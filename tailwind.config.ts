@@ -1,98 +1,72 @@
 import type { Config } from 'tailwindcss'
-import { fontFamily } from 'tailwindcss/defaultTheme'
+import flowbite from 'flowbite/plugin'
 
 const config: Config = {
-  darkMode: ['class'],
+  darkMode: ['selector', '[data-dark]'],
   content: [
-    './src/pages/**/*.{ts,tsx}',
-    './src/components/**/*.{ts,tsx}',
-    './src/app/**/*.{ts,tsx}',
-    './src/lib/**/*.{ts,tsx}',
-    // Include packages/ui so its class names are picked up
-    '../../packages/ui/src/**/*.{ts,tsx}',
+    './index.html',
+    './src/**/*.{ts,tsx}',
+    './node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
-    container: {
-      center: true,
-      padding: '2rem',
-      screens: { '2xl': '1400px' },
-    },
     extend: {
       colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-        popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
-        sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))',
-        },
-      },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        // ── Lito Studio brand tokens ──────────────────────────────
+        cream:   { DEFAULT: '#F7F4EE', alt: '#E6DED1' },
+        ink:     { DEFAULT: '#111111', light: '#6B6560', muted: '#9A948E' },
+        gold:    { DEFAULT: '#D4A853', soft: 'rgba(212,168,83,0.14)', deep: '#B8902F' },
+        teal:    { DEFAULT: '#1A4A5A' },
+        border:  { DEFAULT: '#D9D2C7' },
+        // ── CMS surface tokens ────────────────────────────────────
+        'cms-bg':        '#EDEAE3',
+        'cms-card':      '#FFFFFF',
+        'cms-header':    '#F7F4EE',
+        'cms-sidebar':   '#111111',
+        // ── Status tokens ─────────────────────────────────────────
+        'status-pub-fg':   '#1A4A5A',
+        'status-draft-fg': '#8A6520',
+        'status-arch-fg':  '#888888',
+        'status-danger':   '#A33028',
       },
       fontFamily: {
-        sans: ['var(--font-sans)', ...fontFamily.sans],
+        display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        body:    ['Inter', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        '2xs': ['10px', { lineHeight: '1.5' }],
+        xs:    ['11px', { lineHeight: '1.5' }],
+        sm:    ['13px', { lineHeight: '1.6' }],
+        base:  ['14px', { lineHeight: '1.6' }],
+        md:    ['15px', { lineHeight: '1.6' }],
+        lg:    ['16px', { lineHeight: '1.75' }],
+      },
+      borderRadius: {
+        sm:  '4px',
+        md:  '8px',
+        lg:  '12px',
+        pill: '999px',
+      },
+      boxShadow: {
+        card: '0 1px 3px rgba(17,17,17,0.07), 0 1px 2px rgba(17,17,17,0.05)',
+        lg:   '0 8px 24px rgba(17,17,17,0.10)',
       },
       keyframes: {
-        'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' },
-        },
-        'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: '0' },
+        'page-in': {
+          from: { transform: 'translateY(6px)', opacity: '0' },
+          to:   { transform: 'none', opacity: '1' },
         },
         'fade-in': {
-          from: { opacity: '0', transform: 'translateY(4px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+          from: { opacity: '0' },
+          to:   { opacity: '1' },
         },
       },
       animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-        'fade-in': 'fade-in 0.2s ease-out',
+        'page-in': 'page-in 180ms ease-out both',
+        'fade-in': 'fade-in 150ms ease-out both',
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [flowbite],
 }
 
 export default config

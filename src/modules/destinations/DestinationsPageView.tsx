@@ -1,0 +1,60 @@
+import { Map, Trash2 } from 'lucide-react'
+import { Button } from '@/components/atoms/Button'
+import { SearchInput } from '@/components/molecules/SearchInput'
+import { DataTable } from '@/components/molecules/DataTable'
+import type { Column } from '@/components/molecules/DataTable/types'
+import { getDestName } from '@/types/content.types'
+import type { Destination } from '@/types/content.types'
+
+interface Props {
+  destinations: Destination[]
+  isLoading: boolean
+  search: string
+  onSearch: (v: string) => void
+  onDelete: (id: string) => void
+}
+
+export function DestinationsPageView({ destinations, isLoading, search, onSearch, onDelete }: Props) {
+  const columns: Column<Destination>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      sortable: true,
+      render: (d) => <span className="font-body text-sm font-medium text-[var(--text-primary)]">{getDestName(d)}</span>,
+    },
+    {
+      key: 'slug',
+      header: 'Slug',
+      render: (d) => <span className="font-body text-xs text-[var(--text-muted)]">{d.slug}</span>,
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: '60px',
+      render: (d) => (
+        <Button size="icon" variant="ghost" onClick={() => onDelete(d.id)} aria-label="Delete destination">
+          <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
+        </Button>
+      ),
+    },
+  ]
+
+  return (
+    <div className="p-6 space-y-5">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="font-display text-2xl font-bold text-[var(--text-primary)]">Destinations</h1>
+      </div>
+      <SearchInput value={search} onChange={onSearch} placeholder="Search destinations…" className="w-64" />
+      <div className="cms-card overflow-hidden">
+        <DataTable
+          data={destinations}
+          columns={columns}
+          keyField="id"
+          loading={isLoading}
+          emptyTitle="No destinations"
+          emptyIcon={Map}
+        />
+      </div>
+    </div>
+  )
+}

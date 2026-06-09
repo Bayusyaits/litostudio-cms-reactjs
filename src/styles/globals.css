@@ -1,0 +1,316 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   LITO STUDIO CMS — Design System Tokens + CMS Layout Tokens
+   Sourced from: _ds/tokens/* + cms/tokens.css
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* ── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+
+/* ── DS Color Tokens ─────────────────────────────────────────────────────── */
+:root {
+  /* Base palette */
+  --lito-cream:        #F7F4EE;
+  --lito-cream-alt:    #E6DED1;
+  --lito-ink:          #111111;
+  --lito-ink-light:    #6B6560;
+  --lito-ink-muted:    #9E9E9E;
+  --lito-accent:       #2B2B2B;
+  --lito-gold:         #D4A853;
+  --lito-gold-soft:    rgba(212,168,83,0.12);
+  --lito-gold-deep:    #B68A3A;
+  --lito-teal:         #1A4A5A;
+  --lito-teal-soft:    #2E6675;
+  --lito-border:       #D9D2C7;
+
+  /* Semantic text */
+  --text-primary:      #111111;
+  --text-muted:        #6B6560;
+  --text-faint:        #9E9E9E;
+  --text-inverse:      #F7F4EE;
+
+  /* Semantic surfaces */
+  --surface-page:      #F7F4EE;
+  --surface-raised:    #FFFFFF;
+
+  /* Typography */
+  --font-display:      'Cormorant Garamond', Georgia, serif;
+  --font-body:         'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Radii */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm:   0 1px 2px rgba(17,17,17,0.04);
+  --shadow-md:   0 4px 16px rgba(17,17,17,0.06);
+  --shadow-lg:   0 12px 40px rgba(17,17,17,0.12);
+
+  /* ── CMS Layout Tokens ─────────────────────────────────────────────────── */
+  --cms-sidebar-w:      260px;
+  --cms-header-h:       64px;
+
+  /* Sidebar — dark ink */
+  --cms-sidebar-bg:     #111111;
+  --cms-sidebar-text:   rgba(247,244,238,0.68);
+  --cms-sidebar-label:  rgba(247,244,238,0.26);
+  --cms-sidebar-div:    rgba(247,244,238,0.07);
+  --cms-nav-hover:      rgba(247,244,238,0.04);
+  --cms-nav-active-bg:  rgba(212,168,83,0.11);
+  --cms-nav-active-fg:  #D4A853;
+
+  /* Main area */
+  --cms-main-bg:        #EDEAE3;
+  --cms-card-bg:        #FFFFFF;
+  --cms-header-bg:      #F7F4EE;
+
+  /* Status colors */
+  --s-pub-fg:    #1A4A5A;  --s-pub-bg:    rgba(26,74,90,0.10);
+  --s-draft-fg:  #8A6520;  --s-draft-bg:  rgba(212,168,83,0.14);
+  --s-sched-fg:  #5A5550;  --s-sched-bg:  rgba(90,85,80,0.10);
+  --s-arch-fg:   #888888;  --s-arch-bg:   rgba(136,136,136,0.12);
+
+  --cms-danger:     #A33028;
+  --cms-danger-bg:  rgba(163,48,40,0.08);
+}
+
+/* ── Dark Mode — [data-dark] on <html> ──────────────────────────────────── */
+[data-dark] {
+  --lito-cream:       #F0EDE7;
+  --lito-cream-alt:   #2A2725;
+  --lito-ink:         #F0EDE7;
+  --lito-ink-light:   #7A7570;
+  --lito-ink-muted:   #4A4845;
+  --lito-border:      #2C2A26;
+
+  --text-primary:     #F0EDE7;
+  --text-muted:       #7A7570;
+  --text-faint:       #4A4845;
+
+  --surface-page:     #161412;
+  --surface-raised:   #1E1C19;
+
+  --cms-main-bg:      #121008;
+  --cms-card-bg:      #1A1814;
+  --cms-header-bg:    #161412;
+  --cms-sidebar-bg:   #0D0C09;
+  --cms-sidebar-div:  rgba(240,237,231,0.07);
+  --cms-nav-hover:    rgba(240,237,231,0.03);
+
+  --s-pub-bg:      rgba(26,74,90,0.18);
+  --s-draft-bg:    rgba(212,168,83,0.16);
+  --s-sched-bg:    rgba(90,85,80,0.18);
+  --s-arch-bg:     rgba(136,136,136,0.15);
+  --cms-danger-bg: rgba(163,48,40,0.15);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BASE
+   ════════════════════════════════════════════════════════════════════════════ */
+html, body, #root {
+  height: 100%;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--cms-main-bg);
+  overflow: hidden;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CMS UTILITY CLASSES
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Sidebar nav item */
+.cms-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 12px;
+  margin: 1px 8px;
+  border-radius: var(--radius-sm);
+  border-left: 2px solid transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--cms-sidebar-text);
+  cursor: pointer;
+  transition: background 150ms, color 150ms, border-color 150ms;
+  user-select: none;
+  text-decoration: none;
+  line-height: 1;
+}
+.cms-nav-item:hover { background: var(--cms-nav-hover); color: rgba(247,244,238,0.90); }
+.cms-nav-item.active {
+  background: var(--cms-nav-active-bg);
+  color: var(--cms-nav-active-fg);
+  border-left-color: var(--cms-nav-active-fg);
+  font-weight: 500;
+}
+
+/* Buttons */
+.cms-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 180ms;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.cms-btn:disabled { opacity: .45; cursor: not-allowed; }
+.cms-btn-primary   { background: var(--lito-ink); color: var(--lito-cream); }
+.cms-btn-primary:hover   { background: #2B2B2B; }
+.cms-btn-secondary { background: transparent; color: var(--lito-ink); border: 1px solid var(--lito-ink); }
+.cms-btn-secondary:hover { background: var(--lito-ink); color: var(--lito-cream); }
+.cms-btn-ghost     { background: transparent; color: var(--text-muted); border: 1px solid var(--lito-border); }
+.cms-btn-ghost:hover     { background: var(--lito-cream-alt); color: var(--text-primary); }
+.cms-btn-danger    { background: var(--cms-danger-bg); color: var(--cms-danger); border: 1px solid rgba(163,48,40,0.2); }
+.cms-btn-danger:hover    { background: rgba(163,48,40,0.14); }
+.cms-btn-sm   { padding: 5px 12px; font-size: 12px; }
+.cms-btn-icon { padding: 7px; border-radius: var(--radius-sm); min-width: 34px; justify-content: center; }
+
+/* Cards */
+.cms-card {
+  background: var(--cms-card-bg);
+  border: 1px solid var(--lito-border);
+  border-radius: var(--radius-md);
+}
+
+/* Tables */
+.cms-table { width: 100%; border-collapse: collapse; }
+.cms-table th {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--lito-border);
+  text-align: left;
+  white-space: nowrap;
+}
+.cms-table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(217,210,199,0.5);
+  font-size: 13px;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+.cms-table tr:last-child td { border-bottom: none; }
+.cms-table tbody tr { transition: background 120ms; }
+.cms-table tbody tr:hover   { background: rgba(212,168,83,0.04); }
+.cms-table tbody tr.selected{ background: rgba(212,168,83,0.07); }
+[data-dark] .cms-table td   { border-bottom-color: rgba(44,42,38,0.5); }
+
+/* Form elements */
+.cms-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--cms-card-bg);
+  border: 1px solid var(--lito-border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 200ms;
+}
+.cms-input:focus { border-color: var(--lito-ink); }
+.cms-input::placeholder { color: var(--text-faint); }
+[data-dark] .cms-input { background: var(--cms-card-bg); color: var(--text-primary); }
+
+.cms-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+/* Tabs */
+.cms-tab {
+  padding: 6px 16px;
+  border-bottom: 2px solid transparent;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 200ms;
+  white-space: nowrap;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+.cms-tab:hover { color: var(--text-primary); }
+.cms-tab.active { color: var(--lito-ink); border-bottom-color: var(--lito-ink); font-weight: 500; }
+[data-dark] .cms-tab.active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
+
+/* Scroll areas */
+.cms-scroll { overflow-y: auto; scrollbar-width: thin; }
+.cms-scroll::-webkit-scrollbar { width: 4px; }
+.cms-scroll::-webkit-scrollbar-track { background: transparent; }
+.cms-scroll::-webkit-scrollbar-thumb { background: rgba(247,244,238,0.15); border-radius: 2px; }
+
+/* Page animation */
+.cms-page { animation: cmsPageIn 180ms ease-out both; }
+@keyframes cmsPageIn { from { transform: translateY(6px); opacity: 0.8; } to { transform: none; opacity: 1; } }
+
+/* Workspace switcher list item */
+.ws-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.ws-item:hover  { background: rgba(212,168,83,0.07); }
+.ws-item.active { background: rgba(212,168,83,0.10); }
+
+/* Status badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.status-badge__dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--lito-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--lito-ink-light); }
+[data-dark] ::-webkit-scrollbar-thumb { background: #2C2A26; }
+
+/* Selection */
+::selection { background: var(--lito-gold); color: var(--lito-ink); }
+
+/* Checkbox */
+input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
