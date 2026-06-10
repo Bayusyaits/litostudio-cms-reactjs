@@ -25,7 +25,7 @@ export default function ThemesPageContainer() {
   })
 
   const applyMutation = useMutation({
-    mutationFn: (themeId: string) => themeService.updateSiteTheme(activeSite!.id, themeId),
+    mutationFn: (themeId: string) => themeService.updateSiteTheme(activeSite!.id, { theme_id: themeId }),
     onSuccess: () => {
       setApplyError(null)
       setApplySuccess(true)

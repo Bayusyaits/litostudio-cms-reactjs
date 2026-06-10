@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Save, ChevronRight, GripVertical } from 'lucide-react'
 import { Skeleton } from '@/components/atoms/Skeleton'
-import type { NavigationMenu, NavItem } from '@/services/navigation.service'
+import type { NavigationMenu } from './NavigationPageContainer'
+import type { NavItem } from '@/services/navigation.service'
 
 interface Props {
   menus: NavigationMenu[]
@@ -219,12 +220,12 @@ export function NavigationPageView({
             </div>
           ) : (
             <div>
-              {items.map((item) => (
+              {items.map((item, idx) => (
                 <NavItemRow
-                  key={item.id}
+                  key={item.id ?? idx}
                   item={item}
-                  onRemove={() => removeItem(item.id)}
-                  onChange={(updated) => updateItem(item.id, updated)}
+                  onRemove={() => removeItem(item.id ?? String(idx))}
+                  onChange={(updated) => updateItem(item.id ?? String(idx), updated)}
                 />
               ))}
             </div>

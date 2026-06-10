@@ -2,17 +2,17 @@ import { Plus, FileText, Trash2, Pencil } from 'lucide-react'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
 import type { Page, PageStatus } from '@/services/pages.service'
-import type { PaginationMeta } from '@/types/api.types'
+import type { PageListMeta } from '@/services/pages.service'
 
 interface Filter {
   status: PageStatus | ''
   search: string
-  page: number
+  offset: number
 }
 
 interface Props {
   pages: Page[]
-  meta: PaginationMeta
+  meta: PageListMeta
   isLoading: boolean
   filter: Filter
   setFilter: (patch: Partial<Filter>) => void
@@ -20,11 +20,11 @@ interface Props {
 }
 
 const STATUS_OPTS: { value: PageStatus | ''; label: string }[] = [
-  { value: '',            label: 'All statuses' },
-  { value: 'published',  label: 'Published' },
-  { value: 'draft',      label: 'Draft' },
-  { value: 'scheduled',  label: 'Scheduled' },
-  { value: 'archived',   label: 'Archived' },
+  { value: '',          label: 'All statuses' },
+  { value: 'active',    label: 'Active' },
+  { value: 'draft',     label: 'Draft' },
+  { value: 'inactive',  label: 'Inactive' },
+  { value: 'archived',  label: 'Archived' },
 ]
 
 export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDelete }: Props) {
@@ -62,7 +62,7 @@ export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDel
           type="search"
           placeholder="Search pages…"
           value={filter.search}
-          onChange={(e) => setFilter({ search: e.target.value, page: 1 })}
+          onChange={(e) => setFilter({ search: e.target.value, offset: 0 })}
           style={{
             flex: 1,
             fontFamily: 'var(--font-body)', fontSize: 13,
@@ -76,7 +76,7 @@ export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDel
         />
         <select
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value as PageStatus | '', page: 1 })}
+          onChange={(e) => setFilter({ status: e.target.value as PageStatus | '', offset: 0 })}
           style={{
             fontFamily: 'var(--font-body)', fontSize: 13,
             padding: '7px 12px',

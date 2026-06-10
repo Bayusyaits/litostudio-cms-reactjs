@@ -1,40 +1,34 @@
 import { apiClient } from '@/lib/axios'
 import type { ApiResponse } from '@/types/api.types'
 import type { Organization, Site } from '@/types/auth.types'
-import type { ContentStatus } from '@/types/api.types'
 
 export interface DashboardStats {
-  stories_published: number
-  journal_published: number
-  gallery_items: number
-  total_views: number
-  drafts: number
+  sites: number
+  pages: number
+  media: number
+  deployments: number
 }
 
 export interface DashboardRecentItem {
   id: string
+  type: 'story' | 'page' | 'media'
   title: string
-  status: ContentStatus
+  status: string
   updated_at: string
-  cover_image?: string
-}
-
-export interface DashboardRecent {
-  stories: DashboardRecentItem[]
-  journal: DashboardRecentItem[]
 }
 
 export const orgService = {
-  /** Single-org endpoint (legacy) */
+  /** Get own organization */
   async getOrg() {
-    const { data } = await apiClient.get<ApiResponse<Organization>>('/api/v1/cms/organizations/me')
+    const { data } = await apiClient.get<ApiResponse<Organization>>('/api/v1/cms/organizations')
     return data.data
   },
 
-  /** All orgs — used by WorkspaceSwitcher step 1 */
+  /** All orgs — used by WorkspaceSwitcher (backend returns one org; wrap in array) */
   async getOrgs() {
-    const { data } = await apiClient.get<ApiResponse<Organization[]>>('/api/v1/cms/organizations')
-    return data
+    const { data } = await apiClient.get<ApiResponse<Organization>>('/api/v1/cms/organizations')
+    const org = data.data
+    return { ...data, data: org ? [org] : [] } as ApiResponse<Organization[]>
   },
 
   async updateOrg(payload: { name?: string; settings?: Record<string, unknown> }) {
@@ -48,9 +42,9 @@ export const orgService = {
     return data.data
   },
 
-  /** Sites for a specific org — used by WorkspaceSwitcher step 2 */
-  async getSitesByOrg(orgId: string) {
-    const { data } = await apiClient.get<ApiResponse<Site[]>>(`/api/v1/cms/organizations/${orgId}/sites`)
+  /** Sites for current org (alias, ignores orgId — backend scopes to the authenticated user's org) */
+  async getSitesByOrg(_orgId?: string) {
+    const { data } = await apiClient.get<ApiResponse<Site[]>>('/api/v1/cms/organizations/sites')
     return data
   },
 
@@ -64,17 +58,13 @@ export const orgService = {
     return data.data
   },
 
-  async getDashboardStats(siteId: string) {
-    const { data } = await apiClient.get<ApiResponse<DashboardStats>>('/api/v1/cms/dashboard/stats', {
-      params: { site_id: siteId },
-    })
+  async getDashboardStats(_siteId?: string) {
+    const { data } = await apiClient.get<ApiResponse<DashboardStats>>('/api/v1/cms/dashboard/stats')
     return data.data
   },
 
-  async getDashboardRecent(siteId: string) {
-    const { data } = await apiClient.get<ApiResponse<DashboardRecent>>('/api/v1/cms/dashboard/recent', {
-      params: { site_id: siteId },
-    })
+  async getDashboardRecent(_siteId?: string) {
+    const { data } = await apiClient.get<ApiResponse<DashboardRecentItem[]>>('/api/v1/cms/dashboard/recent')
     return data.data
   },
 }

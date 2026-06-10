@@ -7,19 +7,21 @@ import { PagesPageView } from './PagesPageView'
 interface Filter {
   status: PageStatus | ''
   search: string
-  page: number
+  offset: number
 }
+
+const LIMIT = 20
 
 export default function PagesPageContainer() {
   const { activeSite } = useWebsiteStore()
   const qc = useQueryClient()
   const siteId = activeSite?.id ?? ''
 
-  const [filter, setFilter] = useState<Filter>({ status: '', search: '', page: 1 })
+  const [filter, setFilter] = useState<Filter>({ status: '', search: '', offset: 0 })
 
   const query = useQuery({
     queryKey: ['pages', siteId, filter],
-    queryFn:  () => pagesService.getList({ site_id: siteId, ...filter, limit: 20 }),
+    queryFn:  () => pagesService.getList({ site_id: siteId, limit: LIMIT, ...filter }),
     enabled:  !!siteId,
     staleTime: 2 * 60 * 1000,
   })
@@ -32,7 +34,7 @@ export default function PagesPageContainer() {
   return (
     <PagesPageView
       pages={query.data?.data ?? []}
-      meta={query.data?.meta ?? { page: 1, limit: 20, total: 0, totalPages: 1 }}
+      meta={query.data?.meta ?? { total: 0, limit: LIMIT, offset: 0 }}
       isLoading={query.isLoading}
       filter={filter}
       setFilter={(patch) => setFilter((f) => ({ ...f, ...patch }))}

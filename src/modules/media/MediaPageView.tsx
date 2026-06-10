@@ -11,12 +11,12 @@ type ViewMode = 'grid' | 'list'
 
 interface Props {
   items: Media[]
-  meta?: { total: number; page: number; limit: number }
+  meta?: { total: number; page: number; per_page: number }
   isLoading: boolean
   uploading: boolean
   uploadError: string | null
-  filter: { search: string; type: string; page: number }
-  setFilter: (f: Partial<{ search: string; type: string; page: number }>) => void
+  filter: { q: string; media_type: string; page: number }
+  setFilter: (f: Partial<{ q: string; media_type: string; page: number }>) => void
   onUpload: (files: File[]) => void
   onDelete: (id: string) => void
 }
@@ -69,12 +69,12 @@ function GridCard({ item, selected, onSelect, onDelete }: { item: Media; selecte
       onClick={onSelect}
     >
       {isImageMime(item.mime_type) ? (
-        <img src={item.file_url} alt={item.alt_text ?? item.file_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+        <img src={item.cdn_url ?? item.original_url ?? ''} alt={item.alt_text ?? item.filename} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
       ) : (
         <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <MediaTypeIcon mimeType={item.mime_type} className="w-8 h-8" />
           <span style={{ fontSize: 9, color: 'var(--text-muted)', textAlign: 'center', padding: '0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-            {item.file_name}
+            {item.filename}
           </span>
         </div>
       )}
@@ -116,7 +116,7 @@ function GridCard({ item, selected, onSelect, onDelete }: { item: Media; selecte
       >
         <button
           type="button"
-          aria-label={`Delete ${item.file_name}`}
+          aria-label={`Delete ${item.filename}`}
           onClick={e => { e.stopPropagation(); onDelete() }}
           style={{
             marginLeft: 'auto', width: 24, height: 24, borderRadius: '50%',
@@ -240,16 +240,16 @@ export function MediaPageView({
         {/* Toolbar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <SearchInput
-            value={filter.search}
-            onChange={(search) => setFilter({ search, page: 1 })}
+            value={filter.q}
+            onChange={(q) => setFilter({ q, page: 1 })}
             placeholder="Search media…"
             className="w-56"
           />
           <select
             className="cms-input"
             style={{ height: 34, width: 140, fontSize: 12 }}
-            value={filter.type}
-            onChange={e => setFilter({ type: e.target.value, page: 1 })}
+            value={filter.media_type}
+            onChange={e => setFilter({ media_type: e.target.value, page: 1 })}
           >
             <option value="">All types</option>
             <option value="image">Images</option>
@@ -323,17 +323,17 @@ export function MediaPageView({
               <tbody>
                 {items.map(item => (
                   <tr key={item.id}>
-                    <td><input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleSelect(item.id)} aria-label={`Select ${item.file_name}`} /></td>
+                    <td><input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleSelect(item.id)} aria-label={`Select ${item.filename}`} /></td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         {isImageMime(item.mime_type) ? (
-                          <img src={item.file_url} alt="" style={{ width: 48, height: 34, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }} loading="lazy" />
+                          <img src={item.cdn_url ?? item.original_url ?? ''} alt="" style={{ width: 48, height: 34, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }} loading="lazy" />
                         ) : (
                           <div style={{ width: 48, height: 34, borderRadius: 3, background: 'var(--lito-cream-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <MediaTypeIcon mimeType={item.mime_type} className="w-4 h-4" />
                           </div>
                         )}
-                        <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{item.file_name}</span>
+                        <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{item.filename}</span>
                       </div>
                     </td>
                     <td>
@@ -341,12 +341,12 @@ export function MediaPageView({
                         {item.mime_type.split('/')[1]?.slice(0, 4)}
                       </span>
                     </td>
-                    <td><span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatBytes(item.file_size)}</span></td>
+                    <td><span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatBytes(item.size_bytes)}</span></td>
                     <td><span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{new Date(item.created_at).toLocaleDateString()}</span></td>
                     <td>
                       <button
                         type="button"
-                        aria-label={`Delete ${item.file_name}`}
+                        aria-label={`Delete ${item.filename}`}
                         onClick={() => onDelete(item.id)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', display: 'flex', borderRadius: 4 }}
                         onMouseEnter={e => { e.currentTarget.style.color = 'var(--cms-danger)'; e.currentTarget.style.background = 'var(--cms-danger-bg)' }}

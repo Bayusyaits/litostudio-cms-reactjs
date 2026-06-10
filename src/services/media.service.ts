@@ -1,18 +1,27 @@
 import { apiClient } from '@/lib/axios'
-import type { ApiResponse, PaginatedResponse } from '@/types/api.types'
-import type { Media, MediaPresignRequest, MediaPresignResponse, MediaConfirmRequest, MediaFilter } from '@/types/media.types'
+import type { ApiResponse } from '@/types/api.types'
+import type {
+  Media,
+  MediaPresignRequest,
+  MediaPresignResponse,
+  MediaConfirmRequest,
+  MediaFilter,
+  MediaPaginationMeta,
+} from '@/types/media.types'
 
 export const mediaService = {
   async getList(params?: MediaFilter) {
-    const query = params ? new URLSearchParams(
-      Object.fromEntries(
-        Object.entries(params)
-          .filter(([, v]) => v != null)
-          .map(([k, v]) => [k, String(v)])
-      )
-    ).toString() : ''
+    const query = params
+      ? new URLSearchParams(
+          Object.fromEntries(
+            Object.entries(params)
+              .filter(([, v]) => v != null)
+              .map(([k, v]) => [k, String(v)]),
+          ),
+        ).toString()
+      : ''
     const url = query ? `/api/v1/cms/media?${query}` : '/api/v1/cms/media'
-    const { data } = await apiClient.get<PaginatedResponse<Media>>(url)
+    const { data } = await apiClient.get<{ success: boolean; data: Media[]; meta: MediaPaginationMeta }>(url)
     return data
   },
 
@@ -30,13 +39,16 @@ export const mediaService = {
     await apiClient.delete(`/api/v1/cms/media/${mediaId}`)
   },
 
-  /** Upload a file: presign → put to S3/R2 → confirm */
-  async upload(file: File, options?: { folder?: string; site_id?: string; alt_text?: string }): Promise<Media> {
+  /** Upload a file: presign → PUT to R2 → confirm */
+  async upload(
+    file: File,
+    options?: { folder?: string; site_id?: string; alt_text?: string },
+  ): Promise<Media> {
     const presign = await mediaService.presign({
-      file_name: file.name,
-      mime_type: file.type,
-      file_size: file.size,
-      folder:    options?.folder,
+      filename:     file.name,
+      content_type: file.type,
+      size_bytes:   file.size,
+      folder:       options?.folder,
     })
 
     await fetch(presign.upload_url, {
@@ -46,16 +58,18 @@ export const mediaService = {
     })
 
     const dims = await getImageDimensions(file)
+    const mediaType = resolveMediaType(file.type)
 
     return mediaService.confirm({
-      key:       presign.key,
-      file_name: file.name,
-      mime_type: file.type,
-      file_size: file.size,
+      key:        presign.key,
+      cdn_url:    presign.cdn_url,
+      filename:   file.name,
+      media_type: mediaType,
+      mime_type:  file.type,
+      size_bytes: file.size,
       ...dims,
       alt_text: options?.alt_text ?? file.name.replace(/\.[^.]+$/, ''),
       folder:   options?.folder,
-      site_id:  options?.site_id,
     })
   },
 }
@@ -72,4 +86,11 @@ async function getImageDimensions(file: File): Promise<{ width?: number; height?
     img.onerror = () => resolve({})
     img.src = url
   })
+}
+
+function resolveMediaType(mimeType: string): MediaConfirmRequest['media_type'] {
+  if (mimeType.startsWith('image/'))  return 'image'
+  if (mimeType.startsWith('video/'))  return 'video'
+  if (mimeType.startsWith('audio/'))  return 'audio'
+  return 'document'
 }

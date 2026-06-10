@@ -44,11 +44,26 @@ export interface LoginRequest {
   password: string
 }
 
+// Flat response from POST /api/v1/auth/sign-in
 export interface LoginResponse {
   success: boolean
+  access_token: string
+  refresh_token: string
+  expires_at: number
+  user: User
+}
+
+// Response from GET /api/v1/auth/session and GET /api/v1/auth/me
+export interface SessionResponse {
+  success: boolean
   data: {
-    access_token: string
-    expires_at: number
-    user: User
+    id: string
+    email: string
+    email_verified: boolean
+    provider: string
+    full_name: string | null
+    avatar_url: string | null
+    org_id: string | null
+    org_role: OrgRole | null
   }
 }

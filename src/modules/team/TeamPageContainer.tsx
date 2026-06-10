@@ -39,7 +39,7 @@ export default function TeamPageContainer() {
   return (
     <TeamPageView
       members={data?.data ?? []}
-      meta={data?.meta}
+      meta={undefined}
       isLoading={isLoading}
       search={search}
       onSearch={useCallback((s: string) => { setSearch(s); setPage(1) }, [])}

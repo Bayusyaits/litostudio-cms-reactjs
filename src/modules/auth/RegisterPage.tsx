@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -28,6 +28,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const navigate = useNavigate()
 
   const {
     register,
@@ -44,6 +45,7 @@ export default function RegisterPage() {
         full_name: values.full_name,
       })
       setSuccess(true)
+      setTimeout(() => navigate('/login?registered=true', { replace: true }), 2500)
     } catch (err) {
       setError(getErrorMessage(err))
     }

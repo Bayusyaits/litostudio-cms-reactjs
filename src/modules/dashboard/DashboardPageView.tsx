@@ -1,14 +1,13 @@
 import { FileText, Globe, Image, Users, BookOpen, ArrowRight, Clock } from 'lucide-react'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { Link } from 'react-router-dom'
-import type { DashboardStats, DashboardRecent, DashboardRecentItem } from '@/services/org.service'
-import type { ContentStatus } from '@/types/api.types'
+import type { DashboardStats, DashboardRecentItem } from '@/services/org.service'
 import { useAuthStore } from '@/stores/auth.store'
 import { formatDate } from '@/lib/utils'
 
 interface Props {
   stats?: DashboardStats | null
-  recent?: DashboardRecent | null
+  recent?: DashboardRecentItem[] | null
   loading: boolean
   siteName?: string
 }
@@ -17,11 +16,11 @@ function toIndoDate(date: Date) {
   return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-function StatusBadge({ status }: { status: ContentStatus }) {
-  const map: Record<ContentStatus, { label: string; fg: string; bg: string }> = {
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; fg: string; bg: string }> = {
     published: { label: 'Published', fg: 'var(--s-pub-fg)',   bg: 'var(--s-pub-bg)' },
+    active:    { label: 'Active',    fg: 'var(--s-pub-fg)',   bg: 'var(--s-pub-bg)' },
     draft:     { label: 'Draft',     fg: 'var(--s-draft-fg)', bg: 'var(--s-draft-bg)' },
-    scheduled: { label: 'Scheduled', fg: 'var(--s-sched-fg)', bg: 'var(--s-sched-bg)' },
     archived:  { label: 'Archived',  fg: 'var(--s-arch-fg)',  bg: 'var(--s-arch-bg)' },
   }
   const cfg = map[status] ?? map.draft
@@ -92,12 +91,11 @@ function RecentRow({ item }: { item: DashboardRecentItem }) {
     <tr>
       <td>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {item.cover_image ? (
-            <img src={item.cover_image} alt="" style={{ width: 36, height: 28, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }} />
-          ) : (
-            <div style={{ width: 36, height: 28, borderRadius: 3, background: 'var(--lito-cream-alt)', flexShrink: 0 }} />
-          )}
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{item.title}</span>
+          <div style={{ width: 36, height: 28, borderRadius: 3, background: 'var(--lito-cream-alt)', flexShrink: 0 }} />
+          <div>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{item.title}</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', marginLeft: 6, textTransform: 'capitalize' }}>{item.type}</span>
+          </div>
         </div>
       </td>
       <td><StatusBadge status={item.status} /></td>
@@ -116,10 +114,10 @@ export function DashboardPageView({ stats, recent, loading }: Props) {
   const firstName = user?.full_name?.split(' ')[0] ?? 'Admin'
 
   const statCards: StatCardProps[] = [
-    { icon: FileText, iconBg: 'rgba(26,74,90,0.10)',  iconColor: 'var(--lito-teal)',  label: 'Total Stories',    value: (stats?.stories_published ?? 0) + (stats?.drafts ?? 0), loading },
-    { icon: Globe,    iconBg: 'rgba(212,168,83,0.12)', iconColor: 'var(--lito-gold)',  label: 'Published Pages',  value: stats?.stories_published ?? 0, loading },
-    { icon: Image,    iconBg: 'rgba(212,168,83,0.08)', iconColor: 'var(--lito-gold-deep)', label: 'Media Files', value: stats?.gallery_items ?? 0, loading },
-    { icon: Users,    iconBg: 'rgba(17,17,17,0.06)',   iconColor: 'var(--text-muted)', label: 'Team Members',    value: '—', loading },
+    { icon: FileText, iconBg: 'rgba(26,74,90,0.10)',  iconColor: 'var(--lito-teal)',       label: 'Pages',       value: stats?.pages ?? 0,       loading },
+    { icon: Globe,    iconBg: 'rgba(212,168,83,0.12)', iconColor: 'var(--lito-gold)',       label: 'Sites',       value: stats?.sites ?? 0,       loading },
+    { icon: Image,    iconBg: 'rgba(212,168,83,0.08)', iconColor: 'var(--lito-gold-deep)', label: 'Media Files', value: stats?.media ?? 0,       loading },
+    { icon: Users,    iconBg: 'rgba(17,17,17,0.06)',   iconColor: 'var(--text-muted)',      label: 'Deployments', value: stats?.deployments ?? 0, loading },
   ]
 
   return (
@@ -177,12 +175,12 @@ export function DashboardPageView({ stats, recent, loading }: Props) {
                     <td><Skeleton className="h-4 w-24" /></td>
                   </tr>
                 ))
-              ) : recent?.stories.length ? (
-                recent.stories.slice(0, 8).map(s => <RecentRow key={s.id} item={s} />)
+              ) : recent?.length ? (
+                recent.slice(0, 8).map((s: DashboardRecentItem) => <RecentRow key={s.id} item={s} />)
               ) : (
                 <tr>
                   <td colSpan={3} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)', fontSize: 13 }}>
-                    No stories yet
+                    No recent content
                   </td>
                 </tr>
               )}
@@ -206,8 +204,8 @@ export function DashboardPageView({ stats, recent, loading }: Props) {
                   </div>
                 </div>
               ))
-            ) : recent?.journal.length ? (
-              recent.journal.slice(0, 8).map(item => (
+            ) : recent?.length ? (
+              recent.slice(0, 8).map((item: DashboardRecentItem) => (
                 <div key={item.id} style={{ display: 'flex', gap: 10, padding: '10px 18px', borderBottom: '1px solid rgba(217,210,199,0.3)' }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--lito-gold)', marginTop: 5, flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>

@@ -1,6 +1,5 @@
 import { apiClient } from '@/lib/axios'
-import type { ApiResponse, PaginatedResponse } from '@/types/api.types'
-import type { OrgRole } from '@/types/api.types'
+import type { ApiResponse, OrgRole } from '@/types/api.types'
 
 export interface TeamMember {
   id: string
@@ -19,27 +18,25 @@ export interface InvitePayload {
   role: OrgRole
 }
 
+const BASE = '/api/v1/cms/organizations'
+
 export const teamService = {
-  async getMembers(params?: { page?: number; limit?: number; search?: string }) {
-    const q = params ? new URLSearchParams(
-      Object.fromEntries(Object.entries(params).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)]))
-    ).toString() : ''
-    const url = q ? `/api/v1/cms/team?${q}` : '/api/v1/cms/team'
-    const { data } = await apiClient.get<PaginatedResponse<TeamMember>>(url)
+  async getMembers(_params?: { page?: number; limit?: number; search?: string }) {
+    const { data } = await apiClient.get<ApiResponse<TeamMember[]>>(`${BASE}/members`)
     return data
   },
 
   async invite(payload: InvitePayload) {
-    const { data } = await apiClient.post<ApiResponse<TeamMember>>('/api/v1/cms/team/invite', payload)
+    const { data } = await apiClient.post<ApiResponse<{ message: string }>>(`${BASE}/invites`, payload)
     return data.data
   },
 
-  async updateRole(memberId: string, role: OrgRole) {
-    const { data } = await apiClient.patch<ApiResponse<TeamMember>>(`/api/v1/cms/team/${memberId}/role`, { role })
+  async updateRole(userId: string, role: OrgRole) {
+    const { data } = await apiClient.patch<ApiResponse<TeamMember>>(`${BASE}/members/${userId}/role`, { role })
     return data.data
   },
 
-  async remove(memberId: string) {
-    await apiClient.delete(`/api/v1/cms/team/${memberId}`)
+  async remove(userId: string) {
+    await apiClient.delete(`${BASE}/members/${userId}`)
   },
 }

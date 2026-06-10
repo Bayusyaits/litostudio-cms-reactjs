@@ -4,17 +4,33 @@ import { mediaService } from '@/services/media.service'
 import { useWebsiteStore } from '@/stores/website.store'
 import { MediaPageView } from './MediaPageView'
 import { getErrorMessage } from '@/lib/axios'
+import type { MediaConfirmRequest } from '@/types/media.types'
+
+type MediaTypeFilter = '' | 'image' | 'video' | 'document' | 'audio'
+
+interface MediaFilter {
+  q: string
+  media_type: MediaTypeFilter
+  page: number
+  per_page: number
+}
 
 export default function MediaPageContainer() {
   const { activeSite } = useWebsiteStore()
   const qc = useQueryClient()
-  const [filter, setFilter] = useState({ search: '', type: '', page: 1, limit: 40 })
+  const [filter, setFilter] = useState<MediaFilter>({ q: '', media_type: '', page: 1, per_page: 40 })
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['media', activeSite?.id, filter],
-    queryFn: () => mediaService.getList({ site_id: activeSite!.id, ...filter }),
+    queryFn: () => mediaService.getList({
+      site_id: activeSite!.id,
+      q: filter.q || undefined,
+      media_type: (filter.media_type || undefined) as MediaConfirmRequest['media_type'] | undefined,
+      page: filter.page,
+      per_page: filter.per_page,
+    }),
     enabled: !!activeSite,
     staleTime: 2 * 60 * 1000,
   })
@@ -48,7 +64,7 @@ export default function MediaPageContainer() {
       uploading={uploading}
       uploadError={uploadError}
       filter={filter}
-      setFilter={(f) => setFilter((prev) => ({ ...prev, ...f }))}
+      setFilter={(f) => setFilter((prev) => ({ ...prev, ...f } as MediaFilter))}
       onUpload={handleUpload}
       onDelete={(id) => deleteMutation.mutate(id)}
     />
