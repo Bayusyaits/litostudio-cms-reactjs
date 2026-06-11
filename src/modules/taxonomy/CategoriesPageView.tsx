@@ -86,8 +86,7 @@ function AddCategoryForm({ onCreate, creating, error }: {
           onChange={e => setSlug(e.target.value)}
           placeholder="category-slug" required />
       </div>
-      <button type="submit" disabled={creating || !name.trim()}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 999, background: 'var(--lito-ink)', color: 'var(--lito-cream)', border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer', height: 34, opacity: creating ? 0.5 : 1 }}>
+      <button type="submit" disabled={creating || !name.trim()} className="cms-btn cms-btn-primary cms-btn-sm">
         <Plus size={13} /> {creating ? 'Adding…' : 'Add'}
       </button>
       {error && <div style={{ width: '100%', padding: '6px 10px', borderRadius: 4, background: 'var(--cms-danger-bg)', fontSize: 12, color: 'var(--cms-danger)' }}>{error}</div>}

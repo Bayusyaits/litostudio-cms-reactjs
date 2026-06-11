@@ -142,19 +142,7 @@ function InviteForm({ onInvite, inviting, error }: { onInvite: (p: InvitePayload
           ))}
         </select>
       </div>
-      <button
-        type="submit"
-        disabled={inviting || !email.trim()}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '7px 16px', borderRadius: 999,
-          background: 'var(--lito-ink)', color: 'var(--lito-cream)',
-          border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-          fontFamily: 'var(--font-body)', whiteSpace: 'nowrap',
-          opacity: inviting || !email.trim() ? 0.5 : 1,
-          height: 34,
-        }}
-      >
+      <button type="submit" disabled={inviting || !email.trim()} className="cms-btn cms-btn-primary cms-btn-sm">
         <UserPlus size={13} /> {inviting ? 'Sending…' : 'Invite'}
       </button>
       {error && (

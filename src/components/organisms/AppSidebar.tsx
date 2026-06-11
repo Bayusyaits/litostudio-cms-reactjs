@@ -3,6 +3,7 @@ import {
   LayoutDashboard, FileText, BookOpen, Image, Film, MapPin,
   Megaphone, Globe, Settings, Users, BarChart2, Search,
   LogOut, ChevronRight, Tag, Hash, Palette,
+  Package, Layers, MessageSquare, HelpCircle,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
@@ -29,6 +30,20 @@ const NAV: NavSection[] = [
       { label: 'Destinations', icon: MapPin,   to: '/destinations' },
       { label: 'Categories',   icon: Tag,      to: '/categories' },
       { label: 'Tags',         icon: Hash,     to: '/tags' },
+    ],
+  },
+  {
+    section: 'Commerce',
+    items: [
+      { label: 'Products',    icon: Package,       to: '/products' },
+      { label: 'Collections', icon: Layers,        to: '/collections' },
+      { label: 'Reviews',     icon: MessageSquare, to: '/reviews' },
+    ],
+  },
+  {
+    section: 'Support',
+    items: [
+      { label: 'FAQs', icon: HelpCircle, to: '/faqs' },
     ],
   },
   {

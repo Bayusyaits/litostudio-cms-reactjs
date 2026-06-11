@@ -139,6 +139,105 @@ export interface Destination {
   translations: (Translation & { name?: string; description?: string })[]
 }
 
+// ── Product ───────────────────────────────────────────────────────────────
+
+export type ProductType = 'product' | 'service' | 'package'
+
+export interface Product {
+  id: string
+  site_id: string
+  slug: string
+  name: string
+  product_type: ProductType
+  price: number | null
+  sort_order: number
+  status: ContentStatus
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface ProductCreateRequest {
+  site_id?: string
+  slug: string
+  name: string
+  product_type: ProductType
+  price?: number
+  sort_order?: number
+  status?: ContentStatus
+  translation?: { locale: string; title: string; description?: string }
+}
+
+export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {}
+
+// ── Collection ────────────────────────────────────────────────────────────
+
+export interface Collection {
+  id: string
+  site_id: string
+  slug: string
+  name: string
+  product_count: number
+  status: ContentStatus
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface CollectionCreateRequest {
+  site_id?: string
+  slug: string
+  name: string
+  status?: ContentStatus
+  translation?: { locale: string; title: string; description?: string }
+}
+
+export interface CollectionUpdateRequest extends Partial<CollectionCreateRequest> {}
+
+// ── Review ────────────────────────────────────────────────────────────────
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export interface Review {
+  id: string
+  site_id: string
+  author_name: string
+  rating: number
+  reviewable_type: string | null
+  status: ReviewStatus
+  body: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ReviewUpdateRequest {
+  status?: ReviewStatus
+  body?: string
+}
+
+// ── FAQ ───────────────────────────────────────────────────────────────────
+
+export interface Faq {
+  id: string
+  site_id: string
+  slug: string
+  sort_order: number
+  status: ContentStatus
+  created_at: string
+  updated_at: string
+  translations: (Translation & { question?: string; answer?: string })[]
+}
+
+export interface FaqCreateRequest {
+  site_id?: string
+  slug: string
+  sort_order?: number
+  status?: ContentStatus
+  translation: { locale: string; question: string; answer?: string }
+}
+
+export interface FaqUpdateRequest extends Partial<FaqCreateRequest> {}
+
 // ── Category / Tag ────────────────────────────────────────────────────────
 
 export interface Category {

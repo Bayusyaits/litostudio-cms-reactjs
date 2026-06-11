@@ -42,8 +42,7 @@ export function TagsPageView({ tags, total, isLoading, search, onSearch, onCreat
         <form onSubmit={handleAdd} style={{ display: 'flex', gap: 8 }}>
           <input className="cms-input" style={{ height: 34, flex: 1, maxWidth: 320 }}
             value={newTag} onChange={e => setNewTag(e.target.value)} placeholder="Tag name" required />
-          <button type="submit" disabled={creating || !newTag.trim()}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', borderRadius: 999, background: 'var(--lito-ink)', color: 'var(--lito-cream)', border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer', height: 34, opacity: creating ? 0.5 : 1 }}>
+          <button type="submit" disabled={creating || !newTag.trim()} className="cms-btn cms-btn-primary cms-btn-sm">
             <Plus size={13} /> {creating ? 'Adding…' : 'Add'}
           </button>
         </form>

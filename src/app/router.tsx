@@ -29,6 +29,12 @@ const TagsPage         = lazy(() => import('@/modules/taxonomy/TagsPageContainer
 const ThemesPage       = lazy(() => import('@/modules/themes/ThemesPageContainer'))
 const NavigationPage   = lazy(() => import('@/modules/navigation/NavigationPageContainer'))
 const PagesPage        = lazy(() => import('@/modules/pages/PagesPageContainer'))
+const ProductsPage        = lazy(() => import('@/modules/products/ProductsPageContainer'))
+const ProductsFormPage    = lazy(() => import('@/modules/products/ProductsFormContainer'))
+const CollectionsPage     = lazy(() => import('@/modules/collections/CollectionsPageContainer'))
+const CollectionsFormPage = lazy(() => import('@/modules/collections/CollectionsFormContainer'))
+const ReviewsPage      = lazy(() => import('@/modules/reviews/ReviewsPageContainer'))
+const FaqsPage         = lazy(() => import('@/modules/faqs/FaqsPageContainer'))
 
 function PageLoader() {
   return (
@@ -80,6 +86,14 @@ export const router = createBrowserRouter([
       { path: 'themes',            element: <S><ThemesPage /></S> },
       { path: 'navigation',        element: <S><NavigationPage /></S> },
       { path: 'pages',             element: <S><PagesPage /></S> },
+      { path: 'products',               element: <S><ProductsPage /></S> },
+      { path: 'products/new',           element: <S><ProductsFormPage /></S> },
+      { path: 'products/:id/edit',      element: <S><ProductsFormPage /></S> },
+      { path: 'collections',            element: <S><CollectionsPage /></S> },
+      { path: 'collections/new',        element: <S><CollectionsFormPage /></S> },
+      { path: 'collections/:id/edit',   element: <S><CollectionsFormPage /></S> },
+      { path: 'reviews',           element: <S><ReviewsPage /></S> },
+      { path: 'faqs',              element: <S><FaqsPage /></S> },
       { path: '*',                 element: <Navigate to="/dashboard" replace /> },
     ],
   },

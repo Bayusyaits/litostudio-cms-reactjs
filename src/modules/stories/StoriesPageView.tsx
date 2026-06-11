@@ -136,15 +136,7 @@ export function StoriesPageView({
           </div>
           <Link
             to="/stories/new"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '7px 16px', borderRadius: 999,
-              background: 'var(--lito-ink)', color: 'var(--lito-cream)',
-              fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-body)',
-              textDecoration: 'none', transition: 'background 150ms',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#2B2B2B')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'var(--lito-ink)')}
+            className="cms-btn cms-btn-primary"
           >
             <Plus size={14} /> New Story
           </Link>

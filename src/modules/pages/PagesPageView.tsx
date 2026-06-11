@@ -40,17 +40,7 @@ export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDel
             {meta.total} page{meta.total !== 1 ? 's' : ''} total
           </p>
         </div>
-        <a
-          href="/pages/new"
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '8px 16px',
-            background: 'var(--lito-ink)', color: 'var(--lito-cream)',
-            border: 'none', borderRadius: 8,
-            fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500,
-            textDecoration: 'none', cursor: 'pointer',
-          }}
-        >
+        <a href="/pages/new" className="cms-btn cms-btn-primary">
           <Plus size={14} />
           New Page
         </a>
@@ -106,15 +96,7 @@ export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDel
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>
             No pages found
           </p>
-          <a
-            href="/pages/new"
-            style={{
-              padding: '7px 16px',
-              background: 'var(--lito-ink)', color: 'var(--lito-cream)',
-              borderRadius: 8, fontSize: 13, fontFamily: 'var(--font-body)',
-              textDecoration: 'none',
-            }}
-          >
+          <a href="/pages/new" className="cms-btn cms-btn-primary">
             Create your first page
           </a>
         </div>

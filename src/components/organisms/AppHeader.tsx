@@ -147,23 +147,7 @@ export function AppHeader() {
         {/* New Story */}
         <a
           href="/stories/new"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            padding: '5px 13px',
-            borderRadius: 999,
-            background: 'var(--lito-ink)',
-            color: 'var(--lito-cream)',
-            fontSize: 12,
-            fontFamily: 'var(--font-body)',
-            fontWeight: 500,
-            textDecoration: 'none',
-            transition: 'background 150ms',
-            whiteSpace: 'nowrap',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#2B2B2B')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'var(--lito-ink)')}
+          className="cms-btn cms-btn-primary"
         >
           <Plus size={12} />
           New Story

@@ -31,9 +31,26 @@ export const orgService = {
     return { ...data, data: org ? [org] : [] } as ApiResponse<Organization[]>
   },
 
+  /** Create a new organization */
+  async createOrg(payload: { name: string; slug?: string; plan?: string }) {
+    const data = await http.post<ApiResponse<Organization>>('/api/v1/cms/organizations', payload)
+    return data.data
+  },
+
   async updateOrg(payload: { name?: string; settings?: Record<string, unknown> }) {
     const data = await http.patch<ApiResponse<Organization>>('/api/v1/cms/organizations/settings', payload)
     return data.data
+  },
+
+  /** Update organization by ID */
+  async updateOrgById(orgId: string, payload: { name?: string; settings?: Record<string, unknown> }) {
+    const data = await http.patch<ApiResponse<Organization>>(`/api/v1/cms/organizations/${orgId}`, payload)
+    return data.data
+  },
+
+  /** Delete organization */
+  async deleteOrg(orgId: string) {
+    await http.delete<ApiResponse<null>>(`/api/v1/cms/organizations/${orgId}`)
   },
 
   /** Sites for current org */

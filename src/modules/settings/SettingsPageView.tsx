@@ -123,13 +123,7 @@ export function SettingsPageView({
             type="button"
             disabled={saving || orgName === org?.name}
             onClick={() => onSaveOrg({ name: orgName })}
-            style={{
-              padding: '7px 18px', borderRadius: 999,
-              background: 'var(--lito-ink)', color: 'var(--lito-cream)',
-              border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-              fontFamily: 'var(--font-body)',
-              opacity: saving || orgName === org?.name ? 0.5 : 1,
-            }}
+            className="cms-btn cms-btn-primary cms-btn-sm"
           >
             {saving ? 'Saving…' : 'Save organization'}
           </button>
@@ -173,13 +167,7 @@ export function SettingsPageView({
               type="button"
               disabled={saving || (siteName === activeSite.name && siteDomain === (activeSite.domain ?? ''))}
               onClick={() => onSaveSite({ name: siteName, domain: siteDomain || undefined })}
-              style={{
-                padding: '7px 18px', borderRadius: 999,
-                background: 'var(--lito-ink)', color: 'var(--lito-cream)',
-                border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                fontFamily: 'var(--font-body)',
-                opacity: saving ? 0.5 : 1,
-              }}
+              className="cms-btn cms-btn-primary cms-btn-sm"
             >
               {saving ? 'Saving…' : 'Save website'}
             </button>

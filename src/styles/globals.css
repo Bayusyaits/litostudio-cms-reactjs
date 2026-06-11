@@ -79,6 +79,16 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
   --cms-danger:     #A33028;
   --cms-danger-bg:  rgba(163,48,40,0.08);
+
+  /* ── CMS action button — stays high-contrast in both modes ──────────────── */
+  /* Primary: dark bg + light text in light mode */
+  --cms-btn-bg:     #111111;
+  --cms-btn-fg:     #F7F4EE;
+  --cms-btn-bg-h:   #2B2B2B;  /* hover */
+  /* Secondary: outlined */
+  --cms-btn-sec-bg: transparent;
+  --cms-btn-sec-fg: #111111;
+  --cms-btn-sec-border: #111111;
 }
 
 /* ── Dark Mode — [data-dark] on <html> ──────────────────────────────────── */
@@ -109,6 +119,14 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   --s-sched-bg:    rgba(90,85,80,0.18);
   --s-arch-bg:     rgba(136,136,136,0.15);
   --cms-danger-bg: rgba(163,48,40,0.15);
+
+  /* Primary button flips to light bg + dark text in dark mode */
+  --cms-btn-bg:     #F0EDE7;
+  --cms-btn-fg:     #111111;
+  --cms-btn-bg-h:   #D9D4CC;
+  --cms-btn-sec-bg: transparent;
+  --cms-btn-sec-fg: #F0EDE7;
+  --cms-btn-sec-border: rgba(240,237,231,0.4);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -170,10 +188,10 @@ html, body, #root {
   text-decoration: none;
 }
 .cms-btn:disabled { opacity: .45; cursor: not-allowed; }
-.cms-btn-primary   { background: var(--lito-ink); color: var(--lito-cream); }
-.cms-btn-primary:hover   { background: #2B2B2B; }
-.cms-btn-secondary { background: transparent; color: var(--lito-ink); border: 1px solid var(--lito-ink); }
-.cms-btn-secondary:hover { background: var(--lito-ink); color: var(--lito-cream); }
+.cms-btn-primary   { background: var(--cms-btn-bg); color: var(--cms-btn-fg); }
+.cms-btn-primary:hover   { background: var(--cms-btn-bg-h); }
+.cms-btn-secondary { background: var(--cms-btn-sec-bg); color: var(--cms-btn-sec-fg); border: 1px solid var(--cms-btn-sec-border); }
+.cms-btn-secondary:hover { background: var(--cms-btn-bg); color: var(--cms-btn-fg); }
 .cms-btn-ghost     { background: transparent; color: var(--text-muted); border: 1px solid var(--lito-border); }
 .cms-btn-ghost:hover     { background: var(--lito-cream-alt); color: var(--text-primary); }
 .cms-btn-danger    { background: var(--cms-danger-bg); color: var(--cms-danger); border: 1px solid rgba(163,48,40,0.2); }

@@ -1,6 +1,6 @@
 import { http } from '@/lib/request'
 import type { ApiResponse, PaginatedResponse, ListParams, BulkUpdateRequest, BulkDeleteRequest, BulkUpdateResponse, BulkDeleteResponse } from '@/types/api.types'
-import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination } from '@/types/content.types'
+import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination, Product, ProductCreateRequest, ProductUpdateRequest, Collection, CollectionCreateRequest, CollectionUpdateRequest, Review, ReviewUpdateRequest, Faq, FaqCreateRequest, FaqUpdateRequest } from '@/types/content.types'
 
 // ── Generic content service factory ─────────────────────────────────────
 
@@ -63,7 +63,11 @@ function createContentService<Entity, CreateDTO, UpdateDTO>(basePath: string) {
 
 // ── Module-specific services ──────────────────────────────────────────────
 
-export const storiesService    = createContentService<Story,       StoryCreateRequest,   StoryUpdateRequest>(  '/api/v1/cms/content/stories')
-export const journalService    = createContentService<JournalPost, JournalCreateRequest, JournalUpdateRequest>('/api/v1/cms/content/journal')
-export const galleryService    = createContentService<GalleryItem, GalleryCreateRequest, GalleryUpdateRequest>('/api/v1/cms/content/gallery')
-export const destinationsService = createContentService<Destination, Record<string,unknown>, Record<string,unknown>>('/api/v1/cms/content/destinations')
+export const storiesService      = createContentService<Story,       StoryCreateRequest,      StoryUpdateRequest>(     '/api/v1/cms/content/stories')
+export const journalService      = createContentService<JournalPost, JournalCreateRequest,    JournalUpdateRequest>(   '/api/v1/cms/content/journal')
+export const galleryService      = createContentService<GalleryItem, GalleryCreateRequest,    GalleryUpdateRequest>(   '/api/v1/cms/content/gallery')
+export const destinationsService = createContentService<Destination, Record<string,unknown>,  Record<string,unknown>>( '/api/v1/cms/content/destinations')
+export const productsService     = createContentService<Product,     ProductCreateRequest,    ProductUpdateRequest>(   '/api/v1/cms/content/products')
+export const collectionsService  = createContentService<Collection,  CollectionCreateRequest, CollectionUpdateRequest>('/api/v1/cms/content/collections')
+export const reviewsService      = createContentService<Review,      Record<string,unknown>,  ReviewUpdateRequest>(    '/api/v1/cms/content/reviews')
+export const faqsService         = createContentService<Faq,         FaqCreateRequest,        FaqUpdateRequest>(       '/api/v1/cms/content/faqs')
