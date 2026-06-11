@@ -47,3 +47,4 @@ src/playwright-report/
 src/blob-report/
 src/test-results/
 dist
+node_modules
