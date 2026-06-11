@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth.store'
 import { useWebsiteStore } from '@/stores/website.store'
+import { useOrgStore } from '@/stores/org.store'
 import { useThemeStore } from '@/stores/theme.store'
 import { AppSidebar } from '@/components/organisms/AppSidebar'
 import { AppHeader } from '@/components/organisms/AppHeader'
@@ -10,7 +11,9 @@ import { CommandPalette } from '@/components/organisms/CommandPalette'
 export function DashboardLayout() {
   const { isAuthenticated } = useAuthStore()
   const { activeSite } = useWebsiteStore()
+  const { org } = useOrgStore()
   const { applyTheme } = useThemeStore()
+  const location = useLocation()
   const [cmdOpen, setCmdOpen] = useState(false)
 
   // Apply persisted theme on mount
@@ -39,8 +42,33 @@ export function DashboardLayout() {
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, overflow: 'hidden' }}>
         <AppHeader />
 
-        {/* No-site banner */}
-        {!activeSite && (
+        {/* No-org banner — show everywhere except /organizations */}
+        {!org && location.pathname !== '/organizations' && (
+          <div style={{
+            padding: '8px 20px',
+            background: 'rgba(212,168,83,0.10)',
+            borderBottom: '1px solid rgba(212,168,83,0.20)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          }}>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--lito-gold-deep)', margin: 0 }}>
+              You need an organization to manage content.
+            </p>
+            <Link
+              to="/organizations"
+              style={{
+                fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
+                color: 'var(--lito-gold-deep)',
+                textDecoration: 'underline',
+                textUnderlineOffset: 2,
+              }}
+            >
+              Create one →
+            </Link>
+          </div>
+        )}
+
+        {/* No-site banner — only when org exists but no site selected */}
+        {org && !activeSite && (
           <div style={{
             padding: '7px 20px',
             background: 'rgba(212,168,83,0.10)',

@@ -200,14 +200,14 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
                       title={deleteConfirm === org.id ? 'Click again to confirm delete' : 'Delete organization'}
                       style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: 30, height: 30, borderRadius: 6,
+                        width: deleteConfirm === org.id ? 'auto' : 30,
+                        height: 30, borderRadius: 6,
                         border: `1px solid ${deleteConfirm === org.id ? 'rgba(163,48,40,0.5)' : 'var(--lito-border)'}`,
                         background: deleteConfirm === org.id ? 'var(--cms-danger-bg)' : 'transparent',
                         color: deleteConfirm === org.id ? 'var(--cms-danger)' : 'var(--text-muted)',
                         cursor: 'pointer', transition: 'all 150ms',
                         fontSize: 10, fontWeight: 600, gap: 3,
                         whiteSpace: 'nowrap', padding: deleteConfirm === org.id ? '0 8px' : undefined,
-                        width: deleteConfirm === org.id ? 'auto' : 30,
                       } as React.CSSProperties}
                       onMouseEnter={e => {
                         if (deleteConfirm !== org.id) {

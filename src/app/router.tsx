@@ -35,6 +35,7 @@ const CollectionsPage     = lazy(() => import('@/modules/collections/Collections
 const CollectionsFormPage = lazy(() => import('@/modules/collections/CollectionsFormContainer'))
 const ReviewsPage      = lazy(() => import('@/modules/reviews/ReviewsPageContainer'))
 const FaqsPage         = lazy(() => import('@/modules/faqs/FaqsPageContainer'))
+const OrganizationsPage = lazy(() => import('@/modules/organizations/OrganizationsPageContainer'))
 
 function PageLoader() {
   return (
@@ -94,6 +95,7 @@ export const router = createBrowserRouter([
       { path: 'collections/:id/edit',   element: <S><CollectionsFormPage /></S> },
       { path: 'reviews',           element: <S><ReviewsPage /></S> },
       { path: 'faqs',              element: <S><FaqsPage /></S> },
+      { path: 'organizations',     element: <S><OrganizationsPage /></S> },
       { path: '*',                 element: <Navigate to="/dashboard" replace /> },
     ],
   },

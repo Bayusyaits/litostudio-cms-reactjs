@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, ChevronLeft, Search, Building2, Globe, Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { useOrgStore } from '@/stores/org.store'
 import { useWebsiteStore } from '@/stores/website.store'
 import { orgService } from '@/services/org.service'
@@ -15,6 +16,7 @@ export function WorkspaceSwitcher() {
   const [search, setSearch] = useState('')
   const ref = useRef<HTMLDivElement>(null)
 
+  const navigate = useNavigate()
   const { org, setOrg } = useOrgStore()
   const { activeSite, setActiveSite } = useWebsiteStore()
 
@@ -258,6 +260,9 @@ export function WorkspaceSwitcher() {
           <div style={{ borderTop: '1px solid rgba(247,244,238,0.06)', padding: '6px 8px' }}>
             <button
               type="button"
+              onClick={() => {
+                if (step === 'org') { setOpen(false); navigate('/organizations') }
+              }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 width: '100%', padding: '7px 8px',
@@ -272,6 +277,25 @@ export function WorkspaceSwitcher() {
               <Plus size={11} />
               {step === 'org' ? 'Create organization' : 'Create website'}
             </button>
+            {step === 'org' && (
+              <button
+                type="button"
+                onClick={() => { setOpen(false); navigate('/organizations') }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  width: '100%', padding: '7px 8px',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 11, color: 'var(--lito-gold)',
+                  fontFamily: 'var(--font-body)',
+                  borderRadius: 4,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,168,83,0.08)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              >
+                <Building2 size={11} />
+                Manage organizations
+              </button>
+            )}
           </div>
         </div>
       )}
