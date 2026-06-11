@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/axios'
+import { http } from '@/lib/request'
 import type { ApiResponse, PaginatedResponse, ListParams, BulkUpdateRequest, BulkDeleteRequest, BulkUpdateResponse, BulkDeleteResponse } from '@/types/api.types'
 import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination } from '@/types/content.types'
 
@@ -21,41 +21,41 @@ function createContentService<Entity, CreateDTO, UpdateDTO>(basePath: string) {
     async getList(params?: ListParams & { site_id?: string }) {
       const query = params ? new URLSearchParams(buildParams(params)).toString() : ''
       const url = query ? `${basePath}?${query}` : basePath
-      const { data } = await apiClient.get<PaginatedResponse<Entity>>(url)
+      const data = await http.get<PaginatedResponse<Entity>>(url)
       return data
     },
 
     async getById(id: string) {
-      const { data } = await apiClient.get<ApiResponse<Entity>>(`${basePath}/${id}`)
+      const data = await http.get<ApiResponse<Entity>>(`${basePath}/${id}`)
       return data.data
     },
 
     async create(payload: CreateDTO) {
-      const { data } = await apiClient.post<ApiResponse<Entity>>(basePath, payload)
+      const data = await http.post<ApiResponse<Entity>>(basePath, payload)
       return data.data
     },
 
     async update(id: string, payload: UpdateDTO) {
-      const { data } = await apiClient.patch<ApiResponse<Entity>>(`${basePath}/${id}`, payload)
+      const data = await http.patch<ApiResponse<Entity>>(`${basePath}/${id}`, payload)
       return data.data
     },
 
     async remove(id: string) {
-      await apiClient.delete(`${basePath}/${id}`)
+      await http.delete(`${basePath}/${id}`)
     },
 
     async bulkUpdate(payload: BulkUpdateRequest) {
-      const { data } = await apiClient.patch<BulkUpdateResponse>(`${basePath}/bulk`, payload)
+      const data = await http.patch<BulkUpdateResponse>(`${basePath}/bulk`, payload)
       return data
     },
 
     async bulkDelete(payload: BulkDeleteRequest) {
-      const { data } = await apiClient.delete<BulkDeleteResponse>(`${basePath}/bulk`, { data: payload })
+      const data = await http.delete<BulkDeleteResponse>(`${basePath}/bulk`, payload)
       return data
     },
 
     async upsertTranslation(id: string, locale: string, payload: Record<string, unknown>) {
-      const { data } = await apiClient.put<ApiResponse<unknown>>(`${basePath}/${id}/translations/${locale}`, payload)
+      const data = await http.put<ApiResponse<unknown>>(`${basePath}/${id}/translations/${locale}`, payload)
       return data.data
     },
   }

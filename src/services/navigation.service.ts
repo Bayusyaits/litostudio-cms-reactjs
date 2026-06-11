@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/axios'
+import { http } from '@/lib/request'
 import type { ApiResponse } from '@/types/api.types'
 
 export interface NavItem {
@@ -15,7 +15,7 @@ export interface NavItem {
 export const navigationService = {
   /** Get all navigation items for a site */
   async getNavigation(siteId: string) {
-    const { data } = await apiClient.get<{ success: boolean; data: NavItem[] }>(
+    const data = await http.get<{ success: boolean; data: NavItem[] }>(
       `/api/v1/cms/sites/${siteId}/navigation`,
     )
     return data
@@ -23,7 +23,7 @@ export const navigationService = {
 
   /** Replace all navigation items for a site */
   async updateNavigation(siteId: string, items: NavItem[]) {
-    const { data } = await apiClient.put<ApiResponse<{ message: string }>>(
+    const data = await http.put<ApiResponse<{ message: string }>>(
       `/api/v1/cms/sites/${siteId}/navigation`,
       { items },
     )

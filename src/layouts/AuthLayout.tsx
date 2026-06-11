@@ -1,10 +1,15 @@
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth.store'
 
 export function AuthLayout() {
   const { isAuthenticated } = useAuthStore()
+  const { pathname } = useLocation()
 
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />
+  // Allow callback/verify pages to render even when already "authenticated"
+  // in persisted state — they need to complete their own flows first.
+  const isPassthrough = pathname.startsWith('/auth/')
+
+  if (isAuthenticated && !isPassthrough) return <Navigate to="/dashboard" replace />
 
   return (
     <div

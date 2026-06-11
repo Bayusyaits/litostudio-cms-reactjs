@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/axios'
+import { http } from '@/lib/request'
 import type { ApiResponse } from '@/types/api.types'
 
 export type PageStatus = 'draft' | 'active' | 'inactive' | 'archived'
@@ -55,30 +55,30 @@ export const pagesService = {
     if (params.offset)  q.set('offset',  String(params.offset))
     if (params.status)  q.set('status',  params.status)
     if (params.locale)  q.set('locale',  params.locale)
-    const { data } = await apiClient.get<{ success: boolean; data: Page[]; meta: PageListMeta }>(`${BASE}?${q}`)
+    const data = await http.get<{ success: boolean; data: Page[]; meta: PageListMeta }>(`${BASE}?${q}`)
     return data
   },
 
   async getOne(pageId: string) {
-    const { data } = await apiClient.get<ApiResponse<Page>>(`${BASE}/${pageId}`)
+    const data = await http.get<ApiResponse<Page>>(`${BASE}/${pageId}`)
     return data.data
   },
 
   async create(payload: PageCreateRequest) {
-    const { data } = await apiClient.post<ApiResponse<Page>>(BASE, payload)
+    const data = await http.post<ApiResponse<Page>>(BASE, payload)
     return data.data
   },
 
   async update(pageId: string, payload: Partial<PageCreateRequest>) {
-    const { data } = await apiClient.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, payload)
+    const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, payload)
     return data.data
   },
 
   async remove(pageId: string) {
-    await apiClient.delete(`${BASE}/${pageId}`)
+    await http.delete(`${BASE}/${pageId}`)
   },
 
   async bulkDelete(ids: string[]) {
-    await apiClient.delete(`${BASE}/bulk`, { data: { ids } })
+    await http.delete(`${BASE}/bulk`, { ids })
   },
 }

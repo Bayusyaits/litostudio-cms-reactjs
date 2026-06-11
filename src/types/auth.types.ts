@@ -5,8 +5,13 @@ export interface User {
   email: string
   full_name: string | null
   avatar_url: string | null
+  // org_id and org_role are populated from the sign-in response (org membership
+  // resolved server-side) and may be null for users with no org yet.
   org_id: string | null
-  role: OrgRole | null
+  // Backend sign-in returns `org_role`; older code used `role`. Accept both.
+  org_role?: OrgRole | null
+  /** @deprecated Use org_role instead */
+  role?: OrgRole | null
 }
 
 export interface Organization {
@@ -50,7 +55,14 @@ export interface LoginResponse {
   access_token: string
   refresh_token: string
   expires_at: number
-  user: User
+  user: {
+    id: string
+    email: string
+    full_name: string | null
+    avatar_url: string | null
+    org_id: string | null
+    org_role: OrgRole | null
+  }
 }
 
 // Response from GET /api/v1/auth/session and GET /api/v1/auth/me

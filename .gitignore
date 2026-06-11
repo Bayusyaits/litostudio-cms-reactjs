@@ -45,3 +45,4 @@ test-results/
 src/playwright-report/
 src/blob-report/
 src/test-results/
+dist

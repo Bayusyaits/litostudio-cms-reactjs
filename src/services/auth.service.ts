@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import { apiClient } from '@/lib/axios'
+import { http } from '@/lib/request'
 import type { LoginResponse, SessionResponse } from '@/types/auth.types'
 import type { ApiResponse } from '@/types/api.types'
 
@@ -8,8 +8,7 @@ const BASE = '/api/v1/auth'
 export const authService = {
   /** Email + password login — returns flat response (access_token at top level) */
   async login(email: string, password: string): Promise<LoginResponse> {
-    const { data } = await apiClient.post<LoginResponse>(`${BASE}/sign-in`, { email, password })
-    return data
+    return http.post<LoginResponse>(`${BASE}/sign-in`, { email, password })
   },
 
   /** Register new account — POST /api/v1/auth/sign-up */
@@ -18,17 +17,17 @@ export const authService = {
     password: string
     full_name: string
   }): Promise<{ id: string; email: string; email_confirmed: boolean }> {
-    const { data } = await apiClient.post<ApiResponse<{ id: string; email: string; email_confirmed: boolean }>>(
+    const res = await http.post<ApiResponse<{ id: string; email: string; email_confirmed: boolean }>>(
       `${BASE}/sign-up`,
       params,
     )
-    return data.data
+    return res.data
   },
 
   /** Send forgot-password email */
   async forgotPassword(email: string): Promise<{ message: string }> {
-    const { data } = await apiClient.post<{ success: boolean; message: string }>(`${BASE}/forgot-password`, { email })
-    return { message: data.message }
+    const res = await http.post<{ success: boolean; message: string }>(`${BASE}/forgot-password`, { email })
+    return { message: res.message }
   },
 
   /**
@@ -37,18 +36,18 @@ export const authService = {
    * It is sent as the Authorization Bearer header; only { password } goes in the body.
    */
   async resetPassword(token: string, password: string): Promise<{ message: string }> {
-    const { data } = await apiClient.post<{ success: boolean; message: string }>(
+    const res = await http.post<{ success: boolean; message: string }>(
       `${BASE}/reset-password`,
       { password },
       { headers: { Authorization: `Bearer ${token}` } },
     )
-    return { message: data.message }
+    return { message: res.message }
   },
 
   /** Resend email verification — POST /api/v1/auth/verify-email */
   async verifyEmail(email: string): Promise<{ message: string }> {
-    const { data } = await apiClient.post<{ success: boolean; message: string }>(`${BASE}/verify-email`, { email })
-    return { message: data.message }
+    const res = await http.post<{ success: boolean; message: string }>(`${BASE}/verify-email`, { email })
+    return { message: res.message }
   },
 
   /** Alias for verifyEmail — both map to POST /api/v1/auth/verify-email */
@@ -56,16 +55,46 @@ export const authService = {
     return authService.verifyEmail(email)
   },
 
-  /** Redirect to Google OAuth */
+  /**
+   * Initiate Google OAuth (PKCE flow).
+   * 1. Fetch the OAuth URL + code_verifier from the backend.
+   * 2. Persist the verifier in sessionStorage (callback page retrieves it).
+   * 3. Redirect the browser to Google's OAuth URL.
+   */
   async loginWithGoogle(): Promise<void> {
-    window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:3001'}${BASE}/google`
+    const callbackUrl = `${window.location.origin}/auth/callback`
+    const res = await http.get<{
+      success: boolean
+      data: { url: string; code_verifier: string | null }
+    }>(`${BASE}/google`, { params: { redirect_to: callbackUrl } })
+
+    if (res.data.code_verifier) {
+      sessionStorage.setItem('oauth_code_verifier', res.data.code_verifier)
+    }
+
+    window.location.href = res.data.url
+  },
+
+  /**
+   * Exchange the OAuth authorization code for a session.
+   * Called by the /auth/callback page after Google redirects back.
+   */
+  async exchangeOAuthCode(
+    code: string,
+    codeVerifier: string,
+  ): Promise<{ access_token: string; expires_at: number; user: { id: string; email: string; full_name: string | null; avatar_url: string | null } }> {
+    const res = await http.post<{
+      success: boolean
+      data: { access_token: string; expires_at: number; user: { id: string; email: string; full_name: string | null; avatar_url: string | null } }
+    }>(`${BASE}/exchange-code`, { code, code_verifier: codeVerifier })
+    return res.data
   },
 
   /** Get current session user from cookie-backed token */
   async getSession(): Promise<SessionResponse['data'] | null> {
     try {
-      const { data } = await apiClient.get<SessionResponse>(`${BASE}/session`)
-      return data.data
+      const res = await http.get<SessionResponse>(`${BASE}/session`)
+      return res.data
     } catch {
       return null
     }
@@ -73,12 +102,12 @@ export const authService = {
 
   /** Get current user profile */
   async getMe(): Promise<SessionResponse['data']> {
-    const { data } = await apiClient.get<SessionResponse>(`${BASE}/me`)
-    return data.data
+    const res = await http.get<SessionResponse>(`${BASE}/me`)
+    return res.data
   },
 
   /** Sign out and clear server cookie */
   async signOut(): Promise<void> {
-    await apiClient.post(`${BASE}/sign-out`, {})
+    await http.post(`${BASE}/sign-out`, {})
   },
 }

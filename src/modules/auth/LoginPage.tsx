@@ -23,10 +23,13 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const justRegistered = searchParams.get('registered') === 'true'
+  const oauthError = searchParams.get('error')
 
   const {
     register,
     handleSubmit,
+    setValue,
+    setFocus,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) })
 
@@ -37,6 +40,9 @@ export default function LoginPage() {
       setAuth(result.user, result.access_token, result.expires_at)
       navigate('/dashboard', { replace: true })
     } catch (err) {
+      // Keep email populated, clear only the password field, then refocus it
+      setValue('password', '')
+      setFocus('password')
       setError(getErrorMessage(err))
     }
   }
@@ -54,7 +60,7 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-5">
-      <div>
+      <div className="space-y-1 text-center">
         <h2 className="font-display text-xl font-semibold text-[var(--text-primary)]">
           Sign in to your workspace
         </h2>
@@ -62,6 +68,14 @@ export default function LoginPage() {
           Manage your visual stories and content
         </p>
       </div>
+
+      {oauthError && (
+        <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200" role="alert">
+          <p className="font-body text-xs text-red-600">
+            Google sign-in failed: {oauthError.replace(/_/g, ' ')}. Please try again.
+          </p>
+        </div>
+      )}
 
       {justRegistered && (
         <div className="px-3 py-2 rounded-lg bg-green-50 border border-green-200" role="status">

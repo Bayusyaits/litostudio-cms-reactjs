@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/axios'
+import { http } from '@/lib/request'
 import type { ApiResponse } from '@/types/api.types'
 
 // ── Category ─────────────────────────────────────────────────────────────────
@@ -28,24 +28,24 @@ export const categoryService = {
   async getList(siteId: string, parentId?: string | null) {
     const params = new URLSearchParams({ site_id: siteId, limit: '200' })
     if (parentId !== undefined) params.set('parent_id', parentId ?? '')
-    const { data } = await apiClient.get<{ success: boolean; data: Category[]; total: number }>(
+    const data = await http.get<{ success: boolean; data: Category[]; total: number }>(
       `/api/v1/cms/content/categories?${params}`,
     )
     return data
   },
 
   async create(payload: CategoryCreateRequest) {
-    const { data } = await apiClient.post<ApiResponse<Category>>('/api/v1/cms/content/categories', payload)
+    const data = await http.post<ApiResponse<Category>>('/api/v1/cms/content/categories', payload)
     return data.data
   },
 
   async update(id: string, payload: CategoryUpdateRequest) {
-    const { data } = await apiClient.patch<ApiResponse<Category>>(`/api/v1/cms/content/categories/${id}`, payload)
+    const data = await http.patch<ApiResponse<Category>>(`/api/v1/cms/content/categories/${id}`, payload)
     return data.data
   },
 
   async remove(id: string) {
-    await apiClient.delete(`/api/v1/cms/content/categories/${id}`)
+    await http.delete(`/api/v1/cms/content/categories/${id}`)
   },
 }
 
@@ -69,18 +69,18 @@ export interface TagCreateRequest {
 
 export const tagService = {
   async getList(siteId: string) {
-    const { data } = await apiClient.get<{ success: boolean; data: Tag[]; total: number }>(
+    const data = await http.get<{ success: boolean; data: Tag[]; total: number }>(
       `/api/v1/cms/content/tags?site_id=${siteId}&limit=500`,
     )
     return data
   },
 
   async create(payload: TagCreateRequest) {
-    const { data } = await apiClient.post<ApiResponse<Tag>>('/api/v1/cms/content/tags', payload)
+    const data = await http.post<ApiResponse<Tag>>('/api/v1/cms/content/tags', payload)
     return data.data
   },
 
   async remove(id: string) {
-    await apiClient.delete(`/api/v1/cms/content/tags/${id}`)
+    await http.delete(`/api/v1/cms/content/tags/${id}`)
   },
 }

@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/axios'
+import { http } from '@/lib/request'
 import type { ApiResponse } from '@/types/api.types'
 import type {
   Media,
@@ -21,22 +21,22 @@ export const mediaService = {
         ).toString()
       : ''
     const url = query ? `/api/v1/cms/media?${query}` : '/api/v1/cms/media'
-    const { data } = await apiClient.get<{ success: boolean; data: Media[]; meta: MediaPaginationMeta }>(url)
+    const data = await http.get<{ success: boolean; data: Media[]; meta: MediaPaginationMeta }>(url)
     return data
   },
 
   async presign(payload: MediaPresignRequest) {
-    const { data } = await apiClient.post<MediaPresignResponse>('/api/v1/cms/media/presign', payload)
+    const data = await http.post<MediaPresignResponse>('/api/v1/cms/media/presign', payload)
     return data.data
   },
 
   async confirm(payload: MediaConfirmRequest) {
-    const { data } = await apiClient.post<ApiResponse<Media>>('/api/v1/cms/media/confirm', payload)
+    const data = await http.post<ApiResponse<Media>>('/api/v1/cms/media/confirm', payload)
     return data.data
   },
 
   async remove(mediaId: string) {
-    await apiClient.delete(`/api/v1/cms/media/${mediaId}`)
+    await http.delete(`/api/v1/cms/media/${mediaId}`)
   },
 
   /** Upload a file: presign → PUT to R2 → confirm */

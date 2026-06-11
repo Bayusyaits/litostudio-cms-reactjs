@@ -28,16 +28,15 @@ export default function EmailVerificationPage() {
     formState: { errors, isSubmitting },
   } = useForm<ResendForm>({ resolver: zodResolver(resendSchema) })
 
-  // Auto-verify when token in URL
+  // When a ?token= param is present the user has been redirected here from a
+  // Supabase-sent link (e.g. "resend verification" deep-link).  The token is a
+  // hash, NOT an email address — passing it to verifyEmail() would fail with a
+  // validation error because the endpoint expects an email.
+  // Supabase itself already confirmed the email before redirecting here; we
+  // just need to show a success state.
   useEffect(() => {
     if (!token) return
-    setStatus('verifying')
-    authService.verifyEmail(token)
-      .then(() => setStatus('success'))
-      .catch((err) => {
-        setStatus('error')
-        setMessage(getErrorMessage(err))
-      })
+    setStatus('success')
   }, [token])
 
   const onResend = async (values: ResendForm) => {

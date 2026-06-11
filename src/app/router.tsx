@@ -10,6 +10,8 @@ const RegisterPage          = lazy(() => import('@/modules/auth/RegisterPage'))
 const ForgotPasswordPage    = lazy(() => import('@/modules/auth/ForgotPasswordPage'))
 const ResetPasswordPage     = lazy(() => import('@/modules/auth/ResetPasswordPage'))
 const EmailVerificationPage = lazy(() => import('@/modules/auth/EmailVerificationPage'))
+const OAuthCallbackPage     = lazy(() => import('@/modules/auth/OAuthCallbackPage'))
+const EmailVerifiedPage     = lazy(() => import('@/modules/auth/EmailVerifiedPage'))
 
 // Dashboard pages
 const DashboardPage    = lazy(() => import('@/modules/dashboard/DashboardPageContainer'))
@@ -53,6 +55,9 @@ export const router = createBrowserRouter([
       { path: 'forgot-password',    element: <S><ForgotPasswordPage /></S> },
       { path: 'reset-password',     element: <S><ResetPasswordPage /></S> },
       { path: 'email-verification', element: <S><EmailVerificationPage /></S> },
+      { path: 'auth/callback',      element: <S><OAuthCallbackPage /></S> },
+      // Supabase email confirmation links redirect to /auth/verify
+      { path: 'auth/verify',        element: <S><EmailVerifiedPage /></S> },
     ],
   },
   {

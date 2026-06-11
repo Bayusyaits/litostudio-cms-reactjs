@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/axios'
+import { http } from '@/lib/request'
 import type { ApiResponse } from '@/types/api.types'
 
 export interface Theme {
@@ -70,24 +70,24 @@ export interface SiteThemeUpdateRequest {
 
 export const themeService = {
   async listThemes() {
-    const { data } = await apiClient.get<{ success: boolean; data: Theme[] }>('/api/v1/cms/themes')
+    const data = await http.get<{ success: boolean; data: Theme[] }>('/api/v1/cms/themes')
     return data
   },
 
   async getTheme(themeId: string) {
-    const { data } = await apiClient.get<ApiResponse<Theme>>(`/api/v1/cms/themes/${themeId}`)
+    const data = await http.get<ApiResponse<Theme>>(`/api/v1/cms/themes/${themeId}`)
     return data.data
   },
 
   async getSiteTheme(siteId: string) {
-    const { data } = await apiClient.get<ApiResponse<SiteThemeSettings>>(
+    const data = await http.get<ApiResponse<SiteThemeSettings>>(
       `/api/v1/cms/themes/sites/${siteId}/settings`,
     )
     return data.data
   },
 
   async updateSiteTheme(siteId: string, payload: SiteThemeUpdateRequest) {
-    const { data } = await apiClient.put<ApiResponse<SiteThemeSettings>>(
+    const data = await http.put<ApiResponse<SiteThemeSettings>>(
       `/api/v1/cms/themes/sites/${siteId}/settings`,
       payload,
     )
