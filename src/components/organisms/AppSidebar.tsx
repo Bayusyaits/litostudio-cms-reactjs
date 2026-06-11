@@ -3,7 +3,7 @@ import {
   LayoutDashboard, FileText, BookOpen, Image, Film, MapPin,
   Megaphone, Globe, Settings, Users, BarChart2, Search,
   LogOut, ChevronRight, Tag, Hash, Palette,
-  Package, Layers, MessageSquare, HelpCircle,
+  Package, Layers, MessageSquare, HelpCircle, Puzzle,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
@@ -59,6 +59,7 @@ const NAV: NavSection[] = [
       { label: 'Pages',      icon: Globe,        to: '/pages' },
       { label: 'Navigation', icon: ChevronRight, to: '/navigation' },
       { label: 'Themes',     icon: Palette,      to: '/themes' },
+      { label: 'Add-Ons',    icon: Puzzle,       to: '/addons' },
     ],
   },
   {
