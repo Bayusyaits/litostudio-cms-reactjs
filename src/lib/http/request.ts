@@ -16,7 +16,7 @@ import type { HttpMethod, QueryParams, QueryParamValue, RequestOptions } from '.
 import { HTTP_METHODS } from './types'
 import { TimeoutError, NetworkError } from './errors'
 import { parseResponse } from './response'
-import { getStoredToken, handleUnauthorized } from './auth'
+import { getStoredToken, handleUnauthorized, handleForbidden } from './auth'
 
 // ── Defaults ──────────────────────────────────────────────────────────────
 
@@ -247,6 +247,7 @@ export async function executeRequest<T>(
     }
 
     handleUnauthorized(res.status)
+    handleForbidden(res.status)
     return parseResponse<T>(res, options?.responseType)
   }
 

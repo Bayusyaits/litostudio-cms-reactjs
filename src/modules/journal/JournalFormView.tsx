@@ -33,7 +33,7 @@ export function JournalFormView({ post, isLoading, isSubmitting, isEdit, serverE
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: post
-      ? { title: getTitle(post), slug: post.slug, excerpt: post.translations[0]?.excerpt ?? '', cover_image: post.cover_image ?? '', status: post.status }
+      ? { title: getTitle(post), slug: post.slug, excerpt: post.translations?.[0]?.excerpt ?? '', cover_image: post.cover_image ?? '', status: post.status }
       : { status: 'draft' },
   })
 

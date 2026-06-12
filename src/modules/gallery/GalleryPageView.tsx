@@ -81,7 +81,7 @@ export function GalleryPageView({
                   {item.image_url ? (
                     <img
                       src={item.image_url}
-                      alt={item.translations[0]?.title ?? ''}
+                      alt={item.translations?.[0]?.title ?? ''}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />

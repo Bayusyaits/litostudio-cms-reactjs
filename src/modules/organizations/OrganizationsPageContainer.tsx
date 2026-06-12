@@ -1,6 +1,7 @@
 // apps/cms/src/modules/organizations/OrganizationsPageContainer.tsx
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { orgService } from '@/services/org.service'
 import { useOrgStore } from '@/stores/org.store'
 import { useWebsiteStore } from '@/stores/website.store'
@@ -11,6 +12,7 @@ import { OrgFormModal } from './OrgFormModal'
 
 export default function OrganizationsPageContainer() {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const { org: activeOrg, setOrg } = useOrgStore()
   const { setActiveSite, clearSites } = useWebsiteStore()
   const { user, setUser } = useAuthStore()
@@ -35,6 +37,9 @@ export default function OrganizationsPageContainer() {
       if (!newOrg) return
       qc.invalidateQueries({ queryKey: ['orgs'] })
 
+      // Track whether this is the user's first org (for post-create redirect)
+      const isFirstOrg = !activeOrg
+
       // Auto-select the newly created org
       setOrg(newOrg)
       clearSites()
@@ -48,6 +53,12 @@ export default function OrganizationsPageContainer() {
       })
 
       setModalOrg(undefined)
+
+      // First-time org creation: redirect to dashboard so the user can start
+      // managing content. Subsequent org additions stay on /organizations.
+      if (isFirstOrg) {
+        navigate('/dashboard', { replace: true })
+      }
     },
   })
 

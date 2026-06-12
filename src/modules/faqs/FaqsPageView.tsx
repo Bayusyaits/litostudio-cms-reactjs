@@ -8,11 +8,11 @@ import type { Column } from '@/components/molecules/DataTable/types'
 import type { Faq } from '@/types/content.types'
 
 function getFaqQuestion(faq: Faq): string {
-  return faq.translations[0]?.question ?? faq.translations[0]?.title ?? faq.slug ?? '—'
+  return faq.translations?.[0]?.question ?? faq.translations?.[0]?.title ?? faq.slug ?? '—'
 }
 
 function getFaqAnswer(faq: Faq): string | undefined {
-  return faq.translations[0]?.answer ?? faq.translations[0]?.excerpt
+  return faq.translations?.[0]?.answer ?? faq.translations?.[0]?.excerpt
 }
 
 interface Filter {

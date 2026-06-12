@@ -1,15 +1,26 @@
-import { Outlet, Navigate, useLocation } from 'react-router-dom'
+import { Outlet, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth.store'
 
 export function AuthLayout() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, _hasHydrated } = useAuthStore()
   const { pathname } = useLocation()
+  const [searchParams] = useSearchParams()
 
   // Allow callback/verify pages to render even when already "authenticated"
   // in persisted state — they need to complete their own flows first.
   const isPassthrough = pathname.startsWith('/auth/')
 
-  if (isAuthenticated && !isPassthrough) return <Navigate to="/dashboard" replace />
+  // Wait for Zustand persist to rehydrate before redirecting.
+  // Without this, a freshly-loaded page would see isAuthenticated=false,
+  // stay on /login, then immediately flip to true and redirect — causing a flash.
+  if (!_hasHydrated) return null
+
+  if (isAuthenticated && !isPassthrough) {
+    // If returnTo param exists, respect it — otherwise go to /dashboard
+    const returnTo = searchParams.get('returnTo')
+    const dest = returnTo?.startsWith('/') ? decodeURIComponent(returnTo) : '/dashboard'
+    return <Navigate to={dest} replace />
+  }
 
   return (
     <div

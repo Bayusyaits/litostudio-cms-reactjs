@@ -54,7 +54,7 @@ export function StoryFormView({
       ? {
           title:       getTitle(story),
           slug:        story.slug,
-          excerpt:     story.translations[0]?.excerpt ?? '',
+          excerpt:     story.translations?.[0]?.excerpt ?? '',
           content:     '',
           location:    story.location ?? '',
           cover_image: story.cover_image ?? '',

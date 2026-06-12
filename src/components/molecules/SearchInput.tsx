@@ -16,7 +16,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', classN
   return (
     <div className={cn('relative flex items-center', className)}>
       <Search
-        className="absolute left-3 w-3.5 h-3.5 text-[var(--text-muted)] pointer-events-none"
+        className="absolute right-3 w-3.5 h-3.5 text-[var(--text-muted)] pointer-events-none"
         aria-hidden
       />
       <input

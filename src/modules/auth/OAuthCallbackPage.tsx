@@ -57,7 +57,12 @@ export default function OAuthCallbackPage() {
           result.access_token,
           result.expires_at,
         )
-        navigate('/dashboard', { replace: true })
+        // Restore the page the user was trying to reach before Google OAuth.
+        // Stored in sessionStorage by LoginPage before the external redirect.
+        const returnTo = sessionStorage.getItem('oauth_return_to')
+        sessionStorage.removeItem('oauth_return_to')
+        const dest = returnTo?.startsWith('/') ? returnTo : '/dashboard'
+        navigate(dest, { replace: true })
       } catch (err) {
         console.error('OAuth exchange failed:', err)
         navigate('/login?error=exchange_failed', { replace: true })

@@ -4,6 +4,8 @@ import {
   Megaphone, Globe, Settings, Users, BarChart2, Search,
   LogOut, ChevronRight, Tag, Hash, Palette,
   Package, Layers, MessageSquare, HelpCircle, Puzzle,
+  Briefcase, Quote, DollarSign, Tv2, MessageCircle,
+  ShoppingBag, Mail, Inbox,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
@@ -37,13 +39,25 @@ const NAV: NavSection[] = [
     items: [
       { label: 'Products',    icon: Package,       to: '/products' },
       { label: 'Collections', icon: Layers,        to: '/collections' },
+      { label: 'Orders',      icon: ShoppingBag,   to: '/orders' },
       { label: 'Reviews',     icon: MessageSquare, to: '/reviews' },
     ],
   },
   {
-    section: 'Support',
+    section: 'Services',
     items: [
-      { label: 'FAQs', icon: HelpCircle, to: '/faqs' },
+      { label: 'Services',      icon: Briefcase,    to: '/services' },
+      { label: 'Testimonials',  icon: Quote,        to: '/testimonials' },
+      { label: 'Pricing',       icon: DollarSign,   to: '/pricing' },
+    ],
+  },
+  {
+    section: 'Engagement',
+    items: [
+      { label: 'Messages',    icon: Inbox,         to: '/messages' },
+      { label: 'Newsletter',  icon: Mail,          to: '/newsletter' },
+      { label: 'FAQs',        icon: HelpCircle,    to: '/faqs' },
+      { label: 'Comments',    icon: MessageCircle, to: '/comments' },
     ],
   },
   {
@@ -56,10 +70,11 @@ const NAV: NavSection[] = [
   {
     section: 'Website',
     items: [
-      { label: 'Pages',      icon: Globe,        to: '/pages' },
-      { label: 'Navigation', icon: ChevronRight, to: '/navigation' },
-      { label: 'Themes',     icon: Palette,      to: '/themes' },
-      { label: 'Add-Ons',    icon: Puzzle,       to: '/addons' },
+      { label: 'Hero Slides', icon: Tv2,          to: '/hero' },
+      { label: 'Pages',       icon: Globe,        to: '/pages' },
+      { label: 'Navigation',  icon: ChevronRight, to: '/navigation' },
+      { label: 'Themes',      icon: Palette,      to: '/themes' },
+      { label: 'Add-Ons',     icon: Puzzle,       to: '/addons' },
     ],
   },
   {

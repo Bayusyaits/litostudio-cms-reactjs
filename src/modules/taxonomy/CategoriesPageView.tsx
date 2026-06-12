@@ -24,7 +24,7 @@ function CategoryRow({ cat, onDelete }: { cat: Category; onDelete: (id: string) 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <FolderOpen size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
           <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)' }}>
-            {cat.translations[0]?.name ?? cat.slug}
+            {cat.translations?.[0]?.name ?? cat.slug}
           </span>
         </div>
       </td>

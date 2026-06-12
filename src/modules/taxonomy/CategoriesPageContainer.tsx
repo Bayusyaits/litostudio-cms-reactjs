@@ -28,7 +28,7 @@ export default function CategoriesPageContainer() {
   })
 
   const categories = (data?.data ?? []).filter(c =>
-    search ? c.translations[0]?.name?.toLowerCase().includes(search.toLowerCase()) : true,
+    search ? c.translations?.[0]?.name?.toLowerCase().includes(search.toLowerCase()) : true,
   )
 
   return (

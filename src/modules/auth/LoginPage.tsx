@@ -24,6 +24,8 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams()
   const justRegistered = searchParams.get('registered') === 'true'
   const oauthError = searchParams.get('error')
+  // Preserve the page the user was trying to reach before session expired
+  const returnToParam = searchParams.get('returnTo')
 
   const {
     register,
@@ -38,7 +40,12 @@ export default function LoginPage() {
     try {
       const result = await authService.login(values.email, values.password)
       setAuth(result.user, result.access_token, result.expires_at)
-      navigate('/dashboard', { replace: true })
+      // Navigate back to the page the user was on before session expired.
+      // Validate the returnTo is a local path to prevent open-redirect attacks.
+      const dest = returnToParam?.startsWith('/')
+        ? decodeURIComponent(returnToParam)
+        : '/dashboard'
+      navigate(dest, { replace: true })
     } catch (err) {
       // Keep email populated, clear only the password field, then refocus it
       setValue('password', '')
@@ -51,6 +58,13 @@ export default function LoginPage() {
     setGoogleLoading(true)
     setError(null)
     try {
+      // Persist returnTo across the OAuth redirect (external round-trip to Google)
+      // OAuthCallbackPage reads this key and navigates there after exchange.
+      if (returnToParam?.startsWith('/')) {
+        sessionStorage.setItem('oauth_return_to', returnToParam)
+      } else {
+        sessionStorage.removeItem('oauth_return_to')
+      }
       await authService.loginWithGoogle()
     } catch (err) {
       setError(getErrorMessage(err))

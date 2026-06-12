@@ -7,6 +7,8 @@
  */
 
 import Cookies from 'js-cookie'
+// evictSession is a plain function (not a hook) — safe to call from here
+import { evictSession } from '@/stores/auth.store'
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
@@ -78,11 +80,14 @@ export function removeStoredToken(): void {
   Cookies.remove(SESSION_COOKIE)
 }
 
-// ── 401 handler ───────────────────────────────────────────────────────────
+// ── 401 / 403 handlers ────────────────────────────────────────────────────
 
 /**
  * Evict the session and redirect to /login when a 401 occurs on a
  * protected (non-auth) page.
+ *
+ * Preserves the current path as `?returnTo=` so LoginPage can navigate
+ * back after successful authentication.
  *
  * Safe during SSR — no-ops when window is unavailable.
  */
@@ -90,6 +95,21 @@ export function handleUnauthorized(status: number): void {
   if (status !== 401) return
   if (isAuthPage()) return
   if (typeof window === 'undefined') return
-  removeStoredToken()
-  window.location.href = '/login'
+  // Use evictSession instead of only removing the cookie.
+  // evictSession also clears Zustand localStorage keys, which prevents
+  // the auth loop: without this, isAuthenticated=true rehydrates on reload
+  // → protected page loads → 401 → eviction → reload → isAuthenticated=true → ∞
+  const returnTo = encodeURIComponent(window.location.pathname + window.location.search)
+  evictSession(`/login?returnTo=${returnTo}`)
+}
+
+/**
+ * Redirect to /unauthorized when a 403 occurs on a protected page.
+ *
+ * Safe during SSR — no-ops when window is unavailable.
+ */
+export function handleForbidden(status: number): void {
+  if (status !== 403) return
+  if (typeof window === 'undefined') return
+  window.location.href = '/unauthorized'
 }

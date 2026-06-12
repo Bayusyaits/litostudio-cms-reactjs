@@ -238,6 +238,174 @@ export interface FaqCreateRequest {
 
 export interface FaqUpdateRequest extends Partial<FaqCreateRequest> {}
 
+// ── Service ───────────────────────────────────────────────────────────────
+
+export interface Service {
+  id: string
+  site_id: string
+  slug: string
+  category: string | null
+  cover_image: string | null
+  price: number | null
+  currency: string | null
+  duration: string | null
+  sort_order: number
+  is_featured: boolean
+  status: ContentStatus
+  published_at: string | null
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface ServiceCreateRequest {
+  site_id?: string
+  slug: string
+  category?: string
+  cover_image?: string
+  price?: number
+  currency?: string
+  duration?: string
+  sort_order?: number
+  is_featured?: boolean
+  status?: ContentStatus
+  translation: { locale: string; title: string; excerpt?: string; body?: unknown }
+}
+
+export interface ServiceUpdateRequest extends Partial<ServiceCreateRequest> {}
+
+// ── Testimonial ───────────────────────────────────────────────────────────
+
+export interface Testimonial {
+  id: string
+  site_id: string
+  slug: string
+  author_name: string
+  author_title: string | null
+  author_company: string | null
+  author_avatar: string | null
+  service_type: string | null
+  rating: number | null
+  sort_order: number
+  is_featured: boolean
+  status: ContentStatus
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface TestimonialCreateRequest {
+  site_id?: string
+  slug: string
+  author_name: string
+  author_title?: string
+  author_company?: string
+  author_avatar?: string
+  service_type?: string
+  rating?: number
+  sort_order?: number
+  is_featured?: boolean
+  status?: ContentStatus
+  translation: { locale: string; title?: string; body?: unknown }
+}
+
+export interface TestimonialUpdateRequest extends Partial<TestimonialCreateRequest> {}
+
+// ── Pricing Package ───────────────────────────────────────────────────────
+
+export interface PricingPackage {
+  id: string
+  site_id: string
+  slug: string
+  service_id: string | null
+  price: number | null
+  price_max: number | null
+  currency: string | null
+  billing_period: string | null
+  sort_order: number
+  is_featured: boolean
+  is_popular: boolean
+  status: ContentStatus
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface PricingCreateRequest {
+  site_id?: string
+  slug: string
+  service_id?: string
+  price?: number
+  price_max?: number
+  currency?: string
+  billing_period?: string
+  sort_order?: number
+  is_featured?: boolean
+  is_popular?: boolean
+  status?: ContentStatus
+  translation: { locale: string; title: string; excerpt?: string; body?: unknown }
+}
+
+export interface PricingUpdateRequest extends Partial<PricingCreateRequest> {}
+
+// ── Hero Slide ────────────────────────────────────────────────────────────
+
+export interface HeroSlide {
+  id: string
+  site_id: string
+  slug: string
+  image_url: string | null
+  video_url: string | null
+  cta_url: string | null
+  cta_label: string | null
+  sort_order: number
+  is_active: boolean
+  status: ContentStatus
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface HeroSlideCreateRequest {
+  site_id?: string
+  slug: string
+  image_url?: string
+  video_url?: string
+  cta_url?: string
+  cta_label?: string
+  sort_order?: number
+  is_active?: boolean
+  status?: ContentStatus
+  translation: { locale: string; title: string; excerpt?: string }
+}
+
+export interface HeroSlideUpdateRequest extends Partial<HeroSlideCreateRequest> {}
+
+// ── Comment ───────────────────────────────────────────────────────────────
+
+export type CommentStatus = 'pending' | 'approved' | 'rejected' | 'spam'
+
+export interface Comment {
+  id: string
+  site_id: string
+  entity_type: string
+  entity_id: string
+  parent_id: string | null
+  author_name: string
+  author_email: string | null
+  author_avatar: string | null
+  body: string
+  reply_count: number
+  status: CommentStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface CommentUpdateRequest {
+  status?: CommentStatus
+  body?: string
+}
+
 // ── Category / Tag ────────────────────────────────────────────────────────
 
 export interface Category {
@@ -265,16 +433,16 @@ export interface Tag {
 // ── Translation helpers ────────────────────────────────────────────────────
 
 /** Get the first translation's title, falling back to slug */
-export function getTitle(item: { translations: { title?: string }[]; slug?: string }): string {
-  return item.translations[0]?.title ?? item.slug ?? '—'
+export function getTitle(item: { translations?: { title?: string }[] | null; slug?: string }): string {
+  return item.translations?.[0]?.title ?? item.slug ?? '—'
 }
 
 /** Get the first translation's excerpt */
-export function getExcerpt(item: { translations: { excerpt?: string }[] }): string | undefined {
-  return item.translations[0]?.excerpt
+export function getExcerpt(item: { translations?: { excerpt?: string }[] | null }): string | undefined {
+  return item.translations?.[0]?.excerpt
 }
 
 /** Get Destination display name from translations */
-export function getDestName(item: { translations: (Translation & { name?: string })[]; slug?: string }): string {
-  return item.translations[0]?.name ?? item.translations[0]?.title ?? item.slug ?? '—'
+export function getDestName(item: { translations?: (Translation & { name?: string })[] | null; slug?: string }): string {
+  return item.translations?.[0]?.name ?? item.translations?.[0]?.title ?? item.slug ?? '—'
 }
