@@ -1,0 +1,131 @@
+/**
+ * EditorShell — full-screen frame: toolbar + left sidebar + canvas + right sidebar.
+ * Handles keyboard shortcuts (⌘Z, ⌘⇧Z, ⌘S) and auto-save.
+ *
+ * Generic: callers supply saveFn/publishFn so the shell is reusable across
+ * pages, stories, journal, services, destinations, etc.
+ */
+
+import { useEffect, useCallback } from 'react'
+import { EditorToolbar }      from './EditorToolbar'
+import { EditorLeftSidebar }  from './EditorLeftSidebar'
+import { EditorCanvas }       from './EditorCanvas'
+import { EditorRightSidebar } from './EditorRightSidebar'
+import { EditorAiPanel }      from './EditorAiPanel'
+import { useEditorStore }     from '@/stores/editor.store'
+
+interface EditorShellProps {
+  /** Title shown in the toolbar save-status area */
+  pageTitle:   string
+  /** Slug used to build the preview URL */
+  pageSlug?:   string
+  /**
+   * Called when the user saves. Must handle setting saveStatus via
+   * setSaveStatus / markClean from useEditorStore.
+   */
+  saveFn:      () => Promise<void>
+  /**
+   * Called when the user publishes (Publish button).
+   * Default behaviour: call saveFn then do nothing more — callers should
+   * override to also set content status to 'active'.
+   */
+  publishFn?:  () => Promise<void>
+}
+
+export function EditorShell({ pageTitle, pageSlug, saveFn, publishFn }: EditorShellProps) {
+  const {
+    undo, redo, canUndo, canRedo,
+    isDirty, setSaveStatus, markClean,
+    leftSidebarOpen, rightSidebarOpen, aiPanelOpen,
+  } = useEditorStore()
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+
+  const handleSave = useCallback(async () => {
+    if (!isDirty) return
+    setSaveStatus('saving')
+    try {
+      await saveFn()
+      markClean()
+    } catch {
+      setSaveStatus('error')
+    }
+  }, [isDirty, saveFn, setSaveStatus, markClean])
+
+  // ── Publish ───────────────────────────────────────────────────────────────
+
+  const handlePublish = useCallback(async () => {
+    setSaveStatus('saving')
+    try {
+      if (publishFn) {
+        await publishFn()
+      } else {
+        await saveFn()
+      }
+      markClean()
+    } catch {
+      setSaveStatus('error')
+    }
+  }, [publishFn, saveFn, setSaveStatus, markClean])
+
+  // ── Preview ───────────────────────────────────────────────────────────────
+
+  const handlePreview = useCallback(() => {
+    const base = (import.meta.env.VITE_WEBSITE_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+    window.open(`${base}/${pageSlug ?? ''}?preview=1`, '_blank', 'noopener,noreferrer')
+  }, [pageSlug])
+
+  // ── Keyboard shortcuts ────────────────────────────────────────────────────
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const isMac = /Mac/i.test(navigator.platform)
+      const mod   = isMac ? e.metaKey : e.ctrlKey
+
+      if (mod && e.key === 'z' && !e.shiftKey) { e.preventDefault(); if (canUndo()) undo() }
+      if (mod && e.key === 'z' && e.shiftKey)  { e.preventDefault(); if (canRedo()) redo() }
+      if (mod && e.key === 'y')                 { e.preventDefault(); if (canRedo()) redo() }
+      if (mod && e.key === 's')                 { e.preventDefault(); void handleSave() }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [canUndo, canRedo, undo, redo, handleSave])
+
+  // ── Warn on unload ────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [isDirty])
+
+  // ── Layout ────────────────────────────────────────────────────────────────
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      height: '100%', width: '100%', overflow: 'hidden',
+      background: 'var(--cms-main-bg)',
+    }}>
+      <EditorToolbar
+        pageTitle={pageTitle}
+        onSave={() => void handleSave()}
+        onPublish={handlePublish}
+        onPreview={handlePreview}
+      />
+
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+        {leftSidebarOpen && <EditorLeftSidebar />}
+        <EditorCanvas />
+        {rightSidebarOpen && <EditorRightSidebar />}
+      </div>
+
+      {aiPanelOpen && <EditorAiPanel />}
+    </div>
+  )
+}
