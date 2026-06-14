@@ -17,6 +17,7 @@ import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
+import { FormField, TextAreaField } from '@/components/molecules/FormField'
 import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroStatus } from '@/types/content.types'
 import { heroService } from '@/services/content.service'
 import { draftMediaStore } from '@/stores/draftMedia.store'
@@ -24,10 +25,10 @@ import { draftMediaStore } from '@/stores/draftMedia.store'
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  slide?: HeroSlide          // undefined = create mode
-  siteId: string
-  onClose: () => void
-  onSaved: () => void
+  readonly slide?: HeroSlide
+  readonly siteId: string
+  readonly onClose: () => void
+  readonly onSaved: () => void
 }
 
 interface TranslationDraft {
@@ -118,6 +119,20 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
     }))
   }
 
+  async function upsertAllTranslations(contentItemId: string) {
+    for (const locale of LOCALES) {
+      const t = translations[locale]
+      await heroService.upsertTranslation(contentItemId, locale, {
+        title:    t.title,
+        subtitle: t.subtitle,
+        // description form field → excerpt column
+        excerpt:  t.description,
+        // cta_label + category → extra JSONB in content_translations
+        extra: { cta_label: t.cta_label, category: t.category },
+      })
+    }
+  }
+
   async function handleSave() {
     setError(null)
     if (!coverImage.trim()) {
@@ -126,37 +141,20 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
     }
     setSaving(true)
     try {
-      // Resolve any blob: URL to a real CDN URL before saving
       const resolvedCoverImage = await draftMediaStore.resolveUrl(coverImage)
 
       if (isEdit) {
-        // 1. Update core fields — mapped to content_items columns
         const updatePayload: HeroSlideUpdateRequest = {
           cover_image: resolvedCoverImage,
           location:    location || undefined,
           region:      region || undefined,
           sort_order:  sortOrder,
           status,
-          // href stored in extra JSONB
-          extra: { ...(slide!.extra ?? {}), href: href || undefined },
+          extra: { ...slide?.extra, href: href || undefined },
         }
-        await heroService.update(slide!.id, updatePayload)
-
-        // 2. Upsert translations — mapped to content_translations columns
-        for (const locale of LOCALES) {
-          const t = translations[locale]
-          await heroService.upsertTranslation(slide!.id, locale, {
-            title:    t.title,
-            subtitle: t.subtitle,
-            // description form field → excerpt column
-            excerpt:  t.description,
-            // cta_label + category → extra JSONB in content_translations
-            extra: { cta_label: t.cta_label, category: t.category },
-          })
-        }
+        await heroService.update(slide.id, updatePayload)
+        await upsertAllTranslations(slide.id)
       } else {
-        // 1. Create slide — mapped to content_items POST body
-        // slug is required; generate a unique one for hero slides
         const createPayload: HeroSlideCreateRequest = {
           site_id:     siteId,
           slug:        generateHeroSlug(sortOrder),
@@ -171,21 +169,14 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
         const created = await heroService.create(createPayload)
         if (!created) throw new Error('Create returned no data')
 
-        // 2. Upsert translations
         const createdId = (created as { id: string }).id
-        for (const locale of LOCALES) {
+        const hasSomeTranslation = LOCALES.some(locale => {
           const t = translations[locale]
-          if (t.title || t.subtitle || t.description || t.cta_label) {
-            await heroService.upsertTranslation(createdId, locale, {
-              title:    t.title,
-              subtitle: t.subtitle,
-              excerpt:  t.description,
-              extra: { cta_label: t.cta_label, category: t.category },
-            })
-          }
-        }
+          return t.title || t.subtitle || t.description || t.cta_label
+        })
+        if (hasSomeTranslation) await upsertAllTranslations(createdId)
       }
-      // Sync local state to the resolved CDN URL (avoids stale blob on re-open)
+
       setCoverImage(resolvedCoverImage)
       onSaved()
     } catch (err) {
@@ -197,15 +188,16 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
   }
 
   const t = translations[activeLocale] ?? emptyTranslation(activeLocale)
+  const idleLabel = isEdit ? 'Save Changes' : 'Create Slide'
+  const saveButtonLabel = saving ? 'Saving…' : idleLabel
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      role="dialog"
-      aria-modal="true"
-      aria-label={isEdit ? 'Edit Hero Slide' : 'New Hero Slide'}
-    >
-      <div className="bg-[var(--cms-card-bg)] rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <dialog
+        open
+        className="bg-[var(--cms-card-bg)] rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border-0 p-0"
+        aria-label={isEdit ? 'Edit Hero Slide' : 'New Hero Slide'}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--lito-border)]">
           <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
@@ -223,9 +215,9 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
         <div className="p-6 space-y-6">
           {/* Image */}
           <div>
-            <label className="block font-body text-sm font-medium text-[var(--text-primary)] mb-2">
+            <p className="font-body text-sm font-medium text-[var(--text-primary)] mb-2">
               Slide Image <span className="text-red-500">*</span>
-            </label>
+            </p>
             <ImageUploader
               value={coverImage || null}
               onChange={(url) => setCoverImage(url ?? '')}
@@ -233,67 +225,46 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
             />
           </div>
 
-          {/* Core fields row */}
+          {/* Core fields */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-body text-sm font-medium text-[var(--text-primary)] mb-1">
-                Link URL (href)
-              </label>
-              <input
-                type="url"
-                value={href}
-                onChange={(e) => setHref(e.target.value)}
-                placeholder="https://example.com/page"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
-              />
-            </div>
-            <div>
-              <label className="block font-body text-sm font-medium text-[var(--text-primary)] mb-1">
-                Sort Order
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={sortOrder}
-                onChange={(e) => setSortOrder(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
-              />
-            </div>
-            <div>
-              <label className="block font-body text-sm font-medium text-[var(--text-primary)] mb-1">
-                Location
-              </label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Bali, Indonesia"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
-              />
-            </div>
-            <div>
-              <label className="block font-body text-sm font-medium text-[var(--text-primary)] mb-1">
-                Region
-              </label>
-              <input
-                type="text"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                placeholder="e.g. Southeast Asia"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
-              />
-            </div>
+            <FormField
+              label="Link URL (href)"
+              type="url"
+              value={href}
+              onChange={(e) => setHref(e.target.value)}
+              placeholder="https://example.com/page"
+            />
+            <FormField
+              label="Sort Order"
+              type="number"
+              min={0}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(Number(e.target.value))}
+            />
+            <FormField
+              label="Location"
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. Bali, Indonesia"
+            />
+            <FormField
+              label="Region"
+              type="text"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              placeholder="e.g. Southeast Asia"
+            />
           </div>
 
           {/* Status */}
-          <div>
-            <label className="block font-body text-sm font-medium text-[var(--text-primary)] mb-1">
-              Status
-            </label>
+          <div className="cms-field-wrapper">
+            <label htmlFor="hero-status" className="cms-label">Status</label>
             <select
+              id="hero-status"
               value={status}
               onChange={(e) => setStatus(e.target.value as HeroStatus)}
-              className="px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
+              className="cms-input"
             >
               {STATUS_OPTIONS.map(s => (
                 <option key={s} value={s}>
@@ -324,57 +295,42 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
               </div>
             </div>
             <div className="space-y-3">
-              <div>
-                <label className="block font-body text-xs text-[var(--text-muted)] mb-1">Title</label>
-                <input
-                  type="text"
-                  value={t.title}
-                  onChange={(e) => updateTranslation(activeLocale, 'title', e.target.value)}
-                  placeholder="Slide headline"
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
-                />
-              </div>
-              <div>
-                <label className="block font-body text-xs text-[var(--text-muted)] mb-1">Subtitle</label>
-                <input
-                  type="text"
-                  value={t.subtitle}
-                  onChange={(e) => updateTranslation(activeLocale, 'subtitle', e.target.value)}
-                  placeholder="Supporting text"
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
-                />
-              </div>
-              <div>
-                <label className="block font-body text-xs text-[var(--text-muted)] mb-1">Description</label>
-                <textarea
-                  value={t.description}
-                  onChange={(e) => updateTranslation(activeLocale, 'description', e.target.value)}
-                  placeholder="Optional longer description"
-                  rows={3}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)] resize-none"
-                />
-              </div>
+              <FormField
+                label="Title"
+                type="text"
+                value={t.title}
+                onChange={(e) => updateTranslation(activeLocale, 'title', e.target.value)}
+                placeholder="Slide headline"
+              />
+              <FormField
+                label="Subtitle"
+                type="text"
+                value={t.subtitle}
+                onChange={(e) => updateTranslation(activeLocale, 'subtitle', e.target.value)}
+                placeholder="Supporting text"
+              />
+              <TextAreaField
+                label="Description"
+                value={t.description}
+                onChange={(e) => updateTranslation(activeLocale, 'description', e.target.value)}
+                placeholder="Optional longer description"
+                rows={3}
+              />
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-body text-xs text-[var(--text-muted)] mb-1">CTA Label</label>
-                  <input
-                    type="text"
-                    value={t.cta_label}
-                    onChange={(e) => updateTranslation(activeLocale, 'cta_label', e.target.value)}
-                    placeholder="e.g. Explore Now"
-                    className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-body text-xs text-[var(--text-muted)] mb-1">Category</label>
-                  <input
-                    type="text"
-                    value={t.category}
-                    onChange={(e) => updateTranslation(activeLocale, 'category', e.target.value)}
-                    placeholder="e.g. Adventure"
-                    className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
-                  />
-                </div>
+                <FormField
+                  label="CTA Label"
+                  type="text"
+                  value={t.cta_label}
+                  onChange={(e) => updateTranslation(activeLocale, 'cta_label', e.target.value)}
+                  placeholder="e.g. Explore Now"
+                />
+                <FormField
+                  label="Category"
+                  type="text"
+                  value={t.category}
+                  onChange={(e) => updateTranslation(activeLocale, 'category', e.target.value)}
+                  placeholder="e.g. Adventure"
+                />
               </div>
             </div>
           </div>
@@ -394,10 +350,10 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
           </Button>
           <Button onClick={handleSave} disabled={saving || !coverImage.trim()}>
             <Save className="w-4 h-4 mr-1.5" />
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Slide'}
+            {saveButtonLabel}
           </Button>
         </div>
-      </div>
+      </dialog>
     </div>
   )
 }

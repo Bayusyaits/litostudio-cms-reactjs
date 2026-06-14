@@ -13,7 +13,6 @@ const MODULES = [
   { key: 'stories',     label: 'Stories',     siteScoped: true },
   { key: 'journal',     label: 'Journal',     siteScoped: true },
   { key: 'faqs',        label: 'FAQs',        siteScoped: true },
-  { key: 'navigation',  label: 'Navigation',  siteScoped: true },
 ]
 
 interface ImportResult {
