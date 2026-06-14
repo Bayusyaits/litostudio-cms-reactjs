@@ -146,7 +146,7 @@ export function DashboardPageView({ stats, recent, loading, org: _org, site: _si
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
           <QuickActionCard icon={FileText}  iconBg="rgba(26,74,90,0.10)"   iconColor="var(--lito-teal)" title="New Story"       desc="Write & publish a story" to="/stories/new" />
           <QuickActionCard icon={Image}     iconBg="rgba(212,168,83,0.12)" iconColor="var(--lito-gold)" title="Upload Media"    desc="Add photos & videos"     to="/media" />
-          <QuickActionCard icon={Globe}     iconBg="rgba(212,168,83,0.08)" iconColor="var(--lito-gold-deep)" title="Navigation" desc="Edit site menus"          to="/navigation" />
+          <QuickActionCard icon={Globe}     iconBg="rgba(26,74,90,0.08)"   iconColor="var(--lito-teal)"      title="Pages"      desc="Manage pages & menu"     to="/pages" />
           <QuickActionCard icon={BookOpen}  iconBg="rgba(17,17,17,0.06)"   iconColor="var(--text-muted)" title="SEO Overview"  desc="Check search performance" to="/seo" />
         </div>
       </div>

@@ -29,7 +29,6 @@ const SettingsPage     = lazy(() => import('@/modules/settings/SettingsPageConta
 const CategoriesPage   = lazy(() => import('@/modules/taxonomy/CategoriesPageContainer'))
 const TagsPage         = lazy(() => import('@/modules/taxonomy/TagsPageContainer'))
 const ThemesPage       = lazy(() => import('@/modules/themes/ThemesPageContainer'))
-const NavigationPage   = lazy(() => import('@/modules/navigation/NavigationPageContainer'))
 const PagesPage        = lazy(() => import('@/modules/pages/PagesPageContainer'))
 const PagesNewPage     = lazy(() => import('@/modules/pages/PagesNewPageContainer'))
 const ProductsPage     = lazy(() => import('@/modules/products/ProductsPageContainer'))
@@ -119,8 +118,6 @@ export const router = createBrowserRouter([
       { path: 'categories',        element: <S><CategoriesPage /></S> },
       { path: 'tags',              element: <S><TagsPage /></S> },
       { path: 'themes',            element: <S><ThemesPage /></S> },
-      { path: 'navigation',        element: <S><NavigationPage /></S> },
-
       // Pages (BlockEditorPage is kept — used here only)
       { path: 'pages',             element: <S><PagesPage /></S> },
       { path: 'pages/new',         element: <S><PagesNewPage /></S> },

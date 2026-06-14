@@ -17,6 +17,11 @@ function buildParams(params: ListParams & { site_id?: string }): Record<string, 
   return q
 }
 
+/**
+ * Generic CRUD service for a named backend path.
+ * Used by modules with their own dedicated backend routes
+ * (e.g. /products, /collections, /feedbacks, /campaigns).
+ */
 function createContentService<Entity, CreateDTO, UpdateDTO>(basePath: string) {
   return {
     async getList(params?: ListParams & { site_id?: string }) {
@@ -62,21 +67,97 @@ function createContentService<Entity, CreateDTO, UpdateDTO>(basePath: string) {
   }
 }
 
-// ── Module-specific services ──────────────────────────────────────────────
+/**
+ * Service factory for content types stored in the unified `content_items` table.
+ * All data lives at /api/v1/cms/content/items with a `type` query param.
+ *
+ * - GET list:   injects `type=<contentType>` automatically
+ * - POST:       injects `content_type: <contentType>` into the body
+ * - PATCH/PUT/DELETE: use item ID — no type injection needed
+ *
+ * Correct for: story, journal, gallery, destination, hero
+ */
+function createContentItemService<Entity, CreateDTO, UpdateDTO>(contentType: string) {
+  const BASE = '/api/v1/cms/content/items'
 
-export const storiesService       = createContentService<Story,          StoryCreateRequest,        StoryUpdateRequest>(        '/api/v1/cms/content/stories')
-export const journalService       = createContentService<JournalPost,    JournalCreateRequest,      JournalUpdateRequest>(      '/api/v1/cms/content/journal')
-export const galleryService       = createContentService<GalleryItem,    GalleryCreateRequest,      GalleryUpdateRequest>(      '/api/v1/cms/content/gallery')
-export const destinationsService  = createContentService<Destination,    Record<string,unknown>,    Record<string,unknown>>(    '/api/v1/cms/content/destinations')
+  return {
+    async getList(params?: ListParams & { site_id?: string }) {
+      const q = buildParams(params ?? {})
+      q.type = contentType
+      const url = `${BASE}?${new URLSearchParams(q).toString()}`
+      const data = await http.get<PaginatedResponse<Entity>>(url)
+      return data
+    },
+
+    async getById(id: string) {
+      const data = await http.get<ApiResponse<Entity>>(`${BASE}/${id}`)
+      return data.data
+    },
+
+    async create(payload: CreateDTO) {
+      const data = await http.post<ApiResponse<Entity>>(BASE, { ...(payload as Record<string, unknown>), content_type: contentType })
+      return data.data
+    },
+
+    async update(id: string, payload: UpdateDTO) {
+      const data = await http.patch<ApiResponse<Entity>>(`${BASE}/${id}`, payload)
+      return data.data
+    },
+
+    async remove(id: string) {
+      await http.delete(`${BASE}/${id}`)
+    },
+
+    async bulkUpdate(payload: BulkUpdateRequest) {
+      const data = await http.patch<BulkUpdateResponse>(`${BASE}/bulk`, payload)
+      return data
+    },
+
+    async bulkDelete(payload: BulkDeleteRequest) {
+      const data = await http.delete<BulkDeleteResponse>(`${BASE}/bulk`, payload)
+      return data
+    },
+
+    async upsertTranslation(id: string, locale: string, payload: Record<string, unknown>) {
+      const data = await http.put<ApiResponse<unknown>>(`${BASE}/${id}/translations/${locale}`, payload)
+      return data.data
+    },
+  }
+}
+
+// ── Module-specific services ──────────────────────────────────────────────
+//
+// Routing legend (verified from backend routes.ts + migration history):
+//   content_items table  → /api/v1/cms/content/items  (via createContentItemService)
+//   feedbacks table      → /api/v1/cms/content/feedbacks
+//   products table       → /api/v1/cms/content/products
+//   collections table    → /api/v1/cms/content/collections
+//   campaigns table      → /api/v1/cms/content/campaigns
+//   faqs table           → /api/v1/cms/content/faqs
+//   orders table         → /api/v1/cms/content/orders
+//   comments table       → /api/v1/cms/content/comments
+//   newsletter table     → /api/v1/cms/content/newsletter
+
+// Stories, Journal, Gallery, Destinations, Hero → content_items (type filter)
+export const storiesService       = createContentItemService<Story,          StoryCreateRequest,       StoryUpdateRequest>(      'story')
+export const journalService       = createContentItemService<JournalPost,    JournalCreateRequest,     JournalUpdateRequest>(    'journal')
+export const galleryService       = createContentItemService<GalleryItem,    GalleryCreateRequest,     GalleryUpdateRequest>(    'gallery')
+export const destinationsService  = createContentItemService<Destination,    Record<string,unknown>,   Record<string,unknown>>(  'destination')
+export const heroService          = createContentItemService<HeroSlide,      HeroSlideCreateRequest,   HeroSlideUpdateRequest>(  'hero')
+
+// Reviews & Testimonials → feedbacks table
+export const reviewsService       = createContentService<Review,         Record<string,unknown>,    ReviewUpdateRequest>(       '/api/v1/cms/content/feedbacks')
+export const testimonialsService  = createContentService<Testimonial,    TestimonialCreateRequest,  TestimonialUpdateRequest>(  '/api/v1/cms/content/feedbacks')
+export const feedbacksService     = createContentService<Feedback,       FeedbackCreateRequest,     FeedbackUpdateRequest>(     '/api/v1/cms/content/feedbacks')
+
+// Services & Pricing → products table (product_type='service'/'package')
+export const servicesService      = createContentService<Service,        ServiceCreateRequest,      ServiceUpdateRequest>(      '/api/v1/cms/content/products')
+export const pricingService       = createContentService<PricingPackage, PricingCreateRequest,      PricingUpdateRequest>(      '/api/v1/cms/content/products')
+
+// Dedicated routes
 export const productsService      = createContentService<Product,        ProductCreateRequest,      ProductUpdateRequest>(      '/api/v1/cms/content/products')
 export const collectionsService   = createContentService<Collection,     CollectionCreateRequest,   CollectionUpdateRequest>(   '/api/v1/cms/content/collections')
-export const reviewsService       = createContentService<Review,         Record<string,unknown>,    ReviewUpdateRequest>(       '/api/v1/cms/content/reviews')
-export const feedbacksService     = createContentService<Feedback,       FeedbackCreateRequest,     FeedbackUpdateRequest>(     '/api/v1/cms/content/feedbacks')
 export const faqsService          = createContentService<Faq,            FaqCreateRequest,          FaqUpdateRequest>(          '/api/v1/cms/content/faqs')
-export const servicesService      = createContentService<Service,        ServiceCreateRequest,      ServiceUpdateRequest>(      '/api/v1/cms/content/services')
-export const testimonialsService  = createContentService<Testimonial,    TestimonialCreateRequest,  TestimonialUpdateRequest>(  '/api/v1/cms/content/testimonials')
-export const pricingService       = createContentService<PricingPackage, PricingCreateRequest,      PricingUpdateRequest>(      '/api/v1/cms/content/pricing')
-export const heroService          = createContentService<HeroSlide,      HeroSlideCreateRequest,    HeroSlideUpdateRequest>(    '/api/v1/cms/content/hero')
 export const commentsService      = createContentService<Comment,        Record<string,unknown>,    CommentUpdateRequest>(      '/api/v1/cms/content/comments')
 export const campaignsService     = createContentService<Campaign,       CampaignCreateRequest,     CampaignUpdateRequest>(     '/api/v1/cms/content/campaigns')
 

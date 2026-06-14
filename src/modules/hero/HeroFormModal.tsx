@@ -1,16 +1,23 @@
 /**
  * HeroFormModal — create or edit a hero slide.
- * Handles:
- *   - Image upload (via ImageUploader)
- *   - Link URL, location, region
- *   - Sort order + status
- *   - Multilingual translations (id + en) for title, subtitle, description, cta_label
+ *
+ * Hero slides are stored in the unified content_items table (content_type='hero').
+ * Field mapping from the old hero_slides schema:
+ *   image_url  → cover_image
+ *   href       → extra.href
+ *   location   → location  (direct column on content_items)
+ *   region     → region    (direct column on content_items)
+ *
+ * Translation mapping (content_translations):
+ *   description → excerpt
+ *   cta_label   → extra.cta_label
+ *   category    → extra.category
  */
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
-import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroSlideTranslation, HeroStatus } from '@/types/content.types'
+import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroStatus } from '@/types/content.types'
 import { heroService } from '@/services/content.service'
 import { draftMediaStore } from '@/stores/draftMedia.store'
 
@@ -27,6 +34,7 @@ interface TranslationDraft {
   locale: string
   title: string
   subtitle: string
+  /** Displayed as "Description" in the form; stored as excerpt in content_translations */
   description: string
   cta_label: string
   category: string
@@ -39,16 +47,23 @@ function emptyTranslation(locale: string): TranslationDraft {
   return { locale, title: '', subtitle: '', description: '', cta_label: '', category: '' }
 }
 
-function toTranslationDraft(t?: HeroSlideTranslation): TranslationDraft {
+function toTranslationDraft(t?: HeroSlide['translations'][number]): TranslationDraft {
   if (!t) return emptyTranslation('id')
   return {
     locale:      t.locale,
     title:       t.title ?? '',
     subtitle:    t.subtitle ?? '',
-    description: t.description ?? '',
-    cta_label:   t.cta_label ?? '',
-    category:    t.category ?? '',
+    // content_translations stores description as 'excerpt'
+    description: t.excerpt ?? '',
+    // cta_label and category live in content_translations.extra
+    cta_label:   t.extra?.cta_label ?? '',
+    category:    t.extra?.category ?? '',
   }
+}
+
+/** Generate a unique slug for new hero slides (required by content_items). */
+function generateHeroSlug(sortOrder: number): string {
+  return `hero-${sortOrder}-${Date.now()}`
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -56,13 +71,13 @@ function toTranslationDraft(t?: HeroSlideTranslation): TranslationDraft {
 export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
   const isEdit = !!slide
 
-  // Core fields
-  const [imageUrl,  setImageUrl]  = useState<string>(slide?.image_url ?? '')
-  const [href,      setHref]      = useState<string>(slide?.href ?? '')
-  const [location,  setLocation]  = useState<string>(slide?.location ?? '')
-  const [region,    setRegion]    = useState<string>(slide?.region ?? '')
-  const [sortOrder, setSortOrder] = useState<number>(slide?.sort_order ?? 0)
-  const [status,    setStatus]    = useState<HeroStatus>(slide?.status ?? 'draft')
+  // Core fields — mapped to content_items columns
+  const [coverImage, setCoverImage] = useState<string>(slide?.cover_image ?? '')
+  const [href,       setHref]       = useState<string>(slide?.extra?.href ?? '')
+  const [location,   setLocation]   = useState<string>(slide?.location ?? '')
+  const [region,     setRegion]     = useState<string>(slide?.region ?? '')
+  const [sortOrder,  setSortOrder]  = useState<number>(slide?.sort_order ?? 0)
+  const [status,     setStatus]     = useState<HeroStatus>(slide?.status ?? 'draft')
 
   // Translations keyed by locale
   const [translations, setTranslations] = useState<Record<string, TranslationDraft>>(() => {
@@ -81,8 +96,8 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
   // Sync when slide prop changes (e.g. reopen for different slide)
   useEffect(() => {
     if (slide) {
-      setImageUrl(slide.image_url ?? '')
-      setHref(slide.href ?? '')
+      setCoverImage(slide.cover_image ?? '')
+      setHref(slide.extra?.href ?? '')
       setLocation(slide.location ?? '')
       setRegion(slide.region ?? '')
       setSortOrder(slide.sort_order ?? 0)
@@ -105,68 +120,73 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
 
   async function handleSave() {
     setError(null)
-    if (!imageUrl.trim()) {
+    if (!coverImage.trim()) {
       setError('Image is required.')
       return
     }
     setSaving(true)
     try {
       // Resolve any blob: URL to a real CDN URL before saving
-      const resolvedImageUrl = await draftMediaStore.resolveUrl(imageUrl)
+      const resolvedCoverImage = await draftMediaStore.resolveUrl(coverImage)
 
       if (isEdit) {
-        // 1. Update core fields
+        // 1. Update core fields — mapped to content_items columns
         const updatePayload: HeroSlideUpdateRequest = {
-          image_url: resolvedImageUrl,
-          href:      href || undefined,
-          location:  location || undefined,
-          region:    region || undefined,
-          sort_order: sortOrder,
+          cover_image: resolvedCoverImage,
+          location:    location || undefined,
+          region:      region || undefined,
+          sort_order:  sortOrder,
           status,
+          // href stored in extra JSONB
+          extra: { ...(slide!.extra ?? {}), href: href || undefined },
         }
         await heroService.update(slide!.id, updatePayload)
 
-        // 2. Upsert translations
+        // 2. Upsert translations — mapped to content_translations columns
         for (const locale of LOCALES) {
           const t = translations[locale]
           await heroService.upsertTranslation(slide!.id, locale, {
-            title:       t.title,
-            subtitle:    t.subtitle,
-            description: t.description,
-            cta_label:   t.cta_label,
-            category:    t.category,
+            title:    t.title,
+            subtitle: t.subtitle,
+            // description form field → excerpt column
+            excerpt:  t.description,
+            // cta_label + category → extra JSONB in content_translations
+            extra: { cta_label: t.cta_label, category: t.category },
           })
         }
       } else {
-        // 1. Create slide
+        // 1. Create slide — mapped to content_items POST body
+        // slug is required; generate a unique one for hero slides
         const createPayload: HeroSlideCreateRequest = {
-          site_id:    siteId,
-          image_url:  resolvedImageUrl,
-          href:       href || undefined,
-          location:   location || undefined,
-          region:     region || undefined,
-          sort_order: sortOrder,
+          site_id:     siteId,
+          slug:        generateHeroSlug(sortOrder),
+          cover_image: resolvedCoverImage,
+          location:    location || undefined,
+          region:      region || undefined,
+          sort_order:  sortOrder,
           status,
+          extra: href ? { href } : undefined,
         }
+        // content_type:'hero' is injected automatically by createContentItemService
         const created = await heroService.create(createPayload)
         if (!created) throw new Error('Create returned no data')
 
         // 2. Upsert translations
+        const createdId = (created as { id: string }).id
         for (const locale of LOCALES) {
           const t = translations[locale]
           if (t.title || t.subtitle || t.description || t.cta_label) {
-            await heroService.upsertTranslation((created as { id: string }).id, locale, {
-              title:       t.title,
-              subtitle:    t.subtitle,
-              description: t.description,
-              cta_label:   t.cta_label,
-              category:    t.category,
+            await heroService.upsertTranslation(createdId, locale, {
+              title:    t.title,
+              subtitle: t.subtitle,
+              excerpt:  t.description,
+              extra: { cta_label: t.cta_label, category: t.category },
             })
           }
         }
       }
       // Sync local state to the resolved CDN URL (avoids stale blob on re-open)
-      setImageUrl(resolvedImageUrl)
+      setCoverImage(resolvedCoverImage)
       onSaved()
     } catch (err) {
       console.error('[HeroFormModal] save error', err)
@@ -185,15 +205,15 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
       aria-modal="true"
       aria-label={isEdit ? 'Edit Hero Slide' : 'New Hero Slide'}
     >
-      <div className="bg-[var(--bg-primary)] rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-[var(--cms-card-bg)] rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--lito-border)]">
           <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
             {isEdit ? 'Edit Slide' : 'New Slide'}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-[var(--bg-hover)] text-[var(--text-muted)]"
+            className="p-1.5 rounded-lg hover:bg-[var(--cms-nav-hover)] text-[var(--text-muted)]"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -207,8 +227,8 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
               Slide Image <span className="text-red-500">*</span>
             </label>
             <ImageUploader
-              value={imageUrl || null}
-              onChange={(url) => setImageUrl(url ?? '')}
+              value={coverImage || null}
+              onChange={(url) => setCoverImage(url ?? '')}
               folder="hero"
             />
           </div>
@@ -224,7 +244,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                 value={href}
                 onChange={(e) => setHref(e.target.value)}
                 placeholder="https://example.com/page"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
               />
             </div>
             <div>
@@ -236,7 +256,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                 min={0}
                 value={sortOrder}
                 onChange={(e) => setSortOrder(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
               />
             </div>
             <div>
@@ -248,7 +268,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. Bali, Indonesia"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
               />
             </div>
             <div>
@@ -260,7 +280,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
                 placeholder="e.g. Southeast Asia"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
               />
             </div>
           </div>
@@ -273,7 +293,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as HeroStatus)}
-              className="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              className="px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
             >
               {STATUS_OPTIONS.map(s => (
                 <option key={s} value={s}>
@@ -294,8 +314,8 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                     onClick={() => setActiveLocale(locale)}
                     className={`px-2.5 py-1 rounded-md font-body text-xs font-medium transition-colors ${
                       activeLocale === locale
-                        ? 'bg-[var(--color-primary)] text-white'
-                        : 'bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                        ? 'bg-[var(--lito-teal)] text-white'
+                        : 'bg-[var(--cms-nav-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                     }`}
                   >
                     {locale.toUpperCase()}
@@ -311,7 +331,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                   value={t.title}
                   onChange={(e) => updateTranslation(activeLocale, 'title', e.target.value)}
                   placeholder="Slide headline"
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
                 />
               </div>
               <div>
@@ -321,7 +341,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                   value={t.subtitle}
                   onChange={(e) => updateTranslation(activeLocale, 'subtitle', e.target.value)}
                   placeholder="Supporting text"
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
                 />
               </div>
               <div>
@@ -331,7 +351,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                   onChange={(e) => updateTranslation(activeLocale, 'description', e.target.value)}
                   placeholder="Optional longer description"
                   rows={3}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)] resize-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -342,7 +362,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                     value={t.cta_label}
                     onChange={(e) => updateTranslation(activeLocale, 'cta_label', e.target.value)}
                     placeholder="e.g. Explore Now"
-                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
                   />
                 </div>
                 <div>
@@ -352,7 +372,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                     value={t.category}
                     onChange={(e) => updateTranslation(activeLocale, 'category', e.target.value)}
                     placeholder="e.g. Adventure"
-                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] text-[var(--text-primary)] font-body text-sm focus:outline-none focus:ring-2 focus:ring-[var(--lito-teal)]"
                   />
                 </div>
               </div>
@@ -368,11 +388,11 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--border)]">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--lito-border)]">
           <Button variant="ghost" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving || !imageUrl.trim()}>
+          <Button onClick={handleSave} disabled={saving || !coverImage.trim()}>
             <Save className="w-4 h-4 mr-1.5" />
             {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Slide'}
           </Button>

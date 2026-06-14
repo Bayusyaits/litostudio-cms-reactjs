@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, BookOpen, Image, Film, MapPin,
   Megaphone, Globe, Settings, Users, BarChart2, Search,
-  LogOut, ChevronRight, Tag, Hash, Palette,
+  LogOut, Tag, Hash, Palette,
   Package, Layers, MessageSquare, HelpCircle, Puzzle,
   Briefcase, Quote, DollarSign, Tv2, MessageCircle,
   ShoppingBag, Mail, Inbox, Bot, Link2, Rocket, FileSpreadsheet,
@@ -71,10 +71,9 @@ const NAV: NavSection[] = [
   {
     section: 'Website',
     items: [
-      { label: 'Hero Slides', icon: Tv2,          to: '/hero' },
-      { label: 'Pages',       icon: Globe,        to: '/pages' },
-      { label: 'Navigation',  icon: ChevronRight, to: '/navigation' },
-      { label: 'Themes',      icon: Palette,      to: '/themes' },
+      { label: 'Hero Slides', icon: Tv2,     to: '/hero' },
+      { label: 'Pages',       icon: Globe,   to: '/pages' },
+      { label: 'Themes',      icon: Palette, to: '/themes' },
       { label: 'Add-Ons',     icon: Puzzle,       to: '/addons' },
     ],
   },

@@ -45,9 +45,9 @@ export function HeroPageView({
       sortable: true,
       render: (s) => (
         <div className="flex items-center gap-3">
-          {s.image_url ? (
+          {s.cover_image ? (
             <img
-              src={s.image_url}
+              src={s.cover_image}
               alt={getSlideTitle(s)}
               style={{ width: 52, height: 36, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
             />
@@ -78,11 +78,11 @@ export function HeroPageView({
       header: 'Link',
       width: '180px',
       render: (s) =>
-        s.href ? (
+        s.extra?.href ? (
           <div className="flex items-center gap-1.5">
-            <span className="font-body text-xs text-[var(--text-secondary)] truncate max-w-[140px]">{s.href}</span>
+            <span className="font-body text-xs text-[var(--text-secondary)] truncate max-w-[140px]">{s.extra.href}</span>
             <a
-              href={s.href}
+              href={s.extra.href}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[var(--text-muted)] hover:text-[var(--text-primary)] shrink-0"
@@ -132,7 +132,7 @@ export function HeroPageView({
             <Pencil className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
           </Button>
           <Button size="icon" variant="ghost" onClick={() => onDelete(s.id)} aria-label="Delete slide">
-            <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
+            <Trash2 className="w-3.5 h-3.5 text-[var(--cms-danger)]" />
           </Button>
         </div>
       ),

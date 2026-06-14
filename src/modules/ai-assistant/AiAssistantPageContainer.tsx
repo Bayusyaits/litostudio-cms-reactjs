@@ -120,7 +120,7 @@ export default function AiAssistantPageContainer() {
       </div>
 
       {/* Settings Form */}
-      <section className="bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-[8px] p-6 space-y-5">
+      <section className="bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-[8px] p-6 space-y-5 overflow-y-auto">
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">Configuration</h2>
         <form onSubmit={settingsForm.handleSubmit(v => saveSettingsMutation.mutate(v))} className="space-y-4">
           <label className="flex items-center gap-3">

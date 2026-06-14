@@ -12,11 +12,50 @@ import { useQuery } from '@tanstack/react-query'
 import { pagesService }         from '@/services/pages.service'
 import { useEditorStore }       from '@/stores/editor.store'
 import { useWebsiteStore }      from '@/stores/website.store'
+import { draftMediaStore }      from '@/stores/draftMedia.store'
 import { EditorShell }          from './EditorShell'
 import { DashboardSkeleton }    from '@/components/atoms/Skeleton'
-import type { BlockDocument }   from '@/types/editor.types'
+import type { BlockDocument, Block, ImageBlockData, GalleryBlockData, HeroBlockData } from '@/types/editor.types'
 
 const LOCALE = 'id'
+
+/** Walk the BlockDocument and resolve any blob: URLs to CDN URLs before save. */
+async function resolveBlockDocMedia(doc: BlockDocument): Promise<BlockDocument> {
+  const resolved = await Promise.all(
+    doc.blocks.map(async (block: Block): Promise<Block> => {
+      switch (block.type) {
+        case 'image': {
+          const d = block.data as ImageBlockData
+          if (d.src?.startsWith('blob:')) {
+            return { ...block, data: { ...d, src: await draftMediaStore.resolveUrl(d.src) } }
+          }
+          return block
+        }
+        case 'gallery': {
+          const d = block.data as GalleryBlockData
+          const images = await Promise.all(
+            d.images.map(async (img) =>
+              img.src?.startsWith('blob:')
+                ? { ...img, src: await draftMediaStore.resolveUrl(img.src) }
+                : img,
+            ),
+          )
+          return { ...block, data: { ...d, images } }
+        }
+        case 'hero': {
+          const d = block.data as HeroBlockData
+          if (d.backgroundImage?.startsWith('blob:')) {
+            return { ...block, data: { ...d, backgroundImage: await draftMediaStore.resolveUrl(d.backgroundImage) } }
+          }
+          return block
+        }
+        default:
+          return block
+      }
+    }),
+  )
+  return { ...doc, blocks: resolved }
+}
 
 function isBlockDocument(v: unknown): v is BlockDocument {
   return (
@@ -66,11 +105,13 @@ export default function BlockEditorPage() {
     if (!pageId) return
     const translation = (page?.page_translations ?? []).find((t) => t.locale === LOCALE)
     const title = translation?.title ?? page?.slug ?? ''
+    // Resolve any blob: URLs (deferred ImageUploader uploads) before persisting
+    const resolvedDoc = await resolveBlockDocMedia(blockDoc)
     await pagesService.update(pageId, {
       translations: [{
         locale: LOCALE,
         title,
-        body:             blockDoc as unknown as Record<string, unknown>,
+        body:             resolvedDoc as unknown as Record<string, unknown>,
         meta_title:       pageSeo.metaTitle || undefined,
         meta_description: pageSeo.metaDescription || undefined,
       }],

@@ -51,7 +51,7 @@ export function DestinationsPageView({ destinations, isLoading, search, onSearch
   ]
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 space-y-5 overflow-y-auto">
       <div className="flex items-center justify-between gap-4">
         <h1 className="font-display text-2xl font-bold text-[var(--text-primary)]">Destinations</h1>
         <Button onClick={onNew} leftIcon={<Plus className="w-4 h-4" />}>

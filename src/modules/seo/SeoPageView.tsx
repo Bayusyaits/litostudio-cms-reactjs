@@ -105,7 +105,7 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
   const descLen  = (description ?? '').length
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 space-y-5 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>

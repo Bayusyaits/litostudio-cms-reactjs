@@ -17,6 +17,13 @@ export interface Page {
   slug: string
   status: PageStatus
   template: string
+  sort_order: number
+  parent_id: string | null
+  is_in_menu: boolean
+  menu_label: string | null
+  is_header: boolean
+  is_footer: boolean
+  is_mobile_menu: boolean
   title: string | null
   created_at: string
   updated_at: string
@@ -45,6 +52,20 @@ export interface PageCreateRequest {
   translations?: PageTranslation[]
 }
 
+export interface PageUpdateRequest {
+  slug?: string
+  template?: string
+  status?: PageStatus
+  sort_order?: number
+  parent_id?: string | null
+  is_in_menu?: boolean
+  menu_label?: string | null
+  is_header?: boolean
+  is_footer?: boolean
+  is_mobile_menu?: boolean
+  translations?: PageTranslation[]
+}
+
 const BASE = '/api/v1/cms/content/pages'
 
 export const pagesService = {
@@ -69,8 +90,28 @@ export const pagesService = {
     return data.data
   },
 
-  async update(pageId: string, payload: Partial<PageCreateRequest>) {
+  async update(pageId: string, payload: PageUpdateRequest) {
     const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, payload)
+    return data.data
+  },
+
+  async toggleMenu(pageId: string, is_in_menu: boolean) {
+    const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, { is_in_menu })
+    return data.data
+  },
+
+  async toggleHeader(pageId: string, is_header: boolean) {
+    const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, { is_header })
+    return data.data
+  },
+
+  async toggleFooter(pageId: string, is_footer: boolean) {
+    const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, { is_footer })
+    return data.data
+  },
+
+  async toggleMobileMenu(pageId: string, is_mobile_menu: boolean) {
+    const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, { is_mobile_menu })
     return data.data
   },
 

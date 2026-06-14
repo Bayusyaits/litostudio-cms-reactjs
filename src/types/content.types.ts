@@ -413,48 +413,74 @@ export interface PricingUpdateRequest extends Partial<PricingCreateRequest> {}
 // Hero slides use a different status set than the generic ContentStatus
 export type HeroStatus = 'draft' | 'active' | 'inactive' | 'archived' | 'suspended'
 
-// Translation shape specific to hero_slide_translations table
+// Translation shape as stored in content_translations.
+// 'description' from the old hero_slide_translations is now 'excerpt'.
+// 'cta_label' and 'category' live in the extra JSONB column.
 export interface HeroSlideTranslation {
   locale: string
   title: string | null
   subtitle: string | null
-  description: string | null
-  cta_label: string | null
-  category: string | null
+  /** Maps to content_translations.excerpt */
+  excerpt: string | null
+  meta_title?: string | null
+  meta_description?: string | null
+  extra?: {
+    cta_label?: string | null
+    category?: string | null
+    [key: string]: unknown
+  }
 }
 
+// HeroSlide now maps to the unified content_items table.
+// image_url  → cover_image
+// href       → extra.href
+// story_id   → extra.story_id
 export interface HeroSlide {
   id: string
   site_id: string
-  story_id: string | null
-  image_url: string
-  href: string | null        // link URL for the slide
+  content_type: 'hero'
+  slug: string
+  /** Hero image URL — stored as cover_image in content_items */
+  cover_image: string
   location: string | null
   region: string | null
   sort_order: number
   status: HeroStatus
   created_at: string
   updated_at: string
+  extra: {
+    href?: string | null
+    story_id?: string | null
+    [key: string]: unknown
+  }
   translations: HeroSlideTranslation[]
 }
 
 export interface HeroSlideCreateRequest {
   site_id: string
-  image_url: string
-  href?: string
+  /** Must be unique per site — generate as 'hero-{sort_order}-{timestamp}' */
+  slug: string
+  cover_image: string
   location?: string
   region?: string
   sort_order?: number
   status?: HeroStatus
+  extra?: {
+    href?: string
+    [key: string]: unknown
+  }
 }
 
 export interface HeroSlideUpdateRequest {
-  image_url?: string
-  href?: string
+  cover_image?: string
   location?: string
   region?: string
   sort_order?: number
   status?: HeroStatus
+  extra?: {
+    href?: string
+    [key: string]: unknown
+  }
 }
 
 // ── Comment ───────────────────────────────────────────────────────────────

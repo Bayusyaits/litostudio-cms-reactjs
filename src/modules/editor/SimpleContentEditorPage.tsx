@@ -87,9 +87,15 @@ function getEntityTranslation(e: AnyEntity, module: SimpleModule) {
   const translations = ((e as unknown as Record<string, unknown>).translations as Record<string, unknown>[] | undefined) ?? []
   const t = translations.find((tr) => tr.locale === LOCALE) ?? translations[0]
   if (!t) return null
-  const isDest = module === 'destinations'
+  const isDest      = module === 'destinations'
+  // products, collections, and services (stored in products table) use `name` in their translation tables
+  const isNameBased = module === 'products' || module === 'collections' || module === 'services'
   return {
-    displayTitle:     isDest ? ((t.name as string) ?? (t.title as string) ?? '')          : ((t.title as string) ?? ''),
+    displayTitle: isDest
+      ? ((t.name as string) ?? (t.title as string) ?? '')
+      : isNameBased
+        ? ((t.name as string) ?? '')
+        : ((t.title as string) ?? ''),
     displayExcerpt:   isDest ? ((t.description as string) ?? (t.excerpt as string) ?? '') : ((t.excerpt as string) ?? ''),
     body:             t.body,
     meta_title:       (t.meta_title       as string) ?? '',
@@ -109,7 +115,15 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
     }
     case 'services': {
       const sv = e as Service
-      return { category: sv.category ?? '', price: sv.price ?? '', currency: sv.currency ?? 'IDR', duration: sv.duration ?? '', isFeatured: sv.is_featured ?? false }
+      // category + duration are stored in extra JSONB (products table has no dedicated columns)
+      const ext = ((sv as unknown as { extra?: Record<string, unknown> }).extra) ?? {}
+      return {
+        category:   (ext.category ?? sv.category  ?? '') as string,
+        price:      String(sv.price ?? ''),
+        currency:   (sv.currency ?? 'IDR') as string,
+        duration:   (ext.duration ?? sv.duration  ?? '') as string,
+        isFeatured: sv.is_featured ?? false,
+      }
     }
     case 'destinations': {
       const d = e as Destination
@@ -139,7 +153,14 @@ function buildTranslationPayload(
     meta_title:       metaTitle || undefined,
     meta_description: metaDesc  || undefined,
   }
+  // destinations → name + description (destination_translations schema)
   if (module === 'destinations') return { ...common, name: title, description: excerpt || undefined }
+  // products, services, collections → translation tables use `name` not `title`
+  // (product_translations, collection_translations both have `name` column, no `title`)
+  if (module === 'products' || module === 'services' || module === 'collections') {
+    return { ...common, name: title, excerpt: excerpt || undefined }
+  }
+  // stories, journal, campaigns → translation tables use `title`
   return { ...common, title, excerpt: excerpt || undefined }
 }
 
@@ -156,13 +177,13 @@ function buildCreatePayload(
     case 'journal':
       return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'services':
-      return { ...base, category: extras.category || undefined, price: extras.price ? Number(extras.price) : undefined, currency: extras.currency || undefined, duration: extras.duration || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+      return { ...base, product_type: 'service', price: extras.price ? Number(extras.price) : undefined, currency: extras.currency || undefined, is_featured: extras.isFeatured ?? false, extra: { category: extras.category || undefined, duration: extras.duration || undefined } }
     case 'destinations':
       return { ...base, island: extras.island || undefined, region: extras.region || undefined, province: extras.province || undefined, country: extras.country || undefined, lat: extras.lat ? Number(extras.lat) : undefined, lng: extras.lng ? Number(extras.lng) : undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, name: title, description: excerpt || undefined } }
     case 'products':
-      return { ...base, name: title, product_type: (extras.productType as ProductType) || 'product', price: extras.price ? Number(extras.price) : undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title } }
+      return { ...base, product_type: (extras.productType as ProductType) || 'product', price: extras.price ? Number(extras.price) : undefined, is_featured: extras.isFeatured ?? false }
     case 'collections':
-      return { ...base, name: title, translation: { locale: LOCALE, title } }
+      return { ...base }
     case 'campaigns':
       return { ...base, cta_label: extras.ctaLabel || undefined, cta_url: extras.ctaUrl || undefined, start_date: extras.startDate || undefined, end_date: extras.endDate || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     default:
@@ -171,7 +192,7 @@ function buildCreatePayload(
 }
 
 function buildUpdatePatch(
-  module: SimpleModule, title: string,
+  module: SimpleModule, _title: string,
   coverImage: string | null, tags: string[], status: ContentStatus,
   extras: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -179,10 +200,10 @@ function buildUpdatePatch(
   switch (module) {
     case 'stories':      return { ...base, tags, category: extras.category || null, location: extras.location || null, region: extras.region || null, is_featured: extras.isFeatured ?? false }
     case 'journal':      return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
-    case 'services':     return { ...base, category: extras.category || null, price: extras.price ? Number(extras.price) : null, currency: extras.currency || null, duration: extras.duration || null, is_featured: extras.isFeatured ?? false }
+    case 'services':     return { ...base, price: extras.price ? Number(extras.price) : null, currency: extras.currency || null, is_featured: extras.isFeatured ?? false, extra: { category: extras.category || null, duration: extras.duration || null } }
     case 'destinations': return { ...base, island: extras.island || null, region: extras.region || null, province: extras.province || null, country: extras.country || null, lat: extras.lat ? Number(extras.lat) : null, lng: extras.lng ? Number(extras.lng) : null, is_featured: extras.isFeatured ?? false }
-    case 'products':     return { ...base, name: title, product_type: (extras.productType as ProductType) || 'product', price: extras.price ? Number(extras.price) : null, is_featured: extras.isFeatured ?? false }
-    case 'collections':  return { ...base, name: title }
+    case 'products':     return { ...base, product_type: (extras.productType as ProductType) || 'product', price: extras.price ? Number(extras.price) : null, is_featured: extras.isFeatured ?? false }
+    case 'collections':  return { ...base }
     case 'campaigns':    return { ...base, cta_label: extras.ctaLabel || null, cta_url: extras.ctaUrl || null, start_date: extras.startDate || null, end_date: extras.endDate || null, is_featured: extras.isFeatured ?? false }
     default:             return base
   }
@@ -383,8 +404,8 @@ export default function SimpleContentEditorPage() {
           )
           const newEntity = await config.service.create(createPayload) as { id: string }
 
-          // products/collections: create payload omits body — upsert translation separately
-          if (module === 'products' || module === 'collections') {
+          // products/collections/services: create payload omits body — upsert translation separately
+          if (module === 'products' || module === 'collections' || module === 'services') {
             await config.service.upsertTranslation(
               newEntity.id, LOCALE,
               buildTranslationPayload(module, title, excerpt, body, metaTitle, metaDesc),

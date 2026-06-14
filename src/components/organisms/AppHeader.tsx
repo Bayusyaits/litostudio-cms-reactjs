@@ -19,7 +19,6 @@ const ROUTE_LABELS: Record<string, string> = {
   '/campaigns':    'Campaigns',
   '/seo':          'SEO',
   '/pages':        'Pages',
-  '/navigation':   'Navigation',
   '/forms':        'Forms',
   '/themes':       'Themes',
   '/categories':   'Categories',

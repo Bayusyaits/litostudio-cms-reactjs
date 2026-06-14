@@ -24,7 +24,7 @@ export function GalleryPageView({
   selectedIds, onSelect, onDelete, onBulkDelete,
 }: Props) {
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 space-y-5 overflow-y-auto">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-[var(--text-primary)]">Gallery</h1>
