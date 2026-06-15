@@ -47,6 +47,7 @@ const HeroPage           = lazy(() => import('@/modules/hero/HeroPageContainer')
 const CommentsPage       = lazy(() => import('@/modules/comments/CommentsPageContainer'))
 const CampaignsPage      = lazy(() => import('@/modules/campaigns/CampaignsPageContainer'))
 const SeoPage            = lazy(() => import('@/modules/seo/SeoPageContainer'))
+const LabelsPage         = lazy(() => import('@/modules/settings/labels/LabelsPageContainer'))
 
 // Commerce + engagement pages
 const OrdersPage         = lazy(() => import('@/modules/orders/OrdersPageContainer'))
@@ -59,6 +60,7 @@ const DomainsPage        = lazy(() => import('@/modules/domains/DomainsPageConta
 const DeploymentsPage    = lazy(() => import('@/modules/deployments/DeploymentsPageContainer'))
 const CsvPage            = lazy(() => import('@/modules/csv/CsvPageContainer'))
 const AiAssistantPage    = lazy(() => import('@/modules/ai-assistant/AiAssistantPageContainer'))
+const SiteContentPage    = lazy(() => import('@/modules/site-content/SiteContentPageContainer'))
 
 function PageLoader() {
   return (
@@ -114,10 +116,12 @@ export const router = createBrowserRouter([
       { path: 'destinations/:id/edit',      element: <S><SimpleContentEditorPage /></S> },
 
       { path: 'team',              element: <S><TeamPage /></S> },
-      { path: 'settings',          element: <S><SettingsPage /></S> },
+      { path: 'settings',               element: <S><SettingsPage /></S> },
+      { path: 'settings/localization',  element: <S><LabelsPage /></S> },
       { path: 'categories',        element: <S><CategoriesPage /></S> },
       { path: 'tags',              element: <S><TagsPage /></S> },
       { path: 'themes',            element: <S><ThemesPage /></S> },
+      { path: 'site-content',      element: <S><SiteContentPage /></S> },
       // Pages (BlockEditorPage is kept — used here only)
       { path: 'pages',             element: <S><PagesPage /></S> },
       { path: 'pages/new',         element: <S><PagesNewPage /></S> },

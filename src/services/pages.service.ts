@@ -42,6 +42,7 @@ export interface PageListParams {
   offset?: number
   status?: PageStatus | ''
   locale?: string
+  search?: string
 }
 
 export interface PageCreateRequest {
@@ -76,6 +77,7 @@ export const pagesService = {
     if (params.offset)  q.set('offset',  String(params.offset))
     if (params.status)  q.set('status',  params.status)
     if (params.locale)  q.set('locale',  params.locale)
+    if (params.search)  q.set('search',  params.search)
     const data = await http.get<{ success: boolean; data: Page[]; meta: PageListMeta }>(`${BASE}?${q}`)
     return data
   },
@@ -121,5 +123,20 @@ export const pagesService = {
 
   async bulkDelete(ids: string[]) {
     await http.delete(`${BASE}/bulk`, { ids })
+  },
+
+  async updateMenuLabel(pageId: string, menu_label: string | null) {
+    const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, { menu_label })
+    return data.data
+  },
+
+  async updateSortOrder(pageId: string, sort_order: number) {
+    const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, { sort_order })
+    return data.data
+  },
+
+  async updateParentId(pageId: string, parent_id: string | null) {
+    const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, { parent_id })
+    return data.data
   },
 }

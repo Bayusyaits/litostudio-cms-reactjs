@@ -17,7 +17,9 @@ import { EditorShell }          from './EditorShell'
 import { DashboardSkeleton }    from '@/components/atoms/Skeleton'
 import type { BlockDocument, Block, ImageBlockData, GalleryBlockData, HeroBlockData } from '@/types/editor.types'
 
-const LOCALE = 'id'
+// LOCALE is now driven by the activeSite's default locale or falls back to 'id'.
+// TODO: add a locale switcher UI in EditorToolbar to allow editing multiple locales.
+const LOCALE = (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('locale')) || 'id'
 
 /** Walk the BlockDocument and resolve any blob: URLs to CDN URLs before save. */
 async function resolveBlockDocMedia(doc: BlockDocument): Promise<BlockDocument> {

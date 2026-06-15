@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, FileText, Trash2, Pencil, Globe } from 'lucide-react'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
 import type { Page, PageStatus } from '@/services/pages.service'
 import type { PageListMeta } from '@/services/pages.service'
+import { PageSectionsManager } from './PageSectionsManager'
 
 interface Filter {
   status: PageStatus | ''
@@ -22,6 +24,8 @@ interface Props {
   onToggleHeader: (id: string, is_header: boolean) => void
   onToggleFooter: (id: string, is_footer: boolean) => void
   onToggleMobileMenu: (id: string, is_mobile_menu: boolean) => void
+  onUpdateMenuLabel: (id: string, label: string | null) => void
+  onUpdateSortOrder: (id: string, order: number) => void
 }
 
 const STATUS_OPTS: { value: PageStatus | ''; label: string }[] = [
@@ -63,7 +67,9 @@ function MenuToggle({ checked, onChange }: { checked: boolean; onChange: () => v
   )
 }
 
-export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDelete, onToggleMenu, onToggleHeader, onToggleFooter, onToggleMobileMenu }: Props) {
+export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDelete, onToggleMenu, onToggleHeader, onToggleFooter, onToggleMobileMenu, onUpdateMenuLabel, onUpdateSortOrder }: Props) {
+  const [sectionManagerPage, setSectionManagerPage] = useState<{ id: string; title: string } | null>(null)
+
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
       {/* Header */}
@@ -145,7 +151,7 @@ export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDel
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--lito-border)', background: 'var(--cms-header-bg)' }}>
-                {['Title', 'Slug', 'Template', 'Status', 'In Menu', 'Header', 'Footer', 'Mobile', ''].map((h) => (
+                {['#', 'Title / Menu Label', 'Slug', 'Template', 'Status', 'In Menu', 'Header', 'Footer', 'Mobile', ''].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -168,14 +174,79 @@ export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDel
                   onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--cms-header-bg)' }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = '' }}
                 >
+                  {/* Sort order */}
+                  <td style={{ padding: '12px 16px', width: 48 }}>
+                    <input
+                      type="number"
+                      defaultValue={page.sort_order ?? 0}
+                      min={0}
+                      step={1}
+                      title="Sort order"
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value, 10)
+                        if (!isNaN(val) && val !== page.sort_order) onUpdateSortOrder(page.id, val)
+                      }}
+                      style={{
+                        width: 44, fontFamily: 'monospace', fontSize: 12,
+                        padding: '3px 6px', textAlign: 'center',
+                        background: 'var(--cms-header-bg)',
+                        border: '1px solid var(--lito-border)',
+                        borderRadius: 4, color: 'var(--text-muted)', outline: 'none',
+                      }}
+                    />
+                  </td>
+                  {/* Title + menu_label inline edit */}
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       {page.is_in_menu && (
                         <Globe size={12} style={{ color: 'var(--lito-teal)', flexShrink: 0 }} aria-label="In navigation menu" />
                       )}
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
-                        {page.title ?? page.slug}
-                      </span>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {/* Hierarchy indentation: 16px per level */}
+                          {(page.level ?? 0) > 0 && (
+                            <span style={{
+                              display: 'inline-block',
+                              width: (page.level ?? 1) * 16,
+                              flexShrink: 0,
+                            }}>
+                              <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: 11 }}>
+                                {'└ '}
+                              </span>
+                            </span>
+                          )}
+                          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
+                            {page.title ?? page.slug}
+                          </span>
+                          {(page.level ?? 0) === 0 && page.parent_id == null && (
+                            <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 4, background: 'rgba(20,184,166,0.12)', color: 'var(--lito-teal)', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
+                              root
+                            </span>
+                          )}
+                        </div>
+                        {page.is_in_menu && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                            <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>Menu:</span>
+                            <input
+                              type="text"
+                              placeholder={page.title ?? page.slug}
+                              defaultValue={page.menu_label ?? ''}
+                              title="Menu label (shown in nav). Leave blank to use page title."
+                              onBlur={(e) => {
+                                const val = e.target.value.trim() || null
+                                if (val !== page.menu_label) onUpdateMenuLabel(page.id, val)
+                              }}
+                              style={{
+                                fontFamily: 'var(--font-body)', fontSize: 11,
+                                padding: '2px 6px', width: 120,
+                                background: 'var(--cms-header-bg)',
+                                border: '1px solid var(--lito-border)',
+                                borderRadius: 4, color: 'var(--text-primary)', outline: 'none',
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
@@ -230,6 +301,31 @@ export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDel
                       >
                         <Pencil size={12} />
                       </Link>
+                      {/* Sections manager */}
+                      <button
+                        type="button"
+                        title="Manage sections"
+                        onClick={() => setSectionManagerPage({ id: page.id, title: page.title ?? page.slug })}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          padding: '4px 8px', borderRadius: 5,
+                          border: '1px solid var(--lito-border)',
+                          background: 'transparent', cursor: 'pointer',
+                          fontFamily: 'var(--font-body)', fontSize: 11,
+                          color: 'var(--text-secondary)',
+                          transition: 'color 150ms, border-color 150ms',
+                        }}
+                        onMouseEnter={e => {
+                          ;(e.currentTarget as HTMLElement).style.color = 'var(--lito-teal)'
+                          ;(e.currentTarget as HTMLElement).style.borderColor = 'var(--lito-teal)'
+                        }}
+                        onMouseLeave={e => {
+                          ;(e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'
+                          ;(e.currentTarget as HTMLElement).style.borderColor = 'var(--lito-border)'
+                        }}
+                      >
+                        Sections
+                      </button>
                       <button
                         type="button"
                         onClick={() => { if (confirm(`Delete "${page.title ?? page.slug}"?`)) onDelete(page.id) }}
@@ -252,6 +348,15 @@ export function PagesPageView({ pages, meta, isLoading, filter, setFilter, onDel
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Section Manager modal */}
+      {sectionManagerPage && (
+        <PageSectionsManager
+          pageId={sectionManagerPage.id}
+          pageTitle={sectionManagerPage.title}
+          onClose={() => setSectionManagerPage(null)}
+        />
       )}
     </div>
   )

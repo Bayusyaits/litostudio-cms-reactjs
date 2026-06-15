@@ -2,11 +2,11 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, BookOpen, Image, Film, MapPin,
   Megaphone, Globe, Settings, Users, BarChart2, Search,
-  LogOut, Tag, Hash, Palette,
+  LogOut, Tag, Hash, Palette, Sliders,
   Package, Layers, MessageSquare, HelpCircle, Puzzle,
   Briefcase, Quote, DollarSign, Tv2, MessageCircle,
   ShoppingBag, Mail, Inbox, Bot, Link2, Rocket, FileSpreadsheet,
-  Building2,
+  Building2, Languages,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
@@ -73,8 +73,9 @@ const NAV: NavSection[] = [
     items: [
       { label: 'Hero Slides', icon: Tv2,     to: '/hero' },
       { label: 'Pages',       icon: Globe,   to: '/pages' },
-      { label: 'Themes',      icon: Palette, to: '/themes' },
-      { label: 'Add-Ons',     icon: Puzzle,       to: '/addons' },
+      { label: 'Themes',        icon: Palette,  to: '/themes' },
+      { label: 'Site Content',  icon: Sliders,  to: '/site-content' },
+      { label: 'Add-Ons',       icon: Puzzle,   to: '/addons' },
     ],
   },
   {
@@ -91,7 +92,8 @@ const NAV: NavSection[] = [
   {
     section: 'Settings',
     items: [
-      { label: 'Settings', icon: Settings, to: '/settings' },
+      { label: 'Settings',     icon: Settings,   to: '/settings' },
+      { label: 'Labels',       icon: Languages,  to: '/settings/localization' },
     ],
   },
 ]

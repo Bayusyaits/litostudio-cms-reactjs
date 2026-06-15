@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useWebsiteStore } from '@/stores/website.store'
 import { pagesService, type PageStatus } from '@/services/pages.service'
+// pagesService now includes: updateMenuLabel, updateSortOrder, updateParentId
 import { PagesPageView } from './PagesPageView'
 
 interface Filter {
@@ -55,6 +56,18 @@ export default function PagesPageContainer() {
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['pages', siteId] }) },
   })
 
+  const updateMenuLabelMutation = useMutation({
+    mutationFn: ({ id, menu_label }: { id: string; menu_label: string | null }) =>
+      pagesService.updateMenuLabel(id, menu_label),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['pages', siteId] }) },
+  })
+
+  const updateSortOrderMutation = useMutation({
+    mutationFn: ({ id, sort_order }: { id: string; sort_order: number }) =>
+      pagesService.updateSortOrder(id, sort_order),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['pages', siteId] }) },
+  })
+
   return (
     <PagesPageView
       pages={query.data?.data ?? []}
@@ -67,6 +80,8 @@ export default function PagesPageContainer() {
       onToggleHeader={(id, is_header) => toggleHeaderMutation.mutate({ id, is_header })}
       onToggleFooter={(id, is_footer) => toggleFooterMutation.mutate({ id, is_footer })}
       onToggleMobileMenu={(id, is_mobile_menu) => toggleMobileMenuMutation.mutate({ id, is_mobile_menu })}
+      onUpdateMenuLabel={(id, menu_label) => updateMenuLabelMutation.mutate({ id, menu_label })}
+      onUpdateSortOrder={(id, sort_order) => updateSortOrderMutation.mutate({ id, sort_order })}
     />
   )
 }
