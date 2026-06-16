@@ -18,7 +18,9 @@ import { useEditorStore }     from '@/stores/editor.store'
 interface EditorShellProps {
   /** Title shown in the toolbar save-status area */
   pageTitle:   string
-  /** Slug used to build the preview URL */
+  /** Page ID — used to open the CMS-internal preview route */
+  pageId?:     string
+  /** Slug used as fallback for external preview (legacy) */
   pageSlug?:   string
   /**
    * Called when the user saves. Must handle setting saveStatus via
@@ -33,7 +35,7 @@ interface EditorShellProps {
   publishFn?:  () => Promise<void>
 }
 
-export function EditorShell({ pageTitle, pageSlug, saveFn, publishFn }: EditorShellProps) {
+export function EditorShell({ pageTitle, pageId, pageSlug, saveFn, publishFn }: EditorShellProps) {
   const {
     undo, redo, canUndo, canRedo,
     isDirty, setSaveStatus, markClean,
@@ -72,10 +74,27 @@ export function EditorShell({ pageTitle, pageSlug, saveFn, publishFn }: EditorSh
 
   // ── Preview ───────────────────────────────────────────────────────────────
 
-  const handlePreview = useCallback(() => {
-    const base = (import.meta.env.VITE_WEBSITE_URL as string | undefined)?.replace(/\/$/, '') ?? ''
-    window.open(`${base}/${pageSlug ?? ''}?preview=1`, '_blank', 'noopener,noreferrer')
-  }, [pageSlug])
+  const handlePreview = useCallback(async () => {
+    // Auto-save unsaved changes first so the preview shows the latest content
+    if (isDirty) {
+      setSaveStatus('saving')
+      try {
+        await saveFn()
+        markClean()
+      } catch {
+        // Continue to preview even if save failed — user sees last saved version
+        setSaveStatus('error')
+      }
+    }
+    // Open CMS-internal preview route (reads BlockDocument from DB — correct data source)
+    // Falls back to external website URL if no pageId (non-block-editor contexts)
+    if (pageId) {
+      window.open(`/pages/${pageId}/preview`, '_blank', 'noopener,noreferrer')
+    } else {
+      const base = (import.meta.env.VITE_WEBSITE_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+      window.open(`${base}/${pageSlug ?? ''}?preview=1`, '_blank', 'noopener,noreferrer')
+    }
+  }, [pageId, pageSlug, isDirty, saveFn, setSaveStatus, markClean])
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
 

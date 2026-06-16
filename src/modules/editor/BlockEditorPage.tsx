@@ -8,16 +8,21 @@
 
 import { useEffect, useCallback } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { pagesService }            from '@/services/pages.service'
 import { pageSectionsService }     from '@/services/pageSectionsService'
 import type { PageSection }        from '@/services/pageSectionsService'
 import { useEditorStore }          from '@/stores/editor.store'
 import { useWebsiteStore }         from '@/stores/website.store'
 import { draftMediaStore }         from '@/stores/draftMedia.store'
+import { getPageDefaults }         from '@litostudio/templates'
+import { getPageLayout }           from '@/services/pageLayouts.service'
 import { EditorShell }             from './EditorShell'
 import { DashboardSkeleton }       from '@/components/atoms/Skeleton'
 import type { BlockDocument, Block, ImageBlockData, GalleryBlockData, HeroBlockData } from '@/types/editor.types'
+
+/** Generate a short random ID — same as patternLibrary uid() */
+function uid() { return Math.random().toString(36).slice(2, 10) }
 
 // LOCALE is now driven by the activeSite's default locale or falls back to 'id'.
 // TODO: add a locale switcher UI in EditorToolbar to allow editing multiple locales.
@@ -129,11 +134,11 @@ function sectionToBlock(s: PageSection): Block {
 }
 
 function isBlockDocument(v: unknown): v is BlockDocument {
+  // Accept any object with a `blocks` array — version field is optional
+  // (older saves may not have version: '1.0' but are still valid)
   return (
     typeof v === 'object' &&
     v !== null &&
-    'version' in v &&
-    (v as BlockDocument).version === '1.0' &&
     Array.isArray((v as BlockDocument).blocks)
   )
 }
@@ -142,6 +147,7 @@ export default function BlockEditorPage() {
   const { pageId } = useParams<{ pageId: string }>()
   const { activeSite } = useWebsiteStore()
   const { init, reset, setPageSeo, blockDoc, pageSeo } = useEditorStore()
+  const qc = useQueryClient()
 
   const { data: page, isLoading, error } = useQuery({
     queryKey:  ['page-editor', pageId],
@@ -154,11 +160,14 @@ export default function BlockEditorPage() {
   useEffect(() => {
     if (!page || !pageId) return
 
+    // Guard against stale async callbacks after unmount / page change
+    let mounted = true
+
     const translation = (page.page_translations ?? []).find((t) => t.locale === LOCALE)
     const rawBody     = translation?.body
 
     const doc: BlockDocument = isBlockDocument(rawBody)
-      ? rawBody
+      ? { ...(rawBody as BlockDocument), version: '1.0', locale: LOCALE }   // normalise: ensure version field
       : { version: '1.0', locale: LOCALE, blocks: [] }
 
     init(doc, pageId, LOCALE)
@@ -167,22 +176,85 @@ export default function BlockEditorPage() {
       metaDescription: translation?.meta_description ?? '',
     })
 
-    // Bug C fix: if no block content exists, migrate legacy page_sections
+    // Seeding priority (only when canvas is empty — no existing saved blocks):
+    //   1. Legacy page_sections migration
+    //   2. page_layouts DB override (per-org customised defaults)
+    //   3. PAGE_DEFAULTS_REGISTRY (static in-package defaults keyed by template + pageSlug)
     if (doc.blocks.length === 0) {
-      pageSectionsService.list(pageId).then((sections) => {
+      // Read template_slug safely — settings is Record<string,unknown>
+      const settings     = activeSite?.settings as Record<string, unknown> | null | undefined
+      const templateSlug = (settings?.template_slug as string | undefined) ?? ''
+      const orgId        = activeSite?.organization_id ?? ''
+      const pageSlug     = page.slug ?? ''
+
+      /** Convert slug variants: 'home-page' → 'home', 'about-us' → 'about' */
+      function normaliseSlug(s: string): string {
+        return s.split('-')[0] ?? s
+      }
+
+      /** Seed blocks from a PageDefaultBlock[] array — fresh IDs each time */
+      const seedFromDefaults = (defaults: Array<{ id: string; type: string; data: Record<string, unknown>; styles?: Record<string, unknown>; locked?: boolean; name?: string; visibility?: { desktop?: boolean; tablet?: boolean; mobile?: boolean } }>) => {
+        if (!mounted) return
+        const seededBlocks: Block[] = defaults.map((d) => ({
+          ...d,
+          id:   uid(),
+          type: d.type as Block['type'],
+          data: d.data  as Block['data'],
+        }))
+        if (seededBlocks.length > 0) {
+          init({ version: '1.0', locale: LOCALE, blocks: seededBlocks }, pageId, LOCALE)
+        }
+      }
+
+      /** Try static package defaults — also tries normalised slug as fallback */
+      const tryStaticDefaults = (tplSlug: string, pgSlug: string): boolean => {
+        const d = getPageDefaults(tplSlug, pgSlug) ?? getPageDefaults(tplSlug, normaliseSlug(pgSlug))
+        if (d && d.length > 0) { seedFromDefaults(d); return true }
+        return false
+      }
+
+      const doSeed = async () => {
+        // 1. Legacy sections
+        let sections: Awaited<ReturnType<typeof pageSectionsService.list>> = []
+        try { sections = await pageSectionsService.list(pageId) } catch { /* ignore */ }
+
+        if (!mounted) return
+
         if (sections.length > 0) {
           const migratedBlocks = sections
             .sort((a, b) => a.sort_order - b.sort_order)
             .map(sectionToBlock)
           init({ version: '1.0', locale: LOCALE, blocks: migratedBlocks }, pageId, LOCALE)
+          return
         }
-      }).catch(() => {
-        // Sections fetch failed — leave the editor at empty canvas, not a crash
-      })
+
+        // Without a template slug we can still try by falling through to static defaults
+        // using the page slug alone (each template shares common page slugs like 'home').
+        const effectiveSlug = templateSlug || 'lito'   // default to lito if not set
+
+        if (!pageSlug) return
+
+        // 2. DB override (page_layouts)
+        if (orgId && templateSlug) {
+          try {
+            const dbLayout = await getPageLayout(orgId, effectiveSlug, pageSlug)
+            if (!mounted) return
+            if (dbLayout && dbLayout.length > 0) { seedFromDefaults(dbLayout); return }
+          } catch { /* ignore */ }
+        }
+
+        // 3. Static package defaults (try exact slug, then normalised slug)
+        tryStaticDefaults(effectiveSlug, pageSlug)
+      }
+
+      doSeed()
     }
 
-    return () => { reset() }
-  }, [page, pageId, init, reset, setPageSeo])
+    return () => {
+      mounted = false
+      reset()
+    }
+  }, [page, pageId, init, reset, setPageSeo, activeSite])
 
   // ── Save function ─────────────────────────────────────────────────────────
 
@@ -201,7 +273,9 @@ export default function BlockEditorPage() {
         meta_description: pageSeo.metaDescription || undefined,
       }],
     })
-  }, [pageId, page, blockDoc, pageSeo])
+    // Invalidate cache so re-opening the editor fetches fresh content from DB
+    qc.invalidateQueries({ queryKey: ['page-editor', pageId] })
+  }, [pageId, page, blockDoc, pageSeo, qc])
 
   // ── Publish function ──────────────────────────────────────────────────────
 
@@ -245,6 +319,7 @@ export default function BlockEditorPage() {
   return (
     <EditorShell
       pageTitle={pageTitle}
+      pageId={pageId}
       pageSlug={page.slug}
       saveFn={saveFn}
       publishFn={publishFn}

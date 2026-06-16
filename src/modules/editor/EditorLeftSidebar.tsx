@@ -86,13 +86,27 @@ const SIDEBAR_VIEWS: Array<{ view: SidebarView; Icon: LucideIcon; label: string 
 ]
 
 export function EditorLeftSidebar() {
-  const { addBlock, selectedBlockId } = useEditorStore()
+  const { addBlock, selectedBlockId, blockDoc } = useEditorStore()
   const { manifest, templateSlug } = useTemplateManifest()
   const [search, setSearch]         = useState('')
   const [activeTab, setActiveTab]   = useState<FilterTab>('All')
   const [sidebarView, setSidebarView] = useState<SidebarView>('blocks')
 
+  // Build a set of block types already on the canvas (as strings for manifest comparison)
+  const blockTypesOnCanvas = new Set<string>(blockDoc.blocks.map((b) => b.type as string))
+
+  // Build a set of block types that are at their max (multiple: false) per manifest
+  const maxedBlockTypes = new Set<string>()
+  if (manifest) {
+    for (const section of manifest.sections) {
+      if (!section.multiple && blockTypesOnCanvas.has(section.id)) {
+        maxedBlockTypes.add(section.id)
+      }
+    }
+  }
+
   const handleInsert = (item: typeof BLOCK_LIBRARY[number]) => {
+    if (maxedBlockTypes.has(item.type)) return // guard: shouldn't be clickable anyway
     const block = makeBlock(
       item.type,
       structuredClone(item.defaultData),
@@ -136,50 +150,60 @@ export function EditorLeftSidebar() {
     whiteSpace: 'nowrap' as const,
   })
 
-  const blockCard = (item: typeof BLOCK_LIBRARY[number]) => (
-    <button
-      key={item.type}
-      type="button"
-      onClick={() => handleInsert(item)}
-      title={item.description}
-      style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        gap: 6, padding: '10px 6px',
-        borderRadius: 10,
-        border: '1px solid var(--lito-border)',
-        background: 'var(--cms-card-bg)',
-        cursor: 'pointer',
-        textAlign: 'center',
-        transition: 'border-color 120ms, box-shadow 120ms',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = 'var(--lito-teal)'
-        e.currentTarget.style.boxShadow = '0 0 0 1px var(--lito-teal)'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = 'var(--lito-border)'
-        e.currentTarget.style.boxShadow = 'none'
-      }}
-    >
-      <div style={{
-        width: 36, height: 36, borderRadius: 8,
-        background: 'var(--cms-surface-3)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'var(--text-secondary)',
-        flexShrink: 0,
-      }}>
-        <BlockIcon name={item.icon} />
-      </div>
-      <span style={{
-        fontFamily: 'var(--font-body)', fontSize: 10, lineHeight: 1.2,
-        color: 'var(--text-secondary)',
-        overflow: 'hidden', textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap', maxWidth: '100%',
-      }}>
-        {item.label}
-      </span>
-    </button>
-  )
+  const blockCard = (item: typeof BLOCK_LIBRARY[number]) => {
+    const isMaxed = maxedBlockTypes.has(item.type)
+    return (
+      <button
+        key={item.type}
+        type="button"
+        onClick={() => !isMaxed && handleInsert(item)}
+        title={isMaxed ? `Only one ${item.label} block allowed` : item.description}
+        disabled={isMaxed}
+        aria-label={isMaxed ? `${item.label} — already on canvas` : `Insert ${item.label} block`}
+        style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          gap: 6, padding: '10px 6px',
+          borderRadius: 10,
+          border: isMaxed ? '1px dashed var(--lito-border)' : '1px solid var(--lito-border)',
+          background: isMaxed ? 'transparent' : 'var(--cms-card-bg)',
+          cursor: isMaxed ? 'not-allowed' : 'pointer',
+          textAlign: 'center',
+          opacity: isMaxed ? 0.4 : 1,
+          transition: 'border-color 120ms, box-shadow 120ms, opacity 120ms',
+        }}
+        onMouseEnter={e => {
+          if (!isMaxed) {
+            e.currentTarget.style.borderColor = 'var(--lito-teal)'
+            e.currentTarget.style.boxShadow = '0 0 0 1px var(--lito-teal)'
+          }
+        }}
+        onMouseLeave={e => {
+          if (!isMaxed) {
+            e.currentTarget.style.borderColor = 'var(--lito-border)'
+            e.currentTarget.style.boxShadow = 'none'
+          }
+        }}
+      >
+        <div style={{
+          width: 36, height: 36, borderRadius: 8,
+          background: 'var(--cms-surface-3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'var(--text-secondary)',
+          flexShrink: 0,
+        }}>
+          <BlockIcon name={item.icon} />
+        </div>
+        <span style={{
+          fontFamily: 'var(--font-body)', fontSize: 10, lineHeight: 1.2,
+          color: 'var(--text-secondary)',
+          overflow: 'hidden', textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap', maxWidth: '100%',
+        }}>
+          {item.label}
+        </span>
+      </button>
+    )
+  }
 
   const sectionHeader = (label: string) => (
     <p key={`hdr-${label}`} style={{

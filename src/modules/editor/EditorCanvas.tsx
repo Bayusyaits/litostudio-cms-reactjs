@@ -21,11 +21,13 @@ import {
   Plus, ChevronUp, ChevronDown, Copy, Trash2, GripVertical,
   MoreVertical, Scissors, ClipboardPaste, ArrowUpToLine, ArrowDownToLine,
   Paintbrush, ClipboardCopy, Group, Lock, Unlock, Tag, EyeOff,
-  ImageIcon, Code2,
+  ImageIcon, Code2, Menu,
 } from 'lucide-react'
-import { useEditorStore } from '@/stores/editor.store'
-import { BlockRenderer } from './blocks/BlockRenderer'
-import type { Block } from '@/types/editor.types'
+import { useEditorStore }       from '@/stores/editor.store'
+import { BlockRenderer }        from './blocks/BlockRenderer'
+import { useTemplateManifest }  from '@/hooks/useTemplateManifest'
+import { getCanvasTokens }      from './templateCanvasTokens'
+import type { Block }           from '@/types/editor.types'
 
 // ── Context menu ─────────────────────────────────────────────────────────────
 
@@ -218,7 +220,8 @@ function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockC
         },
       ],
     },
-    {
+    // Delete is hidden for locked blocks (locked = template-required section)
+    ...(!block.locked ? [{
       items: [
         {
           label: 'Delete',
@@ -227,7 +230,7 @@ function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockC
           action: () => { removeBlock(block.id); onClose() },
         },
       ],
-    },
+    }] : []),
   ]
 
   const itemStyle = (item: ContextMenuItem): React.CSSProperties => ({
@@ -249,6 +252,8 @@ function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockC
   return (
     <div
       ref={menuRef}
+      role="menu"
+      aria-label="Block options"
       style={{
         position: 'absolute',
         top: pos.top,
@@ -263,17 +268,20 @@ function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockC
         overflow: 'hidden',
       }}
       onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
     >
       {groups.map((group, gi) => (
-        <div key={gi}>
+        <div key={gi} role="group">
           {gi > 0 && (
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '3px 8px' }} />
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '3px 8px' }} aria-hidden="true" />
           )}
           {group.items.map((item, ii) => (
             <button
               key={ii}
               type="button"
+              role="menuitem"
               disabled={item.disabled}
+              aria-disabled={item.disabled}
               onClick={item.disabled ? undefined : item.action}
               style={itemStyle(item)}
               onMouseEnter={e => {
@@ -283,7 +291,7 @@ function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockC
               }}
               onMouseLeave={e => { e.currentTarget.style.background = 'none' }}
             >
-              <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-hidden="true">
                 {item.icon}
               </span>
               {item.label}
@@ -344,13 +352,16 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         draggable
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        role="button"
+        tabIndex={0}
+        aria-label="Drag to reorder block"
         style={{ ...btnStyle, cursor: 'grab' }}
         title="Drag to reorder"
       >
         <GripVertical size={13} />
       </div>
 
-      <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.12)', margin: '0 2px' }} />
+      <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.12)', margin: '0 2px' }} aria-hidden="true" />
 
       {/* Move up */}
       <button
@@ -358,11 +369,12 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         disabled={isFirst}
         onClick={() => moveBlockUp(block.id)}
         title="Move up"
+        aria-label="Move block up"
         style={{ ...btnStyle, opacity: isFirst ? 0.25 : 1 }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
-        <ChevronUp size={13} />
+        <ChevronUp size={13} aria-hidden="true" />
       </button>
 
       {/* Move down */}
@@ -371,25 +383,27 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         disabled={isLast}
         onClick={() => moveBlockDown(block.id)}
         title="Move down"
+        aria-label="Move block down"
         style={{ ...btnStyle, opacity: isLast ? 0.25 : 1 }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
-        <ChevronDown size={13} />
+        <ChevronDown size={13} aria-hidden="true" />
       </button>
 
-      <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.12)', margin: '0 2px' }} />
+      <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.12)', margin: '0 2px' }} aria-hidden="true" />
 
       {/* Duplicate */}
       <button
         type="button"
         onClick={() => duplicateBlock(block.id)}
-        title="Duplicate"
+        title="Duplicate block"
+        aria-label="Duplicate block"
         style={btnStyle}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)' }}
       >
-        <Copy size={12} />
+        <Copy size={12} aria-hidden="true" />
       </button>
 
       {/* More options (⋮) */}
@@ -397,6 +411,9 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         type="button"
         onClick={handleMoreClick}
         title="More options"
+        aria-label="More block options"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
         style={{
           ...btnStyle,
           background: menuOpen ? 'rgba(255,255,255,0.14)' : 'transparent',
@@ -404,7 +421,7 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = menuOpen ? 'rgba(255,255,255,0.14)' : 'transparent' }}
       >
-        <MoreVertical size={12} />
+        <MoreVertical size={12} aria-hidden="true" />
       </button>
 
       {/* Delete */}
@@ -412,11 +429,12 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         type="button"
         onClick={() => removeBlock(block.id)}
         title="Delete block"
+        aria-label="Delete block"
         style={btnStyle}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.25)'; (e.currentTarget as HTMLElement).style.color = '#f87171' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)' }}
       >
-        <Trash2 size={12} />
+        <Trash2 size={12} aria-hidden="true" />
       </button>
 
       {/* Context menu */}
@@ -470,6 +488,122 @@ function InsertButton({ afterBlockId }: { afterBlockId: string }) {
   )
 }
 
+// ── Mock site header (Gutenberg-style template preview bar) ──────────────────
+
+interface MockSiteHeaderProps {
+  headerBg:     string
+  headerText:   string
+  headerAccent: string
+  siteName:     string
+  fontDisplay:  string
+  fontBody:     string
+}
+
+function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody }: MockSiteHeaderProps) {
+  const navItems = ['Home', 'About', 'Portfolio', 'Journal', 'Contact']
+  return (
+    <div
+      aria-label="Template site header preview"
+      role="banner"
+      style={{
+        background: headerBg,
+        color: headerText,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 40px',
+        height: 64,
+        flexShrink: 0,
+        borderBottom: `1px solid ${headerAccent}22`,
+        position: 'relative',
+        zIndex: 5,
+      }}
+    >
+      {/* Logo */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        fontFamily: fontDisplay, fontSize: 18, fontWeight: 600,
+        letterSpacing: '0.04em',
+        color: headerText,
+        userSelect: 'none',
+      }}>
+        <span style={{
+          width: 8, height: 8, borderRadius: '50%',
+          background: headerAccent,
+          display: 'inline-block', flexShrink: 0,
+        }} aria-hidden="true" />
+        {siteName}
+      </div>
+
+      {/* Nav */}
+      <nav aria-label="Template navigation preview" style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
+        {navItems.map((item) => (
+          <span
+            key={item}
+            style={{
+              fontFamily: fontBody, fontSize: 12, fontWeight: 500,
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              color: `${headerText}bb`,
+              cursor: 'default',
+              userSelect: 'none',
+            }}
+          >
+            {item}
+          </span>
+        ))}
+      </nav>
+
+      {/* Hamburger — mobile hint */}
+      <Menu size={18} style={{ color: `${headerText}88` }} aria-hidden="true" />
+
+      {/* "Preview" badge */}
+      <div style={{
+        position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)',
+        background: headerAccent,
+        color: '#fff',
+        fontFamily: fontBody, fontSize: 9, fontWeight: 700,
+        letterSpacing: '0.1em', textTransform: 'uppercase',
+        padding: '2px 10px', borderRadius: 20,
+        pointerEvents: 'none',
+        zIndex: 10,
+      }} aria-hidden="true">
+        Template Preview
+      </div>
+    </div>
+  )
+}
+
+// ── Mock site footer ──────────────────────────────────────────────────────────
+
+function MockSiteFooter({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody }: MockSiteHeaderProps) {
+  return (
+    <div
+      aria-label="Template site footer preview"
+      role="contentinfo"
+      style={{
+        background: headerBg,
+        color: `${headerText}88`,
+        padding: '32px 40px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderTop: `1px solid ${headerAccent}22`,
+        flexShrink: 0,
+      }}
+    >
+      <span style={{ fontFamily: fontDisplay, fontSize: 14, color: headerText, userSelect: 'none' }}>
+        {siteName}
+      </span>
+      <span style={{ fontFamily: fontBody, fontSize: 11, userSelect: 'none' }}>
+        © {new Date().getFullYear()} · All rights reserved
+      </span>
+      <span style={{
+        fontFamily: fontBody, fontSize: 10, fontWeight: 600,
+        letterSpacing: '0.08em', textTransform: 'uppercase',
+        color: headerAccent, userSelect: 'none',
+      }}>
+        Lito Studio CMS
+      </span>
+    </div>
+  )
+}
+
 // ── Main canvas ───────────────────────────────────────────────────────────────
 
 export function EditorCanvas() {
@@ -477,6 +611,15 @@ export function EditorCanvas() {
     blockDoc: doc, selectedBlockId, selectBlock,
     reorderBlocks, previewMode, zoomLevel, editorMode,
   } = useEditorStore()
+
+  const { templateSlug } = useTemplateManifest()
+  const tokens           = getCanvasTokens(templateSlug)
+  const {
+    headerBg, headerText, headerAccent, siteName,
+    '--font-display': fontDisplay,
+    '--font-body':    fontBody,
+    ...cssVars
+  } = tokens
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const dragIdx   = useRef<number | null>(null)
@@ -516,23 +659,42 @@ export function EditorCanvas() {
       ref={canvasRef}
       style={{
         flex: 1, overflowY: 'auto',
-        background: 'var(--cms-main-bg)',
+        background: cssVars['--cms-main-bg'],
         display: 'flex', justifyContent: 'center',
         minHeight: 0,
         position: 'relative',
       }}
     >
-      <div style={{
-        width: '100%',
-        maxWidth: canvasWidth,
-        minHeight: '100%',
-        background: 'var(--cms-card-bg)',
-        boxShadow: '0 0 0 1px var(--lito-border)',
-        transition: 'max-width 300ms',
-        position: 'relative',
-        transformOrigin: 'top center',
-        transform: zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined,
-      }}>
+      {/* Page column — inherits template CSS vars */}
+      <div
+        style={{
+          width: '100%',
+          maxWidth: canvasWidth,
+          minHeight: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 0 0 1px var(--lito-border), 0 4px 32px rgba(0,0,0,0.08)',
+          transition: 'max-width 300ms',
+          position: 'relative',
+          transformOrigin: 'top center',
+          transform: zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined,
+          // ── Inject template CSS variable overrides scoped to this column ──
+          '--font-display': fontDisplay,
+          '--font-body':    fontBody,
+          ...cssVars,
+        } as React.CSSProperties}
+      >
+        {/* Mock site header */}
+        <MockSiteHeader
+          headerBg={headerBg}
+          headerText={headerText}
+          headerAccent={headerAccent}
+          siteName={siteName}
+          fontDisplay={fontDisplay}
+          fontBody={fontBody}
+        />
+        {/* Page body — template background */}
+        <div style={{ flex: 1, background: cssVars['--cms-card-bg'] as string }}>
         {doc.blocks.length === 0 ? (
           /* Empty state */
           <div style={{
@@ -589,6 +751,9 @@ export function EditorCanvas() {
               return (
                 <div
                   key={block.id}
+                  role="region"
+                  aria-label={`${block.name ?? block.type} block${isLocked ? ' (locked)' : ''}`}
+                  aria-selected={isSelected}
                   onClick={() => !isPreview && !isLocked && selectBlock(block.id)}
                   onDragOver={(e) => !isPreview && handleDragOver(e, idx)}
                   onDrop={(e) => !isPreview && handleDrop(e, idx)}
@@ -738,6 +903,17 @@ export function EditorCanvas() {
             )}
           </div>
         )}
+        </div>{/* end page body */}
+
+        {/* Mock site footer */}
+        <MockSiteFooter
+          headerBg={headerBg}
+          headerText={headerText}
+          headerAccent={headerAccent}
+          siteName={siteName}
+          fontDisplay={fontDisplay}
+          fontBody={fontBody}
+        />
       </div>
     </div>
   )

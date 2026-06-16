@@ -26,11 +26,20 @@ import {
 
 // ── Style helper ──────────────────────────────────────────────────────────────
 
+/**
+ * Derive inline styles for a block's outer wrapper.
+ * Default vertical section padding (64px top + bottom) is applied unless the
+ * block explicitly overrides it — this matches the real website's section rhythm
+ * and makes the canvas look like the live site rather than a flat widget list.
+ * Hero and Spacer blocks explicitly set paddingTop/Bottom: 0 in their defaults.
+ */
 function blockStyle(block: Block): React.CSSProperties {
   const s = block.styles ?? {}
+  // Blocks that manage their own layout should not have forced padding
+  const noPadding = block.type === 'spacer' || block.type === 'divider'
   return {
-    paddingTop:    s.paddingTop    !== undefined ? s.paddingTop    : undefined,
-    paddingBottom: s.paddingBottom !== undefined ? s.paddingBottom : undefined,
+    paddingTop:    s.paddingTop    !== undefined ? s.paddingTop    : noPadding ? 0 : 64,
+    paddingBottom: s.paddingBottom !== undefined ? s.paddingBottom : noPadding ? 0 : 64,
     paddingLeft:   s.paddingLeft   !== undefined ? s.paddingLeft   : undefined,
     paddingRight:  s.paddingRight  !== undefined ? s.paddingRight  : undefined,
     marginTop:     s.marginTop     !== undefined ? s.marginTop     : undefined,

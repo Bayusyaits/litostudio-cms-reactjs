@@ -37,6 +37,7 @@ const ReviewsPage      = lazy(() => import('@/modules/reviews/ReviewsPageContain
 const FaqsPage         = lazy(() => import('@/modules/faqs/FaqsPageContainer'))
 const OnboardingPage   = lazy(() => import('@/modules/onboarding/OnboardingPage'))
 const BlockEditorPage          = lazy(() => import('@/modules/editor/BlockEditorPage'))
+const PagePreviewPage          = lazy(() => import('@/modules/editor/PagePreviewPage'))
 const SimpleContentEditorPage  = lazy(() => import('@/modules/editor/SimpleContentEditorPage'))
 const OrganizationsPage  = lazy(() => import('@/modules/organizations/OrganizationsPageContainer'))
 const AddonsPage         = lazy(() => import('@/modules/addons/AddonsPageContainer'))
@@ -78,6 +79,11 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <Navigate to="/dashboard" replace />,
+  },
+  // ── Full-screen standalone routes (no DashboardLayout chrome) ──────────────
+  {
+    path: 'pages/:pageId/preview',
+    element: <S><PagePreviewPage /></S>,
   },
   {
     element: <AuthLayout />,

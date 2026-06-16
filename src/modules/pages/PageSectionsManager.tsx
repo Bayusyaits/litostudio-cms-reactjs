@@ -4,7 +4,7 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  GripVertical, Eye, EyeOff, Plus, Trash2, ChevronUp, ChevronDown, X, Check,
+  GripVertical, Eye, EyeOff, Plus, Trash2, ChevronUp, ChevronDown, X, Check, AlertCircle,
 } from 'lucide-react'
 import {
   pageSectionsService, SECTION_TYPES,
@@ -65,40 +65,62 @@ const SECTION_LABELS: Record<string, string> = {
   featured_products: 'Featured Products',
 }
 
+// ── Shared button style ───────────────────────────────────────────────────────
+
+const iconBtn: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  padding: '4px 6px', borderRadius: 6,
+  border: '1px solid var(--lito-border)',
+  background: 'transparent', cursor: 'pointer',
+  color: 'var(--text-secondary)',
+  transition: 'color 120ms, border-color 120ms, background 120ms',
+  lineHeight: 1,
+}
+
+const iconBtnDisabled: React.CSSProperties = {
+  ...iconBtn,
+  opacity: 0.35,
+  cursor: 'not-allowed',
+}
+
 // ── Row component ─────────────────────────────────────────────────────────────
 
 interface SectionRowProps {
-  section: PageSection
-  isFirst: boolean
-  isLast: boolean
-  onMoveUp: () => void
-  onMoveDown: () => void
-  onToggle: () => void
-  onDelete: () => void
+  section:     PageSection
+  isFirst:     boolean
+  isLast:      boolean
+  isDeleting:  boolean
+  isToggling:  boolean
+  onMoveUp:    () => void
+  onMoveDown:  () => void
+  onToggle:    () => void
+  onDelete:    () => void
   onDragStart: (e: React.DragEvent) => void
-  onDragOver: (e: React.DragEvent) => void
-  onDrop: (e: React.DragEvent) => void
-  isDragOver: boolean
+  onDragOver:  (e: React.DragEvent) => void
+  onDrop:      (e: React.DragEvent) => void
+  isDragOver:  boolean
 }
 
 function SectionRow({
-  section, isFirst, isLast, onMoveUp, onMoveDown, onToggle, onDelete,
+  section, isFirst, isLast, isDeleting, isToggling,
+  onMoveUp, onMoveDown, onToggle, onDelete,
   onDragStart, onDragOver, onDrop, isDragOver,
 }: SectionRowProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   return (
     <div
+      role="listitem"
       draggable
       onDragStart={onDragStart}
       onDragOver={(e) => { e.preventDefault(); onDragOver(e) }}
       onDrop={onDrop}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
+        display: 'flex', alignItems: 'center', gap: 8,
         padding: '10px 12px',
-        background: isDragOver ? 'rgba(20,184,166,0.08)' : 'var(--cms-card-bg)',
+        background: isDragOver
+          ? 'rgba(26,74,90,0.08)'
+          : 'var(--cms-surface-2)',
         border: isDragOver
           ? '1px solid var(--lito-teal)'
           : '1px solid var(--lito-border)',
@@ -109,122 +131,135 @@ function SectionRow({
       }}
     >
       {/* Grip */}
-      <GripVertical size={14} style={{ color: 'var(--text-muted)', flexShrink: 0, cursor: 'grab' }} />
-
-      {/* Sort order badge */}
-      <span style={{
-        minWidth: 22, textAlign: 'center',
-        fontFamily: 'monospace', fontSize: 11, color: 'var(--text-muted)',
-      }}>
-        {section.sort_order}
+      <span aria-hidden="true" style={{ display: 'flex', flexShrink: 0 }}>
+        <GripVertical size={14} style={{ color: 'var(--text-muted)', cursor: 'grab' }} />
       </span>
 
-      {/* Section type label */}
+      {/* Sort order badge */}
+      <span aria-hidden="true" style={{
+        minWidth: 22, textAlign: 'center',
+        fontFamily: 'monospace', fontSize: 11,
+        color: 'var(--text-muted)', flexShrink: 0,
+      }}>
+        {section.sort_order + 1}
+      </span>
+
+      {/* Section label */}
       <span style={{
-        flex: 1, fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500,
+        flex: 1,
+        fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500,
         color: section.is_visible ? 'var(--text-primary)' : 'var(--text-muted)',
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
         {SECTION_LABELS[section.section_type] ?? section.section_type}
         {section.name && (
-          <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--text-muted)', fontWeight: 400 }}>
+          <span style={{
+            marginLeft: 6, fontSize: 11,
+            color: 'var(--text-muted)', fontWeight: 400,
+          }}>
             — {section.name}
           </span>
         )}
       </span>
 
       {/* Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+
         {/* Move up */}
         <button
           type="button"
           disabled={isFirst}
           onClick={onMoveUp}
+          aria-label="Move section up"
           title="Move up"
-          style={{
-            padding: '3px 5px', borderRadius: 5, border: '1px solid var(--lito-border)',
-            background: 'transparent', cursor: isFirst ? 'not-allowed' : 'pointer',
-            color: isFirst ? 'var(--text-muted)' : 'var(--text-secondary)',
-            opacity: isFirst ? 0.4 : 1,
-          }}
+          style={isFirst ? iconBtnDisabled : iconBtn}
         >
-          <ChevronUp size={12} />
+          <ChevronUp size={12} aria-hidden="true" />
         </button>
+
         {/* Move down */}
         <button
           type="button"
           disabled={isLast}
           onClick={onMoveDown}
+          aria-label="Move section down"
           title="Move down"
-          style={{
-            padding: '3px 5px', borderRadius: 5, border: '1px solid var(--lito-border)',
-            background: 'transparent', cursor: isLast ? 'not-allowed' : 'pointer',
-            color: isLast ? 'var(--text-muted)' : 'var(--text-secondary)',
-            opacity: isLast ? 0.4 : 1,
-          }}
+          style={isLast ? iconBtnDisabled : iconBtn}
         >
-          <ChevronDown size={12} />
+          <ChevronDown size={12} aria-hidden="true" />
         </button>
 
         {/* Visibility toggle */}
         <button
           type="button"
           onClick={onToggle}
+          disabled={isToggling}
+          aria-label={section.is_visible ? 'Hide section' : 'Show section'}
+          aria-pressed={section.is_visible}
           title={section.is_visible ? 'Hide section' : 'Show section'}
           style={{
-            padding: '3px 5px', borderRadius: 5, border: '1px solid var(--lito-border)',
-            background: 'transparent', cursor: 'pointer',
+            ...iconBtn,
             color: section.is_visible ? 'var(--lito-teal)' : 'var(--text-muted)',
+            borderColor: section.is_visible ? 'var(--lito-teal)' : 'var(--lito-border)',
+            opacity: isToggling ? 0.5 : 1,
+            cursor: isToggling ? 'wait' : 'pointer',
           }}
         >
-          {section.is_visible ? <Eye size={12} /> : <EyeOff size={12} />}
+          {section.is_visible
+            ? <Eye size={12} aria-hidden="true" />
+            : <EyeOff size={12} aria-hidden="true" />
+          }
         </button>
 
-        {/* Delete */}
+        {/* Delete / confirm */}
         {confirmDelete ? (
           <>
             <button
               type="button"
               onClick={() => { onDelete(); setConfirmDelete(false) }}
+              disabled={isDeleting}
+              aria-label="Confirm delete section"
               title="Confirm delete"
               style={{
-                padding: '3px 7px', borderRadius: 5, border: '1px solid #ef4444',
-                background: '#ef4444', cursor: 'pointer', color: '#fff',
+                ...iconBtn,
+                borderColor: 'var(--lito-teal)',
+                background: 'var(--lito-teal)',
+                color: '#fff',
+                opacity: isDeleting ? 0.6 : 1,
+                cursor: isDeleting ? 'wait' : 'pointer',
               }}
             >
-              <Check size={12} />
+              <Check size={12} aria-hidden="true" />
             </button>
             <button
               type="button"
               onClick={() => setConfirmDelete(false)}
+              aria-label="Cancel delete"
               title="Cancel"
-              style={{
-                padding: '3px 5px', borderRadius: 5, border: '1px solid var(--lito-border)',
-                background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)',
-              }}
+              style={iconBtn}
             >
-              <X size={12} />
+              <X size={12} aria-hidden="true" />
             </button>
           </>
         ) : (
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
+            aria-label="Delete section"
             title="Delete section"
-            style={{
-              padding: '3px 5px', borderRadius: 5, border: '1px solid var(--lito-border)',
-              background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)',
-              transition: 'color 150ms, border-color 150ms',
-            }}
+            style={iconBtn}
             onMouseEnter={e => {
-              ;(e.currentTarget as HTMLElement).style.color = '#ef4444'
-              ;(e.currentTarget as HTMLElement).style.borderColor = '#ef4444'
+              const el = e.currentTarget as HTMLButtonElement
+              el.style.color = '#dc2626'
+              el.style.borderColor = '#dc2626'
             }}
             onMouseLeave={e => {
-              ;(e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'
-              ;(e.currentTarget as HTMLElement).style.borderColor = 'var(--lito-border)'
+              const el = e.currentTarget as HTMLButtonElement
+              el.style.color = 'var(--text-secondary)'
+              el.style.borderColor = 'var(--lito-border)'
             }}
           >
-            <Trash2 size={12} />
+            <Trash2 size={12} aria-hidden="true" />
           </button>
         )}
       </div>
@@ -235,26 +270,29 @@ function SectionRow({
 // ── Main component ────────────────────────────────────────────────────────────
 
 interface PageSectionsManagerProps {
-  pageId: string
+  pageId:    string
   pageTitle: string
-  onClose: () => void
+  onClose:   () => void
 }
 
 export function PageSectionsManager({ pageId, pageTitle, onClose }: PageSectionsManagerProps) {
   const qc = useQueryClient()
-  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [dragIdx,    setDragIdx]    = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
-  const [addType, setAddType] = useState<SectionType | ''>('')
+  const [addType,    setAddType]    = useState<SectionType | ''>('')
 
   const queryKey = ['page-sections', pageId]
 
-  const { data: sections = [], isLoading } = useQuery<PageSection[]>({
+  const { data: sections = [], isLoading, isError } = useQuery<PageSection[]>({
     queryKey,
-    queryFn: () => pageSectionsService.list(pageId),
-    enabled: !!pageId,
+    queryFn:  () => pageSectionsService.list(pageId),
+    enabled:  !!pageId,
   })
 
-  const invalidate = () => qc.invalidateQueries({ queryKey })
+  const invalidate = useCallback(
+    () => qc.invalidateQueries({ queryKey }),
+    [qc, pageId], // eslint-disable-line react-hooks/exhaustive-deps
+  )
 
   const toggleMutation = useMutation({
     mutationFn: ({ id, is_visible }: { id: string; is_visible: boolean }) =>
@@ -283,7 +321,7 @@ export function PageSectionsManager({ pageId, pageTitle, onClose }: PageSections
     onSuccess: () => { invalidate(); setAddType('') },
   })
 
-  // ── Drag & drop reorder ────────────────────────────────────────────────────
+  // ── Drag & drop ────────────────────────────────────────────────────────────
 
   const handleDrop = useCallback((targetIdx: number) => {
     if (dragIdx === null || dragIdx === targetIdx) return
@@ -298,42 +336,65 @@ export function PageSectionsManager({ pageId, pageTitle, onClose }: PageSections
 
   // ── Move up / down ─────────────────────────────────────────────────────────
 
-  function moveSection(idx: number, direction: 'up' | 'down') {
+  const moveSection = useCallback((idx: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? idx - 1 : idx + 1
     if (targetIdx < 0 || targetIdx >= sections.length) return
     const reordered = [...sections]
     ;[reordered[idx], reordered[targetIdx]] = [reordered[targetIdx], reordered[idx]]
     const order = reordered.map((s, i) => ({ id: s.id, sort_order: i }))
     reorderMutation.mutate(order)
+  }, [sections, reorderMutation])
+
+  // ── Keyboard close ─────────────────────────────────────────────────────────
+
+  const handleBackdropKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') onClose()
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-    }}>
-      <div style={{
-        background: 'var(--cms-bg)',
-        border: '1px solid var(--lito-border)',
-        borderRadius: 12,
-        width: '100%', maxWidth: 560,
-        maxHeight: '85vh',
-        display: 'flex', flexDirection: 'column',
-        boxShadow: '0 24px 48px rgba(0,0,0,0.25)',
-      }}>
-        {/* Header */}
+    /* Backdrop */
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Section Manager"
+      onKeyDown={handleBackdropKey}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.55)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      {/* Modal panel */}
+      <div
+        role="document"
+        style={{
+          background: 'var(--cms-card-bg)',
+          border: '1px solid var(--lito-border)',
+          borderRadius: 12,
+          width: '100%', maxWidth: 560,
+          maxHeight: '85vh',
+          display: 'flex', flexDirection: 'column',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.30)',
+          overflow: 'hidden',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ── Header ── */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '16px 20px',
           borderBottom: '1px solid var(--lito-border)',
+          flexShrink: 0,
         }}>
           <div>
             <p style={{
               fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600,
-              color: 'var(--text-primary)', margin: 0,
+              color: 'var(--text-primary)', margin: 0, lineHeight: 1.3,
             }}>
               Section Manager
             </p>
@@ -347,47 +408,99 @@ export function PageSectionsManager({ pageId, pageTitle, onClose }: PageSections
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close section manager"
+            title="Close"
             style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               padding: '6px 8px', borderRadius: 7,
               border: '1px solid var(--lito-border)',
               background: 'transparent', cursor: 'pointer',
               color: 'var(--text-muted)',
+              transition: 'color 120ms, background 120ms',
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLButtonElement
+              el.style.background = 'var(--cms-surface-3)'
+              el.style.color = 'var(--text-primary)'
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLButtonElement
+              el.style.background = 'transparent'
+              el.style.color = 'var(--text-muted)'
             }}
           >
-            <X size={14} />
+            <X size={14} aria-hidden="true" />
           </button>
         </div>
 
-        {/* Section list */}
-        <div style={{
-          flex: 1, overflowY: 'auto', padding: '16px 20px',
-          display: 'flex', flexDirection: 'column', gap: 8,
-        }}>
+        {/* ── Section list ── */}
+        <div
+          role="list"
+          aria-label="Page sections"
+          style={{
+            flex: 1, overflowY: 'auto', padding: '16px 20px',
+            display: 'flex', flexDirection: 'column', gap: 6,
+          }}
+        >
+          {/* Loading */}
           {isLoading && (
-            <p style={{
-              fontFamily: 'var(--font-body)', fontSize: 13,
-              color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0',
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 8, padding: '32px 0',
             }}>
-              Loading sections…
-            </p>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={{
+                  height: 44, borderRadius: 8, width: '100%',
+                  background: 'var(--cms-surface-3)',
+                  animation: 'pulse 1.4s ease-in-out infinite',
+                  animationDelay: `${i * 0.15}s`,
+                }} />
+              ))}
+            </div>
           )}
-          {!isLoading && sections.length === 0 && (
-            <p style={{
+
+          {/* Error */}
+          {isError && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '12px 14px', borderRadius: 8,
+              border: '1px solid var(--lito-border)',
+              background: 'var(--cms-surface-3)',
+              color: 'var(--text-muted)',
               fontFamily: 'var(--font-body)', fontSize: 13,
-              color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0',
             }}>
+              <AlertCircle size={14} aria-hidden="true" />
+              Failed to load sections. Check your connection and try again.
+            </div>
+          )}
+
+          {/* Empty */}
+          {!isLoading && !isError && sections.length === 0 && (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 6, padding: '32px 0',
+              fontFamily: 'var(--font-body)', fontSize: 13,
+              color: 'var(--text-muted)', textAlign: 'center',
+            }}>
+              <Plus size={20} style={{ opacity: 0.4 }} aria-hidden="true" />
               No sections yet. Add one below.
-            </p>
+            </div>
           )}
-          {sections.map((section, idx) => (
+
+          {/* Rows */}
+          {!isLoading && sections.map((section, idx) => (
             <SectionRow
               key={section.id}
               section={section}
               isFirst={idx === 0}
               isLast={idx === sections.length - 1}
+              isDeleting={deleteMutation.isPending}
+              isToggling={toggleMutation.isPending}
               onMoveUp={() => moveSection(idx, 'up')}
               onMoveDown={() => moveSection(idx, 'down')}
-              onToggle={() => toggleMutation.mutate({ id: section.id, is_visible: !section.is_visible })}
+              onToggle={() =>
+                toggleMutation.mutate({ id: section.id, is_visible: !section.is_visible })
+              }
               onDelete={() => deleteMutation.mutate(section.id)}
               onDragStart={() => setDragIdx(idx)}
               onDragOver={() => setDragOverIdx(idx)}
@@ -397,22 +510,27 @@ export function PageSectionsManager({ pageId, pageTitle, onClose }: PageSections
           ))}
         </div>
 
-        {/* Add section footer */}
+        {/* ── Add section footer ── */}
         <div style={{
           padding: '12px 20px 16px',
           borderTop: '1px solid var(--lito-border)',
           display: 'flex', gap: 8, alignItems: 'center',
+          flexShrink: 0,
         }}>
           <select
             value={addType}
             onChange={e => setAddType(e.target.value as SectionType | '')}
+            aria-label="Select section type to add"
             style={{
               flex: 1, padding: '7px 10px', borderRadius: 7,
               border: '1px solid var(--lito-border)',
-              background: 'var(--cms-header-bg)',
-              color: 'var(--text-primary)',
+              background: 'var(--cms-surface-3)',
+              color: addType ? 'var(--text-primary)' : 'var(--text-muted)',
               fontFamily: 'var(--font-body)', fontSize: 13,
               outline: 'none',
+              cursor: 'pointer',
+              // force dark-mode-aware text in native select
+              colorScheme: 'light dark',
             }}
           >
             <option value="">— Add section type —</option>
@@ -420,23 +538,26 @@ export function PageSectionsManager({ pageId, pageTitle, onClose }: PageSections
               <option key={t} value={t}>{SECTION_LABELS[t] ?? t}</option>
             ))}
           </select>
+
           <button
             type="button"
             disabled={!addType || addMutation.isPending}
             onClick={() => addType && addMutation.mutate(addType)}
+            aria-label="Add selected section type"
             style={{
-              display: 'flex', alignItems: 'center', gap: 5,
+              display: 'inline-flex', alignItems: 'center', gap: 5,
               padding: '7px 14px', borderRadius: 7,
               border: '1px solid var(--lito-teal)',
-              background: addType ? 'var(--lito-teal)' : 'transparent',
-              color: addType ? '#fff' : 'var(--lito-teal)',
+              background: addType && !addMutation.isPending ? 'var(--lito-teal)' : 'transparent',
+              color: addType && !addMutation.isPending ? '#fff' : 'var(--lito-teal)',
               fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500,
               cursor: addType && !addMutation.isPending ? 'pointer' : 'not-allowed',
               opacity: !addType || addMutation.isPending ? 0.5 : 1,
-              transition: 'background 150ms, color 150ms',
+              transition: 'background 150ms, color 150ms, opacity 150ms',
+              flexShrink: 0,
             }}
           >
-            <Plus size={13} />
+            <Plus size={13} aria-hidden="true" />
             {addMutation.isPending ? 'Adding…' : 'Add'}
           </button>
         </div>

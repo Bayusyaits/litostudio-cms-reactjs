@@ -10,6 +10,8 @@ import { useState } from 'react'
 import { Lock, Monitor, Tablet, Smartphone, HelpCircle, ChevronDown, Crown, Plus, Trash2 } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
+import { DynamicContentPanel } from './DynamicContentPanel'
+import { useTemplateManifest }  from '@/hooks/useTemplateManifest'
 import type { EditorTab, Block, BlockStyles } from '@/types/editor.types'
 
 // ── Reusable form helpers ─────────────────────────────────────────────────────
@@ -927,6 +929,18 @@ const TABS: Array<{ id: EditorTab; label: string }> = [
   { id: 'animation',  label: 'Motion' },
 ]
 
+// ── Content tab router ────────────────────────────────────────────────────────
+// If the active template manifest has a SectionSchema for this block type,
+// render the manifest-driven DynamicContentPanel.
+// Otherwise fall back to the hardcoded ContentPanel.
+
+function ContentTabRouter({ block }: { block: Block }) {
+  const { manifest } = useTemplateManifest()
+  const hasManifestSection = manifest?.sections.some((s) => s.id === block.type) ?? false
+  if (hasManifestSection) return <DynamicContentPanel block={block} />
+  return <ContentPanel block={block} />
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function EditorRightSidebar() {
@@ -991,16 +1005,24 @@ export function EditorRightSidebar() {
       </div>
 
       {/* Tab bar */}
-      <div style={{
-        display: 'flex',
-        borderBottom: '1px solid var(--lito-border)',
-        flexShrink: 0,
-        overflowX: 'auto',
-      }}>
+      <div
+        role="tablist"
+        aria-label="Block inspector panels"
+        style={{
+          display: 'flex',
+          borderBottom: '1px solid var(--lito-border)',
+          flexShrink: 0,
+          overflowX: 'auto',
+        }}
+      >
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={activeEditorTab === tab.id}
+            aria-controls={`editor-panel-${tab.id}`}
+            id={`editor-tab-${tab.id}`}
             onClick={() => setEditorTab(tab.id)}
             style={{
               flex: 1, padding: '9px 2px',
@@ -1019,8 +1041,13 @@ export function EditorRightSidebar() {
       </div>
 
       {/* Tab content */}
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-        {activeEditorTab === 'content'    && <ContentPanel    block={block} />}
+      <div
+        role="tabpanel"
+        id={`editor-panel-${activeEditorTab}`}
+        aria-labelledby={`editor-tab-${activeEditorTab}`}
+        style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}
+      >
+        {activeEditorTab === 'content'    && <ContentTabRouter block={block} />}
         {activeEditorTab === 'styles'     && <StylePanel      block={block} />}
         {activeEditorTab === 'spacing'    && <SpacingPanel    block={block} />}
         {activeEditorTab === 'seo'        && <SEOPanel />}
