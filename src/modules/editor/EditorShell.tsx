@@ -10,6 +10,7 @@ import { useEffect, useCallback } from 'react'
 import { EditorToolbar }      from './EditorToolbar'
 import { EditorLeftSidebar }  from './EditorLeftSidebar'
 import { EditorCanvas }       from './EditorCanvas'
+import { EditorCodeView }     from './EditorCodeView'
 import { EditorRightSidebar } from './EditorRightSidebar'
 import { EditorAiPanel }      from './EditorAiPanel'
 import { useEditorStore }     from '@/stores/editor.store'
@@ -37,6 +38,7 @@ export function EditorShell({ pageTitle, pageSlug, saveFn, publishFn }: EditorSh
     undo, redo, canUndo, canRedo,
     isDirty, setSaveStatus, markClean,
     leftSidebarOpen, rightSidebarOpen, aiPanelOpen,
+    editorMode, setEditorMode,
   } = useEditorStore()
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -86,10 +88,24 @@ export function EditorShell({ pageTitle, pageSlug, saveFn, publishFn }: EditorSh
       if (mod && e.key === 'z' && e.shiftKey)  { e.preventDefault(); if (canRedo()) redo() }
       if (mod && e.key === 'y')                 { e.preventDefault(); if (canRedo()) redo() }
       if (mod && e.key === 's')                 { e.preventDefault(); void handleSave() }
+      // Code / Visual mode toggle
+      if (mod && e.shiftKey && e.key === 'E')  {
+        e.preventDefault()
+        setEditorMode(editorMode === 'code' ? 'content' : 'code')
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [canUndo, canRedo, undo, redo, handleSave])
+  }, [canUndo, canRedo, undo, redo, handleSave, editorMode, setEditorMode])
+
+  // ── Auto-save every 30 s when dirty ──────────────────────────────────────
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (isDirty) void handleSave()
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [isDirty, handleSave])
 
   // ── Warn on unload ────────────────────────────────────────────────────────
 
@@ -121,8 +137,8 @@ export function EditorShell({ pageTitle, pageSlug, saveFn, publishFn }: EditorSh
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
         {leftSidebarOpen && <EditorLeftSidebar />}
-        <EditorCanvas />
-        {rightSidebarOpen && <EditorRightSidebar />}
+        {editorMode === 'code' ? <EditorCodeView /> : <EditorCanvas />}
+        {rightSidebarOpen && editorMode !== 'code' && <EditorRightSidebar />}
       </div>
 
       {aiPanelOpen && <EditorAiPanel />}

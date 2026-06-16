@@ -7,6 +7,7 @@
  */
 
 import type { Block } from '@/types/editor.types'
+import { useEditorStore } from '@/stores/editor.store'
 import type {
   TextBlockData, HeadingBlockData, ImageBlockData, GalleryBlockData,
   VideoBlockData, ButtonBlockData, SpacerBlockData, DividerBlockData,
@@ -67,6 +68,8 @@ function TextBlock({ block }: { block: Block }) {
 }
 
 function HeadingBlock({ block }: { block: Block }) {
+  const { updateBlock, selectedBlockId } = useEditorStore()
+  const isSelected = selectedBlockId === block.id
   const d = block.data as HeadingBlockData
   const Tag = `h${d.level}` as keyof JSX.IntrinsicElements
   const sizeMap: Record<number, string> = {
@@ -79,8 +82,18 @@ function HeadingBlock({ block }: { block: Block }) {
   }
   return (
     <div style={{ ...blockStyle(block), ...innerWidth(block) }}>
-      <Tag className={`font-display ${sizeMap[d.level] ?? 'text-2xl'} text-[var(--text-primary)]`}>
-        {d.text || 'Untitled Heading'}
+      <Tag
+        contentEditable={isSelected}
+        suppressContentEditableWarning
+        // eslint-disable-next-line jsx-a11y/no-autofocus
+        autoFocus={isSelected}
+        onBlur={(e) =>
+          updateBlock(block.id, { text: e.currentTarget.textContent ?? '' })
+        }
+        className={`font-display ${sizeMap[d.level] ?? 'text-2xl'} text-[var(--text-primary)] outline-none`}
+        style={{ minWidth: 1 }}
+      >
+        {d.text || (isSelected ? undefined : 'Untitled Heading')}
       </Tag>
     </div>
   )

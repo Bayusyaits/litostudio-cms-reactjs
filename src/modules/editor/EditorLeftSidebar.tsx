@@ -7,10 +7,16 @@
  */
 
 import { useState } from 'react'
-import { Search, Globe, Compass, Aperture, Camera, CalendarDays, Layers2 } from 'lucide-react'
+import {
+  Search, Globe, Compass, Aperture, Camera, CalendarDays, Layers2,
+  List, AlignLeft as OutlineIcon, LayoutGrid as BlocksIcon, Puzzle,
+} from 'lucide-react'
 import { BLOCK_LIBRARY } from './blocks/blockLibrary'
 import { useEditorStore, makeBlock } from '@/stores/editor.store'
 import { useTemplateManifest } from '@/hooks/useTemplateManifest'
+import { EditorOutlinePanel }  from './EditorOutlinePanel'
+import { EditorListView }      from './EditorListView'
+import { EditorPatternsPanel } from './patterns/EditorPatternsPanel'
 
 // ── Lucide icon map (must match icon names in blockLibrary.ts) ────────────────
 import {
@@ -70,11 +76,21 @@ const ALL_SECTIONS: Array<{ key: string; label: string; category: string }> = [
   { key: 'forms',     label: 'FORMS',     category: 'forms' },
 ]
 
+type SidebarView = 'blocks' | 'outline' | 'list' | 'patterns'
+
+const SIDEBAR_VIEWS: Array<{ view: SidebarView; Icon: LucideIcon; label: string }> = [
+  { view: 'blocks',   Icon: BlocksIcon,  label: 'Blocks'    },
+  { view: 'outline',  Icon: OutlineIcon, label: 'Outline'   },
+  { view: 'list',     Icon: List,        label: 'List'      },
+  { view: 'patterns', Icon: Puzzle,      label: 'Patterns'  },
+]
+
 export function EditorLeftSidebar() {
   const { addBlock, selectedBlockId } = useEditorStore()
   const { manifest, templateSlug } = useTemplateManifest()
-  const [search, setSearch]       = useState('')
-  const [activeTab, setActiveTab] = useState<FilterTab>('All')
+  const [search, setSearch]         = useState('')
+  const [activeTab, setActiveTab]   = useState<FilterTab>('All')
+  const [sidebarView, setSidebarView] = useState<SidebarView>('blocks')
 
   const handleInsert = (item: typeof BLOCK_LIBRARY[number]) => {
     const block = makeBlock(
@@ -190,21 +206,46 @@ export function EditorLeftSidebar() {
       background: 'var(--cms-card-bg)',
       borderRight: '1px solid var(--lito-border)',
     }}>
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      {/* ── Header: view switcher ───────────────────────────────────────────── */}
       <div style={{
-        padding: '12px 12px 0', flexShrink: 0,
+        padding: '8px 10px 0', flexShrink: 0,
         borderBottom: '1px solid var(--lito-border)',
       }}>
-        {/* Title */}
-        <p style={{
-          fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700,
-          color: 'var(--text-primary)', margin: '0 0 8px 2px',
-        }}>
-          Blocks
-        </p>
-
-        {/* Search bar */}
+        {/* View tab strip */}
         <div style={{
+          display: 'flex', gap: 2, marginBottom: 6,
+          background: 'var(--cms-surface-3)',
+          border: '1px solid var(--lito-border)',
+          borderRadius: 8, padding: 2,
+        }}>
+          {SIDEBAR_VIEWS.map(({ view, Icon, label }) => {
+            const active = sidebarView === view
+            return (
+              <button
+                key={view}
+                type="button"
+                title={label}
+                onClick={() => setSidebarView(view)}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  gap: 4, padding: '5px 4px', borderRadius: 6, border: 'none',
+                  cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 10,
+                  fontWeight: active ? 600 : 400,
+                  background: active ? 'var(--lito-teal)' : 'transparent',
+                  color: active ? '#fff' : 'var(--text-muted)',
+                  transition: 'background 120ms, color 120ms',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Icon size={11} />
+                {label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search bar — only in blocks view */}
+        {sidebarView === 'blocks' && <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           background: 'var(--cms-surface-3)',
           border: '1px solid var(--lito-border)',
@@ -235,8 +276,10 @@ export function EditorLeftSidebar() {
               borderRadius: 3, padding: '1px 4px', lineHeight: '14px',
             }}>K</kbd>
           </div>
-        </div>
+        </div>}
 
+        {/* Row 1 tabs — only in blocks view */}
+        {sidebarView === 'blocks' && <>
         {/* Row 1 tabs: All | Text | Layout | Media | Social */}
         <div style={{ display: 'flex', gap: 2, marginBottom: 4, overflowX: 'auto' }}>
           {ROW1_TABS.map((tab) => (
@@ -278,10 +321,30 @@ export function EditorLeftSidebar() {
             )
           })}
         </div>
+        </>}
       </div>
 
+      {/* ── Alternate views: Outline / List ──────────────────────────────────── */}
+      {sidebarView === 'outline' && (
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <EditorOutlinePanel />
+        </div>
+      )}
+
+      {sidebarView === 'list' && (
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <EditorListView />
+        </div>
+      )}
+
+      {sidebarView === 'patterns' && (
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <EditorPatternsPanel />
+        </div>
+      )}
+
       {/* ── Block list ───────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 12px 16px' }}>
+      {sidebarView === 'blocks' && <div style={{ flex: 1, overflowY: 'auto', padding: '8px 12px 16px' }}>
         {/* Search results mode */}
         {search.trim() && (
           <>
@@ -343,10 +406,10 @@ export function EditorLeftSidebar() {
             })}
           </div>
         )}
-      </div>
+      </div>}
 
-      {/* ── Footer ───────────────────────────────────────────────────────────── */}
-      <div style={{
+      {/* ── Footer — blocks view only ─────────────────────────────────────────── */}
+      {sidebarView === 'blocks' && <div style={{
         padding: '8px 12px',
         borderTop: '1px solid var(--lito-border)',
         flexShrink: 0,
@@ -357,7 +420,7 @@ export function EditorLeftSidebar() {
         }}>
           {BLOCK_LIBRARY.length} blocks · click to insert
         </p>
-      </div>
+      </div>}
     </div>
   )
 }

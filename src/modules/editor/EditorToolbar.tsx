@@ -5,14 +5,15 @@
  * Right: – 100% + | undo/redo | settings | Preview | Publish ▾
  */
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Monitor, Tablet, Smartphone,
   Undo2, Redo2, Settings2, Eye, Rocket, Loader2,
-  Minus, Plus, ChevronDown, ArrowLeft,
+  Minus, Plus, ChevronDown, ArrowLeft, Code2, PanelLeft, Keyboard,
 } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
+import { EditorShortcutsModal } from './EditorShortcutsModal'
 import type { PreviewMode } from '@/types/editor.types'
 
 interface EditorToolbarProps {
@@ -29,7 +30,10 @@ export function EditorToolbar({ pageTitle, onSave, onPublish, onPreview, backUrl
     saveStatus, isDirty, canUndo, canRedo,
     undo, redo, previewMode, setPreviewMode,
     zoomLevel, setZoomLevel, toggleRightSidebar,
+    editorMode, setEditorMode, toggleLeftSidebar,
   } = useEditorStore()
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const isCodeMode = editorMode === 'code'
 
   const SaveStatus = useCallback(() => {
     if (saveStatus === 'saving') {
@@ -87,6 +91,7 @@ export function EditorToolbar({ pageTitle, onSave, onPublish, onPreview, backUrl
   })
 
   return (
+    <>
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       height: 48, padding: '0 14px',
@@ -211,6 +216,44 @@ export function EditorToolbar({ pageTitle, onSave, onPublish, onPreview, backUrl
         {/* Sep */}
         <div style={{ width: 1, height: 18, background: 'var(--lito-border)', margin: '0 2px' }} />
 
+        {/* Sidebar toggle */}
+        <button
+          type="button"
+          title="Toggle left sidebar (⌘\)"
+          onClick={() => toggleLeftSidebar()}
+          style={iconBtn()}
+        >
+          <PanelLeft size={14} />
+        </button>
+
+        {/* Code / Visual toggle */}
+        <button
+          type="button"
+          title={isCodeMode ? 'Switch to Visual mode (⌘⇧E)' : 'Switch to Code mode (⌘⇧E)'}
+          onClick={() => setEditorMode(isCodeMode ? 'content' : 'code')}
+          style={{
+            ...iconBtn(isCodeMode),
+            background: isCodeMode ? 'var(--lito-teal)' : 'transparent',
+            color: isCodeMode ? '#fff' : 'var(--text-muted)',
+            borderRadius: 6,
+          }}
+        >
+          <Code2 size={14} />
+        </button>
+
+        {/* Keyboard shortcuts */}
+        <button
+          type="button"
+          title="Keyboard shortcuts (⌘⇧P)"
+          onClick={() => setShortcutsOpen(true)}
+          style={iconBtn()}
+        >
+          <Keyboard size={14} />
+        </button>
+
+        {/* Sep */}
+        <div style={{ width: 1, height: 18, background: 'var(--lito-border)', margin: '0 2px' }} />
+
         {/* Preview */}
         <button
           type="button"
@@ -259,5 +302,8 @@ export function EditorToolbar({ pageTitle, onSave, onPublish, onPreview, backUrl
         </div>
       </div>
     </div>
+
+    {shortcutsOpen && <EditorShortcutsModal onClose={() => setShortcutsOpen(false)} />}
+  </>
   )
 }

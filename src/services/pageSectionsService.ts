@@ -8,8 +8,24 @@ import { http } from '@/lib/http'
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export const SECTION_TYPES = [
+  // ── Generic (all templates) ─────────────────────────────────────────────
   'hero', 'about', 'services', 'stories', 'destinations',
   'gallery', 'testimonials', 'pricing', 'journal', 'contact', 'custom_html',
+  'faq', 'team', 'timeline', 'map',
+
+  // ── Lito-specific ───────────────────────────────────────────────────────
+  'featured_stories', 'featured_content',
+  'selected_works', 'story_map', 'story_categories',
+  'offerings', 'client_reviews', 'campaign', 'latest_journal',
+
+  // ── Fashion-specific ────────────────────────────────────────────────────
+  'new_arrival', 'promo_banners', 'campaign_banner', 'product_carousel',
+  'marquee', 'brand_story', 'lookbook', 'about_cta',
+  'collaborations', 'social_grid', 'philosophy',
+
+  // ── Beauty-specific ─────────────────────────────────────────────────────
+  'collection_banner', 'product_benefits', 'product_categories',
+  'founder_quote', 'blog_highlight', 'newsletter', 'featured_products',
 ] as const
 
 export type SectionType = typeof SECTION_TYPES[number]

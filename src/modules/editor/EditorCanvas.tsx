@@ -500,7 +500,14 @@ export function EditorCanvas() {
   const handleDragEnd = () => { dragIdx.current = null; setDragOver(null) }
 
   const addEmptyBlock = () => {
-    useEditorStore.getState().toggleLeftSidebar(true)
+    const { addBlock } = useEditorStore.getState()
+    addBlock({
+      id: Math.random().toString(36).slice(2, 10),
+      type: 'heading',
+      data: { level: 1, text: '' },
+      styles: {},
+      visibility: { desktop: true, tablet: true, mobile: true },
+    })
   }
 
   return (

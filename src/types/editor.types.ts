@@ -412,8 +412,8 @@ export interface BlockDocument {
 export type EditorTab = 'content' | 'styles' | 'spacing' | 'layout' | 'seo' | 'visibility' | 'conditions' | 'animation'
 export type LeftPanelTab = 'blocks' | 'pages' | 'templates' | 'media' | 'patterns'
 export type PreviewMode = 'desktop' | 'tablet' | 'mobile'
-/** Top-level editor mode — Content edits blocks, Design edits visuals, Preview shows final output */
-export type EditorMode = 'content' | 'design' | 'preview'
+/** Top-level editor mode — Content edits blocks, Design edits visuals, Preview shows final output, Code edits raw JSON */
+export type EditorMode = 'content' | 'design' | 'preview' | 'code'
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 

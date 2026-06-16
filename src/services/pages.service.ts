@@ -25,6 +25,8 @@ export interface Page {
   is_footer: boolean
   is_mobile_menu: boolean
   title: string | null
+  /** Computed depth in hierarchy (0 = root). Returned by list endpoint when tree=true. */
+  level?: number
   created_at: string
   updated_at: string
   page_translations?: PageTranslation[]

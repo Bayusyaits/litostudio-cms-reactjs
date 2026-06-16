@@ -14,17 +14,55 @@ import {
 // ── Section type labels ───────────────────────────────────────────────────────
 
 const SECTION_LABELS: Record<string, string> = {
-  hero:         'Hero',
-  about:        'About',
-  services:     'Services',
-  stories:      'Stories',
-  destinations: 'Destinations',
-  gallery:      'Gallery',
-  testimonials: 'Testimonials',
-  pricing:      'Pricing',
-  journal:      'Journal',
-  contact:      'Contact',
-  custom_html:  'Custom HTML',
+  // ── Generic ──────────────────────────────────────────────────────────────
+  hero:              'Hero',
+  about:             'About',
+  services:          'Services',
+  stories:           'Stories',
+  destinations:      'Destinations',
+  gallery:           'Gallery',
+  testimonials:      'Testimonials',
+  pricing:           'Pricing',
+  journal:           'Journal',
+  contact:           'Contact',
+  custom_html:       'Custom HTML',
+  faq:               'FAQ',
+  team:              'Team',
+  timeline:          'Timeline',
+  map:               'Map',
+
+  // ── Lito ─────────────────────────────────────────────────────────────────
+  featured_stories:  'Featured Stories',
+  featured_content:  'Featured Content',
+  selected_works:    'Selected Works',
+  story_map:         'Story Map',
+  story_categories:  'Story Categories',
+  offerings:         'Offerings',
+  client_reviews:    'Client Reviews',
+  campaign:          'Campaign Banner',
+  latest_journal:    'Latest Journal',
+
+  // ── Fashion ───────────────────────────────────────────────────────────────
+  new_arrival:       'New Arrival',
+  promo_banners:     'Promo Banners',
+  campaign_banner:   'Campaign Banner',
+  product_carousel:  'Product Carousel',
+  marquee:           'Marquee',
+  brand_story:       'Brand Story',
+  lookbook:          'Lookbook',
+  about_cta:         'About CTA',
+  collaborations:    'Collaborations',
+  social_grid:       'Social Grid',
+  philosophy:        'Philosophy',
+
+  // ── Beauty ────────────────────────────────────────────────────────────────
+  collection_banner: 'Collection Banner',
+  product_benefits:  'Product Benefits',
+  product_categories:'Product Categories',
+  founder_quote:     'Founder Quote',
+  blog_highlight:    'Blog Highlight',
+  newsletter:        'Newsletter',
+  featured_products: 'Featured Products',
 }
 
 // ── Row component ─────────────────────────────────────────────────────────────

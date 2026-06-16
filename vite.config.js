@@ -6,10 +6,11 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
+            '@litostudio/templates': path.resolve(__dirname, '../../packages/templates/src/index.ts'),
         },
     },
     server: {
-        port: 3003,
+        port: 3002,
         proxy: {
             '/api': {
                 target: process.env.VITE_API_URL ?? 'http://localhost:3001',

@@ -824,6 +824,98 @@ function VisibilityPanel({ block }: { block: Block }) {
   )
 }
 
+// ── Animation panel ───────────────────────────────────────────────────────────
+
+const ANIMATION_TYPES = [
+  { value: '',          label: 'None'     },
+  { value: 'fade-in',   label: 'Fade In'  },
+  { value: 'slide-up',  label: 'Slide Up' },
+  { value: 'slide-down',label: 'Slide Down'},
+  { value: 'slide-left',label: 'Slide Left'},
+  { value: 'zoom-in',   label: 'Zoom In'  },
+  { value: 'bounce',    label: 'Bounce'   },
+]
+
+function AnimationPanel({ block }: { block: Block }) {
+  const { updateAnimation } = useEditorStore()
+  const anim = block.animation ?? {}
+
+  const patch = (patch: Partial<NonNullable<Block['animation']>>) =>
+    updateAnimation(block.id, { ...anim, ...patch })
+
+  const row: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: 10,
+  }
+  const selectStyle: React.CSSProperties = {
+    flex: 1, padding: '5px 8px',
+    border: '1px solid var(--lito-border)', borderRadius: 6,
+    background: 'var(--cms-surface-2)',
+    fontFamily: 'var(--font-body)', fontSize: 12,
+    color: 'var(--text-primary)', outline: 'none',
+  }
+
+  return (
+    <div style={{ padding: '14px' }}>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700,
+        letterSpacing: '0.06em', color: 'var(--text-muted)', margin: '0 0 12px' }}>
+        ENTRANCE ANIMATION
+      </p>
+
+      {/* Type */}
+      <div style={row}>
+        <Label>Effect</Label>
+        <select
+          value={anim.type ?? ''}
+          onChange={(e) => patch({ type: e.target.value || undefined })}
+          style={selectStyle}
+        >
+          {ANIMATION_TYPES.map(({ value, label }) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+      </div>
+
+      {anim.type && (
+        <>
+          {/* Duration */}
+          <div style={row}>
+            <Label>Duration (ms)</Label>
+            <input
+              type="number" min={100} max={3000} step={50}
+              value={anim.duration ?? 400}
+              onChange={(e) => patch({ duration: parseInt(e.target.value) || 400 })}
+              style={{ ...selectStyle, maxWidth: 90, textAlign: 'right' }}
+            />
+          </div>
+
+          {/* Delay */}
+          <div style={row}>
+            <Label>Delay (ms)</Label>
+            <input
+              type="number" min={0} max={3000} step={50}
+              value={anim.delay ?? 0}
+              onChange={(e) => patch({ delay: parseInt(e.target.value) || 0 })}
+              style={{ ...selectStyle, maxWidth: 90, textAlign: 'right' }}
+            />
+          </div>
+
+          {/* Preview hint */}
+          <p style={{
+            fontFamily: 'var(--font-body)', fontSize: 10,
+            color: 'var(--text-muted)', margin: '8px 0 0',
+            padding: '6px 8px', borderRadius: 6,
+            background: 'var(--cms-surface-3)',
+            border: '1px solid var(--lito-border)',
+          }}>
+            Animation applied on page load. Preview in the live site.
+          </p>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
 const TABS: Array<{ id: EditorTab; label: string }> = [
@@ -832,6 +924,7 @@ const TABS: Array<{ id: EditorTab; label: string }> = [
   { id: 'spacing',    label: 'Spacing' },
   { id: 'seo',        label: 'SEO' },
   { id: 'visibility', label: 'Visibility' },
+  { id: 'animation',  label: 'Motion' },
 ]
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -932,6 +1025,7 @@ export function EditorRightSidebar() {
         {activeEditorTab === 'spacing'    && <SpacingPanel    block={block} />}
         {activeEditorTab === 'seo'        && <SEOPanel />}
         {activeEditorTab === 'visibility' && <VisibilityPanel block={block} />}
+        {activeEditorTab === 'animation'  && <AnimationPanel  block={block} />}
       </div>
 
       {/* Footer — Need help? / Keyboard shortcuts */}

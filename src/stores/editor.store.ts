@@ -57,6 +57,7 @@ interface EditorActions {
   updateBlock:     (id: string, data: Partial<BlockData>) => void
   updateStyles:    (id: string, styles: Partial<BlockStyles>) => void
   updateVisibility:(id: string, v: Partial<BlockVisibility>) => void
+  updateAnimation: (id: string, animation: Block['animation']) => void
   duplicateBlock:  (id: string) => void
   moveBlockUp:     (id: string) => void
   moveBlockDown:   (id: string) => void
@@ -162,11 +163,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (idx >= 0) blocks.splice(idx + 1, 0, block)
     else blocks.push(block)
     set({
-      blockDoc:        { ...blockDoc, blocks },
-      past:            [...past.slice(-MAX_HISTORY), prev],
-      future:          [],
-      isDirty:         true,
-      selectedBlockId: block.id,
+      blockDoc:         { ...blockDoc, blocks },
+      past:             [...past.slice(-MAX_HISTORY), prev],
+      future:           [],
+      isDirty:          true,
+      selectedBlockId:  block.id,
+      rightSidebarOpen: true,
     })
   },
 
@@ -216,6 +218,20 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const prev = snap(blockDoc)
     const blocks = blockDoc.blocks.map((b) =>
       b.id === id ? { ...b, visibility: { ...b.visibility, ...v } } : b,
+    )
+    set({
+      blockDoc: { ...blockDoc, blocks },
+      past:     [...past.slice(-MAX_HISTORY), prev],
+      future:   [],
+      isDirty:  true,
+    })
+  },
+
+  updateAnimation: (id, animation) => {
+    const { blockDoc, past } = get()
+    const prev = snap(blockDoc)
+    const blocks = blockDoc.blocks.map((b) =>
+      b.id === id ? { ...b, animation } : b,
     )
     set({
       blockDoc: { ...blockDoc, blocks },
