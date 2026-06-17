@@ -42,7 +42,8 @@ import { Switch }                                 from '@/components/atoms/Switc
 
 import type { ContentStatus }  from '@/types/api.types'
 import type {
-  Story, JournalPost, Service, Destination, Product, Collection, Campaign, ProductType,
+  Story, JournalPost, Service, Destination, Product, Collection, Campaign,
+  ProductType, ProductCategory, ProductExtra,
 } from '@/types/content.types'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -131,7 +132,21 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
     }
     case 'products': {
       const p = e as Product
-      return { productType: p.product_type ?? 'product', price: p.price ?? '', isFeatured: (p as { is_featured?: boolean }).is_featured ?? false }
+      const ext = p.extra ?? {}
+      return {
+        productType: p.product_type ?? 'product',
+        price:       p.price ?? '',
+        isFeatured:  p.is_featured ?? false,
+        category:    ext.category   ?? '',
+        brand:       ext.brand      ?? '',
+        sizes:       ext.sizes      ?? [],
+        gender:      ext.gender     ?? '',
+        skin_type:   ext.skin_type  ?? '',
+        volume:      ext.volume     ?? '',
+        shade:       ext.shade      ?? '',
+        color:       ext.color      ?? '',
+        material:    ext.material   ?? '',
+      }
     }
     case 'collections': {
       return {}
@@ -180,8 +195,25 @@ function buildCreatePayload(
       return { ...base, product_type: 'service', price: extras.price ? Number(extras.price) : undefined, currency: extras.currency || undefined, is_featured: extras.isFeatured ?? false, extra: { category: extras.category || undefined, duration: extras.duration || undefined } }
     case 'destinations':
       return { ...base, island: extras.island || undefined, region: extras.region || undefined, province: extras.province || undefined, country: extras.country || undefined, lat: extras.lat ? Number(extras.lat) : undefined, lng: extras.lng ? Number(extras.lng) : undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, name: title, description: excerpt || undefined } }
-    case 'products':
-      return { ...base, product_type: (extras.productType as ProductType) || 'product', price: extras.price ? Number(extras.price) : undefined, is_featured: extras.isFeatured ?? false }
+    case 'products': {
+      const extra: ProductExtra = {}
+      if (extras.category)  extra.category  = extras.category  as ProductCategory
+      if (extras.brand)     extra.brand     = extras.brand     as string
+      if (extras.gender)    extra.gender    = extras.gender    as string
+      if (extras.skin_type) extra.skin_type = extras.skin_type as string
+      if (extras.volume)    extra.volume    = extras.volume    as string
+      if (extras.shade)     extra.shade     = extras.shade     as string
+      if (extras.color)     extra.color     = extras.color     as string
+      if (extras.material)  extra.material  = extras.material  as string
+      if (Array.isArray(extras.sizes) && (extras.sizes as string[]).length > 0) extra.sizes = extras.sizes as string[]
+      return {
+        ...base,
+        product_type: (extras.productType as ProductType) || 'product',
+        price:        extras.price ? Number(extras.price) : undefined,
+        is_featured:  extras.isFeatured ?? false,
+        extra,
+      }
+    }
     case 'collections':
       return { ...base }
     case 'campaigns':
@@ -202,7 +234,25 @@ function buildUpdatePatch(
     case 'journal':      return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
     case 'services':     return { ...base, price: extras.price ? Number(extras.price) : null, currency: extras.currency || null, is_featured: extras.isFeatured ?? false, extra: { category: extras.category || null, duration: extras.duration || null } }
     case 'destinations': return { ...base, island: extras.island || null, region: extras.region || null, province: extras.province || null, country: extras.country || null, lat: extras.lat ? Number(extras.lat) : null, lng: extras.lng ? Number(extras.lng) : null, is_featured: extras.isFeatured ?? false }
-    case 'products':     return { ...base, product_type: (extras.productType as ProductType) || 'product', price: extras.price ? Number(extras.price) : null, is_featured: extras.isFeatured ?? false }
+    case 'products': {
+      const extra: ProductExtra = {}
+      if (extras.category)  extra.category  = extras.category  as ProductCategory
+      if (extras.brand)     extra.brand     = extras.brand     as string
+      if (extras.gender)    extra.gender    = extras.gender    as string
+      if (extras.skin_type) extra.skin_type = extras.skin_type as string
+      if (extras.volume)    extra.volume    = extras.volume    as string
+      if (extras.shade)     extra.shade     = extras.shade     as string
+      if (extras.color)     extra.color     = extras.color     as string
+      if (extras.material)  extra.material  = extras.material  as string
+      if (Array.isArray(extras.sizes) && (extras.sizes as string[]).length > 0) extra.sizes = extras.sizes as string[]
+      return {
+        ...base,
+        product_type: (extras.productType as ProductType) || 'product',
+        price:        extras.price ? Number(extras.price) : null,
+        is_featured:  extras.isFeatured ?? false,
+        extra,
+      }
+    }
     case 'collections':  return { ...base }
     case 'campaigns':    return { ...base, cta_label: extras.ctaLabel || null, cta_url: extras.ctaUrl || null, start_date: extras.startDate || null, end_date: extras.endDate || null, is_featured: extras.isFeatured ?? false }
     default:             return base
@@ -273,10 +323,19 @@ function renderModuleExtras(
           </div>
         </div>
       )
-    case 'products':
+    case 'products': {
+      const cat = (extras.category as string) || ''
+      const sizes = (extras.sizes as string[]) || []
+      const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+      const toggleSize = (sz: string) => {
+        const next = sizes.includes(sz) ? sizes.filter((s) => s !== sz) : [...sizes, sz]
+        setExtra('sizes', next)
+      }
       return (
         <div className="cms-card p-4 space-y-3">
           <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Product Details</h3>
+
+          {/* Type */}
           <div className="space-y-1.5">
             <label className="cms-label">Type <span className="text-[var(--s-danger)] ml-0.5">*</span></label>
             <select className="cms-input w-full" value={extras.productType as string ?? 'product'} onChange={(e) => setExtra('productType', e.target.value)}>
@@ -285,13 +344,173 @@ function renderModuleExtras(
               <option value="package">Package</option>
             </select>
           </div>
+
+          {/* Category */}
+          <div className="space-y-1.5">
+            <label className="cms-label">Category</label>
+            <select className="cms-input w-full" value={cat} onChange={(e) => {
+              setExtra('category', e.target.value)
+              // reset category-specific fields on change
+              setExtra('sizes', [])
+              setExtra('gender', '')
+              setExtra('skin_type', '')
+              setExtra('volume', '')
+              setExtra('shade', '')
+              setExtra('color', '')
+              setExtra('material', '')
+            }}>
+              <option value="">— Select category —</option>
+              <option value="fashion">Fashion</option>
+              <option value="skincare">Skin Care</option>
+              <option value="beauty">Beauty</option>
+              <option value="accessories">Accessories</option>
+              <option value="food_beverage">Food &amp; Beverage</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          {/* Brand */}
+          <FormField
+            label="Brand"
+            value={extras.brand as string ?? ''}
+            onChange={(e) => setExtra('brand', e.target.value)}
+            placeholder="e.g. Nike, Wardah, or leave blank"
+          />
+
+          {/* ── Fashion fields ─────────────────────── */}
+          {cat === 'fashion' && (
+            <>
+              <div className="space-y-1.5">
+                <label className="cms-label">Available Sizes</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_SIZES.map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => toggleSize(sz)}
+                      className={[
+                        'px-2.5 py-1 rounded font-body text-xs font-semibold border transition-colors',
+                        sizes.includes(sz)
+                          ? 'bg-[var(--lito-teal)] text-white border-[var(--lito-teal)]'
+                          : 'bg-transparent text-[var(--text-secondary)] border-[var(--lito-border)] hover:border-[var(--lito-teal)]',
+                      ].join(' ')}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+                {sizes.length > 0 && (
+                  <p className="font-body text-xs text-[var(--text-muted)]">Selected: {sizes.join(', ')}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="cms-label">Gender</label>
+                <div className="flex gap-2">
+                  {(['men', 'women', 'unisex'] as const).map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setExtra('gender', extras.gender === g ? '' : g)}
+                      className={[
+                        'flex-1 py-1.5 rounded font-body text-xs font-semibold border transition-colors capitalize',
+                        extras.gender === g
+                          ? 'bg-[var(--lito-teal)] text-white border-[var(--lito-teal)]'
+                          : 'bg-transparent text-[var(--text-secondary)] border-[var(--lito-border)] hover:border-[var(--lito-teal)]',
+                      ].join(' ')}
+                    >
+                      {g === 'men' ? 'Men' : g === 'women' ? 'Women' : 'Unisex'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ── Skincare fields ────────────────────── */}
+          {cat === 'skincare' && (
+            <>
+              <div className="space-y-1.5">
+                <label className="cms-label">Skin Type</label>
+                <select className="cms-input w-full" value={extras.skin_type as string ?? ''} onChange={(e) => setExtra('skin_type', e.target.value)}>
+                  <option value="">— All skin types —</option>
+                  <option value="oily">Oily</option>
+                  <option value="dry">Dry</option>
+                  <option value="combination">Combination</option>
+                  <option value="sensitive">Sensitive</option>
+                  <option value="all">All types</option>
+                </select>
+              </div>
+              <FormField
+                label="Volume / Size"
+                value={extras.volume as string ?? ''}
+                onChange={(e) => setExtra('volume', e.target.value)}
+                placeholder="e.g. 100ml, 50g"
+              />
+            </>
+          )}
+
+          {/* ── Beauty fields ──────────────────────── */}
+          {cat === 'beauty' && (
+            <>
+              <FormField
+                label="Shade / Color Name"
+                value={extras.shade as string ?? ''}
+                onChange={(e) => setExtra('shade', e.target.value)}
+                placeholder="e.g. Rose Petal, Nude 02"
+              />
+              <div className="space-y-1.5">
+                <label className="cms-label">Skin Type</label>
+                <select className="cms-input w-full" value={extras.skin_type as string ?? ''} onChange={(e) => setExtra('skin_type', e.target.value)}>
+                  <option value="">— All skin types —</option>
+                  <option value="oily">Oily</option>
+                  <option value="dry">Dry</option>
+                  <option value="combination">Combination</option>
+                  <option value="sensitive">Sensitive</option>
+                  <option value="all">All types</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* ── Accessories fields ─────────────────── */}
+          {cat === 'accessories' && (
+            <>
+              <FormField
+                label="Color"
+                value={extras.color as string ?? ''}
+                onChange={(e) => setExtra('color', e.target.value)}
+                placeholder="e.g. Black, Gold"
+              />
+              <FormField
+                label="Material"
+                value={extras.material as string ?? ''}
+                onChange={(e) => setExtra('material', e.target.value)}
+                placeholder="e.g. Leather, Silver"
+              />
+            </>
+          )}
+
+          {/* ── Food & Beverage fields ─────────────── */}
+          {cat === 'food_beverage' && (
+            <FormField
+              label="Weight / Volume"
+              value={extras.volume as string ?? ''}
+              onChange={(e) => setExtra('volume', e.target.value)}
+              placeholder="e.g. 250g, 500ml"
+            />
+          )}
+
+          {/* Price */}
           <FormField label="Price" type="number" value={String(extras.price ?? '')} onChange={(e) => setExtra('price', e.target.value)} placeholder="0" />
+
+          {/* Featured */}
           <div className="flex items-center justify-between">
             <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
             <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
           </div>
         </div>
       )
+    }
     case 'campaigns':
       return (
         <div className="cms-card p-4 space-y-3">

@@ -55,8 +55,8 @@ export function CollectionsPageView({
       ),
     },
     {
-      key: 'product_count',
-      header: 'Products',
+      key: 'item_count',
+      header: 'Items',
       width: '100px',
       render: (col) => (
         <span
@@ -70,7 +70,7 @@ export function CollectionsPageView({
             fontFamily: 'var(--font-body)',
           }}
         >
-          {col.product_count}
+          {col.item_count ?? 0}
         </span>
       ),
     },

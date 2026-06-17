@@ -143,6 +143,41 @@ export interface Destination {
 
 export type ProductType = 'product' | 'service' | 'package'
 
+export type ProductCategory =
+  | 'fashion'
+  | 'skincare'
+  | 'beauty'
+  | 'accessories'
+  | 'food_beverage'
+  | 'other'
+
+export type ProductGender = 'men' | 'women' | 'unisex'
+
+export type ProductSkinType = 'oily' | 'dry' | 'combination' | 'sensitive' | 'all'
+
+export interface ProductExtra {
+  /** High-level category for category-aware fields */
+  category?:   ProductCategory | string | null
+  /** Brand name — registered or free-text */
+  brand?:      string | null
+  /** Fashion: selected sizes */
+  sizes?:      string[]
+  /** Fashion: target gender */
+  gender?:     ProductGender | string | null
+  /** Skincare / Beauty: skin type */
+  skin_type?:  ProductSkinType | string | null
+  /** Skincare: volume / size e.g. "100ml" */
+  volume?:     string | null
+  /** Beauty: shade name */
+  shade?:      string | null
+  /** Beauty / Accessories: color */
+  color?:      string | null
+  /** Accessories: material */
+  material?:   string | null
+  /** Arbitrary extra attributes */
+  [key: string]: unknown
+}
+
 export interface Product {
   id: string
   site_id: string
@@ -150,6 +185,11 @@ export interface Product {
   name: string
   product_type: ProductType
   price: number | null
+  compare_at_price?: number | null
+  currency?: string | null
+  is_featured?: boolean
+  tags?: string[]
+  extra?: ProductExtra | null
   sort_order: number
   status: ContentStatus
   created_at: string
@@ -163,9 +203,14 @@ export interface ProductCreateRequest {
   name: string
   product_type: ProductType
   price?: number
+  compare_at_price?: number
+  currency?: string
+  is_featured?: boolean
+  tags?: string[]
+  extra?: ProductExtra
   sort_order?: number
   status?: ContentStatus
-  translation?: { locale: string; title: string; description?: string }
+  translation?: { locale: string; name?: string; title?: string; description?: string; excerpt?: string; body?: unknown }
 }
 
 export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {}
@@ -176,11 +221,26 @@ export interface Collection {
   id: string
   site_id: string
   slug: string
-  name: string
-  product_count: number
+  name?: string
+  collection_type?: string
+  is_featured?: boolean
+  cover_image?: string | null
+  images?: unknown[]
+  island?: string | null
+  region?: string | null
+  province?: string | null
+  country?: string | null
+  lat?: number | null
+  lng?: number | null
+  /** DB column: item_count (NOT product_count) */
+  item_count: number
+  tags?: string[]
+  extra?: Record<string, unknown>
+  sort_order?: number
   status: ContentStatus
   created_at: string
   updated_at: string
+  deleted_at?: string | null
   translations: Translation[]
 }
 

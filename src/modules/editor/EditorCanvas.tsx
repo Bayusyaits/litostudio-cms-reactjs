@@ -21,13 +21,17 @@ import {
   Plus, ChevronUp, ChevronDown, Copy, Trash2, GripVertical,
   MoreVertical, Scissors, ClipboardPaste, ArrowUpToLine, ArrowDownToLine,
   Paintbrush, ClipboardCopy, Group, Lock, Unlock, Tag, EyeOff,
-  ImageIcon, Code2, Menu,
+  ImageIcon, Code2,
 } from 'lucide-react'
 import { useEditorStore }       from '@/stores/editor.store'
 import { BlockRenderer }        from './blocks/BlockRenderer'
 import { useTemplateManifest }  from '@/hooks/useTemplateManifest'
 import { getCanvasTokens }      from './templateCanvasTokens'
 import type { Block }           from '@/types/editor.types'
+import type { PreviewMode }     from '@/types/editor.types'
+// Real website CSS tokens — single source of truth.
+// :root vars (lito), [data-template="fashion"] (--nx-*), [data-template="beauty"] (--bx-*)
+import './canvas-website-tokens.css'
 
 // ── Context menu ─────────────────────────────────────────────────────────────
 
@@ -488,7 +492,8 @@ function InsertButton({ afterBlockId }: { afterBlockId: string }) {
   )
 }
 
-// ── Mock site header (Gutenberg-style template preview bar) ──────────────────
+// ── Responsive mock site header ───────────────────────────────────────────────
+// Mirrors AppHeader.vue from apps/website — burger on mobile, full nav on desktop/tablet.
 
 interface MockSiteHeaderProps {
   headerBg:     string
@@ -497,109 +502,217 @@ interface MockSiteHeaderProps {
   siteName:     string
   fontDisplay:  string
   fontBody:     string
+  previewMode:  PreviewMode
 }
 
-function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody }: MockSiteHeaderProps) {
-  const navItems = ['Home', 'About', 'Portfolio', 'Journal', 'Contact']
+const NAV_LINKS = ['Home', 'About', 'Portfolio', 'Stories', 'Journal', 'Contact']
+
+function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode }: MockSiteHeaderProps) {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const isMobile = previewMode === 'mobile'
+  const isTablet = previewMode === 'tablet'
+
+  const px = isMobile ? '20px' : isTablet ? '32px' : '40px'
+
+  const navLinkStyle: React.CSSProperties = {
+    fontFamily: fontBody,
+    fontSize: 11,
+    fontWeight: 500,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: `${headerText}bb`,
+    cursor: 'default',
+    userSelect: 'none',
+    transition: 'opacity 150ms',
+  }
+
   return (
-    <div
-      aria-label="Template site header preview"
-      role="banner"
-      style={{
+    <div role="banner" aria-label="Site header preview" style={{ flexShrink: 0, position: 'relative', zIndex: 10 }}>
+      {/* ── Main bar ────────────────────────────────────────────────────── */}
+      <div style={{
         background: headerBg,
-        color: headerText,
+        borderBottom: `1px solid ${headerAccent}20`,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 40px',
+        padding: `0 ${px}`,
         height: 64,
-        flexShrink: 0,
-        borderBottom: `1px solid ${headerAccent}22`,
-        position: 'relative',
-        zIndex: 5,
-      }}
-    >
-      {/* Logo */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        fontFamily: fontDisplay, fontSize: 18, fontWeight: 600,
-        letterSpacing: '0.04em',
-        color: headerText,
-        userSelect: 'none',
       }}>
-        <span style={{
-          width: 8, height: 8, borderRadius: '50%',
-          background: headerAccent,
-          display: 'inline-block', flexShrink: 0,
-        }} aria-hidden="true" />
-        {siteName}
-      </div>
+        {/* Logo */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          fontFamily: fontDisplay,
+          fontSize: isMobile ? 15 : 17,
+          fontWeight: 600,
+          letterSpacing: '0.04em',
+          color: headerText,
+          userSelect: 'none',
+          flexShrink: 0,
+        }}>
+          <span style={{
+            width: 7, height: 7, borderRadius: '50%',
+            background: headerAccent,
+            display: 'inline-block', flexShrink: 0,
+          }} aria-hidden="true" />
+          {siteName}
+        </div>
 
-      {/* Nav */}
-      <nav aria-label="Template navigation preview" style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
-        {navItems.map((item) => (
-          <span
-            key={item}
-            style={{
+        {/* Desktop / tablet nav */}
+        {!isMobile && (
+          <nav aria-label="Primary navigation" style={{ display: 'flex', alignItems: 'center', gap: isTablet ? 20 : 28 }}>
+            {NAV_LINKS.slice(0, isTablet ? 4 : 6).map((item) => (
+              <span key={item} style={navLinkStyle}>{item}</span>
+            ))}
+          </nav>
+        )}
+
+        {/* Desktop CTA */}
+        {!isMobile && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
+          }}>
+            <span style={{
               fontFamily: fontBody, fontSize: 12, fontWeight: 500,
-              letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: `${headerText}bb`,
-              cursor: 'default',
-              userSelect: 'none',
-            }}
-          >
-            {item}
-          </span>
-        ))}
-      </nav>
+              color: `${headerText}88`, userSelect: 'none',
+              letterSpacing: '0.06em',
+            }}>EN</span>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '6px 18px', borderRadius: 999,
+              background: headerText,
+              color: headerBg,
+              fontFamily: fontBody, fontSize: 12, fontWeight: 500,
+              cursor: 'default', userSelect: 'none',
+            }}>
+              Book Now
+            </div>
+          </div>
+        )}
 
-      {/* Hamburger — mobile hint */}
-      <Menu size={18} style={{ color: `${headerText}88` }} aria-hidden="true" />
-
-      {/* "Preview" badge */}
-      <div style={{
-        position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)',
-        background: headerAccent,
-        color: '#fff',
-        fontFamily: fontBody, fontSize: 9, fontWeight: 700,
-        letterSpacing: '0.1em', textTransform: 'uppercase',
-        padding: '2px 10px', borderRadius: 20,
-        pointerEvents: 'none',
-        zIndex: 10,
-      }} aria-hidden="true">
-        Template Preview
+        {/* Mobile: search + burger */}
+        {isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button
+              type="button"
+              aria-label={drawerOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={drawerOpen}
+              aria-controls="mobile-nav-preview"
+              onClick={() => setDrawerOpen(o => !o)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 36, height: 36, borderRadius: 6,
+                border: 'none', background: 'transparent',
+                color: headerText, cursor: 'pointer',
+              }}
+            >
+              {drawerOpen
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+              }
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* ── Mobile drawer ────────────────────────────────────────────────── */}
+      {isMobile && drawerOpen && (
+        <div
+          id="mobile-nav-preview"
+          role="navigation"
+          aria-label="Mobile navigation"
+          style={{
+            background: headerBg,
+            borderBottom: `1px solid ${headerAccent}25`,
+            padding: '8px 20px 20px',
+          }}
+        >
+          {NAV_LINKS.map((item, i) => (
+            <div
+              key={item}
+              style={{
+                fontFamily: fontBody,
+                fontSize: 13,
+                fontWeight: 500,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: i === 0 ? headerText : `${headerText}99`,
+                padding: '12px 0',
+                borderBottom: i < NAV_LINKS.length - 1 ? `1px solid ${headerAccent}18` : 'none',
+                userSelect: 'none', cursor: 'default',
+              }}
+            >
+              {item}
+            </div>
+          ))}
+          <div style={{ paddingTop: 16 }}>
+            <div style={{
+              display: 'block', padding: '10px 0', borderRadius: 999,
+              background: headerText, color: headerBg,
+              fontFamily: fontBody, fontSize: 13, fontWeight: 500,
+              textAlign: 'center', userSelect: 'none', cursor: 'default',
+            }}>
+              Book Now
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Mock site footer ──────────────────────────────────────────────────────────
 
-function MockSiteFooter({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody }: MockSiteHeaderProps) {
+function MockSiteFooter({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode }: MockSiteHeaderProps) {
+  const isMobile = previewMode === 'mobile'
   return (
     <div
-      aria-label="Template site footer preview"
+      aria-label="Site footer preview"
       role="contentinfo"
       style={{
         background: headerBg,
-        color: `${headerText}88`,
-        padding: '32px 40px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        borderTop: `1px solid ${headerAccent}22`,
+        borderTop: `1px solid ${headerAccent}20`,
+        padding: isMobile ? '28px 20px' : '40px 40px',
         flexShrink: 0,
       }}
     >
-      <span style={{ fontFamily: fontDisplay, fontSize: 14, color: headerText, userSelect: 'none' }}>
-        {siteName}
-      </span>
-      <span style={{ fontFamily: fontBody, fontSize: 11, userSelect: 'none' }}>
-        © {new Date().getFullYear()} · All rights reserved
-      </span>
-      <span style={{
-        fontFamily: fontBody, fontSize: 10, fontWeight: 600,
-        letterSpacing: '0.08em', textTransform: 'uppercase',
-        color: headerAccent, userSelect: 'none',
+      {/* Top row */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'flex-start' : 'flex-start',
+        justifyContent: 'space-between',
+        gap: isMobile ? 24 : 0,
+        paddingBottom: 24,
+        borderBottom: `1px solid ${headerAccent}15`,
+        marginBottom: 20,
       }}>
-        Lito Studio CMS
-      </span>
+        {/* Logo + tagline */}
+        <div>
+          <div style={{ fontFamily: fontDisplay, fontSize: 16, fontWeight: 600, color: headerText, marginBottom: 6, userSelect: 'none' }}>
+            {siteName}
+          </div>
+          <div style={{ fontFamily: fontBody, fontSize: 11, color: `${headerText}66`, userSelect: 'none', maxWidth: 200, lineHeight: 1.6 }}>
+            Visual storytelling for travel, culture & community.
+          </div>
+        </div>
+        {/* Footer nav */}
+        {!isMobile && (
+          <div style={{ display: 'flex', gap: 32 }}>
+            {['Portfolio', 'Stories', 'Journal', 'About', 'Contact'].map(link => (
+              <span key={link} style={{ fontFamily: fontBody, fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: `${headerText}88`, cursor: 'default', userSelect: 'none' }}>
+                {link}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* Bottom row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontFamily: fontBody, fontSize: 10, color: `${headerText}55`, userSelect: 'none' }}>
+          © {new Date().getFullYear()} {siteName} · All rights reserved
+        </span>
+        <span style={{ fontFamily: fontBody, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: headerAccent, userSelect: 'none' }}>
+          Lito Studio CMS
+        </span>
+      </div>
     </div>
   )
 }
@@ -625,7 +738,7 @@ export function EditorCanvas() {
   const dragIdx   = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
 
-  const canvasWidth =
+  const canvasWidth  =
     previewMode === 'mobile' ? 375 :
     previewMode === 'tablet' ? 768 :
     '100%'
@@ -653,37 +766,45 @@ export function EditorCanvas() {
     })
   }
 
+  // ── Page column style ────────────────────────────────────────────────────
+  const pageColumnStyle = {
+    width:          '100%',
+    maxWidth:       canvasWidth,
+    minHeight:      '100%',
+    display:        'flex',
+    flexDirection:  'column',
+    boxShadow:      '0 0 0 1px var(--lito-border), 0 4px 32px rgba(0,0,0,0.08)',
+    transition:     'max-width 300ms',
+    position:       'relative',
+    transformOrigin: 'top center',
+    transform:      zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined,
+    // Inject template CSS variable overrides so BlockRenderer picks up template palette.
+    // canvas-website-tokens.css further refines via [data-template] CSS.
+    '--font-display': fontDisplay,
+    '--font-body':    fontBody,
+    ...cssVars,
+  } as React.CSSProperties
+
   return (
     <div
       data-editor-canvas
+      data-device-mode={previewMode}
       ref={canvasRef}
       style={{
         flex: 1, overflowY: 'auto',
         background: cssVars['--cms-main-bg'],
-        display: 'flex', justifyContent: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
         minHeight: 0,
         position: 'relative',
       }}
     >
-      {/* Page column — inherits template CSS vars */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: canvasWidth,
-          minHeight: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 0 0 1px var(--lito-border), 0 4px 32px rgba(0,0,0,0.08)',
-          transition: 'max-width 300ms',
-          position: 'relative',
-          transformOrigin: 'top center',
-          transform: zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined,
-          // ── Inject template CSS variable overrides scoped to this column ──
-          '--font-display': fontDisplay,
-          '--font-body':    fontBody,
-          ...cssVars,
-        } as React.CSSProperties}
-      >
+        {/* Page column — data-template activates scoped CSS vars from canvas-website-tokens.css */}
+        <div
+          data-template={templateSlug ?? 'lito'}
+          style={pageColumnStyle}
+        >
         {/* Mock site header */}
         <MockSiteHeader
           headerBg={headerBg}
@@ -692,6 +813,7 @@ export function EditorCanvas() {
           siteName={siteName}
           fontDisplay={fontDisplay}
           fontBody={fontBody}
+          previewMode={previewMode}
         />
         {/* Page body — template background */}
         <div style={{ flex: 1, background: cssVars['--cms-card-bg'] as string }}>
@@ -913,8 +1035,9 @@ export function EditorCanvas() {
           siteName={siteName}
           fontDisplay={fontDisplay}
           fontBody={fontBody}
+          previewMode={previewMode}
         />
-      </div>
+        </div>{/* end page column */}
     </div>
   )
 }

@@ -1,0 +1,82 @@
+/**
+ * canvas-website-tokens.css
+ *
+ * Imports the real website design-token CSS files into the CMS editor canvas
+ * so the canvas renders blocks with the exact same CSS custom properties that
+ * the live website uses — single source of truth.
+ *
+ * Scope:
+ *  - tokens.css  → :root  (--lito-*, --surface-*, --text-*, --font-*)
+ *  - fashion-tokens.css → [data-template="fashion"] (--nx-*)
+ *  - beauty-tokens.css  → [data-template="beauty"]  (--bx-*)
+ *
+ * Usage in EditorCanvas:
+ *   Add data-template={templateSlug} to the canvas page column so the
+ *   attribute-scoped fashion / beauty vars activate for that element.
+ */
+
+/* Lito / default template tokens — scoped to :root */
+@import '../../../../website/assets/css/tokens.css';
+
+/* Fashion template tokens — scoped to [data-template="fashion"] */
+@import '../../../../website/assets/css/fashion-tokens.css';
+
+/* Beauty template tokens — scoped to [data-template="beauty"] */
+@import '../../../../website/assets/css/beauty-tokens.css';
+
+/* ── Ensure canvas page column uses website surface vars ─────────────────── */
+/* When data-template is set, remap the CMS-namespaced vars so BlockRenderer  */
+/* picks up the right template colours.                                        */
+
+/* Fashion → remap --lito-* → --nx-* values */
+[data-template="fashion"] {
+  --cms-card-bg:    var(--nx-bg,     #FAFAF9);
+  --cms-surface-2:  var(--nx-surface-alt, #F5F5F4);
+  --cms-surface-3:  var(--nx-surface-raised, #EDEDED);
+  --text-primary:   var(--nx-text,   #0A0A0A);
+  --text-secondary: var(--nx-text-muted, #666666);
+  --text-muted:     var(--nx-text-faint, #999999);
+  --lito-teal:      var(--nx-accent, #0A0A0A);
+  --lito-gold:      var(--nx-accent, #0A0A0A);
+  --lito-border:    var(--nx-border, rgba(0,0,0,0.10));
+  --font-display:   var(--nx-font,   'Inter', system-ui, sans-serif);
+  --font-body:      var(--nx-font,   'Inter', system-ui, sans-serif);
+}
+
+/* Beauty → remap --lito-* → --bx-* values */
+[data-template="beauty"] {
+  --cms-card-bg:    var(--bx-bg,     #FAF8F5);
+  --cms-surface-2:  var(--bx-surface-alt, #F7F5F1);
+  --cms-surface-3:  var(--bx-surface, #FFFFFF);
+  --text-primary:   var(--bx-text,   #2C2420);
+  --text-secondary: var(--bx-text-muted, #7A6E68);
+  --text-muted:     var(--bx-text-faint, #B0A49C);
+  --lito-teal:      var(--bx-accent, #C4956A);
+  --lito-gold:      var(--bx-accent, #C4956A);
+  --lito-border:    var(--bx-border, rgba(44,36,32,0.10));
+  --font-display:   var(--bx-font-display, 'Cormorant Garamond', Georgia, serif);
+  --font-body:      var(--bx-font-body,    'Inter', system-ui, sans-serif);
+}
+
+/* Lito (default) — already correct from :root, but add cms-card-bg alias */
+[data-template="lito"],
+[data-template="photography"] {
+  --cms-card-bg:  var(--surface-page, #F7F4EE);
+  --cms-surface-2: var(--surface-alt, #E6DED1);
+  --cms-surface-3: var(--surface-raised, #FFFFFF);
+}
+
+/* Travel template */
+[data-template="travel"] {
+  --cms-card-bg:    #F8FAFC;
+  --cms-surface-2:  #EEF2F7;
+  --cms-surface-3:  #FFFFFF;
+  --text-primary:   #0F172A;
+  --text-secondary: #334155;
+  --text-muted:     #64748B;
+  --lito-teal:      #1A4A5A;
+  --lito-gold:      #1DA462;
+  --lito-border:    #E2E8F0;
+  --font-display:   'Poppins', system-ui, sans-serif;
+  --font-body:      'Inter', system-ui, sans-serif;
+}
