@@ -6,16 +6,35 @@ import { useWebsiteStore } from '@/stores/website.store'
 import { useThemeStore } from '@/stores/theme.store'
 import { SettingsPageView } from './SettingsPageView'
 import { getErrorMessage } from '@/lib/axios'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { TemplateSwitchModal } from '@/modules/editor/TemplateSwitchModal'
+import type { TemplateSwitchResult } from '@/modules/editor/TemplateSwitchModal'
+import { useEditorStore } from '@/stores/editor.store'
 
 export default function SettingsPageContainer() {
   const qc = useQueryClient()
   const { org, setOrg } = useOrgStore()
   const { activeSite, setActiveSite } = useWebsiteStore()
   const { colorMode, setColorMode } = useThemeStore()
+  const resetEditor = useEditorStore((s) => s.reset)
   const [saveError, setSaveError]     = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [themeError, setThemeError]   = useState<string | null>(null)
+
+  // ── Template switch modal ─────────────────────────────────────────────────
+
+  const [pendingTheme, setPendingTheme] = useState<{ id: string; name: string } | null>(null)
+
+  const resolveTemplateSwitchModal = useCallback((result: TemplateSwitchResult) => {
+    if (!pendingTheme || result.action === 'cancel') {
+      setPendingTheme(null)
+      return
+    }
+    const { id, keepContent } = { id: pendingTheme.id, keepContent: result.action === 'keep' }
+    setPendingTheme(null)
+    applyThemeMutation.mutate({ themeId: id, keepContent })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingTheme])
 
   // ── Themes ────────────────────────────────────────────────────────────────
 
@@ -33,11 +52,11 @@ export default function SettingsPageContainer() {
   })
 
   const applyThemeMutation = useMutation({
-    mutationFn: async (themeId: string) => {
+    mutationFn: async ({ themeId, keepContent }: { themeId: string; keepContent: boolean }) => {
       // 1. Set active theme in site_theme_settings
       await themeService.updateSiteTheme(activeSite!.id, { theme_id: themeId })
 
-      // 2. Derive template_slug from the theme's slug, write to site.settings
+      // 2. Derive template_slug from the theme slug, write to site.settings
       //    so BlockEditorPage can seed the correct page defaults
       const theme = (themesData?.data ?? []).find((t) => t.id === themeId)
       if (theme?.slug) {
@@ -46,6 +65,13 @@ export default function SettingsPageContainer() {
           settings: { ...existing, template_slug: theme.slug },
         })
         setActiveSite(updated)
+      }
+
+      // 3. If user chose "apply defaults", wipe the editor blockDoc so the
+      //    editor's init effect re-seeds with the new template's page defaults
+      //    next time the editor opens.
+      if (!keepContent) {
+        resetEditor()
       }
     },
     onSuccess: () => {
@@ -84,22 +110,39 @@ export default function SettingsPageContainer() {
     onError: (err) => setSaveError(getErrorMessage(err)),
   })
 
+  // Gate theme changes through the modal —
+  // find the theme name so the modal copy is specific.
+  const handleApplyTheme = useCallback((id: string) => {
+    const theme = (themesData?.data ?? []).find((t) => t.id === id)
+    const name  = theme?.name ?? 'this template'
+    setPendingTheme({ id, name })
+  }, [themesData])
+
   return (
-    <SettingsPageView
-      org={org}
-      activeSite={activeSite}
-      colorMode={colorMode}
-      onSetColorMode={setColorMode}
-      onSaveOrg={(payload) => updateOrgMutation.mutate(payload)}
-      onSaveSite={(payload) => updateSiteMutation.mutate(payload)}
-      saving={updateOrgMutation.isPending || updateSiteMutation.isPending}
-      saveError={saveError ?? themeError}
-      saveSuccess={saveSuccess}
-      // Theme props
-      themes={themesData?.data ?? []}
-      activeThemeId={siteTheme?.theme_id ?? null}
-      onApplyTheme={(id) => applyThemeMutation.mutate(id)}
-      applyingTheme={applyThemeMutation.isPending}
-    />
+    <>
+      <SettingsPageView
+        org={org}
+        activeSite={activeSite}
+        colorMode={colorMode}
+        onSetColorMode={setColorMode}
+        onSaveOrg={(payload) => updateOrgMutation.mutate(payload)}
+        onSaveSite={(payload) => updateSiteMutation.mutate(payload)}
+        saving={updateOrgMutation.isPending || updateSiteMutation.isPending}
+        saveError={saveError ?? themeError}
+        saveSuccess={saveSuccess}
+        // Theme props
+        themes={themesData?.data ?? []}
+        activeThemeId={siteTheme?.theme_id ?? null}
+        onApplyTheme={handleApplyTheme}
+        applyingTheme={applyThemeMutation.isPending}
+      />
+
+      {pendingTheme && (
+        <TemplateSwitchModal
+          newTemplateName={pendingTheme.name}
+          onResolve={resolveTemplateSwitchModal}
+        />
+      )}
+    </>
   )
 }

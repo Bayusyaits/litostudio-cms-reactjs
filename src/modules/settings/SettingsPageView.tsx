@@ -3,10 +3,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
-  Building2, Globe, Moon, Sun, Monitor, Check, AlertCircle, Layout, Palette,
+  Building2, Globe, Moon, Sun, Monitor, Check, AlertCircle, Layout, Palette, Phone,
 } from 'lucide-react'
 import type { Organization, Site } from '@/types/auth.types'
 import type { Theme } from '@/services/theme.service'
+import { PhoneNumberManager } from './PhoneNumberManager'
 
 type ColorMode = 'light' | 'dark' | 'system'
 
@@ -478,6 +479,15 @@ export function SettingsPageView({
             )
           })}
         </div>
+      </SectionCard>
+
+      {/* ── Phone number + WhatsApp verification ── */}
+      <SectionCard
+        icon={Phone}
+        title="Phone Number"
+        description="Add and verify a phone number for WhatsApp notifications and bookings"
+      >
+        <PhoneNumberManager />
       </SectionCard>
 
       {/* ── Danger zone ── */}

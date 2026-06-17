@@ -9,9 +9,11 @@
 import { useState } from 'react'
 import { Lock, Monitor, Tablet, Smartphone, HelpCircle, ChevronDown, Crown, Plus, Trash2 } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
+import { useWebsiteStore } from '@/stores/website.store'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
 import { DynamicContentPanel } from './DynamicContentPanel'
 import { useTemplateManifest }  from '@/hooks/useTemplateManifest'
+import { getCanvasTokens }      from './templateCanvasTokens'
 import type { EditorTab, Block, BlockStyles } from '@/types/editor.types'
 
 // ── Reusable form helpers ─────────────────────────────────────────────────────
@@ -587,6 +589,47 @@ function ContentPanel({ block }: { block: Block }) {
   )
 }
 
+// ── Template palette chips ────────────────────────────────────────────────────
+
+function TemplatePalette({ onPick }: { onPick: (color: string) => void }) {
+  const { activeSite } = useWebsiteStore()
+  const settings       = activeSite?.settings as Record<string, unknown> | null | undefined
+  const templateSlug   = (settings?.template_slug as string | undefined) ?? 'lito'
+  const tokens         = getCanvasTokens(templateSlug)
+
+  // Extract the 6 key palette colours from canvas tokens
+  const palette = [
+    { label: 'Primary',   color: tokens['--lito-teal']   },
+    { label: 'Accent',    color: tokens['--lito-gold']   },
+    { label: 'Deep',      color: tokens['--lito-gold-deep'] },
+    { label: 'Surface',   color: tokens['--cms-card-bg'] },
+    { label: 'Text',      color: tokens['--text-primary'] },
+    { label: 'Muted',     color: tokens['--text-muted']  },
+  ]
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <Label>Template palette</Label>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {palette.map(({ label, color }) => (
+          <button
+            key={label}
+            type="button"
+            title={`${label}: ${color}`}
+            onClick={() => onPick(color)}
+            style={{
+              width: 24, height: 24, borderRadius: 6,
+              background: color,
+              border: '1.5px solid var(--lito-border)',
+              cursor: 'pointer', padding: 0, flexShrink: 0,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Style panel ───────────────────────────────────────────────────────────────
 
 function StylePanel({ block }: { block: Block }) {
@@ -596,6 +639,9 @@ function StylePanel({ block }: { block: Block }) {
 
   return (
     <div style={{ padding: '4px 14px' }}>
+      {/* Template palette — quick-pick colours from the active template */}
+      <TemplatePalette onPick={(color) => upd({ backgroundColor: color })} />
+
       <div style={{ marginBottom: 12 }}>
         <Label>Background colour</Label>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

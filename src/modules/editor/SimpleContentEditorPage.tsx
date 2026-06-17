@@ -791,8 +791,8 @@ export default function SimpleContentEditorPage() {
       </div>
 
       {saveError && (
-        <div className="px-3 py-2 rounded-lg border border-[var(--s-danger)]/20 bg-red-50" role="alert">
-          <p className="font-body text-xs text-[var(--s-danger)]">{saveError}</p>
+        <div className="px-3 py-2 rounded-lg border border-[var(--cms-danger)] bg-[var(--cms-danger-bg)]" role="alert">
+          <p className="font-body text-xs text-[var(--cms-danger)]">{saveError}</p>
         </div>
       )}
     </ContentEditorLayout>

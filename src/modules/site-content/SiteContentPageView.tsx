@@ -39,7 +39,7 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
       placeholder={placeholder}
       style={{
         width: '100%', height: 36, padding: '0 10px', borderRadius: 6, boxSizing: 'border-box',
-        border: '1px solid var(--color-border)', background: 'var(--cms-input-bg, var(--surface-raised, #fff))',
+        border: '1px solid var(--color-border)', background: 'var(--cms-input-bg)',
         fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)',
         outline: 'none',
       }}
@@ -63,7 +63,7 @@ function ColorInput({ value, onChange, label }: { value: string; onChange: (v: s
         placeholder="#000000"
         style={{
           flex: 1, height: 36, padding: '0 10px', borderRadius: 6, boxSizing: 'border-box',
-          border: '1px solid var(--color-border)', background: 'var(--cms-input-bg, #fff)',
+          border: '1px solid var(--color-border)', background: 'var(--cms-input-bg)',
           fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', outline: 'none',
         }}
       />
@@ -82,7 +82,7 @@ function ArrayTextarea({ value, onChange, placeholder }: { value: string[]; onCh
       rows={4}
       style={{
         width: '100%', padding: '8px 10px', borderRadius: 6, boxSizing: 'border-box',
-        border: '1px solid var(--color-border)', background: 'var(--cms-input-bg, #fff)',
+        border: '1px solid var(--color-border)', background: 'var(--cms-input-bg)',
         fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)',
         resize: 'vertical', outline: 'none', lineHeight: 1.6,
       }}

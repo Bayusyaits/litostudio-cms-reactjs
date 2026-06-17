@@ -268,8 +268,8 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
               </div>
 
               {serverError && (
-                <div className="px-3 py-2 rounded-lg border border-[var(--s-danger)]/20 bg-red-50" role="alert">
-                  <p className="font-body text-xs text-[var(--s-danger)]">{serverError}</p>
+                <div className="px-3 py-2 rounded-lg border border-[var(--cms-danger)] bg-[var(--cms-danger-bg)]" role="alert">
+                  <p className="font-body text-xs text-[var(--cms-danger)]">{serverError}</p>
                 </div>
               )}
 

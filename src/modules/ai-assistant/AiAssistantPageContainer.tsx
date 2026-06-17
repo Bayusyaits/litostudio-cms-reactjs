@@ -130,7 +130,7 @@ export default function AiAssistantPageContainer() {
 
           <div>
             <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Model</label>
-            <select {...settingsForm.register('model')} className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm">
+            <select {...settingsForm.register('model')} className="cms-input">
               <option value="claude-3-haiku-20240307">Claude 3 Haiku (fast, economical)</option>
               <option value="claude-3-sonnet-20240229">Claude 3 Sonnet (balanced)</option>
               <option value="claude-3-opus-20240229">Claude 3 Opus (powerful)</option>
@@ -143,7 +143,7 @@ export default function AiAssistantPageContainer() {
               {...settingsForm.register('system_prompt')}
               rows={3}
               placeholder="You are a helpful assistant for…"
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+              className="cms-input"
             />
           </div>
 
@@ -153,7 +153,7 @@ export default function AiAssistantPageContainer() {
               <input
                 type="number" step="0.1" min="0" max="2"
                 {...settingsForm.register('temperature', { valueAsNumber: true })}
-                className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+                className="cms-input"
               />
             </div>
             <div>
@@ -161,7 +161,7 @@ export default function AiAssistantPageContainer() {
               <input
                 type="number" min="1" max="8192"
                 {...settingsForm.register('max_tokens', { valueAsNumber: true })}
-                className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+                className="cms-input"
               />
             </div>
           </div>
@@ -175,7 +175,7 @@ export default function AiAssistantPageContainer() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Position</label>
-                <select {...settingsForm.register('widget_position')} className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm">
+                <select {...settingsForm.register('widget_position')} className="cms-input">
                   <option value="bottom-right">Bottom Right</option>
                   <option value="bottom-left">Bottom Left</option>
                   <option value="top-right">Top Right</option>
@@ -184,7 +184,7 @@ export default function AiAssistantPageContainer() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Theme</label>
-                <select {...settingsForm.register('widget_theme')} className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm">
+                <select {...settingsForm.register('widget_theme')} className="cms-input">
                   <option value="light">Light</option>
                   <option value="dark">Dark</option>
                   <option value="auto">Auto (system)</option>
@@ -196,7 +196,7 @@ export default function AiAssistantPageContainer() {
               <input
                 {...settingsForm.register('welcome_message')}
                 placeholder="Hi! How can I help you today?"
-                className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+                className="cms-input"
               />
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function AiAssistantPageContainer() {
             <button
               type="submit"
               disabled={saveSettingsMutation.isPending}
-              className="cms-btn cms-btn-primary cms-btn-sm hover:bg-blue-700"
+              className="cms-btn cms-btn-primary cms-btn-sm"
             >
               {saveSettingsMutation.isPending ? 'Saving…' : 'Save Settings'}
             </button>
@@ -221,7 +221,7 @@ export default function AiAssistantPageContainer() {
             <select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value)}
-              className="border border-[var(--lito-border)] rounded px-2 py-1.5 text-sm"
+              className="cms-input"
             >
               <option value="">All types</option>
               {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -263,29 +263,29 @@ export default function AiAssistantPageContainer() {
         {showEntryForm && (
           <form
             onSubmit={entryForm.handleSubmit(v => saveEntryMutation.mutate(v))}
-            className="mt-4 p-4 border border-blue-200 rounded-[6px] bg-blue-50 space-y-3"
+            className="mt-4 p-4 border border-[var(--lito-border)] rounded-[6px] bg-[var(--cms-surface-3)] space-y-3"
           >
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">{editEntry ? 'Edit Entry' : 'New Entry'}</h3>
-            <select {...entryForm.register('content_type')} className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm">
+            <select {...entryForm.register('content_type')} className="cms-input">
               {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
             <input
               {...entryForm.register('title', { required: true })}
               placeholder="Entry title"
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+              className="cms-input"
             />
             <textarea
               {...entryForm.register('content', { required: true })}
               placeholder="Knowledge content (plain text or markdown)"
               rows={6}
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+              className="cms-input"
             />
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="number"
                 {...entryForm.register('priority', { valueAsNumber: true })}
                 placeholder="Priority (higher = more relevant)"
-                className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+                className="cms-input"
               />
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" {...entryForm.register('is_active')} className="h-4 w-4" />

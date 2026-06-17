@@ -8,6 +8,7 @@
 
 import { useEffect, useCallback } from 'react'
 import { EditorToolbar }      from './EditorToolbar'
+import type { SupportedLocale } from './EditorToolbar'
 import { EditorLeftSidebar }  from './EditorLeftSidebar'
 import { EditorCanvas }       from './EditorCanvas'
 import { EditorCodeView }     from './EditorCodeView'
@@ -17,25 +18,32 @@ import { useEditorStore }     from '@/stores/editor.store'
 
 interface EditorShellProps {
   /** Title shown in the toolbar save-status area */
-  pageTitle:   string
+  pageTitle:       string
   /** Page ID — used to open the CMS-internal preview route */
-  pageId?:     string
-  /** Slug used as fallback for external preview (legacy) */
-  pageSlug?:   string
+  pageId?:         string
+  /** Slug used as fallback for external preview */
+  pageSlug?:       string
   /**
    * Called when the user saves. Must handle setting saveStatus via
    * setSaveStatus / markClean from useEditorStore.
    */
-  saveFn:      () => Promise<void>
+  saveFn:          () => Promise<void>
   /**
    * Called when the user publishes (Publish button).
    * Default behaviour: call saveFn then do nothing more — callers should
    * override to also set content status to 'active'.
    */
-  publishFn?:  () => Promise<void>
+  publishFn?:      () => Promise<void>
+  /** Currently active locale for multi-language editing */
+  activeLocale?:   SupportedLocale
+  /** Called when user switches locale in the toolbar */
+  onLocaleChange?: (locale: SupportedLocale) => void
 }
 
-export function EditorShell({ pageTitle, pageId, pageSlug, saveFn, publishFn }: EditorShellProps) {
+export function EditorShell({
+  pageTitle, pageId, pageSlug, saveFn, publishFn,
+  activeLocale, onLocaleChange,
+}: EditorShellProps) {
   const {
     undo, redo, canUndo, canRedo,
     isDirty, setSaveStatus, markClean,
@@ -152,6 +160,8 @@ export function EditorShell({ pageTitle, pageId, pageSlug, saveFn, publishFn }: 
         onSave={() => void handleSave()}
         onPublish={handlePublish}
         onPreview={handlePreview}
+        activeLocale={activeLocale}
+        onLocaleChange={onLocaleChange}
       />
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>

@@ -37,6 +37,10 @@ function blockStyle(block: Block): React.CSSProperties {
   const s = block.styles ?? {}
   // Blocks that manage their own layout should not have forced padding
   const noPadding = block.type === 'spacer' || block.type === 'divider'
+  // Support both canonical keys (backgroundColor/textColor) and legacy shorthand
+  // keys (background/color) that may exist in older pageDefaults entries.
+  const bg    = s.backgroundColor ?? (s as Record<string, unknown>).background as string | undefined
+  const color = s.textColor       ?? (s as Record<string, unknown>).color       as string | undefined
   return {
     paddingTop:    s.paddingTop    !== undefined ? s.paddingTop    : noPadding ? 0 : 64,
     paddingBottom: s.paddingBottom !== undefined ? s.paddingBottom : noPadding ? 0 : 64,
@@ -44,8 +48,8 @@ function blockStyle(block: Block): React.CSSProperties {
     paddingRight:  s.paddingRight  !== undefined ? s.paddingRight  : undefined,
     marginTop:     s.marginTop     !== undefined ? s.marginTop     : undefined,
     marginBottom:  s.marginBottom  !== undefined ? s.marginBottom  : undefined,
-    backgroundColor: s.backgroundColor ?? undefined,
-    color:           s.textColor       ?? undefined,
+    backgroundColor: bg,
+    color,
     textAlign:       s.textAlign       ?? undefined,
     borderRadius:    s.borderRadius !== undefined ? s.borderRadius : undefined,
     borderWidth:     s.borderWidth  !== undefined ? s.borderWidth  : undefined,

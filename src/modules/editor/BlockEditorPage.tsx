@@ -6,7 +6,7 @@
  * the editor store, then renders EditorShell.
  */
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { pagesService }            from '@/services/pages.service'
@@ -16,17 +16,23 @@ import { useEditorStore }          from '@/stores/editor.store'
 import { useWebsiteStore }         from '@/stores/website.store'
 import { draftMediaStore }         from '@/stores/draftMedia.store'
 import { getPageDefaults }         from '@litostudio/templates'
+import { getCanvasTokens }         from './templateCanvasTokens'
 import { getPageLayout }           from '@/services/pageLayouts.service'
 import { EditorShell }             from './EditorShell'
+import type { SupportedLocale }    from './EditorToolbar'
 import { DashboardSkeleton }       from '@/components/atoms/Skeleton'
 import type { BlockDocument, Block, ImageBlockData, GalleryBlockData, HeroBlockData } from '@/types/editor.types'
 
 /** Generate a short random ID — same as patternLibrary uid() */
 function uid() { return Math.random().toString(36).slice(2, 10) }
 
-// LOCALE is now driven by the activeSite's default locale or falls back to 'id'.
-// TODO: add a locale switcher UI in EditorToolbar to allow editing multiple locales.
-const LOCALE = (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('locale')) || 'id'
+/** Initial locale from URL param, falls back to 'id' */
+function getInitialLocale(): SupportedLocale {
+  const param = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('locale')
+    : null
+  return (param === 'en' || param === 'id') ? param : 'id'
+}
 
 /** Walk the BlockDocument and resolve any blob: URLs to CDN URLs before save. */
 async function resolveBlockDocMedia(doc: BlockDocument): Promise<BlockDocument> {
@@ -148,6 +154,7 @@ export default function BlockEditorPage() {
   const { activeSite } = useWebsiteStore()
   const { init, reset, setPageSeo, blockDoc, pageSeo } = useEditorStore()
   const qc = useQueryClient()
+  const [locale, setLocale] = useState<SupportedLocale>(getInitialLocale)
 
   const { data: page, isLoading, error } = useQuery({
     queryKey:  ['page-editor', pageId],
@@ -163,14 +170,14 @@ export default function BlockEditorPage() {
     // Guard against stale async callbacks after unmount / page change
     let mounted = true
 
-    const translation = (page.page_translations ?? []).find((t) => t.locale === LOCALE)
+    const translation = (page.page_translations ?? []).find((t) => t.locale === locale)
     const rawBody     = translation?.body
 
     const doc: BlockDocument = isBlockDocument(rawBody)
-      ? { ...(rawBody as BlockDocument), version: '1.0', locale: LOCALE }   // normalise: ensure version field
-      : { version: '1.0', locale: LOCALE, blocks: [] }
+      ? { ...(rawBody as BlockDocument), version: '1.0', locale: locale }   // normalise: ensure version field
+      : { version: '1.0', locale: locale, blocks: [] }
 
-    init(doc, pageId, LOCALE)
+    init(doc, pageId, locale)
     setPageSeo({
       metaTitle:       translation?.meta_title ?? '',
       metaDescription: translation?.meta_description ?? '',
@@ -202,13 +209,13 @@ export default function BlockEditorPage() {
           data: d.data  as Block['data'],
         }))
         if (seededBlocks.length > 0) {
-          init({ version: '1.0', locale: LOCALE, blocks: seededBlocks }, pageId, LOCALE)
+          init({ version: '1.0', locale: locale, blocks: seededBlocks }, pageId, locale)
         }
       }
 
       /** Try static package defaults — also tries normalised slug as fallback */
       const tryStaticDefaults = (tplSlug: string, pgSlug: string): boolean => {
-        const d = getPageDefaults(tplSlug, pgSlug) ?? getPageDefaults(tplSlug, normaliseSlug(pgSlug))
+        const d = getPageDefaults(tplSlug, pgSlug, locale) ?? getPageDefaults(tplSlug, normaliseSlug(pgSlug), locale)
         if (d && d.length > 0) { seedFromDefaults(d); return true }
         return false
       }
@@ -224,7 +231,7 @@ export default function BlockEditorPage() {
           const migratedBlocks = sections
             .sort((a, b) => a.sort_order - b.sort_order)
             .map(sectionToBlock)
-          init({ version: '1.0', locale: LOCALE, blocks: migratedBlocks }, pageId, LOCALE)
+          init({ version: '1.0', locale: locale, blocks: migratedBlocks }, pageId, locale)
           return
         }
 
@@ -254,19 +261,48 @@ export default function BlockEditorPage() {
       mounted = false
       reset()
     }
-  }, [page, pageId, init, reset, setPageSeo, activeSite])
+  }, [page, pageId, init, reset, setPageSeo, activeSite, locale])
+
+  // ── Google Fonts injection — keeps canvas fonts in sync with active template ─
+
+  useEffect(() => {
+    const settings    = activeSite?.settings as Record<string, unknown> | null | undefined
+    const templateSlug = (settings?.template_slug as string | undefined) ?? 'lito'
+    const tokens      = getCanvasTokens(templateSlug)
+    if (!tokens.fontUrl) return
+
+    const LINK_ID = 'cms-editor-font-link'
+    let link = document.getElementById(LINK_ID) as HTMLLinkElement | null
+
+    if (!link) {
+      link = document.createElement('link')
+      link.id   = LINK_ID
+      link.rel  = 'stylesheet'
+      document.head.appendChild(link)
+    }
+
+    // Only update href when URL changes (avoids flicker on re-render)
+    if (link.href !== tokens.fontUrl) {
+      link.href = tokens.fontUrl
+    }
+
+    return () => {
+      // Clean up on unmount so fonts don't leak into other CMS pages
+      document.getElementById(LINK_ID)?.remove()
+    }
+  }, [activeSite])
 
   // ── Save function ─────────────────────────────────────────────────────────
 
   const saveFn = useCallback(async () => {
     if (!pageId) return
-    const translation = (page?.page_translations ?? []).find((t) => t.locale === LOCALE)
+    const translation = (page?.page_translations ?? []).find((t) => t.locale === locale)
     const title = translation?.title ?? page?.slug ?? ''
     // Resolve any blob: URLs (deferred ImageUploader uploads) before persisting
     const resolvedDoc = await resolveBlockDocMedia(blockDoc)
     await pagesService.update(pageId, {
       translations: [{
-        locale: LOCALE,
+        locale: locale,
         title,
         body:             resolvedDoc as unknown as Record<string, unknown>,
         meta_title:       pageSeo.metaTitle || undefined,
@@ -313,7 +349,7 @@ export default function BlockEditorPage() {
     )
   }
 
-  const translation = (page.page_translations ?? []).find((t) => t.locale === LOCALE)
+  const translation = (page.page_translations ?? []).find((t) => t.locale === locale)
   const pageTitle   = translation?.title ?? page.slug
 
   return (
@@ -323,6 +359,8 @@ export default function BlockEditorPage() {
       pageSlug={page.slug}
       saveFn={saveFn}
       publishFn={publishFn}
+      activeLocale={locale}
+      onLocaleChange={setLocale}
     />
   )
 }

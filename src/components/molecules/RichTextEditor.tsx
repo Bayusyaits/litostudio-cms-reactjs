@@ -155,13 +155,12 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        'ck-editor-host rounded-[var(--radius-md)] border border-[var(--lito-border)] overflow-hidden',
-        '[&_.ck-editor__top]:border-b [&_.ck-editor__top]:border-[var(--lito-border)]',
-        '[&_.ck-editor__editable]:min-h-[var(--ck-min-h)] [&_.ck-editor__editable]:p-4',
-        '[&_.ck-editor__editable]:font-body [&_.ck-editor__editable]:text-[var(--text-primary)]',
-        '[&_.ck.ck-toolbar]:bg-[var(--cms-card-bg)] [&_.ck.ck-toolbar]:border-0',
-        '[&_.ck.ck-editor__editable:not(.ck-focused)]:border-0',
-        '[&_.ck.ck-editor__editable.ck-focused]:border-0 [&_.ck.ck-editor__editable.ck-focused]:shadow-none',
+        // ck-editor-host — global CSS in globals.css handles all theming + dark mode
+        // Keep only structural layout here
+        'ck-editor-host relative rounded-[var(--radius-md)] border border-[var(--lito-border)]',
+        // Enforce min-height on editable area via CSS var
+        '[&_.ck-editor__editable]:min-h-[var(--ck-min-h)]',
+        '[&_.ck-editor__editable]:font-body',
         className,
       )}
       style={{ '--ck-min-h': `${minHeight}px` } as React.CSSProperties}

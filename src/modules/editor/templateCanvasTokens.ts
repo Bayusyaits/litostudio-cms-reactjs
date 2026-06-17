@@ -29,6 +29,8 @@ export interface TemplateCanvasTokens {
   headerText:           string  // mock-header text colour
   headerAccent:         string  // mock-header logo accent
   siteName:             string  // displayed in mock header
+  /** Google Fonts URL to inject as <link> in the editor canvas */
+  fontUrl?:             string
 }
 
 const LITO: TemplateCanvasTokens = {
@@ -49,6 +51,7 @@ const LITO: TemplateCanvasTokens = {
   headerText:         '#F7F4EE',
   headerAccent:       '#D4A853',
   siteName:           'Lito Studio',
+  fontUrl:            'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap',
 }
 
 const PHOTOGRAPHY: TemplateCanvasTokens = {
@@ -69,6 +72,7 @@ const PHOTOGRAPHY: TemplateCanvasTokens = {
   headerText:         '#FAFAFA',
   headerAccent:       '#C9A865',
   siteName:           'Photography',
+  fontUrl:            'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap',
 }
 
 const FASHION: TemplateCanvasTokens = {
@@ -89,6 +93,7 @@ const FASHION: TemplateCanvasTokens = {
   headerText:         '#FAFAF9',
   headerAccent:       '#FAFAF9',
   siteName:           'FASHION',
+  fontUrl:            'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
 }
 
 const BEAUTY: TemplateCanvasTokens = {
@@ -109,6 +114,7 @@ const BEAUTY: TemplateCanvasTokens = {
   headerText:         '#FAF8F5',
   headerAccent:       '#C4956A',
   siteName:           'Beauty',
+  fontUrl:            'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap',
 }
 
 const TRAVEL: TemplateCanvasTokens = {
@@ -129,6 +135,7 @@ const TRAVEL: TemplateCanvasTokens = {
   headerText:         '#F8FAFC',
   headerAccent:       '#1DA462',
   siteName:           'Travel',
+  fontUrl:            'https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap',
 }
 
 export const TEMPLATE_CANVAS_TOKENS: Record<string, TemplateCanvasTokens> = {

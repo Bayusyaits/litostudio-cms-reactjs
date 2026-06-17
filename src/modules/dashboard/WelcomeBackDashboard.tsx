@@ -75,7 +75,7 @@ function QuickAction({
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
         gap: 8, padding: '16px 18px',
-        background: 'white',
+        background: 'var(--cms-card-bg)',
         border: '1px solid var(--lito-border)',
         borderRadius: 12,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -220,7 +220,7 @@ export function WelcomeBackDashboard() {
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '6px 12px', borderRadius: 7,
                   border: '1px solid var(--lito-border)',
-                  background: 'white', cursor: 'pointer',
+                  background: 'var(--cms-card-bg)', cursor: 'pointer',
                   fontFamily: 'var(--font-body)', fontSize: 12,
                   color: 'var(--text-primary)',
                 }}
@@ -234,7 +234,7 @@ export function WelcomeBackDashboard() {
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '6px 12px', borderRadius: 7,
                   border: '1px solid var(--lito-border)',
-                  background: 'white', cursor: 'pointer',
+                  background: 'var(--cms-card-bg)', cursor: 'pointer',
                   fontFamily: 'var(--font-body)', fontSize: 12,
                   color: 'var(--text-muted)',
                 }}
@@ -344,7 +344,7 @@ export function WelcomeBackDashboard() {
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '6px 12px', borderRadius: 7,
                   border: '1px solid var(--lito-border)',
-                  background: 'white', cursor: 'pointer',
+                  background: 'var(--cms-card-bg)', cursor: 'pointer',
                   fontFamily: 'var(--font-body)', fontSize: 12,
                   color: 'var(--text-primary)',
                 }}
@@ -358,7 +358,7 @@ export function WelcomeBackDashboard() {
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '6px 12px', borderRadius: 7,
                   border: '1px solid var(--lito-border)',
-                  background: 'white', cursor: 'pointer',
+                  background: 'var(--cms-card-bg)', cursor: 'pointer',
                   fontFamily: 'var(--font-body)', fontSize: 12,
                   color: 'var(--text-muted)',
                 }}
@@ -374,7 +374,7 @@ export function WelcomeBackDashboard() {
                     display: 'flex', alignItems: 'center', gap: 5,
                     padding: '6px 12px', borderRadius: 7,
                     border: '1px solid var(--lito-border)',
-                    background: 'white', textDecoration: 'none',
+                    background: 'var(--cms-card-bg)', textDecoration: 'none',
                     fontFamily: 'var(--font-body)', fontSize: 12,
                     color: 'var(--lito-teal)',
                   }}

@@ -3,7 +3,7 @@
  * Used by DynamicContentPanel to build inspectors from template manifests.
  */
 
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Globe } from 'lucide-react'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
 import type { FieldSchema } from '@litostudio/templates'
 
@@ -15,13 +15,19 @@ interface DynamicFieldProps {
 
 // ── Primitive field inputs ────────────────────────────────────────────────────
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function FieldLabel({ children, translatable }: { children: React.ReactNode; translatable?: boolean }) {
   return (
     <p style={{
       fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 500,
       color: 'var(--text-secondary)', margin: '0 0 4px',
+      display: 'flex', alignItems: 'center', gap: 4,
     }}>
       {children}
+      {translatable && (
+        <span title="This field changes per locale" style={{ display: 'inline-flex', flexShrink: 0 }}>
+          <Globe size={10} style={{ color: 'var(--lito-teal)' }} />
+        </span>
+      )}
     </p>
   )
 }
@@ -63,7 +69,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
     case 'text':
       return fieldWrap(
         <>
-          <FieldLabel>{schema.label}</FieldLabel>
+          <FieldLabel translatable={schema.translatable}>{schema.label}</FieldLabel>
           <input
             type="text"
             value={str}
@@ -78,7 +84,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
     case 'richtext':
       return fieldWrap(
         <>
-          <FieldLabel>{schema.label}</FieldLabel>
+          <FieldLabel translatable={schema.translatable}>{schema.label}</FieldLabel>
           <textarea
             value={str}
             placeholder={schema.hint ?? '<p>Content...</p>'}
@@ -92,7 +98,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
     case 'number':
       return fieldWrap(
         <>
-          <FieldLabel>{schema.label}</FieldLabel>
+          <FieldLabel translatable={schema.translatable}>{schema.label}</FieldLabel>
           <input
             type="number"
             value={num}
@@ -122,7 +128,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
       const opts = schema.options ?? []
       return fieldWrap(
         <>
-          <FieldLabel>{schema.label}</FieldLabel>
+          <FieldLabel translatable={schema.translatable}>{schema.label}</FieldLabel>
           <select
             value={str}
             onChange={(e) => onChange(e.target.value)}
@@ -140,7 +146,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
     case 'color':
       return fieldWrap(
         <>
-          <FieldLabel>{schema.label}</FieldLabel>
+          <FieldLabel translatable={schema.translatable}>{schema.label}</FieldLabel>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               type="color"
@@ -162,7 +168,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
     case 'media':
       return fieldWrap(
         <>
-          <FieldLabel>{schema.label}</FieldLabel>
+          <FieldLabel translatable={schema.translatable}>{schema.label}</FieldLabel>
           <ImageUploader
             value={str || undefined}
             folder="blocks"
@@ -174,7 +180,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
     case 'link':
       return fieldWrap(
         <>
-          <FieldLabel>{schema.label}</FieldLabel>
+          <FieldLabel translatable={schema.translatable}>{schema.label}</FieldLabel>
           <input
             type="url"
             value={str}

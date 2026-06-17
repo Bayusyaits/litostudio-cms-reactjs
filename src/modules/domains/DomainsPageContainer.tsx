@@ -19,10 +19,10 @@ const domainSchema = z.object({
 })
 
 const SSL_BADGE: Record<string, string> = {
-  active:  'bg-green-100 text-green-700',
-  pending: 'bg-yellow-100 text-yellow-700',
-  expired: 'bg-red-100 text-red-700',
-  error:   'bg-red-100 text-red-700',
+  active:  'text-[var(--s-pub-fg)] bg-[var(--s-pub-bg)]',
+  pending: 'text-[var(--s-sched-fg)] bg-[var(--s-sched-bg)]',
+  expired: 'text-[var(--cms-danger)] bg-[var(--cms-danger-bg)]',
+  error:   'text-[var(--cms-danger)] bg-[var(--cms-danger-bg)]',
 }
 
 export default function DomainsPageContainer() {
@@ -92,13 +92,13 @@ export default function DomainsPageContainer() {
       {showAdd && (
         <form
           onSubmit={handleSubmit(v => addMutation.mutate(v))}
-          className="p-4 border border-blue-200 rounded-[6px] bg-blue-50 space-y-3"
+          className="p-4 border border-[var(--lito-border)] rounded-[6px] bg-[var(--cms-surface-3)] space-y-3"
         >
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Add Custom Domain</h3>
           <input
             {...register('domain', { required: 'Domain is required' })}
             placeholder="shop.yourbrand.com"
-            className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm font-mono"
+            className="cms-input font-mono"
           />
           {errors.domain && <p className="text-xs text-red-500">{errors.domain.message}</p>}
           <div className="flex gap-6">
@@ -141,12 +141,12 @@ export default function DomainsPageContainer() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-sm font-semibold text-[var(--text-primary)]">{domain.domain}</span>
                     {domain.is_primary && (
-                      <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">Primary</span>
+                      <span className="px-2 py-0.5 text-xs text-[var(--s-pub-fg)] bg-[var(--s-pub-bg)] rounded-full">Primary</span>
                     )}
                     {domain.is_verified ? (
-                      <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">✓ Verified</span>
+                      <span className="px-2 py-0.5 text-xs text-[var(--s-pub-fg)] bg-[var(--s-pub-bg)] rounded-full">✓ Verified</span>
                     ) : (
-                      <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">Unverified</span>
+                      <span className="px-2 py-0.5 text-xs text-[var(--s-draft-fg)] bg-[var(--s-draft-bg)] rounded-full">Unverified</span>
                     )}
                     {domain.ssl_status && (
                       <span className={`px-2 py-0.5 text-xs rounded-full ${SSL_BADGE[domain.ssl_status] ?? ''}`}>

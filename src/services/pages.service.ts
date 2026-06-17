@@ -52,7 +52,14 @@ export interface PageCreateRequest {
   slug: string
   template?: string
   status?: PageStatus
+  parent_id?: string | null
+  sort_order?: number
   translations?: PageTranslation[]
+}
+
+export interface PageReorderUpdate {
+  id: string
+  sort_order: number
 }
 
 export interface PageUpdateRequest {
@@ -140,5 +147,26 @@ export const pagesService = {
   async updateParentId(pageId: string, parent_id: string | null) {
     const data = await http.patch<ApiResponse<Page>>(`${BASE}/${pageId}`, { parent_id })
     return data.data
+  },
+
+  /** Bulk-reorder: set sort_order for many pages at once. */
+  async reorder(site_id: string, updates: PageReorderUpdate[]) {
+    const data = await http.post<{ success: boolean; updated: number }>(`${BASE}/reorder`, { site_id, updates })
+    return data
+  },
+
+  /** Check if a slug is available for a site. Returns { available: boolean }. */
+  async checkSlug(site_id: string, slug: string, excludeId?: string) {
+    const q = new URLSearchParams({ site_id, slug })
+    if (excludeId) q.set('excludeId', excludeId)
+    const data = await http.get<{ success: boolean; available: boolean }>(`${BASE}/check-slug?${q}`)
+    return data
+  },
+
+  /** Fetch all pages for a site without pagination (for parent picker). */
+  async getAllForSite(site_id: string) {
+    const q = new URLSearchParams({ site_id, limit: '200', locale: 'id' })
+    const data = await http.get<{ success: boolean; data: Page[]; meta: PageListMeta }>(`${BASE}?${q}`)
+    return data.data ?? []
   },
 }

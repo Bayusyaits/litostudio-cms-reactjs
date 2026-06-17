@@ -337,7 +337,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
 
           {/* Error */}
           {error && (
-            <p className="font-body text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">
+            <p className="font-body text-sm text-[var(--cms-danger)] bg-[var(--cms-danger-bg)] rounded-lg px-3 py-2">
               {error}
             </p>
           )}

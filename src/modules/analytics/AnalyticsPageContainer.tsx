@@ -126,7 +126,7 @@ export default function AnalyticsPageContainer() {
             <input
               {...register('ga4_measurement_id')}
               placeholder="G-XXXXXXXXXX"
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm font-mono"
+              className="cms-input font-mono"
             />
           </div>
 
@@ -139,7 +139,7 @@ export default function AnalyticsPageContainer() {
             <input
               {...register('gtm_container_id')}
               placeholder="GTM-XXXXXXX"
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm font-mono"
+              className="cms-input font-mono"
             />
           </div>
 
@@ -152,7 +152,7 @@ export default function AnalyticsPageContainer() {
             <input
               {...register('meta_pixel_id')}
               placeholder="Pixel ID (numeric)"
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm font-mono"
+              className="cms-input font-mono"
             />
           </div>
 
@@ -165,7 +165,7 @@ export default function AnalyticsPageContainer() {
             <input
               {...register('tiktok_pixel_id')}
               placeholder="TikTok Pixel ID"
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm font-mono"
+              className="cms-input font-mono"
             />
           </div>
 
@@ -185,7 +185,7 @@ export default function AnalyticsPageContainer() {
             <button
               type="submit"
               disabled={!isDirty || saveMutation.isPending}
-              className="cms-btn cms-btn-primary cms-btn-sm hover:bg-blue-700"
+              className="cms-btn cms-btn-primary cms-btn-sm"
             >
               {saveMutation.isPending ? 'Saving…' : 'Save Analytics Settings'}
             </button>
@@ -236,15 +236,15 @@ export default function AnalyticsPageContainer() {
         {showScriptForm && (
           <form
             onSubmit={scriptForm.handleSubmit(v => saveScriptMutation.mutate(v))}
-            className="mt-4 p-4 border border-blue-200 rounded-[6px] bg-blue-50 space-y-3"
+            className="mt-4 p-4 border border-[var(--lito-border)] rounded-[6px] bg-[var(--cms-surface-3)] space-y-3"
           >
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">{editScript ? 'Edit Script' : 'New Script'}</h3>
             <input
               {...scriptForm.register('name', { required: true })}
               placeholder="Script name"
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+              className="cms-input"
             />
-            <select {...scriptForm.register('position')} className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm">
+            <select {...scriptForm.register('position')} className="cms-input">
               <option value="head">Head</option>
               <option value="body">Body (start)</option>
               <option value="footer">Footer</option>
@@ -253,13 +253,13 @@ export default function AnalyticsPageContainer() {
               {...scriptForm.register('content', { required: true })}
               placeholder="<script>…</script>"
               rows={5}
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm font-mono text-xs"
+              className="cms-input font-mono text-xs"
             />
             <input
               {...scriptForm.register('load_order', { valueAsNumber: true })}
               type="number"
               placeholder="Load order (0 = first)"
-              className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+              className="cms-input"
             />
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" {...scriptForm.register('is_active')} className="h-4 w-4" />

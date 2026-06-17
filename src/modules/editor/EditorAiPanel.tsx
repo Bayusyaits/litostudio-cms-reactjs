@@ -287,9 +287,9 @@ export function EditorAiPanel() {
 
         {/* Error */}
         {error && (
-          <div className="m-4 flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
-            <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-            <p className="font-body text-xs text-red-700">{error}</p>
+          <div className="m-4 flex items-start gap-2 p-3 rounded-lg bg-[var(--cms-danger-bg)] border border-[var(--cms-danger)]">
+            <AlertCircle className="w-4 h-4 text-[var(--cms-danger)] mt-0.5 flex-shrink-0" />
+            <p className="font-body text-xs text-[var(--cms-danger)]">{error}</p>
           </div>
         )}
 
