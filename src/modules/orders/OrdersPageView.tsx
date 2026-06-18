@@ -36,7 +36,7 @@ export function OrdersPageView({ orders, meta, isLoading, filter, setFilter, onS
       header: 'Customer',
       render: (order) => (
         <div>
-          <p className="font-body text-sm font-medium text-[var(--text-primary)]">
+          <p className="font-body text-sm font-medium text-[var(--text-muted)]">
             {order.customer_name ?? '—'}
           </p>
           {order.customer_email && (

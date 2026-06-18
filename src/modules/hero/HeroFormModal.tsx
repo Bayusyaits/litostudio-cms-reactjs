@@ -215,7 +215,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
         <div className="p-6 space-y-6">
           {/* Image */}
           <div>
-            <p className="font-body text-sm font-medium text-[var(--text-primary)] mb-2">
+            <p className="font-body text-sm font-medium text-[var(--text-muted)] mb-2">
               Slide Image <span className="text-red-500">*</span>
             </p>
             <ImageUploader
@@ -277,7 +277,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
           {/* Translations */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="font-body text-sm font-medium text-[var(--text-primary)]">Translations</span>
+              <span className="font-body text-sm font-medium text-[var(--text-muted)]">Translations</span>
               <div className="flex gap-1">
                 {LOCALES.map(locale => (
                   <button

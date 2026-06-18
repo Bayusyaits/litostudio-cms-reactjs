@@ -32,7 +32,7 @@ export function NewsletterPageView({ subscribers, meta, isLoading, filter, setFi
       header: 'Email',
       render: (sub) => (
         <div>
-          <p className="font-body text-sm font-medium text-[var(--text-primary)]">{sub.email}</p>
+          <p className="font-body text-sm font-medium text-[var(--text-muted)]">{sub.email}</p>
           {sub.full_name && (
             <p className="font-body text-xs text-[var(--text-muted)]">{sub.full_name}</p>
           )}

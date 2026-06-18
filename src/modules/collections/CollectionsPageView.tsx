@@ -46,7 +46,7 @@ export function CollectionsPageView({
             <Layers className="w-4 h-4 text-[var(--text-muted)]" aria-hidden />
           </div>
           <div>
-            <p className="font-body text-sm font-medium text-[var(--text-primary)] truncate max-w-[260px]">
+            <p className="font-body text-sm font-medium text-[var(--text-muted)] truncate max-w-[260px]">
               {col.name}
             </p>
             <p className="font-body text-xs text-[var(--text-muted)]">{col.slug}</p>
@@ -59,17 +59,7 @@ export function CollectionsPageView({
       header: 'Items',
       width: '100px',
       render: (col) => (
-        <span
-          style={{
-            padding: '3px 9px',
-            borderRadius: 999,
-            fontSize: 11,
-            fontWeight: 500,
-            background: 'rgba(26,74,90,0.08)',
-            color: 'var(--lito-teal)',
-            fontFamily: 'var(--font-body)',
-          }}
-        >
+        <span className="px-[9px] py-[3px] rounded-full text-[11px] font-medium bg-[rgba(26,74,90,0.08)] text-[var(--lito-teal)] font-body">
           {col.item_count ?? 0}
         </span>
       ),

@@ -43,17 +43,11 @@ export function EditorPatternsPanel() {
         key={id}
         type="button"
         onClick={() => setActiveCategory(id)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 5,
-          padding: '4px 10px', borderRadius: 6, border: 'none',
-          cursor: 'pointer',
-          fontFamily: 'var(--font-body)', fontSize: 11,
-          fontWeight: active ? 600 : 400,
-          background: active ? 'var(--lito-teal)' : 'transparent',
-          color: active ? '#fff' : 'var(--text-muted)',
-          transition: 'background 100ms, color 100ms',
-          whiteSpace: 'nowrap',
-        }}
+        className={`flex items-center gap-[5px] px-[10px] py-1 rounded-md border-none cursor-pointer font-body text-[11px] whitespace-nowrap transition-[background,color] duration-100 ${
+          active
+            ? 'font-semibold bg-[var(--lito-teal)] text-white'
+            : 'font-normal bg-transparent text-[var(--text-muted)]'
+        }`}
       >
         <span>{emoji}</span>
         {label}
@@ -62,102 +56,53 @@ export function EditorPatternsPanel() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Search */}
-      <div style={{ padding: '10px 12px 0', flexShrink: 0 }}>
+      <div className="px-3 pt-[10px] shrink-0">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search patterns…"
-          style={{
-            width: '100%', padding: '6px 10px',
-            border: '1px solid var(--lito-border)',
-            borderRadius: 8,
-            background: 'var(--cms-surface-3)',
-            fontFamily: 'var(--font-body)', fontSize: 12,
-            color: 'var(--text-primary)', outline: 'none',
-            boxSizing: 'border-box',
-          }}
+          className="w-full px-[10px] py-[6px] border border-[var(--lito-border)] rounded-lg bg-[var(--cms-surface-3)] font-body text-xs text-[var(--text-primary)] outline-none box-border"
         />
       </div>
 
       {/* Category tabs */}
-      <div style={{
-        display: 'flex', gap: 2, padding: '8px 10px',
-        overflowX: 'auto', flexShrink: 0,
-        borderBottom: '1px solid var(--lito-border)',
-      }}>
+      <div className="flex gap-0.5 px-[10px] py-2 overflow-x-auto shrink-0 border-b border-[var(--lito-border)]">
         {tabBtn('all', 'All', '✨')}
         {PATTERN_CATEGORIES.map((c) => tabBtn(c.id, c.label, c.emoji))}
       </div>
 
       {/* Pattern list */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px 16px' }}>
+      <div className="flex-1 overflow-y-auto px-3 pt-[10px] pb-4">
         {filtered.length === 0 ? (
-          <p style={{
-            fontFamily: 'var(--font-body)', fontSize: 12,
-            color: 'var(--text-muted)', textAlign: 'center',
-            padding: '24px 0', margin: 0,
-          }}>
+          <p className="font-body text-xs text-[var(--text-muted)] text-center py-6 m-0">
             No patterns match.
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="flex flex-col gap-2">
             {filtered.map((pattern) => (
               <button
                 key={pattern.id}
                 type="button"
                 onClick={() => handleInsert(pattern.id)}
                 title={`Insert: ${pattern.name}`}
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 12,
-                  padding: '12px', borderRadius: 10,
-                  border: '1px solid var(--lito-border)',
-                  background: 'var(--cms-card-bg)',
-                  cursor: 'pointer', textAlign: 'left',
-                  transition: 'border-color 100ms, box-shadow 100ms',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--lito-teal)'
-                  e.currentTarget.style.boxShadow = '0 0 0 1px var(--lito-teal)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--lito-border)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
+                className="flex items-start gap-3 p-3 rounded-[10px] border border-[var(--lito-border)] bg-[var(--cms-card-bg)] cursor-pointer text-left transition-[border-color,box-shadow] duration-100 hover:border-[var(--lito-teal)] hover:shadow-[0_0_0_1px_var(--lito-teal)]"
               >
                 {/* Preview emoji */}
-                <span style={{
-                  fontSize: 24, lineHeight: 1, flexShrink: 0,
-                  width: 40, height: 40, display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                  background: 'var(--cms-surface-3)',
-                  borderRadius: 8,
-                }}>
+                <span className="text-2xl leading-none shrink-0 w-10 h-10 flex items-center justify-center bg-[var(--cms-surface-3)] rounded-lg">
                   {pattern.preview}
                 </span>
 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{
-                    fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
-                    color: 'var(--text-primary)', margin: '0 0 3px',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
+                <div className="flex-1 min-w-0">
+                  <p className="font-body text-xs font-semibold text-[var(--text-primary)] mt-0 mb-[3px] overflow-hidden text-ellipsis whitespace-nowrap">
                     {pattern.name}
                   </p>
-                  <p style={{
-                    fontFamily: 'var(--font-body)', fontSize: 11,
-                    color: 'var(--text-muted)', margin: 0,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
+                  <p className="font-body text-[11px] text-[var(--text-muted)] m-0 overflow-hidden text-ellipsis whitespace-nowrap">
                     {pattern.description}
                   </p>
-                  <p style={{
-                    fontFamily: 'var(--font-body)', fontSize: 10,
-                    color: 'var(--lito-teal)', margin: '4px 0 0',
-                    fontWeight: 600,
-                  }}>
+                  <p className="font-body text-[10px] text-[var(--lito-teal)] mt-1 mb-0 font-semibold">
                     {pattern.blocks.length} block{pattern.blocks.length !== 1 ? 's' : ''}
                   </p>
                 </div>

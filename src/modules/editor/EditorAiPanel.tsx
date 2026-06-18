@@ -164,8 +164,7 @@ export function EditorAiPanel() {
 
   return (
     <div
-      className="fixed inset-y-0 right-0 z-[60] flex flex-col bg-[var(--cms-sidebar-bg)] border-l border-[var(--lito-border)] shadow-2xl"
-      style={{ width: 360 }}
+      className="fixed inset-y-0 right-0 z-[60] flex flex-col w-[360px] bg-[var(--cms-sidebar-bg)] border-l border-[var(--lito-border)] shadow-2xl"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--lito-border)] flex-shrink-0">

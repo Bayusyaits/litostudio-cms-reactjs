@@ -49,23 +49,15 @@ export function HeroPageView({
             <img
               src={s.cover_image}
               alt={getSlideTitle(s)}
-              style={{ width: 52, height: 36, borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+              className="w-[52px] h-9 rounded object-cover shrink-0"
             />
           ) : (
-            <div
-              style={{
-                width: 52, height: 36,
-                borderRadius: 4,
-                background: 'var(--lito-cream-alt)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
+            <div className="w-[52px] h-9 rounded bg-[var(--lito-cream-alt)] flex items-center justify-center shrink-0">
               <Tv2 className="w-4 h-4 text-[var(--text-muted)]" aria-hidden />
             </div>
           )}
           <div>
-            <p className="font-body text-sm font-medium text-[var(--text-primary)] truncate max-w-[240px]">
+            <p className="font-body text-sm font-medium text-[var(--text-muted)] truncate max-w-[240px]">
               {getSlideTitle(s)}
             </p>
             <p className="font-body text-xs text-[var(--text-muted)]">Order: {s.sort_order}</p>

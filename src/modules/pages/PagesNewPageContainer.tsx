@@ -1,12 +1,5 @@
 /**
  * PagesNewPageContainer — template-aware page creation wizard.
- *
- * 1. Reads the active site's template manifest via useTemplateManifest()
- * 2. Lets the user pick a page type from the manifest's pages[] list
- * 3. Optionally set a parent page (parent/child menu hierarchy)
- * 4. Checks slug availability before submit (pre-validates against backend)
- * 5. Creates the page via pagesService.create()
- * 6. Navigates to /pages/:id/edit (block editor)
  */
 
 import { useState, useId } from 'react'
@@ -31,12 +24,11 @@ export default function PagesNewPageContainer() {
   const [selectedSlug, setSelectedSlug] = useState<string>('')
   const [customSlug,   setCustomSlug]   = useState('')
   const [title,        setTitle]        = useState('')
-  const [parentId,     setParentId]     = useState<string>('')   // '' means root
+  const [parentId,     setParentId]     = useState<string>('')
   const [slugChecking, setSlugChecking] = useState(false)
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null)
   const [error,        setError]        = useState<string | null>(null)
 
-  // Load all pages for the parent picker
   const allPagesQuery = useQuery({
     queryKey: ['pages-all', activeSite?.id ?? ''],
     queryFn:  () => pagesService.getAllForSite(activeSite!.id),
@@ -50,28 +42,19 @@ export default function PagesNewPageContainer() {
       if (!activeSite) throw new Error('No active site')
       const slug = selectedSlug || slugify(customSlug)
       if (!slug) throw new Error('Enter a page slug')
-
-      // Final slug check before submit
       const check = await pagesService.checkSlug(activeSite.id, slug)
       if (!check.available) throw new Error(`Slug "/${slug}" is already taken. Choose a different name.`)
-
       return pagesService.create({
         site_id:   activeSite.id,
         slug,
         template:  templateSlug ?? 'default',
         status:    'draft',
         parent_id: parentId || null,
-        translations: title
-          ? [{ locale: 'id', title }]
-          : undefined,
+        translations: title ? [{ locale: 'id', title }] : undefined,
       })
     },
-    onSuccess: (page) => {
-      navigate(`/pages/${page.id}/edit`, { replace: true })
-    },
-    onError: (err: unknown) => {
-      setError(err instanceof Error ? err.message : 'Failed to create page')
-    },
+    onSuccess: (page) => navigate(`/pages/${page.id}/edit`, { replace: true }),
+    onError: (err: unknown) => setError(err instanceof Error ? err.message : 'Failed to create page'),
   })
 
   const checkSlug = (slug: string) => {
@@ -85,17 +68,12 @@ export default function PagesNewPageContainer() {
   }
 
   const handleSelectPreset = (slug: string, label: string) => {
-    setSelectedSlug(slug)
-    setCustomSlug('')
-    setSlugAvailable(null)
+    setSelectedSlug(slug); setCustomSlug(''); setSlugAvailable(null)
     if (!title) setTitle(label)
-    setError(null)
-    checkSlug(slug)
+    setError(null); checkSlug(slug)
   }
 
-  const handleCustomSlugBlur = () => {
-    checkSlug(slugify(customSlug))
-  }
+  const handleCustomSlugBlur = () => checkSlug(slugify(customSlug))
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -106,7 +84,6 @@ export default function PagesNewPageContainer() {
     createMutation.mutate()
   }
 
-  // Page options: manifest pages if available, else generic fallback
   const presets = manifest?.pages ?? [
     { slug: 'home',    label: 'Home' },
     { slug: 'about',   label: 'About' },
@@ -117,56 +94,46 @@ export default function PagesNewPageContainer() {
   const slugFeedback = slugChecking ? 'checking' : slugAvailable === true ? 'available' : slugAvailable === false ? 'taken' : null
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', maxWidth: 680 }}>
+    <div className="flex-1 overflow-y-auto px-7 py-6 max-w-[680px]">
       {/* Back */}
       <button
         type="button"
         onClick={() => navigate('/pages')}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          background: 'none', border: 'none', cursor: 'pointer',
-          fontFamily: 'var(--font-body)', fontSize: 13,
-          color: 'var(--text-muted)', marginBottom: 24, padding: 0,
-        }}
+        className="flex items-center gap-[6px] bg-transparent border-none cursor-pointer font-body text-[13px] text-[var(--text-muted)] mb-6 p-0 hover:text-[var(--text-primary)]"
       >
         <ChevronLeft size={14} />
         Back to pages
       </button>
 
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 600, color: 'var(--text-primary)' }}>
-          New Page
-        </h1>
+      <div className="mb-7">
+        <h1 className="font-display text-[22px] font-semibold text-[var(--text-primary)]">New Page</h1>
         {manifest ? (
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-            Creating a page for the <strong style={{ color: 'var(--text-primary)' }}>{manifest.name}</strong> template
+          <p className="font-body text-[13px] text-[var(--text-muted)] mt-1">
+            Creating a page for the <strong className="text-[var(--text-primary)]">{manifest.name}</strong> template
           </p>
         ) : (
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+          <p className="font-body text-[13px] text-[var(--text-muted)] mt-1">
             No template selected — you can enter a custom slug below
           </p>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
         {/* Page type picker */}
         <div>
           <p
             id={labelId}
-            style={{
-              fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
-              textTransform: 'uppercase', letterSpacing: '0.06em',
-              color: 'var(--text-muted)', marginBottom: 10,
-            }}
+            className="font-body text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-muted)] mb-[10px]"
           >
             {manifest ? 'Choose a page type' : 'Common page types'}
           </p>
           <div
             role="group"
             aria-labelledby={labelId}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}
+            className="grid gap-2"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}
           >
             {presets.map((p) => {
               const active = selectedSlug === p.slug
@@ -176,85 +143,72 @@ export default function PagesNewPageContainer() {
                   type="button"
                   onClick={() => handleSelectPreset(p.slug, p.label)}
                   aria-pressed={active}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-                    padding: '10px 14px', borderRadius: 10, position: 'relative',
-                    border: `2px solid ${active && slugAvailable === false ? 'var(--cms-danger)' : active ? 'var(--lito-teal)' : 'var(--lito-border)'}`,
-                    background: active ? 'rgba(26,74,90,0.06)' : 'var(--cms-card-bg)',
-                    cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
-                  }}
+                  className={`flex flex-col items-start px-[14px] py-[10px] rounded-[10px] relative border-2 cursor-pointer transition-[border-color,background] duration-150 ${
+                    active && slugAvailable === false
+                      ? 'border-[var(--cms-danger)] bg-transparent'
+                      : active
+                      ? 'border-[var(--lito-teal)] bg-[rgba(26,74,90,0.06)]'
+                      : 'border-[var(--lito-border)] bg-[var(--cms-card-bg)]'
+                  }`}
                 >
                   <FileText
                     size={16}
-                    style={{ color: active ? 'var(--lito-teal)' : 'var(--text-muted)', marginBottom: 6 }}
+                    className={`mb-[6px] ${active ? 'text-[var(--lito-teal)]' : 'text-[var(--text-muted)]'}`}
                   />
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: active ? 'var(--lito-teal)' : 'var(--text-primary)' }}>
+                  <span className={`font-body text-[13px] font-medium ${active ? 'text-[var(--lito-teal)]' : 'text-[var(--text-primary)]'}`}>
                     {p.label}
                   </span>
-                  <code style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                    /{p.slug}
-                  </code>
+                  <code className="font-mono text-[11px] text-[var(--text-muted)] mt-0.5">/{p.slug}</code>
                   {active && slugFeedback && (
-                    <span style={{ position: 'absolute', top: 6, right: 6 }}>
-                      {slugFeedback === 'available' && <CheckCircle2 size={12} style={{ color: 'var(--lito-teal)' }} />}
-                      {slugFeedback === 'taken'     && <AlertCircle  size={12} style={{ color: 'var(--cms-danger)' }} />}
+                    <span className="absolute top-[6px] right-[6px]">
+                      {slugFeedback === 'available' && <CheckCircle2 size={12} className="text-[var(--lito-teal)]" />}
+                      {slugFeedback === 'taken'     && <AlertCircle  size={12} className="text-[var(--cms-danger)]" />}
                     </span>
                   )}
                 </button>
               )
             })}
 
-            {/* Custom page option */}
+            {/* Custom */}
             <button
               type="button"
               onClick={() => { setSelectedSlug(''); setSlugAvailable(null); setError(null) }}
               aria-pressed={!selectedSlug}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-                padding: '10px 14px', borderRadius: 10,
-                border: `2px solid ${!selectedSlug ? 'var(--lito-gold)' : 'var(--lito-border)'}`,
-                background: !selectedSlug ? 'rgba(212,168,83,0.06)' : 'var(--cms-card-bg)',
-                cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s',
-              }}
+              className={`flex flex-col items-start px-[14px] py-[10px] rounded-[10px] border-2 cursor-pointer transition-[border-color,background] duration-150 ${
+                !selectedSlug
+                  ? 'border-[var(--lito-gold)] bg-[rgba(212,168,83,0.06)]'
+                  : 'border-[var(--lito-border)] bg-[var(--cms-card-bg)]'
+              }`}
             >
               <Plus
                 size={16}
-                style={{ color: !selectedSlug ? 'var(--lito-gold-deep)' : 'var(--text-muted)', marginBottom: 6 }}
+                className={`mb-[6px] ${!selectedSlug ? 'text-[var(--lito-gold-deep)]' : 'text-[var(--text-muted)]'}`}
               />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: !selectedSlug ? 'var(--lito-gold-deep)' : 'var(--text-primary)' }}>
+              <span className={`font-body text-[13px] font-medium ${!selectedSlug ? 'text-[var(--lito-gold-deep)]' : 'text-[var(--text-primary)]'}`}>
                 Custom
               </span>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                any slug
-              </span>
+              <span className="font-body text-[11px] text-[var(--text-muted)] mt-0.5">any slug</span>
             </button>
           </div>
         </div>
 
-        {/* Slug taken inline alert for preset */}
+        {/* Slug taken alert for preset */}
         {selectedSlug && slugAvailable === false && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'var(--cms-danger-bg)', border: '1px solid var(--cms-danger)',
-            borderRadius: 8, padding: '8px 12px',
-          }}>
-            <AlertCircle size={14} style={{ color: 'var(--cms-danger)', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--cms-danger)' }}>
-              Page <code>/{selectedSlug}</code> already exists for this site. Choose a different type or use the Custom option.
+          <div className="flex items-center gap-2 bg-[var(--cms-danger-bg)] border border-[var(--cms-danger)] rounded-lg px-3 py-2">
+            <AlertCircle size={14} className="text-[var(--cms-danger)] shrink-0" />
+            <span className="font-body text-[13px] text-[var(--cms-danger)]">
+              Page <code>/{selectedSlug}</code> already exists. Choose a different type or use the Custom option.
             </span>
           </div>
         )}
 
-        {/* Custom slug input — shown when no preset selected */}
+        {/* Custom slug input */}
         {!selectedSlug && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <label style={{
-              fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
-              textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)',
-            }}>
+          <div className="flex flex-col gap-[6px]">
+            <label className="font-body text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-muted)]">
               Page Slug *
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className="relative">
               <input
                 type="text"
                 value={customSlug}
@@ -262,25 +216,24 @@ export default function PagesNewPageContainer() {
                 onBlur={handleCustomSlugBlur}
                 placeholder="e.g. faq or our-team"
                 autoFocus
-                style={{
-                  width: '100%', boxSizing: 'border-box',
-                  fontFamily: 'var(--font-body)', fontSize: 13,
-                  padding: '8px 36px 8px 12px',
-                  background: 'var(--cms-card-bg)',
-                  border: `1px solid ${slugAvailable === false ? 'var(--cms-danger)' : slugAvailable === true ? 'var(--lito-teal)' : 'var(--lito-border)'}`,
-                  borderRadius: 8, color: 'var(--text-primary)', outline: 'none',
-                }}
+                className={`w-full box-border font-body text-[13px] px-3 pr-9 py-2 bg-[var(--cms-card-bg)] rounded-lg text-[var(--text-primary)] outline-none border ${
+                  slugAvailable === false
+                    ? 'border-[var(--cms-danger)]'
+                    : slugAvailable === true
+                    ? 'border-[var(--lito-teal)]'
+                    : 'border-[var(--lito-border)]'
+                }`}
               />
               {slugFeedback && (
-                <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)' }}>
-                  {slugFeedback === 'available' && <CheckCircle2 size={15} style={{ color: 'var(--lito-teal)' }} />}
-                  {slugFeedback === 'taken'     && <AlertCircle  size={15} style={{ color: 'var(--cms-danger)' }} />}
-                  {slugFeedback === 'checking'  && <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>…</span>}
+                <span className="absolute right-[10px] top-1/2 -translate-y-1/2">
+                  {slugFeedback === 'available' && <CheckCircle2 size={15} className="text-[var(--lito-teal)]" />}
+                  {slugFeedback === 'taken'     && <AlertCircle  size={15} className="text-[var(--cms-danger)]" />}
+                  {slugFeedback === 'checking'  && <span className="text-[11px] text-[var(--text-muted)]">…</span>}
                 </span>
               )}
             </div>
             {customSlug && (
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: slugAvailable === false ? 'var(--cms-danger)' : 'var(--text-muted)' }}>
+              <p className={`font-body text-xs ${slugAvailable === false ? 'text-[var(--cms-danger)]' : 'text-[var(--text-muted)]'}`}>
                 {slugAvailable === false
                   ? `"/${slugify(customSlug)}" is already taken — choose a different slug.`
                   : `URL: /${slugify(customSlug)}`}
@@ -290,56 +243,36 @@ export default function PagesNewPageContainer() {
         )}
 
         {/* Page title */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <label style={{
-            fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
-            textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)',
-          }}>
-            Page Title <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+        <div className="flex flex-col gap-[6px]">
+          <label className="font-body text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-muted)]">
+            Page Title <span className="font-normal normal-case tracking-normal">(optional)</span>
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Our Services"
-            style={{
-              fontFamily: 'var(--font-body)', fontSize: 13,
-              padding: '8px 12px',
-              background: 'var(--cms-card-bg)',
-              border: '1px solid var(--lito-border)',
-              borderRadius: 8, color: 'var(--text-primary)', outline: 'none',
-            }}
+            className="font-body text-[13px] px-3 py-2 bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-lg text-[var(--text-primary)] outline-none"
           />
         </div>
 
-        {/* Parent page picker */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <label style={{
-            fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
-            textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)',
-          }}>
-            Parent Page <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional — for nested menus)</span>
+        {/* Parent picker */}
+        <div className="flex flex-col gap-[6px]">
+          <label className="font-body text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-muted)]">
+            Parent Page <span className="font-normal normal-case tracking-normal">(optional — for nested menus)</span>
           </label>
           <select
             value={parentId}
             onChange={(e) => setParentId(e.target.value)}
-            style={{
-              fontFamily: 'var(--font-body)', fontSize: 13,
-              padding: '8px 12px',
-              background: 'var(--cms-card-bg)',
-              border: '1px solid var(--lito-border)',
-              borderRadius: 8, color: 'var(--text-primary)', outline: 'none', cursor: 'pointer',
-            }}
+            className="font-body text-[13px] px-3 py-2 bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-lg text-[var(--text-primary)] outline-none cursor-pointer"
           >
             <option value="">— None (root level) —</option>
             {allPages.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.title ?? p.slug} (/{p.slug})
-              </option>
+              <option key={p.id} value={p.id}>{p.title ?? p.slug} (/{p.slug})</option>
             ))}
           </select>
           {parentId && (
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>
+            <p className="font-body text-xs text-[var(--text-muted)]">
               Will appear as a child under <strong>{allPages.find(p => p.id === parentId)?.title ?? allPages.find(p => p.id === parentId)?.slug}</strong> in the navigation.
             </p>
           )}
@@ -347,20 +280,14 @@ export default function PagesNewPageContainer() {
 
         {/* Error */}
         {error && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'var(--cms-danger-bg)', border: '1px solid var(--cms-danger)',
-            borderRadius: 8, padding: '8px 12px',
-          }}>
-            <AlertCircle size={14} style={{ color: 'var(--cms-danger)', flexShrink: 0 }} />
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--cms-danger)' }}>
-              {error}
-            </span>
+          <div className="flex items-center gap-2 bg-[var(--cms-danger-bg)] border border-[var(--cms-danger)] rounded-lg px-3 py-2">
+            <AlertCircle size={14} className="text-[var(--cms-danger)] shrink-0" />
+            <span className="font-body text-[13px] text-[var(--cms-danger)]">{error}</span>
           </div>
         )}
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div className="flex gap-[10px] items-center">
           <button
             type="submit"
             disabled={createMutation.isPending || slugAvailable === false}
@@ -368,16 +295,12 @@ export default function PagesNewPageContainer() {
           >
             {createMutation.isPending ? 'Creating…' : 'Create & Open Editor'}
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/pages')}
-            className="cms-btn"
-          >
+          <button type="button" onClick={() => navigate('/pages')} className="cms-btn">
             Cancel
           </button>
           {currentSlug && (
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginLeft: 4 }}>
-              → <code style={{ fontFamily: 'monospace' }}>/{currentSlug}</code>
+            <span className="font-body text-xs text-[var(--text-muted)] ml-1">
+              → <code className="font-mono">/{currentSlug}</code>
             </span>
           )}
         </div>

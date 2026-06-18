@@ -1,7 +1,5 @@
 // apps/cms/src/components/organisms/NotificationsPanel.tsx
 // Realtime notifications panel — polling via TanStack Query (30s interval).
-// Upgrade path: replace polling with Supabase Realtime once
-// @supabase/supabase-js is added to apps/cms/package.json.
 import { useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bell, Check, CheckCheck, Trash2, X, Loader2 } from 'lucide-react'
@@ -26,40 +24,37 @@ interface Props {
 const QUERY_KEY = ['notifications']
 const POLL_MS   = 30_000 // 30 s
 
+const iconBtnClass = 'bg-transparent border-none cursor-pointer text-[var(--text-muted)] px-1 py-[2px] rounded flex items-center'
+
 export function NotificationsPanel({ open, onClose }: Props) {
   const qc = useQueryClient()
 
-  // ── Fetch notifications (polling every 30 s) ──────────────────────────────
   const { data, isLoading, isError } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: () => notificationsService.list({ limit: 30 }),
     refetchInterval: POLL_MS,
     staleTime: POLL_MS,
-    enabled: open, // only poll while panel is open (unread badge uses separate hook)
+    enabled: open,
   })
 
   const notifications: Notification[] = data?.data ?? []
   const unread = data?.meta?.unread ?? 0
 
-  // ── Mark single as read ───────────────────────────────────────────────────
   const markRead = useMutation({
     mutationFn: (id: string) => notificationsService.markRead(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
   })
 
-  // ── Mark all as read ──────────────────────────────────────────────────────
   const markAll = useMutation({
     mutationFn: () => notificationsService.markAllRead(),
     onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
   })
 
-  // ── Delete ────────────────────────────────────────────────────────────────
   const remove = useMutation({
     mutationFn: (id: string) => notificationsService.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
   })
 
-  // ── Close on outside click ────────────────────────────────────────────────
   const panelRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
@@ -80,91 +75,61 @@ export function NotificationsPanel({ open, onClose }: Props) {
       role="dialog"
       aria-modal="false"
       aria-label="Notifications"
-      style={{
-        position: 'absolute',
-        top: 'calc(100% + 8px)',
-        right: 0,
-        width: 360,
-        maxHeight: 520,
-        background: 'var(--cms-sidebar-bg)',
-        border: '1px solid var(--lito-border)',
-        borderRadius: 12,
-        boxShadow: '0 16px 48px rgba(0,0,0,0.18)',
-        zIndex: 900,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
+      className="absolute top-[calc(100%+8px)] right-0 w-[360px] max-h-[520px] bg-[var(--cms-sidebar-bg)] border border-[var(--lito-border)] rounded-xl shadow-[0_16px_48px_rgba(0,0,0,0.18)] z-[900] flex flex-col overflow-hidden"
     >
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 16px',
-        borderBottom: '1px solid var(--lito-border)',
-        flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Bell size={14} style={{ color: 'var(--text-primary)' }} />
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--lito-border)] shrink-0">
+        <div className="flex items-center gap-1.5">
+          <Bell size={14} className="text-[var(--text-primary)]" />
+          <span className="font-body text-[13px] font-semibold text-[var(--text-primary)]">
             Notifications
           </span>
           {unread > 0 && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              minWidth: 18, height: 18, padding: '0 4px',
-              borderRadius: 999,
-              background: 'var(--lito-gold)',
-              fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700,
-              color: '#fff',
-            }}>
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--lito-gold)] font-body text-[10px] font-bold text-white">
               {unread > 99 ? '99+' : unread}
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div className="flex gap-1">
           {unread > 0 && (
             <button
               onClick={() => markAll.mutate()}
               disabled={markAll.isPending}
               title="Mark all as read"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px 4px', borderRadius: 4, display: 'flex', alignItems: 'center' }}
+              className={iconBtnClass}
             >
               {markAll.isPending
-                ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                ? <Loader2 size={13} className="animate-spin" />
                 : <CheckCheck size={13} />
               }
             </button>
           )}
-          <button
-            onClick={onClose}
-            title="Close"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px 4px', borderRadius: 4, display: 'flex', alignItems: 'center' }}
-          >
+          <button onClick={onClose} title="Close" className={iconBtnClass}>
             <X size={13} />
           </button>
         </div>
       </div>
 
       {/* Body */}
-      <div style={{ overflowY: 'auto', flex: 1 }}>
+      <div className="overflow-y-auto flex-1">
         {isLoading && (
-          <div style={{ padding: 32, textAlign: 'center' }}>
-            <Loader2 size={20} style={{ color: 'var(--text-muted)', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+          <div className="p-8 text-center">
+            <Loader2 size={20} className="text-[var(--text-muted)] animate-spin mx-auto" />
           </div>
         )}
 
         {isError && (
-          <div style={{ padding: 24, textAlign: 'center' }}>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--s-danger)' }}>
+          <div className="px-6 py-6 text-center">
+            <p className="font-body text-xs text-[var(--s-danger)]">
               Failed to load notifications
             </p>
           </div>
         )}
 
         {!isLoading && !isError && notifications.length === 0 && (
-          <div style={{ padding: '40px 24px', textAlign: 'center' }}>
-            <Bell size={28} style={{ color: 'var(--lito-border)', margin: '0 auto 12px' }} />
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>
+          <div className="px-6 py-10 text-center">
+            <Bell size={28} className="text-[var(--lito-border)] mx-auto mb-3" />
+            <p className="font-body text-[13px] text-[var(--text-muted)]">
               You're all caught up!
             </p>
           </div>
@@ -175,63 +140,39 @@ export function NotificationsPanel({ open, onClose }: Props) {
           return (
             <div
               key={n.id}
-              style={{
-                display: 'flex', gap: 10, padding: '10px 16px',
-                borderBottom: '1px solid var(--lito-border)',
-                background: isRead ? 'transparent' : 'var(--lito-gold-soft)',
-                transition: 'background 150ms',
-                cursor: 'default',
-              }}
+              className={`flex gap-2.5 px-4 py-2.5 border-b border-[var(--lito-border)] transition-[background] duration-150 cursor-default ${isRead ? 'bg-transparent' : 'bg-[var(--lito-gold-soft)]'}`}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--cms-surface-3)')}
               onMouseLeave={e => (e.currentTarget.style.background = isRead ? 'transparent' : 'var(--lito-gold-soft)')}
             >
               {/* Dot */}
-              <div style={{
-                width: 7, height: 7,
-                borderRadius: '50%',
-                background: isRead ? 'var(--lito-border)' : typeDot(n.type),
-                marginTop: 5,
-                flexShrink: 0,
-              }} />
+              <div
+                className="w-[7px] h-[7px] rounded-full mt-[5px] shrink-0"
+                style={{ background: isRead ? 'var(--lito-border)' : typeDot(n.type) }}
+              />
 
               {/* Content */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 12, fontWeight: isRead ? 400 : 600,
-                  color: 'var(--text-primary)',
-                  margin: 0,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
+              <div className="flex-1 min-w-0">
+                <p className={`font-body text-xs text-[var(--text-primary)] m-0 truncate ${isRead ? 'font-normal' : 'font-semibold'}`}>
                   {n.title}
                 </p>
                 {n.body && (
-                  <p style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 11, color: 'var(--text-muted)',
-                    margin: '2px 0 0',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
+                  <p className="font-body text-[11px] text-[var(--text-muted)] mt-0.5 mb-0 truncate">
                     {n.body}
                   </p>
                 )}
-                <p style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 10, color: 'var(--text-muted)',
-                  margin: '4px 0 0',
-                }}>
+                <p className="font-body text-[10px] text-[var(--text-muted)] mt-1 mb-0">
                   {formatRelative(n.created_at)}
                 </p>
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', gap: 2, flexShrink: 0, alignSelf: 'flex-start', marginTop: 2 }}>
+              <div className="flex gap-0.5 shrink-0 self-start mt-0.5">
                 {!isRead && (
                   <button
                     onClick={() => markRead.mutate(n.id)}
                     disabled={markRead.isPending}
                     title="Mark as read"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', borderRadius: 4, display: 'flex', alignItems: 'center' }}
+                    className={iconBtnClass}
                   >
                     <Check size={11} />
                   </button>
@@ -240,7 +181,7 @@ export function NotificationsPanel({ open, onClose }: Props) {
                   onClick={() => remove.mutate(n.id)}
                   disabled={remove.isPending}
                   title="Delete"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', borderRadius: 4, display: 'flex', alignItems: 'center' }}
+                  className={iconBtnClass}
                 >
                   <Trash2 size={11} />
                 </button>
@@ -251,18 +192,9 @@ export function NotificationsPanel({ open, onClose }: Props) {
       </div>
 
       {/* Footer */}
-      <div style={{
-        padding: '8px 16px',
-        borderTop: '1px solid var(--lito-border)',
-        flexShrink: 0,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}>
-        <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)' }}>
-          Refreshes every 30s
-        </span>
-        <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)' }}>
-          {data?.meta?.total ?? 0} total
-        </span>
+      <div className="px-4 py-2 border-t border-[var(--lito-border)] shrink-0 flex justify-between items-center">
+        <span className="font-body text-[10px] text-[var(--text-muted)]">Refreshes every 30s</span>
+        <span className="font-body text-[10px] text-[var(--text-muted)]">{data?.meta?.total ?? 0} total</span>
       </div>
     </div>
   )

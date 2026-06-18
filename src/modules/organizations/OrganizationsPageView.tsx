@@ -23,11 +23,10 @@ function PlanBadge({ plan }: { plan: string }) {
   }
   const cfg = map[plan] ?? map.free!
   return (
-    <span style={{
-      padding: '2px 8px', borderRadius: 999,
-      fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em',
-      color: cfg.fg, background: cfg.bg,
-    }}>
+    <span
+      className="px-2 py-[2px] rounded-full text-[10px] font-semibold uppercase tracking-[0.07em]"
+      style={{ color: cfg.fg, background: cfg.bg }}
+    >
       {cfg.label}
     </span>
   )
@@ -46,17 +45,18 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
   }
 
   return (
-    <div className="cms-page" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
+    <div className="cms-page flex-1 overflow-y-auto px-7 py-6">
+
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: 'var(--text-primary)', marginBottom: 4 }}>
+          <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)] mb-1">
             Organizations
           </h1>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>
+          <p className="font-body text-[13px] text-[var(--text-muted)]">
             Manage your organizations and their associated websites.
             {orgs.length === 0 && !isLoading && (
-              <span style={{ color: 'var(--lito-gold-deep)', fontWeight: 500 }}>
+              <span className="text-[var(--lito-gold-deep)] font-medium">
                 {' '}Create one to unlock content management.
               </span>
             )}
@@ -67,26 +67,17 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
         </button>
       </div>
 
-      {/* Empty state — no org yet */}
+      {/* Empty state */}
       {!isLoading && orgs.length === 0 && (
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          gap: 16, padding: '64px 0',
-          border: '1.5px dashed var(--lito-border)',
-          borderRadius: 12, background: 'var(--cms-card-bg)',
-        }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: 12,
-            background: 'rgba(212,168,83,0.10)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Building2 size={24} style={{ color: 'var(--lito-gold-deep)' }} />
+        <div className="flex flex-col items-center justify-center gap-4 py-16 border-[1.5px] border-dashed border-[var(--lito-border)] rounded-xl bg-[var(--cms-card-bg)]">
+          <div className="w-14 h-14 rounded-xl bg-[rgba(212,168,83,0.10)] flex items-center justify-center">
+            <Building2 size={24} className="text-[var(--lito-gold-deep)]" />
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: 'var(--text-primary)', marginBottom: 6 }}>
+          <div className="text-center">
+            <p className="font-display text-[20px] font-normal text-[var(--text-primary)] mb-1.5">
               No organizations yet
             </p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', maxWidth: 340 }}>
+            <p className="font-body text-[13px] text-[var(--text-muted)] max-w-[340px]">
               An organization is your workspace. Create one to start managing stories, pages, products and more.
             </p>
           </div>
@@ -98,9 +89,9 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
 
       {/* Skeleton */}
       {isLoading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="flex flex-col gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="cms-card" style={{ padding: '20px 24px' }}>
+            <div key={i} className="cms-card px-6 py-5">
               <Skeleton className="h-5 w-48 mb-2" />
               <Skeleton className="h-3.5 w-32" />
             </div>
@@ -110,48 +101,43 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
 
       {/* Org cards */}
       {!isLoading && orgs.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="flex flex-col gap-2.5">
           {orgs.map(org => {
             const isActive = org.id === activeOrgId
+            const isConfirm = deleteConfirm === org.id
             return (
               <div
                 key={org.id}
-                className="cms-card"
-                style={{
-                  padding: '18px 20px',
-                  borderColor: isActive ? 'rgba(212,168,83,0.4)' : undefined,
-                  background: isActive ? 'rgba(212,168,83,0.03)' : undefined,
-                  transition: 'border-color 150ms, background 150ms',
-                }}
+                className={`cms-card px-5 py-[18px] transition-[border-color,background] duration-150 ${
+                  isActive ? 'border-[rgba(212,168,83,0.4)] bg-[rgba(212,168,83,0.03)]' : ''
+                }`}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div className="flex items-center gap-3.5">
                   {/* Icon */}
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 8, flexShrink: 0,
-                    background: isActive ? 'rgba(212,168,83,0.15)' : 'var(--lito-cream-alt)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
+                  <div className={`w-10 h-10 rounded-lg shrink-0 flex items-center justify-center ${
+                    isActive ? 'bg-[rgba(212,168,83,0.15)]' : 'bg-[var(--lito-cream-alt)]'
+                  }`}>
                     <Building2 size={18} style={{ color: isActive ? 'var(--lito-gold-deep)' : 'var(--text-muted)' }} />
                   </div>
 
                   {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-[3px]">
+                      <span className="font-body text-sm font-medium text-[var(--text-muted)]">
                         {org.name}
                       </span>
                       <PlanBadge plan={org.plan} />
                       {isActive && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'var(--lito-gold-deep)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                        <span className="flex items-center gap-[3px] text-[10px] text-[var(--lito-gold-deep)] font-semibold uppercase tracking-[0.07em]">
                           <CheckCircle2 size={11} /> Active
                         </span>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
-                        slug: <code style={{ fontFamily: 'monospace' }}>{org.slug}</code>
+                    <div className="flex items-center gap-3">
+                      <span className="font-body text-[11px] text-[var(--text-muted)]">
+                        slug: <code className="font-mono">{org.slug}</code>
                       </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: 'var(--text-muted)' }}>
+                      <span className="flex items-center gap-[3px] text-[11px] text-[var(--text-muted)]">
                         <Globe size={10} />
                         {org.status}
                       </span>
@@ -159,21 +145,12 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div className="flex items-center gap-1.5">
                     {!isActive && (
                       <button
                         type="button"
                         onClick={() => onSelect(org)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 5,
-                          padding: '5px 12px', borderRadius: 999,
-                          border: '1px solid var(--lito-border)',
-                          background: 'transparent', color: 'var(--text-muted)',
-                          fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                          fontFamily: 'var(--font-body)', transition: 'all 150ms',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--lito-gold)'; e.currentTarget.style.color = 'var(--lito-gold-deep)' }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--lito-border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
+                        className="flex items-center gap-[5px] px-3 py-[5px] rounded-full border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] text-[11px] font-medium cursor-pointer font-body transition-all duration-150 hover:border-[var(--lito-gold)] hover:text-[var(--lito-gold-deep)]"
                       >
                         Switch <ChevronRight size={11} />
                       </button>
@@ -182,49 +159,23 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
                       type="button"
                       onClick={() => onEdit(org)}
                       title="Edit organization"
-                      style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: 30, height: 30, borderRadius: 6,
-                        border: '1px solid var(--lito-border)',
-                        background: 'transparent', color: 'var(--text-muted)',
-                        cursor: 'pointer', transition: 'all 150ms',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--lito-cream-alt)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
+                      className="flex items-center justify-center w-[30px] h-[30px] rounded-md border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] cursor-pointer transition-all duration-150 hover:bg-[var(--lito-cream-alt)] hover:text-[var(--text-primary)]"
                     >
                       <Pencil size={12} />
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteClick(org)}
-                      title={deleteConfirm === org.id ? 'Click again to confirm delete' : 'Delete organization'}
-                      style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: deleteConfirm === org.id ? 'auto' : 30,
-                        height: 30, borderRadius: 6,
-                        border: `1px solid ${deleteConfirm === org.id ? 'rgba(163,48,40,0.5)' : 'var(--lito-border)'}`,
-                        background: deleteConfirm === org.id ? 'var(--cms-danger-bg)' : 'transparent',
-                        color: deleteConfirm === org.id ? 'var(--cms-danger)' : 'var(--text-muted)',
-                        cursor: 'pointer', transition: 'all 150ms',
-                        fontSize: 10, fontWeight: 600, gap: 3,
-                        whiteSpace: 'nowrap', padding: deleteConfirm === org.id ? '0 8px' : undefined,
-                      } as React.CSSProperties}
-                      onMouseEnter={e => {
-                        if (deleteConfirm !== org.id) {
-                          e.currentTarget.style.borderColor = 'rgba(163,48,40,0.5)'
-                          e.currentTarget.style.color = 'var(--cms-danger)'
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (deleteConfirm !== org.id) {
-                          e.currentTarget.style.borderColor = 'var(--lito-border)'
-                          e.currentTarget.style.color = 'var(--text-muted)'
-                        }
-                        setDeleteConfirm(null)
-                      }}
+                      title={isConfirm ? 'Click again to confirm delete' : 'Delete organization'}
+                      className={`flex items-center justify-center h-[30px] rounded-md cursor-pointer transition-all duration-150 text-[10px] font-semibold gap-[3px] whitespace-nowrap ${
+                        isConfirm
+                          ? 'border border-[rgba(163,48,40,0.5)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger)] px-2'
+                          : 'border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] w-[30px] hover:border-[rgba(163,48,40,0.5)] hover:text-[var(--cms-danger)]'
+                      }`}
+                      onMouseLeave={() => { if (!isConfirm) setDeleteConfirm(null) }}
                     >
                       <Trash2 size={12} />
-                      {deleteConfirm === org.id && <span>Confirm?</span>}
+                      {isConfirm && <span>Confirm?</span>}
                     </button>
                   </div>
                 </div>
@@ -236,7 +187,7 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
 
       {/* Help note */}
       {!isLoading && orgs.length > 0 && (
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-faint)', marginTop: 16, textAlign: 'center' }}>
+        <p className="font-body text-[11px] text-[var(--text-faint)] mt-4 text-center">
           Switch organizations using the workspace switcher in the sidebar, or click "Switch" above.
         </p>
       )}

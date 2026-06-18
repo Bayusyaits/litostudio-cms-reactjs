@@ -33,7 +33,7 @@ export function AuthLayout() {
           <img
             src="/logo/logo-horizontal-black.png"
             alt="Lito Studio"
-            style={{ height: 36, margin: '0 auto 8px', display: 'block' }}
+            className="h-9 mx-auto mb-2 block"
           />
           <p className="font-body text-sm text-[var(--text-muted)]">
             Visual storytelling CMS

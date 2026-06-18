@@ -1,60 +1,19 @@
 import { Link } from 'react-router-dom'
 import { FileQuestion } from 'lucide-react'
 
-/**
- * 404 Not Found — shown when a route doesn't match any registered path.
- * Replaces the old catch-all <Navigate to="/dashboard"> which silently
- * swallowed all unknown URLs.
- */
 export default function NotFoundPage() {
   return (
-    <div
-      style={{
-        display:        'flex',
-        flexDirection:  'column',
-        alignItems:     'center',
-        justifyContent: 'center',
-        flex:           1,
-        padding:        '48px 24px',
-        textAlign:      'center',
-      }}
-    >
-      <FileQuestion
-        size={48}
-        style={{ color: 'var(--text-muted)', marginBottom: 16 }}
-      />
-      <h1
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontSize:   24,
-          fontWeight: 600,
-          color:      'var(--text-primary)',
-          margin:     '0 0 8px',
-        }}
-      >
+    <div className="flex flex-col items-center justify-center flex-1 px-6 py-12 text-center">
+      <FileQuestion size={48} className="text-[var(--text-muted)] mb-4" />
+      <h1 className="font-display text-2xl font-semibold text-[var(--text-primary)] mt-0 mb-2">
         Page not found
       </h1>
-      <p
-        style={{
-          fontFamily: 'var(--font-body)',
-          fontSize:   14,
-          color:      'var(--text-muted)',
-          margin:     '0 0 24px',
-          maxWidth:   400,
-        }}
-      >
+      <p className="font-body text-sm text-[var(--text-muted)] mt-0 mb-6 max-w-[400px]">
         The page you're looking for doesn't exist or has been moved.
       </p>
       <Link
         to="/dashboard"
-        style={{
-          fontFamily:      'var(--font-body)',
-          fontSize:        14,
-          fontWeight:      500,
-          color:           'var(--lito-teal)',
-          textDecoration:  'underline',
-          textUnderlineOffset: 2,
-        }}
+        className="font-body text-sm font-medium text-[var(--lito-teal)] underline underline-offset-2"
       >
         ← Back to Dashboard
       </Link>

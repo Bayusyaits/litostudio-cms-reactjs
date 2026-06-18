@@ -45,8 +45,8 @@ interface StatCardProps {
 }
 function StatCard({ icon: Icon, iconBg, iconColor, label, value, loading }: StatCardProps) {
   return (
-    <div className="cms-card" style={{ padding: '20px 24px', flex: 1, minWidth: 160 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+    <div className="cms-card flex-1 min-w-[160px] px-6 py-5">
+      <div className="flex items-start justify-between gap-3">
         <div>
           {loading ? (
             <>
@@ -55,14 +55,17 @@ function StatCard({ icon: Icon, iconBg, iconColor, label, value, loading }: Stat
             </>
           ) : (
             <>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1 }}>
+              <div className="font-display text-[32px] font-normal text-[var(--text-primary)] leading-none">
                 {value}
               </div>
-              <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{label}</div>
+              <div className="font-body text-xs text-[var(--text-muted)] mt-1">{label}</div>
             </>
           )}
         </div>
-        <div style={{ width: 36, height: 36, borderRadius: 8, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div
+          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: iconBg }}
+        >
           <Icon size={17} style={{ color: iconColor }} />
         </div>
       </div>
@@ -74,16 +77,18 @@ function QuickActionCard({ icon: Icon, iconBg, iconColor, title, desc, to }: {
   icon: React.ElementType; iconBg: string; iconColor: string; title: string; desc: string; to: string
 }) {
   return (
-    <Link to={to} style={{ textDecoration: 'none', flex: 1, minWidth: 140 }}>
-      <div className="cms-card" style={{ padding: '16px 18px', cursor: 'pointer', transition: 'border-color 150ms, box-shadow 150ms' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--lito-gold)'; (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-md)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--lito-border)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
+    <Link to={to} className="no-underline flex-1 min-w-[140px]">
+      <div
+        className="cms-card px-[18px] py-4 cursor-pointer transition-[border-color,box-shadow] duration-150 hover:border-[var(--lito-gold)] hover:shadow-[var(--shadow-md)]"
       >
-        <div style={{ width: 34, height: 34, borderRadius: 8, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+        <div
+          className="w-[34px] h-[34px] rounded-lg flex items-center justify-center mb-2.5"
+          style={{ background: iconBg }}
+        >
           <Icon size={16} style={{ color: iconColor }} />
         </div>
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{title}</div>
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{desc}</div>
+        <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">{title}</div>
+        <div className="font-body text-[11px] text-[var(--text-muted)] mt-0.5">{desc}</div>
       </div>
     </Link>
   )
@@ -93,17 +98,17 @@ function RecentRow({ item }: { item: DashboardRecentItem }) {
   return (
     <tr>
       <td>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 28, borderRadius: 3, background: 'var(--lito-cream-alt)', flexShrink: 0 }} />
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-7 rounded-[3px] bg-[var(--lito-cream-alt)] shrink-0" />
           <div>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{item.title}</span>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', marginLeft: 6, textTransform: 'capitalize' }}>{item.type}</span>
+            <span className="font-body text-[13px] text-[var(--text-primary)] font-medium">{item.title}</span>
+            <span className="font-body text-[10px] text-[var(--text-muted)] ml-1.5 capitalize">{item.type}</span>
           </div>
         </div>
       </td>
       <td><StatusBadge status={item.status} /></td>
       <td>
-        <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
+        <span className="font-body text-[11px] text-[var(--text-muted)]">
           {formatDate(item.updated_at)}
         </span>
       </td>
@@ -124,26 +129,26 @@ export function DashboardPageView({ stats, recent, loading, org: _org, site: _si
   ]
 
   return (
-    <div className="cms-page" style={{ padding: 32, overflowY: 'auto', height: '100%', background: 'var(--cms-main-bg)' }}>
+    <div className="cms-page p-8 overflow-y-auto h-full bg-[var(--cms-main-bg)]">
       {/* Welcome */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 34, fontWeight: 400, color: 'var(--text-primary)', lineHeight: 1.15 }}>
+      <div className="mb-7">
+        <h1 className="font-display text-[34px] font-normal text-[var(--text-primary)] leading-[1.15]">
           Selamat datang, {firstName}.
         </h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>{today}</p>
+        <p className="font-body text-[13px] text-[var(--text-muted)] mt-1.5">{today}</p>
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+      <div className="flex gap-4 mb-6 flex-wrap">
         {statCards.map(c => <StatCard key={c.label} {...c} />)}
       </div>
 
       {/* Quick actions */}
-      <div style={{ marginBottom: 28 }}>
-        <h2 style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.09em', color: 'var(--text-muted)', marginBottom: 12 }}>
+      <div className="mb-7">
+        <h2 className="font-body text-[11px] font-medium uppercase tracking-[0.09em] text-[var(--text-muted)] mb-3">
           Quick Actions
         </h2>
-        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+        <div className="flex gap-3.5 flex-wrap">
           <QuickActionCard icon={FileText}  iconBg="rgba(26,74,90,0.10)"   iconColor="var(--lito-teal)" title="New Story"       desc="Write & publish a story" to="/stories/new" />
           <QuickActionCard icon={Image}     iconBg="rgba(212,168,83,0.12)" iconColor="var(--lito-gold)" title="Upload Media"    desc="Add photos & videos"     to="/media" />
           <QuickActionCard icon={Globe}     iconBg="rgba(26,74,90,0.08)"   iconColor="var(--lito-teal)"      title="Pages"      desc="Manage pages & menu"     to="/pages" />
@@ -152,12 +157,12 @@ export function DashboardPageView({ stats, recent, loading, org: _org, site: _si
       </div>
 
       {/* 2-col bottom */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 308px', gap: 20, alignItems: 'start' }}>
+      <div className="grid gap-5 items-start" style={{ gridTemplateColumns: '1fr 308px' }}>
         {/* Recent stories */}
-        <div className="cms-card" style={{ overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--lito-border)' }}>
-            <h3 style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>Recent Stories</h3>
-            <Link to="/stories" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none' }}>
+        <div className="cms-card overflow-hidden">
+          <div className="flex items-center justify-between px-[18px] py-3.5 border-b border-[var(--lito-border)]">
+            <h3 className="font-body text-[13px] font-medium text-[var(--text-primary)]">Recent Stories</h3>
+            <Link to="/stories" className="flex items-center gap-1 text-[11px] text-[var(--text-muted)] no-underline">
               View all <ArrowRight size={11} />
             </Link>
           </div>
@@ -182,7 +187,7 @@ export function DashboardPageView({ stats, recent, loading, org: _org, site: _si
                 recent.slice(0, 8).map((s: DashboardRecentItem) => <RecentRow key={s.id} item={s} />)
               ) : (
                 <tr>
-                  <td colSpan={3} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)', fontSize: 13 }}>
+                  <td colSpan={3} className="text-center p-8 text-[var(--text-muted)] text-[13px]">
                     No recent content
                   </td>
                 </tr>
@@ -192,16 +197,16 @@ export function DashboardPageView({ stats, recent, loading, org: _org, site: _si
         </div>
 
         {/* Activity feed */}
-        <div className="cms-card" style={{ overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--lito-border)' }}>
-            <h3 style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>Recent Activity</h3>
+        <div className="cms-card overflow-hidden">
+          <div className="px-[18px] py-3.5 border-b border-[var(--lito-border)]">
+            <h3 className="font-body text-[13px] font-medium text-[var(--text-primary)]">Recent Activity</h3>
           </div>
-          <div style={{ padding: '8px 0' }}>
+          <div className="py-2">
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ padding: '10px 18px', display: 'flex', gap: 10 }}>
+                <div key={i} className="px-[18px] py-[10px] flex gap-2.5">
                   <Skeleton className="h-6 w-6 rounded-full flex-shrink-0" />
-                  <div style={{ flex: 1 }}>
+                  <div className="flex-1">
                     <Skeleton className="h-3 w-full mb-1" />
                     <Skeleton className="h-3 w-20" />
                   </div>
@@ -209,20 +214,20 @@ export function DashboardPageView({ stats, recent, loading, org: _org, site: _si
               ))
             ) : recent?.length ? (
               recent.slice(0, 8).map((item: DashboardRecentItem) => (
-                <div key={item.id} style={{ display: 'flex', gap: 10, padding: '10px 18px', borderBottom: '1px solid rgba(217,210,199,0.3)' }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--lito-gold)', marginTop: 5, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div key={item.id} className="flex gap-2.5 px-[18px] py-[10px] border-b border-[rgba(217,210,199,0.3)]">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--lito-gold)] mt-[5px] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-body text-xs text-[var(--text-primary)] truncate">
                       {item.title}
                     </div>
-                    <div style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <div className="font-body text-[10px] text-[var(--text-muted)] mt-0.5 flex items-center gap-[3px]">
                       <Clock size={9} /> {formatDate(item.updated_at)}
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div style={{ padding: '32px 18px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
+              <div className="px-[18px] py-8 text-center text-xs text-[var(--text-muted)]">
                 No recent activity
               </div>
             )}

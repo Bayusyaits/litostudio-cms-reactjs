@@ -95,39 +95,19 @@ export function OrgFormModal({ org, onSave, onClose }: Props) {
       aria-modal="true"
       aria-labelledby="org-modal-title"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
-        animation: 'cmsPageIn 160ms ease-out both',
-      }}
+      className="fixed inset-0 z-[1000] bg-[rgba(0,0,0,0.55)] flex items-center justify-center p-5 [animation:cmsPageIn_160ms_ease-out_both]"
     >
-      <div style={{
-        width: '100%', maxWidth: 480,
-        background: 'var(--cms-card-bg)',
-        border: '1px solid var(--lito-border)',
-        borderRadius: 12,
-        boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-        overflow: 'hidden',
-      }}>
+      <div className="w-full max-w-[480px] bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-xl shadow-[0_24px_64px_rgba(0,0,0,0.35)] overflow-hidden">
+
         {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '18px 20px',
-          borderBottom: '1px solid var(--lito-border)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: 'rgba(212,168,83,0.12)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Building2 size={16} style={{ color: 'var(--lito-gold-deep)' }} />
+        <div className="flex items-center justify-between px-5 py-[18px] border-b border-[var(--lito-border)]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[rgba(212,168,83,0.12)] flex items-center justify-center">
+              <Building2 size={16} className="text-[var(--lito-gold-deep)]" />
             </div>
             <h2
               id="org-modal-title"
-              style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 400, color: 'var(--text-primary)' }}
+              className="font-display text-[18px] font-normal text-[var(--text-primary)]"
             >
               {isEdit ? 'Edit Organization' : 'Create Organization'}
             </h2>
@@ -136,16 +116,16 @@ export function OrgFormModal({ org, onSave, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4, borderRadius: 4, display: 'flex' }}
+            className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 rounded flex"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ padding: '20px 20px 0' }}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="px-5 pt-5">
           {/* Name */}
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <label className="cms-label" htmlFor="org-name">
               Organization name
               <span className="text-[var(--s-danger)] ml-0.5" aria-hidden>*</span>
@@ -158,32 +138,31 @@ export function OrgFormModal({ org, onSave, onClose }: Props) {
               }}
               id="org-name"
               type="text"
-              className="cms-input"
+              className="cms-input h-9"
               placeholder="e.g. Lito Studio"
               maxLength={80}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? 'org-name-error' : undefined}
-              style={{ height: 36 }}
             />
             {errors.name && (
-              <p id="org-name-error" role="alert" style={{ marginTop: 4, fontSize: 11, color: 'var(--s-danger)', fontFamily: 'var(--font-body)' }}>
+              <p id="org-name-error" role="alert" className="mt-1 text-[11px] text-[var(--s-danger)] font-body">
                 {errors.name.message}
               </p>
             )}
           </div>
 
           {/* Slug */}
-          <div style={{ marginBottom: 20 }}>
+          <div className="mb-5">
             <label className="cms-label" htmlFor="org-slug">
               URL slug
               {isEdit && (
-                <span style={{ marginLeft: 6, fontSize: 10, textTransform: 'none', fontWeight: 400, color: 'var(--text-faint)', letterSpacing: 0 }}>
+                <span className="ml-1.5 text-[10px] normal-case font-normal text-[var(--text-faint)] tracking-normal">
                   (changing may break links)
                 </span>
               )}
               <span className="text-[var(--s-danger)] ml-0.5" aria-hidden>*</span>
             </label>
-            <div style={{ position: 'relative' }}>
+            <div className="relative">
               <input
                 {...register('slug', {
                   onChange: e => {
@@ -193,26 +172,22 @@ export function OrgFormModal({ org, onSave, onClose }: Props) {
                 })}
                 id="org-slug"
                 type="text"
-                className="cms-input"
+                className="cms-input h-9 pr-[72px]"
                 placeholder="e.g. lito-studio"
                 maxLength={48}
                 aria-invalid={!!errors.slug}
                 aria-describedby={errors.slug ? 'org-slug-error' : 'org-slug-hint'}
-                style={{ height: 36, paddingRight: 72 }}
               />
-              <span style={{
-                position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                fontSize: 10, color: 'var(--text-faint)', pointerEvents: 'none',
-              }}>
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-faint)] pointer-events-none">
                 {watch('slug')?.length ?? 0}/48
               </span>
             </div>
             {errors.slug ? (
-              <p id="org-slug-error" role="alert" style={{ marginTop: 4, fontSize: 11, color: 'var(--s-danger)', fontFamily: 'var(--font-body)' }}>
+              <p id="org-slug-error" role="alert" className="mt-1 text-[11px] text-[var(--s-danger)] font-body">
                 {errors.slug.message}
               </p>
             ) : (
-              <p id="org-slug-hint" style={{ marginTop: 4, fontSize: 11, color: 'var(--text-faint)', fontFamily: 'var(--font-body)' }}>
+              <p id="org-slug-hint" className="mt-1 text-[11px] text-[var(--text-faint)] font-body">
                 Lowercase letters, numbers, hyphens only. Used in URLs.
               </p>
             )}
@@ -220,22 +195,13 @@ export function OrgFormModal({ org, onSave, onClose }: Props) {
 
           {/* Server error */}
           {errors.root && (
-            <div style={{
-              marginBottom: 16, padding: '8px 12px', borderRadius: 6,
-              background: 'var(--cms-danger-bg)', color: 'var(--cms-danger)',
-              fontSize: 12, fontFamily: 'var(--font-body)',
-            }}>
+            <div className="mb-4 px-3 py-2 rounded-md bg-[var(--cms-danger-bg)] text-[var(--cms-danger)] text-xs font-body">
               {errors.root.message}
             </div>
           )}
 
           {/* Footer */}
-          <div style={{
-            display: 'flex', justifyContent: 'flex-end', gap: 8,
-            padding: '12px 0 18px',
-            borderTop: '1px solid var(--lito-border)',
-            marginTop: 4,
-          }}>
+          <div className="flex justify-end gap-2 py-3 border-t border-[var(--lito-border)] mt-1 pb-[18px]">
             <button type="button" onClick={onClose} className="cms-btn cms-btn-ghost cms-btn-sm">
               Cancel
             </button>

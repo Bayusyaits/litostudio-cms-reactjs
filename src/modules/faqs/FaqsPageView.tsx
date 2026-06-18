@@ -53,7 +53,7 @@ export function FaqsPageView({
             <HelpCircle className="w-4 h-4 text-[var(--text-muted)]" aria-hidden />
           </div>
           <div>
-            <p className="font-body text-sm font-medium text-[var(--text-primary)] truncate max-w-[300px]">
+            <p className="font-body text-sm font-medium text-[var(--text-muted)] truncate max-w-[300px]">
               {getFaqQuestion(faq)}
             </p>
             {getFaqAnswer(faq) && (

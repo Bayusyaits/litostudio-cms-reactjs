@@ -29,34 +29,32 @@ function CategoryRow({ cat, onDelete }: { cat: Category; onDelete: (id: string) 
   return (
     <tr>
       <td>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FolderOpen size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)' }}>
+        <div className="flex items-center gap-2">
+          <FolderOpen size={14} className="text-[var(--text-muted)] shrink-0" />
+          <span className="font-body text-[13px] text-[var(--text-primary)]">
             {cat.translations?.[0]?.name ?? cat.slug}
           </span>
         </div>
       </td>
       <td>
-        <code style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-muted)', background: 'rgba(17,17,17,0.04)', padding: '2px 6px', borderRadius: 3 }}>
+        <code className="font-mono text-[11px] text-[var(--text-muted)] bg-[rgba(17,17,17,0.04)] px-[6px] py-[2px] rounded">
           {cat.slug}
         </code>
       </td>
       <td>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+        <span className="text-xs text-[var(--text-muted)]">
           {cat.parent_id ? 'Sub-category' : 'Top-level'}
         </span>
       </td>
       <td>
-        <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>
+        <span className="font-body text-xs text-[var(--text-muted)]">
           {new Date(cat.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
         </span>
       </td>
       <td>
         <button type="button" onClick={() => onDelete(cat.id)}
           aria-label="Delete category"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4, borderRadius: 4, display: 'flex' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--cms-danger)'; e.currentTarget.style.background = 'var(--cms-danger-bg)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none' }}
+          className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 rounded flex hover:text-[var(--cms-danger)] hover:bg-[var(--cms-danger-bg)]"
         >
           <Trash2 size={13} />
         </button>
@@ -81,8 +79,8 @@ function AddCategoryForm({ onCreate, creating, error }: {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-      <div style={{ flex: 1, minWidth: 160 }}>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex gap-2 flex-wrap items-start">
+      <div className="flex-1 min-w-[160px]">
         <label className="cms-label">Name</label>
         <input
           {...register('name', {
@@ -91,54 +89,52 @@ function AddCategoryForm({ onCreate, creating, error }: {
               setValue('slug', slug, { shouldValidate: true })
             },
           })}
-          className="cms-input"
-          style={{ height: 34 }}
+          className="cms-input h-[34px]"
           placeholder="Category name"
           aria-invalid={!!errors.name}
         />
-        {errors.name && <p style={{ marginTop: 4, fontSize: 11, color: 'var(--s-danger)' }} role="alert">{errors.name.message}</p>}
+        {errors.name && <p className="mt-1 text-[11px] text-[var(--s-danger)]" role="alert">{errors.name.message}</p>}
       </div>
-      <div style={{ flex: 1, minWidth: 160 }}>
+      <div className="flex-1 min-w-[160px]">
         <label className="cms-label">Slug</label>
         <input
           {...register('slug')}
-          className="cms-input"
-          style={{ height: 34 }}
+          className="cms-input h-[34px]"
           placeholder="category-slug"
           aria-invalid={!!errors.slug}
         />
-        {errors.slug && <p style={{ marginTop: 4, fontSize: 11, color: 'var(--s-danger)' }} role="alert">{errors.slug.message}</p>}
+        {errors.slug && <p className="mt-1 text-[11px] text-[var(--s-danger)]" role="alert">{errors.slug.message}</p>}
       </div>
-      <div style={{ paddingTop: 20 }}>
-        <button type="submit" disabled={creating || !isValid} className="cms-btn cms-btn-primary cms-btn-sm" style={{ height: 34 }}>
+      <div className="pt-5">
+        <button type="submit" disabled={creating || !isValid} className="cms-btn cms-btn-primary cms-btn-sm h-[34px]">
           <Plus size={13} /> {creating ? 'Adding…' : 'Add'}
         </button>
       </div>
-      {error && <div style={{ width: '100%', padding: '6px 10px', borderRadius: 4, background: 'var(--cms-danger-bg)', fontSize: 12, color: 'var(--s-danger)' }}>{error}</div>}
+      {error && <div className="w-full px-[10px] py-[6px] rounded bg-[var(--cms-danger-bg)] text-xs text-[var(--s-danger)]">{error}</div>}
     </form>
   )
 }
 
 export function CategoriesPageView({ categories, total, isLoading, search, onSearch, onCreate, creating, createError, onDelete }: Props) {
   return (
-    <div className="cms-page" style={{ padding: 32, overflowY: 'auto', height: '100%' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: 'var(--text-primary)' }}>Categories</h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+    <div className="cms-page p-8 overflow-y-auto h-full">
+      <div className="mb-6">
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Categories</h1>
+        <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
           {total} {total === 1 ? 'category' : 'categories'} across all content types
         </p>
       </div>
 
-      <div className="cms-card" style={{ padding: '20px 24px', marginBottom: 24 }}>
-        <h2 style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, marginBottom: 12, color: 'var(--text-primary)' }}>Add category</h2>
+      <div className="cms-card px-6 py-5 mb-6">
+        <h2 className="font-body text-[13px] font-medium mb-3 text-[var(--text-primary)]">Add category</h2>
         <AddCategoryForm onCreate={onCreate} creating={creating} error={createError} />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+      <div className="flex items-center justify-between mb-[14px]">
         <SearchInput value={search} onChange={onSearch} placeholder="Search categories…" className="w-64" />
       </div>
 
-      <div className="cms-card" style={{ overflow: 'hidden' }}>
+      <div className="cms-card overflow-hidden">
         <table className="cms-table">
           <thead><tr><th>Name</th><th>Slug</th><th>Type</th><th>Created</th><th style={{ width: 40 }} /></tr></thead>
           <tbody>

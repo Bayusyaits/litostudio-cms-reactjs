@@ -59,55 +59,32 @@ export function EditorCodeView() {
   }, [blockDoc])
 
   return (
-    <div style={{
-      flex: 1, display: 'flex', flexDirection: 'column',
-      overflow: 'hidden',
-      background: 'var(--cms-main-bg)',
-    }}>
+    <div className="flex-1 flex flex-col overflow-hidden bg-[var(--cms-main-bg)]">
       {/* ── Toolbar strip ─────────────────────────────────────────────────────── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '8px 16px', gap: 8,
-        borderBottom: '1px solid var(--lito-border)',
-        background: 'var(--cms-card-bg)',
-        flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{
-            fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
-            color: 'var(--text-primary)',
-          }}>
+      <div className="flex items-center justify-between px-4 py-2 gap-2 border-b border-[var(--lito-border)] bg-[var(--cms-card-bg)] shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="font-body text-xs font-semibold text-[var(--text-primary)]">
             Code Editor
           </span>
-          <span style={{
-            fontFamily: 'monospace', fontSize: 10,
-            color: 'var(--text-muted)',
-            background: 'var(--cms-surface-3)',
-            border: '1px solid var(--lito-border)',
-            borderRadius: 4, padding: '1px 6px',
-          }}>
+          <span className="font-mono text-[10px] text-[var(--text-muted)] bg-[var(--cms-surface-3)] border border-[var(--lito-border)] rounded px-[6px] py-[1px]">
             BlockDocument JSON
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div className="flex gap-[6px] items-center">
           {/* Status message */}
           {error && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <AlertCircle size={13} style={{ color: '#ef4444', flexShrink: 0 }} />
-              <span style={{
-                fontFamily: 'var(--font-body)', fontSize: 11,
-                color: '#ef4444', maxWidth: 320,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
+            <div className="flex items-center gap-[5px]">
+              <AlertCircle size={13} className="text-[#ef4444] shrink-0" />
+              <span className="font-body text-[11px] text-[#ef4444] max-w-[320px] overflow-hidden text-ellipsis whitespace-nowrap">
                 {error}
               </span>
             </div>
           )}
           {notice && !error && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <CheckCircle2 size={13} style={{ color: '#22c55e', flexShrink: 0 }} />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: '#22c55e' }}>
+            <div className="flex items-center gap-[5px]">
+              <CheckCircle2 size={13} className="text-[#22c55e] shrink-0" />
+              <span className="font-body text-[11px] text-[#22c55e]">
                 {notice}
               </span>
             </div>
@@ -118,14 +95,7 @@ export function EditorCodeView() {
             type="button"
             onClick={handleReset}
             title="Reset to current document"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              padding: '5px 12px', borderRadius: 7,
-              border: '1px solid var(--lito-border)',
-              background: 'var(--cms-card-bg)', cursor: 'pointer',
-              fontFamily: 'var(--font-body)', fontSize: 12,
-              fontWeight: 500, color: 'var(--text-muted)',
-            }}
+            className="flex items-center gap-[5px] px-3 py-[5px] rounded-[7px] border border-[var(--lito-border)] bg-[var(--cms-card-bg)] cursor-pointer font-body text-xs font-medium text-[var(--text-muted)]"
           >
             <RefreshCcw size={12} /> Reset
           </button>
@@ -134,14 +104,7 @@ export function EditorCodeView() {
           <button
             type="button"
             onClick={handleApply}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              padding: '5px 14px', borderRadius: 7,
-              border: 'none', background: 'var(--lito-teal)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-body)', fontSize: 12,
-              fontWeight: 600, color: '#fff',
-            }}
+            className="flex items-center gap-[5px] px-[14px] py-[5px] rounded-[7px] border-none bg-[var(--lito-teal)] cursor-pointer font-body text-xs font-semibold text-white"
           >
             Apply changes
           </button>
@@ -149,38 +112,19 @@ export function EditorCodeView() {
       </div>
 
       {/* ── JSON textarea ─────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+      <div className="flex-1 overflow-hidden relative">
         <textarea
           value={raw}
           onChange={(e) => { setRaw(e.target.value); setError(null); setNotice(null) }}
           spellCheck={false}
-          style={{
-            width: '100%', height: '100%',
-            padding: '16px 20px',
-            fontFamily: '"Fira Code", "JetBrains Mono", "Cascadia Code", Menlo, Monaco, "Courier New", monospace',
-            fontSize: 13, lineHeight: 1.6,
-            color: error ? '#ef4444' : 'var(--text-primary)',
-            background: 'var(--cms-main-bg)',
-            border: 'none', outline: 'none', resize: 'none',
-            boxSizing: 'border-box',
-            whiteSpace: 'pre',
-            overflowWrap: 'normal',
-            overflowX: 'auto',
-          }}
+          className={`w-full h-full px-5 py-4 font-mono text-[13px] leading-[1.6] bg-[var(--cms-main-bg)] border-none outline-none resize-none box-border whitespace-pre overflow-x-auto ${error ? 'text-[#ef4444]' : 'text-[var(--text-primary)]'}`}
+          style={{ fontFamily: '"Fira Code", "JetBrains Mono", "Cascadia Code", Menlo, Monaco, "Courier New", monospace', overflowWrap: 'normal' }}
         />
       </div>
 
       {/* ── Footer hint ───────────────────────────────────────────────────────── */}
-      <div style={{
-        padding: '6px 16px',
-        borderTop: '1px solid var(--lito-border)',
-        background: 'var(--cms-card-bg)',
-        flexShrink: 0,
-      }}>
-        <p style={{
-          fontFamily: 'var(--font-body)', fontSize: 10,
-          color: 'var(--text-muted)', margin: 0,
-        }}>
+      <div className="px-4 py-[6px] border-t border-[var(--lito-border)] bg-[var(--cms-card-bg)] shrink-0">
+        <p className="font-body text-[10px] text-[var(--text-muted)] m-0">
           Edit the raw BlockDocument JSON, then click <strong>Apply changes</strong> to update the canvas.
           Switch back to Visual mode to continue editing normally.
         </p>

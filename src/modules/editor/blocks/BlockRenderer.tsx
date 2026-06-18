@@ -103,8 +103,7 @@ function HeadingBlock({ block }: { block: Block }) {
         onBlur={(e) =>
           updateBlock(block.id, { text: e.currentTarget.textContent ?? '' })
         }
-        className={`font-display ${sizeMap[d.level] ?? 'text-2xl'} text-[var(--text-primary)] outline-none`}
-        style={{ minWidth: 1 }}
+        className={`font-display ${sizeMap[d.level] ?? 'text-2xl'} text-[var(--text-primary)] outline-none min-w-[1px]`}
       >
         {d.text || (isSelected ? undefined : 'Untitled Heading')}
       </Tag>
@@ -257,12 +256,12 @@ function HeroBlock({ block }: { block: Block }) {
     >
       {d.backgroundImage && (
         <div
-          style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${overlay / 100})` }}
+          className="absolute inset-0"
+          style={{ background: `rgba(0,0,0,${overlay / 100})` }}
         />
       )}
       <div
-        style={{ position: 'relative', zIndex: 1, maxWidth: 800, padding: '0 24px', width: '100%' }}
-        className={`flex flex-col gap-4 ${alignMap[d.align]}`}
+        className={`relative z-[1] max-w-[800px] px-6 w-full flex flex-col gap-4 ${alignMap[d.align]}`}
       >
         <h1 className="font-display text-4xl md:text-5xl font-bold text-white drop-shadow">
           {d.title || 'Hero Title'}
@@ -297,7 +296,7 @@ function CTABlock({ block }: { block: Block }) {
   const alignMap = { left: 'text-left', center: 'text-center', right: 'text-right' }
   return (
     <div style={{ ...blockStyle(block) }} className={`px-8 py-16 ${bgMap[d.variant]} ${alignMap[d.align]}`}>
-      <div style={{ maxWidth: 700, margin: '0 auto' }}>
+      <div className="max-w-[700px] mx-auto">
         <h2 className="font-display text-3xl font-bold mb-3">{d.title}</h2>
         {d.description && <p className="font-body text-base opacity-80 mb-6">{d.description}</p>}
         <a href={d.buttonUrl} onClick={(e) => e.preventDefault()} className="inline-block px-8 py-3 rounded-lg bg-white text-[var(--lito-dark)] font-semibold font-body text-sm">
@@ -404,7 +403,7 @@ function FAQBlock({ block }: { block: Block }) {
               className="w-full flex items-center justify-between px-5 py-4 text-left"
               onClick={() => setOpen(open === i ? null : i)}
             >
-              <span className="font-body text-sm font-medium text-[var(--text-primary)]">{item.question}</span>
+              <span className="font-body text-sm font-medium text-[var(--text-muted)]">{item.question}</span>
               {open === i ? <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />}
             </button>
             {open === i && (
@@ -471,7 +470,7 @@ function ProductsBlock({ block }: { block: Block }) {
               <span className="text-2xl">📦</span>
             </div>
             <div className="p-3">
-              <p className="font-body text-sm font-medium text-[var(--text-primary)]">Product {i + 1}</p>
+              <p className="font-body text-sm font-medium text-[var(--text-muted)]">Product {i + 1}</p>
               {d.showPrice && <p className="font-body text-xs text-[var(--lito-teal)] mt-0.5">$0.00</p>}
             </div>
           </div>
@@ -530,7 +529,7 @@ function StoryBlock({ block }: { block: Block }) {
         {Array.from({ length: d.limit }).map((_, i) => (
           <div key={i} className="rounded-xl bg-[var(--cms-surface-2)] border border-[var(--lito-border)] p-4 flex gap-3 items-center">
             <div className="w-12 h-12 rounded-lg bg-[var(--cms-surface-3)] flex-shrink-0" />
-            <p className="font-body text-sm font-medium text-[var(--text-primary)]">Story {i + 1}</p>
+            <p className="font-body text-sm font-medium text-[var(--text-muted)]">Story {i + 1}</p>
           </div>
         ))}
       </div>
@@ -548,7 +547,7 @@ function ContactFormBlock({ block }: { block: Block }) {
         <div className="space-y-4">
           {d.fields.map((f, i) => (
             <div key={i}>
-              <label className="block font-body text-sm font-medium text-[var(--text-primary)] mb-1">
+              <label className="block font-body text-sm font-medium text-[var(--text-muted)] mb-1">
                 {f.label}{f.required && <span className="text-red-500"> *</span>}
               </label>
               {f.type === 'textarea'
@@ -587,7 +586,7 @@ function MapBlock({ block }: { block: Block }) {
   return (
     <div style={{ ...blockStyle(block) }}>
       {d.src ? (
-        <iframe src={d.src} width="100%" height={d.height ?? 400} style={{ border: 0 }} loading="lazy" className="rounded-xl" />
+        <iframe src={d.src} width="100%" height={d.height ?? 400} loading="lazy" className="rounded-xl border-0" />
       ) : (
         <div className="flex items-center justify-center rounded-xl bg-[var(--cms-surface-3)] border-2 border-dashed border-[var(--lito-border)]" style={{ height: d.height ?? 400 }}>
           <p className="font-body text-sm text-[var(--text-muted)]">Paste a Google Maps embed URL</p>

@@ -314,7 +314,7 @@ export function LabelsPageView({
       ) : labels.length === 0 ? (
         <div className="cms-card p-8 text-center space-y-2">
           <Languages className="w-10 h-10 text-[var(--text-muted)] mx-auto" />
-          <p className="font-body text-sm font-medium text-[var(--text-primary)]">No labels found</p>
+          <p className="font-body text-sm font-medium text-[var(--text-muted)]">No labels found</p>
           <p className="font-body text-xs text-[var(--text-muted)]">
             Try changing your filters or run the migration to seed defaults.
           </p>

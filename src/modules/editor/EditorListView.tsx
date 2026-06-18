@@ -57,6 +57,8 @@ function blockEmoji(block: Block): string {
 
 // ── Row ───────────────────────────────────────────────────────────────────────
 
+const actionBtnCls = 'flex items-center justify-center w-[22px] h-[22px] rounded border-none bg-transparent cursor-pointer text-[var(--text-muted)]'
+
 function BlockRow({ block, index }: { block: Block; index: number }) {
   const { selectedBlockId, selectBlock, updateVisibility, lockBlock, removeBlock } = useEditorStore()
   const isSelected  = selectedBlockId === block.id
@@ -65,53 +67,41 @@ function BlockRow({ block, index }: { block: Block; index: number }) {
 
   return (
     <div
-      style={{
-        display: 'flex', alignItems: 'center',
-        padding: '4px 10px 4px 8px', gap: 6,
-        background: isSelected ? 'rgba(var(--lito-teal-rgb, 15,118,110),0.08)' : 'transparent',
-        borderLeft: isSelected ? '2px solid var(--lito-teal)' : '2px solid transparent',
-        cursor: 'pointer', userSelect: 'none',
-        opacity: isHidden ? 0.4 : 1,
-        transition: 'background 80ms',
-      }}
+      className={`flex items-center py-1 px-[10px] pl-2 gap-[6px] cursor-pointer select-none border-l-2 transition-[background] duration-[80ms] ${
+        isHidden ? 'opacity-40' : 'opacity-100'
+      } ${
+        isSelected
+          ? 'bg-[rgba(15,118,110,0.08)] border-l-[var(--lito-teal)]'
+          : 'bg-transparent border-l-transparent hover:bg-[var(--cms-surface-3)]'
+      }`}
       onClick={() => selectBlock(block.id)}
-      onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = 'var(--cms-surface-3)' }}
-      onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent' }}
     >
       {/* Drag handle (visual only — reorder via moveBlockUp/Down) */}
-      <span style={{ color: 'var(--text-muted)', flexShrink: 0, cursor: 'grab', lineHeight: 0 }}>
+      <span className="text-[var(--text-muted)] shrink-0 cursor-grab leading-none">
         <GripVertical size={13} />
       </span>
 
       {/* Index */}
-      <span style={{
-        fontFamily: 'var(--font-body)', fontSize: 9, fontWeight: 700,
-        color: 'var(--text-muted)', minWidth: 16, textAlign: 'right', flexShrink: 0,
-      }}>
+      <span className="font-body text-[9px] font-bold text-[var(--text-muted)] min-w-4 text-right shrink-0">
         {index + 1}
       </span>
 
       {/* Icon */}
-      <span style={{
-        fontFamily: 'monospace', fontSize: 11, flexShrink: 0,
-        color: isSelected ? 'var(--lito-teal)' : 'var(--text-muted)',
-        minWidth: 18, textAlign: 'center',
-      }}>
+      <span className={`font-mono text-[11px] shrink-0 min-w-[18px] text-center ${isSelected ? 'text-[var(--lito-teal)]' : 'text-[var(--text-muted)]'}`}>
         {blockEmoji(block)}
       </span>
 
       {/* Label */}
-      <span style={{
-        fontFamily: 'var(--font-body)', fontSize: 12, flex: 1,
-        color: isSelected ? 'var(--lito-teal)' : 'var(--text-secondary)',
-        fontWeight: isSelected ? 600 : 400,
-        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-      }}>
+      <span className={`font-body text-xs flex-1 overflow-hidden text-ellipsis whitespace-nowrap ${
+        isSelected
+          ? 'text-[var(--lito-teal)] font-semibold'
+          : 'text-[var(--text-secondary)] font-normal'
+      }`}>
         {blockLabel(block)}
       </span>
 
       {/* Action buttons — visible on hover / selected */}
-      <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+      <div className="flex gap-0.5 shrink-0">
         {/* Visibility toggle */}
         <button
           type="button"
@@ -120,13 +110,7 @@ function BlockRow({ block, index }: { block: Block; index: number }) {
             e.stopPropagation()
             updateVisibility(block.id, { desktop: isHidden, tablet: isHidden, mobile: isHidden })
           }}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 22, height: 22, borderRadius: 4,
-            border: 'none', background: 'transparent',
-            cursor: 'pointer',
-            color: 'var(--text-muted)',
-          }}
+          className={actionBtnCls}
         >
           {isHidden ? <EyeOff size={11} /> : <Eye size={11} />}
         </button>
@@ -139,13 +123,7 @@ function BlockRow({ block, index }: { block: Block; index: number }) {
             e.stopPropagation()
             lockBlock(block.id, !isLocked)
           }}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 22, height: 22, borderRadius: 4,
-            border: 'none', background: 'transparent',
-            cursor: 'pointer',
-            color: 'var(--text-muted)',
-          }}
+          className={actionBtnCls}
         >
           {isLocked ? <Lock size={11} /> : <Unlock size={11} />}
         </button>
@@ -158,15 +136,7 @@ function BlockRow({ block, index }: { block: Block; index: number }) {
             e.stopPropagation()
             removeBlock(block.id)
           }}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 22, height: 22, borderRadius: 4,
-            border: 'none', background: 'transparent',
-            cursor: 'pointer',
-            color: 'var(--text-muted)',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)' }}
+          className={`${actionBtnCls} hover:text-[#ef4444]`}
         >
           <Trash2 size={11} />
         </button>
@@ -182,30 +152,18 @@ export function EditorListView() {
   const blocks = blockDoc.blocks
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+    <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div style={{
-        padding: '10px 12px 6px',
-        borderBottom: '1px solid var(--lito-border)',
-        flexShrink: 0,
-      }}>
-        <p style={{
-          fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700,
-          letterSpacing: '0.06em', color: 'var(--text-muted)',
-          margin: 0,
-        }}>
+      <div className="px-3 pt-[10px] pb-[6px] border-b border-[var(--lito-border)] shrink-0">
+        <p className="font-body text-[10px] font-bold tracking-[0.06em] text-[var(--text-muted)] m-0">
           {blocks.length} BLOCK{blocks.length !== 1 ? 'S' : ''}
         </p>
       </div>
 
       {/* List */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: 4 }}>
+      <div className="flex-1 overflow-y-auto pt-1">
         {blocks.length === 0 ? (
-          <p style={{
-            fontFamily: 'var(--font-body)', fontSize: 12,
-            color: 'var(--text-muted)', textAlign: 'center',
-            padding: '24px 14px', margin: 0,
-          }}>
+          <p className="font-body text-xs text-[var(--text-muted)] text-center px-[14px] py-6 m-0">
             No blocks yet. Use the Blocks tab to insert content.
           </p>
         ) : (

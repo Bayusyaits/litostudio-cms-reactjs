@@ -105,50 +105,26 @@ function UserWidget() {
     : '?'
 
   return (
-    <div style={{
-      borderTop: '1px solid var(--cms-sidebar-div)',
-      padding: '12px 16px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-    }}>
+    <div className="border-t border-[var(--cms-sidebar-div)] px-4 py-3 flex items-center gap-[10px]">
       {/* Avatar */}
       {user?.avatar_url ? (
         <img
           src={user.avatar_url}
           alt={user.full_name ?? 'User'}
-          style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+          className="w-8 h-8 rounded-full object-cover shrink-0"
         />
       ) : (
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%',
-          background: 'rgba(212,168,83,0.15)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-          fontFamily: 'var(--font-body)',
-          fontSize: 12, fontWeight: 500,
-          color: 'var(--lito-gold)',
-        }}>
+        <div className="w-8 h-8 rounded-full bg-[rgba(212,168,83,0.15)] flex items-center justify-center shrink-0 font-body text-xs font-medium text-[var(--lito-gold)]">
           {initials}
         </div>
       )}
 
       {/* Name + role */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 12, fontWeight: 500,
-          color: 'rgba(247,244,238,0.80)',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
+      <div className="flex-1 min-w-0">
+        <div className="font-body text-xs font-medium text-[rgba(247,244,238,0.80)] truncate">
           {user?.full_name ?? user?.email ?? 'User'}
         </div>
-        <div style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 10,
-          color: 'var(--cms-sidebar-label)',
-          textTransform: 'capitalize',
-        }}>
+        <div className="font-body text-[10px] text-[var(--cms-sidebar-label)] capitalize">
           {user?.role ?? 'Member'}
         </div>
       </div>
@@ -159,25 +135,7 @@ function UserWidget() {
         onClick={logout}
         title="Log out"
         aria-label="Log out"
-        style={{
-          background: 'none',
-          border: 'none',
-          padding: 6,
-          cursor: 'pointer',
-          color: 'var(--cms-sidebar-label)',
-          display: 'flex',
-          borderRadius: 4,
-          transition: 'color 150ms, background 150ms',
-          flexShrink: 0,
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.color = '#A33028'
-          e.currentTarget.style.background = 'rgba(163,48,40,0.1)'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.color = 'var(--cms-sidebar-label)'
-          e.currentTarget.style.background = 'none'
-        }}
+        className="bg-transparent border-none p-1.5 cursor-pointer text-[var(--cms-sidebar-label)] flex rounded transition-[color,background] duration-150 shrink-0 hover:text-[#A33028] hover:bg-[rgba(163,48,40,0.1)]"
       >
         <LogOut size={14} />
       </button>
@@ -191,26 +149,13 @@ export function AppSidebar() {
   if (!sidebarOpen) return null
 
   return (
-    <aside style={{
-      width: 'var(--cms-sidebar-w)',
-      flexShrink: 0,
-      height: '100vh',
-      background: 'var(--cms-sidebar-bg)',
-      display: 'flex',
-      flexDirection: 'column',
-      borderRight: '1px solid rgba(247,244,238,0.04)',
-      overflow: 'hidden',
-    }}>
+    <aside className="w-[var(--cms-sidebar-w)] shrink-0 h-screen bg-[var(--cms-sidebar-bg)] flex flex-col border-r border-[rgba(247,244,238,0.04)] overflow-hidden">
       {/* Logo */}
-      <div style={{
-        padding: '16px 20px 12px',
-        borderBottom: '1px solid rgba(247,244,238,0.06)',
-        flexShrink: 0,
-      }}>
+      <div className="px-5 pt-4 pb-3 border-b border-[rgba(247,244,238,0.06)] shrink-0">
         <img
           src="/logo/logo-horizontal-white.png"
           alt="Lito Studio"
-          style={{ height: 22, objectFit: 'contain', objectPosition: 'left' }}
+          className="h-[22px] object-contain object-left"
         />
       </div>
 
@@ -218,19 +163,11 @@ export function AppSidebar() {
       <WorkspaceSwitcher />
 
       {/* Nav */}
-      <nav className="cms-scroll" style={{ flex: 1, paddingTop: 8, paddingBottom: 8 }}>
+      <nav className="cms-scroll flex-1 py-2">
         {NAV.map(({ section, items }) => (
-          <div key={section} style={{ marginBottom: 4 }}>
+          <div key={section} className="mb-1">
             {/* Section label */}
-            <div style={{
-              padding: '10px 20px 4px',
-              fontSize: 10,
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '0.10em',
-              color: 'var(--cms-sidebar-label)',
-              fontFamily: 'var(--font-body)',
-            }}>
+            <div className="px-5 pt-[10px] pb-1 text-[10px] font-medium uppercase tracking-[0.10em] text-[var(--cms-sidebar-label)] font-body">
               {section}
             </div>
 
@@ -238,15 +175,14 @@ export function AppSidebar() {
               <NavLink
                 key={to}
                 to={to}
-                className={({ isActive }) => `cms-nav-item ${isActive ? 'active' : ''}`}
-                style={{ display: 'flex' }}
+                className={({ isActive }) => `cms-nav-item flex ${isActive ? 'active' : ''}`}
               >
-                <Icon size={15} style={{ flexShrink: 0, opacity: 0.85 }} />
-                <span style={{ lineHeight: 1 }}>{label}</span>
+                <Icon size={15} className="shrink-0 opacity-85" />
+                <span className="leading-none">{label}</span>
               </NavLink>
             ))}
 
-            <div style={{ height: 1, margin: '6px 16px 0', background: 'var(--cms-sidebar-div)' }} />
+            <div className="h-px mx-4 mt-1.5 bg-[var(--cms-sidebar-div)]" />
           </div>
         ))}
       </nav>

@@ -23,7 +23,7 @@ export function DestinationsPageView({ destinations, isLoading, search, onSearch
       key: 'name',
       header: 'Name',
       sortable: true,
-      render: (d) => <span className="font-body text-sm font-medium text-[var(--text-primary)]">{getDestName(d)}</span>,
+      render: (d) => <span className="font-body text-sm font-medium text-[var(--text-muted)]">{getDestName(d)}</span>,
     },
     {
       key: 'slug',

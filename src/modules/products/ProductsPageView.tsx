@@ -93,7 +93,7 @@ export function ProductsPageView({
             <Package className="w-4 h-4 text-[var(--text-muted)]" aria-hidden />
           </div>
           <div>
-            <p className="font-body text-sm font-medium text-[var(--text-primary)] truncate max-w-[260px]">
+            <p className="font-body text-sm font-medium text-[var(--text-muted)] truncate max-w-[260px]">
               {product.name}
             </p>
             <p className="font-body text-xs text-[var(--text-muted)]">{product.slug}</p>

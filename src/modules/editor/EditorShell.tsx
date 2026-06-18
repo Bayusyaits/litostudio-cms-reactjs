@@ -150,11 +150,7 @@ export function EditorShell({
   // ── Layout ────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column',
-      height: '100%', width: '100%', overflow: 'hidden',
-      background: 'var(--cms-main-bg)',
-    }}>
+    <div className="flex flex-col h-full w-full overflow-hidden bg-[var(--cms-main-bg)]">
       <EditorToolbar
         pageTitle={pageTitle}
         onSave={() => void handleSave()}
@@ -164,7 +160,7 @@ export function EditorShell({
         onLocaleChange={onLocaleChange}
       />
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {leftSidebarOpen && <EditorLeftSidebar />}
         {editorMode === 'code' ? <EditorCodeView /> : <EditorCanvas />}
         {rightSidebarOpen && editorMode !== 'code' && <EditorRightSidebar />}

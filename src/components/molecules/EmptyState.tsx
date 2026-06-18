@@ -24,7 +24,7 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
           <Icon className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />
         </div>
       )}
-      <h3 className="font-body text-sm font-medium text-[var(--text-primary)] mb-1">{title}</h3>
+      <h3 className="font-body text-sm font-medium text-[var(--text-muted)] mb-1">{title}</h3>
       {description && (
         <p className="font-body text-sm text-[var(--text-muted)] mb-5 max-w-xs">{description}</p>
       )}

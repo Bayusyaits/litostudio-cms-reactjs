@@ -57,21 +57,11 @@ export function PricingPageView({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <p className="font-body text-sm font-medium text-[var(--text-primary)]">
+              <p className="font-body text-sm font-medium text-[var(--text-muted)]">
                 {getPkgTitle(p)}
               </p>
               {p.is_popular && (
-                <span
-                  style={{
-                    padding: '2px 7px',
-                    borderRadius: 999,
-                    fontSize: 10,
-                    fontWeight: 600,
-                    background: 'rgba(212,168,83,0.15)',
-                    color: 'var(--lito-gold-deep)',
-                    fontFamily: 'var(--font-body)',
-                  }}
-                >
+                <span className="px-[7px] py-[2px] rounded-full text-[10px] font-semibold bg-[rgba(212,168,83,0.15)] text-[var(--lito-gold-deep)] font-body">
                   Popular
                 </span>
               )}
@@ -88,7 +78,7 @@ export function PricingPageView({
       header: 'Price',
       width: '180px',
       render: (p) => (
-        <span className="font-body text-sm font-medium text-[var(--text-primary)]">
+        <span className="font-body text-sm font-medium text-[var(--text-muted)]">
           {formatPrice(p.price, p.price_max, p.currency)}
         </span>
       ),

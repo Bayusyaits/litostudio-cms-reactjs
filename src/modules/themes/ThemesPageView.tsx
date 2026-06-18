@@ -20,53 +20,45 @@ function ThemeCard({ theme, isActive, onApply, applying }: {
   applying: boolean
 }) {
   return (
-    <div style={{
-      border: `2px solid ${isActive ? 'var(--lito-gold)' : 'var(--lito-border)'}`,
-      borderRadius: 10,
-      overflow: 'hidden',
-      background: 'var(--cms-card-bg)',
-      transition: 'border-color 150ms',
-      cursor: isActive ? 'default' : 'pointer',
-    }}
+    <div
+      className={`border-2 rounded-[10px] overflow-hidden bg-[var(--cms-card-bg)] transition-[border-color] duration-150 ${isActive ? 'border-[var(--lito-gold)] cursor-default' : 'border-[var(--lito-border)] cursor-pointer'}`}
       onClick={isActive ? undefined : onApply}
     >
-      {/* Preview image */}
-      <div style={{ height: 140, background: 'var(--lito-cream-alt)', position: 'relative', overflow: 'hidden' }}>
+      <div className="h-[140px] bg-[var(--lito-cream-alt)] relative overflow-hidden">
         {theme.preview_image ? (
-          <img src={theme.preview_image} alt={theme.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={theme.preview_image} alt={theme.name} className="w-full h-full object-cover" />
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-            <Palette size={32} style={{ color: 'var(--text-muted)', opacity: 0.4 }} />
+          <div className="flex items-center justify-center h-full">
+            <Palette size={32} className="text-[var(--text-muted)] opacity-40" />
           </div>
         )}
         {isActive && (
-          <div style={{
-            position: 'absolute', top: 10, right: 10,
-            background: 'var(--lito-gold)', borderRadius: '50%',
-            width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          <div className="absolute top-[10px] right-[10px] bg-[var(--lito-gold)] rounded-full w-6 h-6 flex items-center justify-center">
             <Check size={13} color="#fff" />
           </div>
         )}
       </div>
 
-      {/* Info */}
-      <div style={{ padding: '14px 16px' }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 400, color: 'var(--text-primary)', marginBottom: 4 }}>
+      <div className="p-4">
+        <div className="font-display text-base font-normal text-[var(--text-primary)] mb-1">
           {theme.name}
         </div>
         {theme.description && (
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+          <p className="font-body text-xs text-[var(--text-muted)] mb-3">
             {theme.description}
           </p>
         )}
         {isActive ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--lito-gold-deep)', fontFamily: 'var(--font-body)', fontWeight: 500 }}>
+          <div className="flex items-center gap-[6px] text-xs text-[var(--lito-gold-deep)] font-body font-medium">
             <Check size={13} /> Active theme
           </div>
         ) : (
-          <button type="button" onClick={(e) => { e.stopPropagation(); onApply() }} disabled={applying}
-            style={{ padding: '6px 16px', borderRadius: 999, border: '1px solid var(--lito-border)', background: 'transparent', fontSize: 12, fontFamily: 'var(--font-body)', cursor: 'pointer', color: 'var(--text-primary)', opacity: applying ? 0.5 : 1 }}>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onApply() }}
+            disabled={applying}
+            className={`px-4 py-[6px] rounded-full border border-[var(--lito-border)] bg-transparent text-xs font-body cursor-pointer text-[var(--text-primary)] transition-opacity duration-150 ${applying ? 'opacity-50' : 'opacity-100'}`}
+          >
             Apply theme
           </button>
         )}
@@ -77,31 +69,31 @@ function ThemeCard({ theme, isActive, onApply, applying }: {
 
 export function ThemesPageView({ themes, activeThemeId, isLoading, onApplyTheme, applying, applyError, applySuccess }: Props) {
   return (
-    <div className="cms-page" style={{ padding: 32, overflowY: 'auto', height: '100%' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: 'var(--text-primary)' }}>Themes</h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+    <div className="cms-page p-8 overflow-y-auto h-full">
+      <div className="mb-6">
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Themes</h1>
+        <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
           Choose a visual theme for your website
         </p>
       </div>
 
       {applySuccess && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 6, background: 'rgba(26,74,90,0.08)', border: '1px solid rgba(26,74,90,0.15)', fontSize: 13, color: 'var(--s-pub-fg)', fontFamily: 'var(--font-body)' }}>
+        <div className="mb-4 px-[14px] py-[10px] rounded-md bg-[rgba(26,74,90,0.08)] border border-[rgba(26,74,90,0.15)] text-[13px] text-[var(--s-pub-fg)] font-body">
           Theme applied successfully.
         </div>
       )}
       {applyError && (
-        <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 6, background: 'var(--cms-danger-bg)', border: '1px solid var(--cms-danger)', fontSize: 13, color: 'var(--cms-danger)', fontFamily: 'var(--font-body)' }}>
+        <div className="mb-4 px-[14px] py-[10px] rounded-md bg-[var(--cms-danger-bg)] border border-[var(--cms-danger)] text-[13px] text-[var(--cms-danger)] font-body">
           {applyError}
         </div>
       )}
 
       {isLoading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+        <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="cms-card" style={{ overflow: 'hidden' }}>
-              <Skeleton className="h-36 w-full" style={{ borderRadius: 0 }} />
-              <div style={{ padding: '14px 16px' }}>
+            <div key={i} className="cms-card overflow-hidden">
+              <Skeleton className="h-36 w-full rounded-none" />
+              <div className="p-4">
                 <Skeleton className="h-5 w-32 mb-2" />
                 <Skeleton className="h-4 w-48 mb-3" />
                 <Skeleton className="h-7 w-24 rounded-full" />
@@ -112,7 +104,7 @@ export function ThemesPageView({ themes, activeThemeId, isLoading, onApplyTheme,
       ) : themes.length === 0 ? (
         <EmptyState icon={Palette} title="No themes available" description="Themes will appear here once they are configured" />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+        <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
           {themes.map(theme => (
             <ThemeCard
               key={theme.id}

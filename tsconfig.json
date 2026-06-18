@@ -18,7 +18,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@litostudio/templates": ["../../packages/templates/src/index.ts"]
+      "@litostudio/templates": ["../../packages/templates/src/index.ts"],
+      "@litostudio/template-system": ["../../packages/template-system/src/index.ts"]
     }
   },
   "include": ["src"],

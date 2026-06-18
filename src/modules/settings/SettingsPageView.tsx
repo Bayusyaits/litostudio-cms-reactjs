@@ -50,45 +50,30 @@ function SectionCard({ icon: Icon, title, description, children }: {
   icon: React.ElementType; title: string; description: string; children: React.ReactNode
 }) {
   return (
-    <div className="cms-card" style={{ marginBottom: 20, overflow: 'hidden' }}>
-      <div style={{ padding: '18px 24px 14px', borderBottom: '1px solid var(--lito-border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 8,
-            background: 'rgba(17,17,17,0.06)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <Icon size={15} style={{ color: 'var(--text-muted)' }} />
+    <div className="cms-card mb-5 overflow-hidden">
+      <div className="px-6 pt-[18px] pb-3.5 border-b border-[var(--lito-border)]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[rgba(17,17,17,0.06)] flex items-center justify-center shrink-0">
+            <Icon size={15} className="text-[var(--text-muted)]" />
           </div>
           <div>
-            <h2 style={{ fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>
-              {title}
-            </h2>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
-              {description}
-            </p>
+            <h2 className="font-body text-sm font-medium text-[var(--text-muted)]">{title}</h2>
+            <p className="font-body text-[11px] text-[var(--text-muted)] mt-px">{description}</p>
           </div>
         </div>
       </div>
-      <div style={{ padding: '20px 24px' }}>{children}</div>
+      <div className="px-6 py-5">{children}</div>
     </div>
   )
 }
 
 function FormRow({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div style={{
-      display: 'grid', gridTemplateColumns: '200px 1fr', gap: 24,
-      alignItems: 'flex-start', marginBottom: 18,
-    }}>
+    <div className="grid gap-6 items-start mb-[18px]" style={{ gridTemplateColumns: '200px 1fr' }}>
       <div>
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
-          {label}
-        </div>
+        <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">{label}</div>
         {hint && (
-          <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-            {hint}
-          </div>
+          <div className="font-body text-[11px] text-[var(--text-muted)] mt-0.5">{hint}</div>
         )}
       </div>
       <div>{children}</div>
@@ -106,13 +91,7 @@ function ThemePicker({ themes, activeThemeId, onApply, applying }: {
 }) {
   if (themes.length === 0) {
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '12px 14px', borderRadius: 8,
-        border: '1px dashed var(--lito-border)',
-        background: 'var(--cms-surface-3)',
-        fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)',
-      }}>
+      <div className="flex items-center gap-2 px-3.5 py-3 rounded-lg border border-dashed border-[var(--lito-border)] bg-[var(--cms-surface-3)] font-body text-xs text-[var(--text-muted)]">
         <Palette size={14} aria-hidden="true" />
         No themes available — add themes in the Themes module.
       </div>
@@ -120,7 +99,7 @@ function ThemePicker({ themes, activeThemeId, onApply, applying }: {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
+    <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
       {themes.map((theme) => {
         const isActive = theme.id === activeThemeId
         return (
@@ -131,80 +110,51 @@ function ThemePicker({ themes, activeThemeId, onApply, applying }: {
             aria-pressed={isActive}
             disabled={applying && !isActive}
             title={theme.description ?? theme.name}
-            style={{
-              display: 'flex', flexDirection: 'column', gap: 0,
-              borderRadius: 8, overflow: 'hidden', textAlign: 'left',
-              border: `2px solid ${isActive ? 'var(--lito-gold)' : 'var(--lito-border)'}`,
-              background: 'var(--cms-surface-2)',
-              cursor: isActive ? 'default' : applying ? 'wait' : 'pointer',
-              transition: 'border-color 150ms',
-              opacity: applying && !isActive ? 0.5 : 1,
-              padding: 0,
-            }}
+            className={`flex flex-col gap-0 rounded-lg overflow-hidden text-left border-2 border-solid bg-[var(--cms-surface-2)] transition-[border-color] duration-150 p-0 ${
+              isActive
+                ? 'border-[var(--lito-gold)] cursor-default'
+                : applying
+                ? 'border-[var(--lito-border)] cursor-wait opacity-50'
+                : 'border-[var(--lito-border)] cursor-pointer'
+            }`}
           >
             {/* Preview image */}
-            <div style={{
-              height: 80, background: 'var(--cms-surface-3)',
-              position: 'relative', overflow: 'hidden', flexShrink: 0,
-            }}>
+            <div className="h-20 bg-[var(--cms-surface-3)] relative overflow-hidden shrink-0">
               {theme.preview_image ? (
                 <img
                   src={theme.preview_image}
                   alt={theme.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%',
-                }}>
-                  <Palette size={20} style={{ color: 'var(--text-muted)', opacity: 0.3 }} aria-hidden="true" />
+                <div className="flex items-center justify-center h-full">
+                  <Palette size={20} className="text-[var(--text-muted)] opacity-30" aria-hidden="true" />
                 </div>
               )}
               {isActive && (
-                <div style={{
-                  position: 'absolute', top: 6, right: 6,
-                  width: 20, height: 20, borderRadius: '50%',
-                  background: 'var(--lito-gold)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
+                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[var(--lito-gold)] flex items-center justify-center">
                   <Check size={11} color="#fff" aria-hidden="true" />
                 </div>
               )}
             </div>
 
             {/* Info */}
-            <div style={{ padding: '8px 10px', flex: 1 }}>
-              <div style={{
-                fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
-                color: isActive ? 'var(--lito-gold-deep)' : 'var(--text-primary)',
-                marginBottom: 2,
-              }}>
+            <div className="px-2.5 py-2 flex-1">
+              <div className={`font-body text-xs font-semibold mb-0.5 ${isActive ? 'text-[var(--lito-gold-deep)]' : 'text-[var(--text-primary)]'}`}>
                 {theme.name}
               </div>
               {theme.description && (
-                <div style={{
-                  fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)',
-                  lineHeight: 1.4,
-                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}>
+                <div className="font-body text-[10px] text-[var(--text-muted)] leading-[1.4] line-clamp-2">
                   {theme.description}
                 </div>
               )}
-              <div style={{ marginTop: 6 }}>
+              <div className="mt-1.5">
                 {isActive ? (
-                  <span style={{
-                    fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 500,
-                    color: 'var(--lito-gold-deep)',
-                    display: 'flex', alignItems: 'center', gap: 3,
-                  }}>
+                  <span className="font-body text-[10px] font-medium text-[var(--lito-gold-deep)] flex items-center gap-[3px]">
                     <Check size={10} aria-hidden="true" /> Active
                   </span>
                 ) : (
-                  <span style={{
-                    fontFamily: 'var(--font-body)', fontSize: 10,
-                    color: 'var(--lito-teal)',
-                  }}>
+                  <span className="font-body text-[10px] text-[var(--lito-teal)]">
                     Click to apply
                   </span>
                 )}
@@ -254,79 +204,61 @@ export function SettingsPageView({
   }, [activeSite?.id, activeSite?.name, activeSite?.domain])   // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleSaveSite(v: SiteValues) {
-    // Preserve all existing site settings — only patch name/domain
     const existing = (activeSite?.settings ?? {}) as Record<string, unknown>
     onSaveSite({ name: v.name, domain: v.domain || undefined, settings: existing })
   }
 
   return (
-    <div className="cms-page" style={{ padding: 32, overflowY: 'auto', height: '100%', maxWidth: 760 }}>
+    <div className="cms-page p-8 overflow-y-auto h-full max-w-[760px]">
+
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{
-          fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: 'var(--text-primary)',
-        }}>
-          Settings
-        </h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+      <div className="mb-7">
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Settings</h1>
+        <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
           Manage your workspace, website, and appearance preferences
         </p>
       </div>
 
       {/* Feedback banners */}
       {saveSuccess && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16,
-          padding: '10px 14px', borderRadius: 6,
-          background: 'var(--s-pub-bg)', border: '1px solid rgba(26,74,90,0.2)',
-          fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--s-pub-fg)',
-        }}>
+        <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-md bg-[var(--s-pub-bg)] border border-[rgba(26,74,90,0.2)] text-xs font-body text-[var(--s-pub-fg)]">
           <Check size={14} aria-hidden="true" /> Changes saved successfully
         </div>
       )}
       {saveError && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16,
-          padding: '10px 14px', borderRadius: 6,
-          background: 'var(--cms-danger-bg)', border: '1px solid rgba(163,48,40,0.2)',
-          fontSize: 12, fontFamily: 'var(--font-body)', color: 'var(--cms-danger)',
-        }}>
+        <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-md bg-[var(--cms-danger-bg)] border border-[rgba(163,48,40,0.2)] text-xs font-body text-[var(--cms-danger)]">
           <AlertCircle size={14} aria-hidden="true" /> {saveError}
         </div>
       )}
 
       {/* ── Organization ── */}
-      <SectionCard
-        icon={Building2}
-        title="Organization"
-        description="General information about your organization"
-      >
+      <SectionCard icon={Building2} title="Organization" description="General information about your organization">
         <form onSubmit={orgForm.handleSubmit(v => onSaveOrg({ name: v.name }))} noValidate>
           <FormRow label="Organization name" hint="The display name for your workspace">
             <div>
               <input
                 {...orgForm.register('name')}
                 type="text"
-                className="cms-input"
+                className="cms-input h-[34px]"
                 placeholder="e.g. Lito Studio"
                 aria-invalid={!!orgForm.formState.errors.name}
-                style={{ height: 34 }}
               />
               {orgForm.formState.errors.name && (
-                <p role="alert" style={{ marginTop: 4, fontSize: 11, color: 'var(--s-danger)', fontFamily: 'var(--font-body)' }}>
+                <p role="alert" className="mt-1 text-[11px] text-[var(--s-danger)] font-body">
                   {orgForm.formState.errors.name.message}
                 </p>
               )}
             </div>
           </FormRow>
           <FormRow label="Plan" hint="Your current subscription tier">
-            <span className="status-badge" style={{
-              color: 'var(--lito-teal)', background: 'rgba(26,74,90,0.10)', textTransform: 'capitalize',
-            }}>
+            <span
+              className="status-badge capitalize"
+              style={{ color: 'var(--lito-teal)', background: 'rgba(26,74,90,0.10)' }}
+            >
               {org?.plan ?? 'Free'}
             </span>
           </FormRow>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+          <div className="flex justify-end mt-2">
             <button
               type="submit"
               disabled={saving || !orgForm.formState.isDirty || !orgForm.formState.isValid}
@@ -340,24 +272,19 @@ export function SettingsPageView({
 
       {/* ── Website ── */}
       {activeSite && (
-        <SectionCard
-          icon={Globe}
-          title="Website"
-          description="Settings for the currently active website"
-        >
+        <SectionCard icon={Globe} title="Website" description="Settings for the currently active website">
           <form onSubmit={siteForm.handleSubmit(handleSaveSite)} noValidate>
             <FormRow label="Site name" hint="Internal display name for this website">
               <div>
                 <input
                   {...siteForm.register('name')}
                   type="text"
-                  className="cms-input"
+                  className="cms-input h-[34px]"
                   placeholder="e.g. Lito Studio Photography"
                   aria-invalid={!!siteForm.formState.errors.name}
-                  style={{ height: 34 }}
                 />
                 {siteForm.formState.errors.name && (
-                  <p role="alert" style={{ marginTop: 4, fontSize: 11, color: 'var(--s-danger)', fontFamily: 'var(--font-body)' }}>
+                  <p role="alert" className="mt-1 text-[11px] text-[var(--s-danger)] font-body">
                     {siteForm.formState.errors.name.message}
                   </p>
                 )}
@@ -368,23 +295,21 @@ export function SettingsPageView({
               <input
                 {...siteForm.register('domain')}
                 type="text"
-                className="cms-input"
+                className="cms-input h-[34px]"
                 placeholder="e.g. litostudio.id"
-                style={{ height: 34 }}
               />
             </FormRow>
 
             <FormRow label="Site ID" hint="Read-only unique identifier">
               <input
                 type="text"
-                className="cms-input"
+                className="cms-input h-[34px] opacity-60 cursor-default font-mono text-[11px]"
                 value={activeSite.id}
                 readOnly
-                style={{ height: 34, opacity: 0.6, cursor: 'default', fontFamily: 'monospace', fontSize: 11 }}
               />
             </FormRow>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+            <div className="flex justify-end mt-2">
               <button
                 type="submit"
                 disabled={saving || !siteForm.formState.isDirty || !siteForm.formState.isValid}
@@ -404,12 +329,12 @@ export function SettingsPageView({
           title="Template & Theme"
           description="Select the active template. Controls the block editor's default page structure and the website's visual design."
         >
-          <div style={{ marginBottom: 10 }}>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+          <div className="mb-2.5">
+            <p className="font-body text-xs text-[var(--text-muted)] mb-3">
               Clicking a theme below activates it instantly — no save button needed.
               The block editor will use this template's defaults when opening empty pages.
               Manage full theme settings (colours, fonts, logo) in the{' '}
-              <a href="/themes" style={{ color: 'var(--lito-teal)', textDecoration: 'underline' }}>
+              <a href="/themes" className="text-[var(--lito-teal)] underline">
                 Themes module
               </a>.
             </p>
@@ -422,14 +347,8 @@ export function SettingsPageView({
           </div>
 
           {activeThemeId && (
-            <div style={{
-              marginTop: 10, padding: '8px 12px', borderRadius: 6,
-              border: '1px solid rgba(26,74,90,0.2)',
-              background: 'rgba(26,74,90,0.06)',
-              fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              <Check size={11} style={{ color: 'var(--lito-teal)', flexShrink: 0 }} aria-hidden="true" />
+            <div className="mt-2.5 px-3 py-2 rounded-md border border-[rgba(26,74,90,0.2)] bg-[rgba(26,74,90,0.06)] font-body text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
+              <Check size={11} className="text-[var(--lito-teal)] shrink-0" aria-hidden="true" />
               Active theme slug is used as the editor template for page defaults.
             </div>
           )}
@@ -437,12 +356,8 @@ export function SettingsPageView({
       )}
 
       {/* ── Appearance ── */}
-      <SectionCard
-        icon={Moon}
-        title="Appearance"
-        description="Choose your preferred colour mode for the CMS"
-      >
-        <div style={{ display: 'flex', gap: 10 }}>
+      <SectionCard icon={Moon} title="Appearance" description="Choose your preferred colour mode for the CMS">
+        <div className="flex gap-2.5">
           {COLOR_MODE_OPTIONS.map(({ value, label, icon: Icon }) => {
             const active = colorMode === value
             return (
@@ -451,27 +366,21 @@ export function SettingsPageView({
                 type="button"
                 onClick={() => onSetColorMode(value)}
                 aria-pressed={active}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                  padding: '14px 20px', borderRadius: 8,
-                  border: `1.5px solid ${active ? 'var(--lito-ink)' : 'var(--lito-border)'}`,
-                  background: active ? 'var(--lito-ink)' : 'transparent',
-                  cursor: 'pointer', flex: 1, transition: 'all 180ms',
-                }}
+                className={`flex flex-col items-center gap-2 px-5 py-3.5 rounded-lg border-[1.5px] border-solid cursor-pointer flex-1 transition-all duration-[180ms] ${
+                  active
+                    ? 'border-[var(--lito-ink)] bg-[var(--lito-ink)]'
+                    : 'border-[var(--lito-border)] bg-transparent'
+                }`}
               >
                 <Icon size={20} style={{ color: active ? 'var(--lito-cream)' : 'var(--text-muted)' }} aria-hidden="true" />
-                <span style={{
-                  fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500,
-                  color: active ? 'var(--lito-cream)' : 'var(--text-muted)',
-                }}>
+                <span
+                  className="font-body text-xs font-medium"
+                  style={{ color: active ? 'var(--lito-cream)' : 'var(--text-muted)' }}
+                >
                   {label}
                 </span>
                 {active && (
-                  <div style={{
-                    width: 16, height: 16, borderRadius: '50%',
-                    background: 'var(--lito-gold)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
+                  <div className="w-4 h-4 rounded-full bg-[var(--lito-gold)] flex items-center justify-center">
                     <Check size={9} color="#111" strokeWidth={3} aria-hidden="true" />
                   </div>
                 )}
@@ -491,37 +400,26 @@ export function SettingsPageView({
       </SectionCard>
 
       {/* ── Danger zone ── */}
-      <div className="cms-card" style={{ border: '1px solid rgba(163,48,40,0.25)', overflow: 'hidden' }}>
-        <div style={{ padding: '18px 24px 14px', borderBottom: '1px solid rgba(163,48,40,0.15)' }}>
-          <h2 style={{ fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500, color: 'var(--cms-danger)' }}>
-            Danger zone
-          </h2>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+      <div className="cms-card border border-[rgba(163,48,40,0.25)] overflow-hidden">
+        <div className="px-6 pt-[18px] pb-3.5 border-b border-[rgba(163,48,40,0.15)]">
+          <h2 className="font-body text-sm font-medium text-[var(--cms-danger)]">Danger zone</h2>
+          <p className="font-body text-[11px] text-[var(--text-muted)] mt-px">
             Irreversible actions — proceed with caution
           </p>
         </div>
-        <div style={{
-          padding: '16px 24px', display: 'flex',
-          alignItems: 'center', justifyContent: 'space-between', gap: 16,
-        }}>
+        <div className="px-6 py-4 flex items-center justify-between gap-4">
           <div>
-            <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
+            <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">
               Delete this website
             </div>
-            <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
+            <div className="font-body text-[11px] text-[var(--text-muted)]">
               Permanently removes the website and all its content
             </div>
           </div>
           <button
             type="button"
             disabled={!activeSite}
-            style={{
-              padding: '7px 16px', borderRadius: 999,
-              background: 'var(--cms-danger-bg)', color: 'var(--cms-danger)',
-              border: '1px solid rgba(163,48,40,0.25)',
-              fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-body)',
-              whiteSpace: 'nowrap', opacity: !activeSite ? 0.4 : 1,
-            }}
+            className={`px-4 py-[7px] rounded-full bg-[var(--cms-danger-bg)] text-[var(--cms-danger)] border border-[rgba(163,48,40,0.25)] text-xs font-medium cursor-pointer font-body whitespace-nowrap ${!activeSite ? 'opacity-40' : ''}`}
           >
             Delete website
           </button>

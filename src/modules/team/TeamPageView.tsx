@@ -35,6 +35,7 @@ interface Props {
 
 function RoleBadge({ role }: { role: OrgRole }) {
   const cfg = ROLE_LABELS[role]
+  // Dynamic color from lookup map — keep as style
   return (
     <span className="status-badge" style={{ color: cfg.fg, background: cfg.bg }}>
       {cfg.label}
@@ -49,9 +50,9 @@ function StatusDot({ status }: { status: TeamMember['status'] }) {
     suspended: 'var(--s-arch-fg)',
   }
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors[status], flexShrink: 0 }} />
-      <span style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{status}</span>
+    <div className="flex items-center gap-[6px]">
+      <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: colors[status] }} />
+      <span className="text-xs text-[var(--text-muted)] capitalize">{status}</span>
     </div>
   )
 }
@@ -62,47 +63,35 @@ function MemberActions({ onChangeRole, onRemove }: {
 }) {
   const [open, setOpen] = useState(false)
   return (
-    <div style={{ position: 'relative' }}>
-      <button type="button" onClick={() => setOpen(v => !v)} aria-label="Member actions"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', display: 'flex', borderRadius: 4 }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'var(--lito-cream-alt)')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        aria-label="Member actions"
+        className="bg-transparent border-none cursor-pointer p-1 text-[var(--text-muted)] flex rounded hover:bg-[var(--lito-cream-alt)]"
       >
         <MoreHorizontal size={15} />
       </button>
       {open && (
-        <div style={{
-          position: 'absolute', right: 0, top: '100%', zIndex: 50, minWidth: 160,
-          background: 'var(--cms-card-bg)', border: '1px solid var(--lito-border)',
-          borderRadius: 6, boxShadow: 'var(--shadow-md)', overflow: 'hidden',
-        }}>
-          <div style={{ padding: '6px 12px 4px', fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+        <div className="absolute right-0 top-full z-50 min-w-[160px] bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-md shadow-[var(--shadow-md)] overflow-hidden">
+          <div className="px-3 pt-[6px] pb-1 text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
             Change role
           </div>
           {ROLES.filter(r => r !== 'owner').map(role => (
-            <button key={role} type="button"
+            <button
+              key={role}
+              type="button"
               onClick={() => { setOpen(false); onChangeRole(role) }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                padding: '7px 12px', background: 'none', border: 'none',
-                fontSize: 12, cursor: 'pointer', color: 'var(--text-primary)', textAlign: 'left',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--lito-cream-alt)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              className="flex items-center gap-2 w-full px-3 py-[7px] bg-transparent border-none text-xs cursor-pointer text-[var(--text-primary)] text-left hover:bg-[var(--lito-cream-alt)]"
             >
               <RoleBadge role={role} /> {ROLE_LABELS[role].label}
             </button>
           ))}
-          <div style={{ height: 1, background: 'var(--lito-border)', margin: '4px 0' }} />
-          <button type="button"
+          <div className="h-px bg-[var(--lito-border)] my-1" />
+          <button
+            type="button"
             onClick={() => { setOpen(false); onRemove() }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-              padding: '7px 12px', background: 'none', border: 'none',
-              fontSize: 12, cursor: 'pointer', color: 'var(--cms-danger)', textAlign: 'left',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--cms-danger-bg)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+            className="flex items-center gap-2 w-full px-3 py-[7px] bg-transparent border-none text-xs cursor-pointer text-[var(--cms-danger)] text-left hover:bg-[var(--cms-danger-bg)]"
           >
             <Trash2 size={12} /> Remove member
           </button>
@@ -111,8 +100,6 @@ function MemberActions({ onChangeRole, onRemove }: {
     </div>
   )
 }
-
-// ── Invite form schema ────────────────────────────────────────────────────────
 
 const inviteSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -134,28 +121,27 @@ function InviteForm({ onInvite, inviting, error }: { onInvite: (p: InvitePayload
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-      <div style={{ flex: 1, minWidth: 220 }}>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex gap-2 items-end flex-wrap">
+      <div className="flex-1 min-w-[220px]">
         <label className="cms-label" htmlFor="invite-email">Email address</label>
         <input
           {...register('email')}
           id="invite-email"
           type="email"
-          className="cms-input"
+          className="cms-input h-[34px]"
           placeholder="colleague@example.com"
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? 'invite-email-error' : undefined}
-          style={{ height: 34 }}
         />
         {errors.email && (
-          <p id="invite-email-error" role="alert" style={{ marginTop: 3, fontSize: 11, color: 'var(--s-danger)', fontFamily: 'var(--font-body)' }}>
+          <p id="invite-email-error" role="alert" className="mt-[3px] text-[11px] text-[var(--s-danger)] font-body">
             {errors.email.message}
           </p>
         )}
       </div>
-      <div style={{ width: 130 }}>
+      <div className="w-[130px]">
         <label className="cms-label" htmlFor="invite-role">Role</label>
-        <select {...register('role')} id="invite-role" className="cms-input" style={{ height: 34 }}>
+        <select {...register('role')} id="invite-role" className="cms-input h-[34px]">
           {ROLES.filter(r => r !== 'owner').map(r => (
             <option key={r} value={r}>{ROLE_LABELS[r].label}</option>
           ))}
@@ -165,7 +151,7 @@ function InviteForm({ onInvite, inviting, error }: { onInvite: (p: InvitePayload
         <UserPlus size={13} /> {inviting ? 'Sending…' : 'Invite'}
       </button>
       {error && (
-        <div role="alert" style={{ width: '100%', padding: '6px 10px', borderRadius: 4, background: 'var(--cms-danger-bg)', fontSize: 12, color: 'var(--cms-danger)' }}>
+        <div role="alert" className="w-full px-[10px] py-[6px] rounded bg-[var(--cms-danger-bg)] text-xs text-[var(--cms-danger)]">
           {error}
         </div>
       )}
@@ -176,15 +162,11 @@ function InviteForm({ onInvite, inviting, error }: { onInvite: (p: InvitePayload
 function MemberAvatar({ member }: { member: TeamMember }) {
   const initials = (member.full_name ?? member.email).split(/[\s@]/)[0]?.slice(0, 2).toUpperCase() ?? '?'
   return member.avatar_url ? (
-    <img src={member.avatar_url} alt={member.full_name ?? ''} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+    <img src={member.avatar_url} alt={member.full_name ?? ''} className="w-8 h-8 rounded-full object-cover" />
   ) : (
-    <div style={{
-      width: 32, height: 32, borderRadius: '50%',
-      background: 'rgba(212,168,83,0.12)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 11, fontWeight: 600, color: 'var(--lito-gold-deep)',
-      flexShrink: 0,
-    }}>{initials}</div>
+    <div className="w-8 h-8 rounded-full bg-[rgba(212,168,83,0.12)] flex items-center justify-center text-[11px] font-semibold text-[var(--lito-gold-deep)] shrink-0">
+      {initials}
+    </div>
   )
 }
 
@@ -194,33 +176,29 @@ export function TeamPageView({
   onChangeRole, onRemove,
 }: Props) {
   return (
-    <div className="cms-page" style={{ padding: 32, overflowY: 'auto', height: '100%' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: 'var(--text-primary)' }}>Team</h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+    <div className="cms-page p-8 overflow-y-auto h-full">
+      <div className="mb-6">
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Team</h1>
+        <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
           {meta ? `${meta.total} member${meta.total !== 1 ? 's' : ''}` : 'Manage workspace members and their roles'}
         </p>
       </div>
 
-      {/* Invite form */}
-      <div className="cms-card" style={{ padding: '20px 24px', marginBottom: 24 }}>
-        <h2 style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 12 }}>
+      <div className="cms-card px-6 py-5 mb-6">
+        <h2 className="font-body text-[13px] font-medium text-[var(--text-primary)] mb-3">
           Invite a team member
         </h2>
         <InviteForm onInvite={onInvite} inviting={inviting} error={inviteError} />
       </div>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+      <div className="flex items-center justify-between mb-[14px]">
         <SearchInput value={search} onChange={onSearch} placeholder="Search members…" className="w-64" />
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+        <span className="text-xs text-[var(--text-muted)]">
           {meta?.total ?? 0} member{(meta?.total ?? 0) !== 1 ? 's' : ''}
         </span>
       </div>
 
-      {/* Table */}
-      <div className="cms-card" style={{ overflow: 'hidden' }}>
+      <div className="cms-card overflow-hidden">
         <table className="cms-table">
           <thead>
             <tr>
@@ -228,7 +206,7 @@ export function TeamPageView({
               <th>Role</th>
               <th>Status</th>
               <th>Joined</th>
-              <th style={{ width: 48 }} />
+              <th className="w-12" />
             </tr>
           </thead>
           <tbody>
@@ -236,7 +214,7 @@ export function TeamPageView({
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="flex items-center gap-[10px]">
                       <Skeleton className="h-8 w-8 rounded-full" />
                       <div><Skeleton className="h-3.5 w-36 mb-1" /><Skeleton className="h-2.5 w-40" /></div>
                     </div>
@@ -257,13 +235,13 @@ export function TeamPageView({
               members.map(member => (
                 <tr key={member.id}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="flex items-center gap-[10px]">
                       <MemberAvatar member={member} />
                       <div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
+                        <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">
                           {member.full_name ?? '—'}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
+                        <div className="font-body text-[11px] text-[var(--text-muted)]">
                           {member.email}
                         </div>
                       </div>
@@ -272,7 +250,7 @@ export function TeamPageView({
                   <td><RoleBadge role={member.role} /></td>
                   <td><StatusDot status={member.status} /></td>
                   <td>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    <span className="text-xs text-[var(--text-muted)]">
                       {new Date(member.joined_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </td>
@@ -291,19 +269,17 @@ export function TeamPageView({
         </table>
       </div>
 
-      {/* Pagination */}
       {meta && meta.totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 16 }}>
+        <div className="flex justify-center gap-[6px] mt-4">
           {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map(p => (
-            <button key={p} type="button" onClick={() => onPage(p)}
-              style={{
-                width: 32, height: 32, borderRadius: 4, border: '1px solid',
-                borderColor: p === page ? 'var(--lito-ink)' : 'var(--lito-border)',
-                background: p === page ? 'var(--lito-ink)' : 'transparent',
-                color: p === page ? 'var(--lito-cream)' : 'var(--text-muted)',
-                fontSize: 12, cursor: 'pointer',
-              }}
-            >{p}</button>
+            <button
+              key={p}
+              type="button"
+              onClick={() => onPage(p)}
+              className={`w-8 h-8 rounded border text-xs cursor-pointer transition-all duration-150 ${p === page ? 'border-[var(--lito-ink)] bg-[var(--lito-ink)] text-[var(--lito-cream)]' : 'border-[var(--lito-border)] bg-transparent text-[var(--text-muted)]'}`}
+            >
+              {p}
+            </button>
           ))}
         </div>
       )}

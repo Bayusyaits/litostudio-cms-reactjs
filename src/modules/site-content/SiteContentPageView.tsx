@@ -20,11 +20,11 @@ interface Props {
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 20 }}>
-      <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4, letterSpacing: '0.02em' }}>
+    <div className="mb-5">
+      <label className="block font-body text-xs font-semibold text-[var(--text-primary)] mb-1 tracking-[0.02em]">
         {label}
       </label>
-      {hint && <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{hint}</p>}
+      {hint && <p className="font-body text-[11px] text-[var(--text-muted)] mb-[6px]">{hint}</p>}
       {children}
     </div>
   )
@@ -37,37 +37,28 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
-      style={{
-        width: '100%', height: 36, padding: '0 10px', borderRadius: 6, boxSizing: 'border-box',
-        border: '1px solid var(--color-border)', background: 'var(--cms-input-bg)',
-        fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)',
-        outline: 'none',
-      }}
+      className="w-full h-9 px-[10px] rounded-md box-border border border-[var(--color-border)] bg-[var(--cms-input-bg)] font-body text-[13px] text-[var(--text-primary)] outline-none"
     />
   )
 }
 
 function ColorInput({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div className="flex items-center gap-2">
       <input
         type="color"
         value={value || '#000000'}
         onChange={e => onChange(e.target.value)}
-        style={{ width: 36, height: 36, padding: 2, border: '1px solid var(--color-border)', borderRadius: 6, cursor: 'pointer', background: 'none' }}
+        className="w-9 h-9 p-0.5 border border-[var(--color-border)] rounded-md cursor-pointer bg-transparent"
       />
       <input
         type="text"
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder="#000000"
-        style={{
-          flex: 1, height: 36, padding: '0 10px', borderRadius: 6, boxSizing: 'border-box',
-          border: '1px solid var(--color-border)', background: 'var(--cms-input-bg)',
-          fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', outline: 'none',
-        }}
+        className="flex-1 h-9 px-[10px] rounded-md box-border border border-[var(--color-border)] bg-[var(--cms-input-bg)] font-body text-[13px] text-[var(--text-primary)] outline-none"
       />
-      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', minWidth: 90 }}>{label}</span>
+      <span className="font-body text-xs text-[var(--text-muted)] min-w-[90px]">{label}</span>
     </div>
   )
 }
@@ -80,19 +71,14 @@ function ArrayTextarea({ value, onChange, placeholder }: { value: string[]; onCh
       onChange={e => onChange(e.target.value.split('\n'))}
       placeholder={placeholder ?? 'One item per line'}
       rows={4}
-      style={{
-        width: '100%', padding: '8px 10px', borderRadius: 6, boxSizing: 'border-box',
-        border: '1px solid var(--color-border)', background: 'var(--cms-input-bg)',
-        fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)',
-        resize: 'vertical', outline: 'none', lineHeight: 1.6,
-      }}
+      className="w-full px-[10px] py-2 rounded-md box-border border border-[var(--color-border)] bg-[var(--cms-input-bg)] font-body text-[13px] text-[var(--text-primary)] resize-y outline-none leading-[1.6]"
     />
   )
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 400, color: 'var(--text-primary)', margin: '0 0 16px', paddingBottom: 8, borderBottom: '1px solid var(--color-border)' }}>
+    <h3 className="font-display text-base font-normal text-[var(--text-primary)] mt-0 mb-4 pb-2 border-b border-[var(--color-border)]">
       {children}
     </h3>
   )
@@ -117,7 +103,7 @@ function AboutTab({ draft, set }: { draft: SiteExtraSettings; set: (k: keyof Sit
       </Field>
 
       <SectionTitle>Statistics</SectionTitle>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div className="grid grid-cols-2 gap-3">
         {([
           ['sessions',    'Sessions / Projects'],
           ['destinations','Destinations'],
@@ -205,11 +191,11 @@ function ColorsTab({ draft, set }: { draft: SiteExtraSettings; set: (k: keyof Si
   return (
     <div>
       <SectionTitle>CMS Color Overrides</SectionTitle>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.6 }}>
-        Leave blank to use template defaults. Hex values only (e.g. #C4956A). These override the CSS tokens at runtime via <code style={{ fontFamily: 'monospace', fontSize: 11 }}>useThemeColors()</code>.
+      <p className="font-body text-xs text-[var(--text-muted)] mb-5 leading-[1.6]">
+        Leave blank to use template defaults. Hex values only (e.g. #C4956A). These override the CSS tokens at runtime via <code className="font-mono text-[11px]">useThemeColors()</code>.
       </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="flex flex-col gap-3">
         {([
           ['accent',       'Accent (primary CTA, links, highlights)'],
           ['accent_hover', 'Accent hover state'],
@@ -246,43 +232,35 @@ export function SiteContentPageView({ extra, isLoading, saving, saveError, saveS
 
   if (isLoading) {
     return (
-      <div style={{ padding: 40, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>
+      <div className="p-10 font-body text-[13px] text-[var(--text-muted)]">
         Loading site content settings…
       </div>
     )
   }
 
   return (
-    <div style={{ padding: '28px 32px', maxWidth: 760, fontFamily: 'var(--font-body)' }}>
+    <div className="px-8 py-7 max-w-[760px] font-body">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: 'var(--text-primary)', margin: 0 }}>
+      <div className="mb-6">
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)] m-0">
           Site Content
         </h1>
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+        <p className="text-xs text-[var(--text-muted)] mt-1">
           Edit CMS-driven content for About, Pricing, Footer, and color overrides. Changes are reflected on the public website immediately after save.
         </p>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--color-border)', marginBottom: 28 }}>
+      <div className="flex border-b border-[var(--color-border)] mb-7">
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            style={{
-              padding: '8px 18px',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === t.id ? '2px solid var(--lito-gold, #D4A853)' : '2px solid transparent',
-              fontFamily: 'var(--font-body)',
-              fontSize: 13,
-              fontWeight: activeTab === t.id ? 600 : 400,
-              color: activeTab === t.id ? 'var(--text-primary)' : 'var(--text-muted)',
-              cursor: 'pointer',
-              marginBottom: -1,
-              transition: 'color 150ms',
-            }}
+            className={`px-[18px] py-2 bg-transparent border-none border-b-2 -mb-px font-body text-[13px] cursor-pointer transition-colors duration-150 ${
+              activeTab === t.id
+                ? 'border-b-[var(--lito-gold,#D4A853)] font-semibold text-[var(--text-primary)]'
+                : 'border-b-transparent font-normal text-[var(--text-muted)]'
+            }`}
           >
             {t.label}
           </button>
@@ -297,34 +275,22 @@ export function SiteContentPageView({ extra, isLoading, saving, saveError, saveS
 
       {/* Feedback */}
       {saveError && (
-        <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 6, background: 'var(--cms-danger-bg)', border: '1px solid var(--cms-danger)', fontSize: 13, color: 'var(--cms-danger)' }}>
+        <div className="mt-4 px-[14px] py-[10px] rounded-md bg-[var(--cms-danger-bg)] border border-[var(--cms-danger)] text-[13px] text-[var(--cms-danger)]">
           {saveError}
         </div>
       )}
       {saveSuccess && (
-        <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 6, background: 'rgba(26,74,90,0.08)', border: '1px solid rgba(26,74,90,0.15)', fontSize: 13, color: 'var(--text-primary)' }}>
+        <div className="mt-4 px-[14px] py-[10px] rounded-md bg-[rgba(26,74,90,0.08)] border border-[rgba(26,74,90,0.15)] text-[13px] text-[var(--text-primary)]">
           ✓ Site content saved successfully.
         </div>
       )}
 
       {/* Save button */}
-      <div style={{ marginTop: 24 }}>
+      <div className="mt-6">
         <button
           onClick={() => onSave(draft)}
           disabled={saving}
-          style={{
-            padding: '9px 24px',
-            borderRadius: 6,
-            border: 'none',
-            background: 'var(--lito-gold, #D4A853)',
-            color: '#fff',
-            fontFamily: 'var(--font-body)',
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1,
-            transition: 'opacity 150ms',
-          }}
+          className="px-6 py-[9px] rounded-md border-none bg-[var(--lito-gold,#D4A853)] text-white font-body text-[13px] font-semibold cursor-pointer transition-opacity duration-150 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {saving ? 'Saving…' : 'Save Changes'}
         </button>

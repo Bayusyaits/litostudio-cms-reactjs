@@ -43,7 +43,7 @@ export function JournalPageView({
               <FileText className="w-4 h-4 text-[var(--lito-gold)]" aria-hidden />
             </div>
           )}
-          <p className="font-body text-sm font-medium text-[var(--text-primary)] truncate max-w-[300px]">
+          <p className="font-body text-sm font-medium text-[var(--text-muted)] truncate max-w-[300px]">
             {getTitle(post)}
           </p>
         </div>

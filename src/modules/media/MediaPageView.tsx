@@ -27,7 +27,7 @@ function StorageRing({ usedMb = 240, totalMb = 1000 }) {
   const circ = 2 * Math.PI * R
   const dash = circ * pct
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px' }}>
+    <div className="flex items-center gap-[14px] px-[18px] py-[14px]">
       <svg width={80} height={80} viewBox="0 0 80 80" aria-hidden>
         <circle cx={40} cy={40} r={R} fill="none" stroke="var(--lito-border)" strokeWidth={6} />
         <circle cx={40} cy={40} r={R} fill="none" stroke="var(--lito-gold)" strokeWidth={6}
@@ -38,11 +38,11 @@ function StorageRing({ usedMb = 240, totalMb = 1000 }) {
         </text>
       </svg>
       <div>
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>Storage</div>
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+        <div className="font-body text-xs font-medium text-[var(--text-primary)]">Storage</div>
+        <div className="font-body text-[11px] text-[var(--text-muted)] mt-0.5">
           {formatBytes(usedMb * 1024 * 1024)} of {formatBytes(totalMb * 1024 * 1024)}
         </div>
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
+        <div className="font-body text-[11px] text-[var(--text-muted)]">
           {formatBytes((totalMb - usedMb) * 1024 * 1024)} remaining
         </div>
       </div>
@@ -59,70 +59,41 @@ function MediaTypeIcon({ mimeType, className }: { mimeType: string; className?: 
 function GridCard({ item, selected, onSelect, onDelete }: { item: Media; selected: boolean; onSelect: () => void; onDelete: () => void }) {
   return (
     <div
-      style={{
-        position: 'relative', borderRadius: 6, overflow: 'hidden', cursor: 'pointer',
-        border: `1.5px solid ${selected ? 'var(--lito-gold)' : 'var(--lito-border)'}`,
-        aspectRatio: '4/3',
-        background: 'var(--lito-cream-alt)',
-        transition: 'border-color 150ms',
-      }}
+      className={`relative rounded-md overflow-hidden cursor-pointer aspect-[4/3] bg-[var(--lito-cream-alt)] transition-[border-color] duration-150 border-[1.5px] ${selected ? 'border-[var(--lito-gold)]' : 'border-[var(--lito-border)]'}`}
       onClick={onSelect}
     >
       {isImageMime(item.mime_type) ? (
-        <img src={item.cdn_url ?? item.original_url ?? ''} alt={item.alt_text ?? item.filename} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+        <img src={item.cdn_url ?? item.original_url ?? ''} alt={item.alt_text ?? item.filename} className="w-full h-full object-cover" loading="lazy" />
       ) : (
-        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <div className="w-full h-full flex flex-col items-center justify-center gap-[6px]">
           <MediaTypeIcon mimeType={item.mime_type} className="w-8 h-8" />
-          <span style={{ fontSize: 9, color: 'var(--text-muted)', textAlign: 'center', padding: '0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+          <span className="text-[9px] text-[var(--text-muted)] text-center px-[6px] overflow-hidden text-ellipsis whitespace-nowrap max-w-full">
             {item.filename}
           </span>
         </div>
       )}
 
       {/* Type badge */}
-      <div style={{
-        position: 'absolute', top: 5, left: 5,
-        padding: '2px 5px', borderRadius: 3,
-        background: 'rgba(17,17,17,0.55)', backdropFilter: 'blur(4px)',
-        fontSize: 9, fontWeight: 600, color: '#fff', letterSpacing: '0.05em',
-        textTransform: 'uppercase',
-      }}>
+      <div className="absolute top-[5px] left-[5px] px-[5px] py-[2px] rounded-[3px] bg-[rgba(17,17,17,0.55)] backdrop-blur-[4px] text-[9px] font-semibold text-white tracking-[0.05em] uppercase">
         {item.mime_type.split('/')[1]?.slice(0, 4) ?? 'FILE'}
       </div>
 
       {/* Selection check */}
       {selected && (
-        <div style={{
-          position: 'absolute', top: 5, right: 5,
-          width: 18, height: 18, borderRadius: '50%',
-          background: 'var(--lito-gold)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
+        <div className="absolute top-[5px] right-[5px] w-[18px] h-[18px] rounded-full bg-[var(--lito-gold)] flex items-center justify-center">
           <Check size={10} color="#111" strokeWidth={3} />
         </div>
       )}
 
       {/* Hover overlay */}
       <div
-        className="group-overlay"
-        style={{
-          position: 'absolute', inset: 0, background: 'rgba(17,17,17,0)',
-          display: 'flex', alignItems: 'flex-end', padding: 6,
-          transition: 'background 150ms',
-          opacity: 0,
-        }}
-        onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(17,17,17,0.45)' }}
-        onMouseLeave={e => { e.currentTarget.style.opacity = '0'; e.currentTarget.style.background = 'rgba(17,17,17,0)' }}
+        className="absolute inset-0 flex items-end p-[6px] opacity-0 hover:opacity-100 hover:bg-[rgba(17,17,17,0.45)] transition-all duration-150"
       >
         <button
           type="button"
           aria-label={`Delete ${item.filename}`}
           onClick={e => { e.stopPropagation(); onDelete() }}
-          style={{
-            marginLeft: 'auto', width: 24, height: 24, borderRadius: '50%',
-            background: 'rgba(163,48,40,0.8)', border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
+          className="ml-auto w-6 h-6 rounded-full bg-[rgba(163,48,40,0.8)] border-none cursor-pointer flex items-center justify-center"
         >
           <Trash2 size={11} color="#fff" />
         </button>
@@ -160,35 +131,24 @@ export function MediaPageView({
     })
   }
 
-  const iconBtn: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: 32, height: 32, borderRadius: 4,
-    border: '1px solid var(--lito-border)',
-    background: 'transparent', cursor: 'pointer',
-    color: 'var(--text-muted)', transition: 'all 150ms',
-  }
+  const iconBtnBase = 'flex items-center justify-center w-8 h-8 rounded border border-[var(--lito-border)] bg-transparent cursor-pointer text-[var(--text-muted)] transition-all duration-150'
+  const iconBtnActive = 'bg-[var(--lito-ink)] text-[var(--lito-cream)] border-[var(--lito-ink)]'
+  const iconBtnInactive = 'bg-transparent text-[var(--text-muted)] border-[var(--lito-border)]'
 
   return (
-    <div className="cms-page" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div className="cms-page flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div style={{ padding: '24px 28px 16px', flexShrink: 0, background: 'var(--cms-main-bg)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
+      <div className="px-7 pt-6 pb-4 shrink-0 bg-[var(--cms-main-bg)]">
+        <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: 'var(--text-primary)' }}>Media Library</h1>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+            <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Media Library</h1>
+            <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
               {meta ? `${meta.total.toLocaleString()} files` : 'Upload and manage media'}
             </p>
           </div>
           <button
             type="button"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '7px 16px', borderRadius: 999,
-              background: uploading ? 'var(--lito-ink)' : 'var(--lito-ink)',
-              color: 'var(--lito-cream)', border: 'none',
-              fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-body)',
-              opacity: uploading ? 0.7 : 1,
-            }}
+            className={`flex items-center gap-[6px] px-4 py-[7px] rounded-full bg-[var(--lito-ink)] text-[var(--lito-cream)] border-none text-[13px] font-medium cursor-pointer font-body transition-opacity duration-150 ${uploading ? 'opacity-70' : 'opacity-100'}`}
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
           >
@@ -207,38 +167,28 @@ export function MediaPageView({
 
         {/* Dropzone */}
         <div
-          style={{
-            border: '2px dashed var(--lito-border)',
-            borderRadius: 10, padding: '28px 20px',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
-            textAlign: 'center', cursor: 'pointer',
-            transition: 'border-color 200ms, background 200ms',
-            background: uploading ? 'rgba(212,168,83,0.04)' : 'transparent',
-            opacity: uploading ? 0.6 : 1,
-            pointerEvents: uploading ? 'none' : 'auto',
-            marginBottom: 16,
-          }}
+          className={`border-2 border-dashed border-[var(--lito-border)] rounded-[10px] py-7 px-5 flex flex-col items-center justify-center gap-2 text-center cursor-pointer transition-[border-color,background] duration-200 mb-4 ${uploading ? 'bg-[rgba(212,168,83,0.04)] opacity-60 pointer-events-none' : 'bg-transparent'}`}
           onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--lito-gold)' }}
           onDragLeave={e => (e.currentTarget.style.borderColor = 'var(--lito-border)')}
           onDrop={e => { e.currentTarget.style.borderColor = 'var(--lito-border)'; handleDrop(e) }}
           onClick={() => fileInputRef.current?.click()}
         >
-          <Upload size={22} style={{ color: 'var(--text-muted)' }} aria-hidden />
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>
+          <Upload size={22} className="text-[var(--text-muted)]" aria-hidden />
+          <p className="font-body text-[13px] text-[var(--text-muted)]">
             Drop files here or{' '}
-            <span style={{ color: 'var(--lito-gold)', textDecoration: 'underline' }}>browse</span>
+            <span className="text-[var(--lito-gold)] underline">browse</span>
           </p>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-faint)' }}>Images, videos, PDFs up to 50 MB</p>
+          <p className="font-body text-[11px] text-[var(--text-faint)]">Images, videos, PDFs up to 50 MB</p>
         </div>
 
         {uploadError && (
-          <div style={{ padding: '8px 12px', borderRadius: 6, background: 'var(--cms-danger-bg)', border: '1px solid rgba(163,48,40,0.2)', marginBottom: 12 }} role="alert">
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--cms-danger)' }}>{uploadError}</p>
+          <div className="px-3 py-2 rounded-md bg-[var(--cms-danger-bg)] border border-[rgba(163,48,40,0.2)] mb-3" role="alert">
+            <p className="font-body text-xs text-[var(--cms-danger)]">{uploadError}</p>
           </div>
         )}
 
         {/* Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="flex items-center gap-[10px]">
           <SearchInput
             value={filter.q}
             onChange={(q) => setFilter({ q, page: 1 })}
@@ -246,8 +196,7 @@ export function MediaPageView({
             className="w-56"
           />
           <select
-            className="cms-input"
-            style={{ height: 34, width: 140, fontSize: 12 }}
+            className="cms-input h-[34px] w-[140px] text-xs"
             value={filter.media_type}
             onChange={e => setFilter({ media_type: e.target.value, page: 1 })}
           >
@@ -257,13 +206,13 @@ export function MediaPageView({
             <option value="document">Documents</option>
           </select>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+          <div className="ml-auto flex gap-1">
             <button type="button" aria-label="Grid view" onClick={() => setViewMode('grid')}
-              style={{ ...iconBtn, background: viewMode === 'grid' ? 'var(--lito-ink)' : 'transparent', color: viewMode === 'grid' ? 'var(--lito-cream)' : 'var(--text-muted)', borderColor: viewMode === 'grid' ? 'var(--lito-ink)' : 'var(--lito-border)' }}>
+              className={`${iconBtnBase} ${viewMode === 'grid' ? iconBtnActive : iconBtnInactive}`}>
               <Grid size={14} />
             </button>
             <button type="button" aria-label="List view" onClick={() => setViewMode('list')}
-              style={{ ...iconBtn, background: viewMode === 'list' ? 'var(--lito-ink)' : 'transparent', color: viewMode === 'list' ? 'var(--lito-cream)' : 'var(--text-muted)', borderColor: viewMode === 'list' ? 'var(--lito-ink)' : 'var(--lito-border)' }}>
+              className={`${iconBtnBase} ${viewMode === 'list' ? iconBtnActive : iconBtnInactive}`}>
               <List size={14} />
             </button>
           </div>
@@ -271,23 +220,23 @@ export function MediaPageView({
       </div>
 
       {/* Content area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 28px 28px' }}>
+      <div className="flex-1 overflow-y-auto px-7 pb-7">
         {/* Storage ring card */}
-        <div className="cms-card" style={{ marginBottom: 16, overflow: 'hidden' }}>
+        <div className="cms-card mb-4 overflow-hidden">
           <StorageRing usedMb={(meta?.total ?? 0) * 0.8} totalMb={5000} />
         </div>
 
         {isLoading ? (
           viewMode === 'grid' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+            <div className="grid gap-[10px]" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
               {Array.from({ length: 20 }).map((_, i) => <Skeleton key={i} className="aspect-[4/3] rounded-md" />)}
             </div>
           ) : (
-            <div className="cms-card" style={{ overflow: 'hidden' }}>
+            <div className="cms-card overflow-hidden">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} style={{ padding: '10px 16px', display: 'flex', gap: 12, borderBottom: '1px solid var(--lito-border)' }}>
+                <div key={i} className="px-4 py-[10px] flex gap-3 border-b border-[var(--lito-border)]">
                   <Skeleton className="h-10 w-14 rounded" />
-                  <div style={{ flex: 1 }}><Skeleton className="h-3.5 w-48 mb-1" /><Skeleton className="h-2.5 w-24" /></div>
+                  <div className="flex-1"><Skeleton className="h-3.5 w-48 mb-1" /><Skeleton className="h-2.5 w-24" /></div>
                   <Skeleton className="h-4 w-16" /><Skeleton className="h-4 w-12" />
                 </div>
               ))}
@@ -296,7 +245,7 @@ export function MediaPageView({
         ) : items.length === 0 ? (
           <EmptyState icon={FolderOpen} title="No media files" description="Upload images and videos to get started" />
         ) : viewMode === 'grid' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+          <div className="grid gap-[10px]" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
             {items.map(item => (
               <GridCard
                 key={item.id}
@@ -308,16 +257,16 @@ export function MediaPageView({
             ))}
           </div>
         ) : (
-          <div className="cms-card" style={{ overflow: 'hidden' }}>
+          <div className="cms-card overflow-hidden">
             <table className="cms-table">
               <thead>
                 <tr>
-                  <th style={{ width: 20 }}><input type="checkbox" aria-label="Select all" /></th>
+                  <th className="w-5"><input type="checkbox" aria-label="Select all" /></th>
                   <th>File</th>
                   <th>Type</th>
                   <th>Size</th>
                   <th>Added</th>
-                  <th style={{ width: 48 }} />
+                  <th className="w-12" />
                 </tr>
               </thead>
               <tbody>
@@ -325,32 +274,30 @@ export function MediaPageView({
                   <tr key={item.id}>
                     <td><input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleSelect(item.id)} aria-label={`Select ${item.filename}`} /></td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div className="flex items-center gap-[10px]">
                         {isImageMime(item.mime_type) ? (
-                          <img src={item.cdn_url ?? item.original_url ?? ''} alt="" style={{ width: 48, height: 34, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }} loading="lazy" />
+                          <img src={item.cdn_url ?? item.original_url ?? ''} alt="" className="w-12 h-[34px] object-cover rounded-[3px] shrink-0" loading="lazy" />
                         ) : (
-                          <div style={{ width: 48, height: 34, borderRadius: 3, background: 'var(--lito-cream-alt)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <div className="w-12 h-[34px] rounded-[3px] bg-[var(--lito-cream-alt)] flex items-center justify-center shrink-0">
                             <MediaTypeIcon mimeType={item.mime_type} className="w-4 h-4" />
                           </div>
                         )}
-                        <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{item.filename}</span>
+                        <span className="font-body text-[13px] font-medium text-[var(--text-primary)]">{item.filename}</span>
                       </div>
                     </td>
                     <td>
-                      <span style={{ padding: '2px 7px', borderRadius: 3, background: 'var(--lito-cream-alt)', fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      <span className="px-[7px] py-[2px] rounded-[3px] bg-[var(--lito-cream-alt)] text-[10px] font-semibold text-[var(--text-muted)] uppercase">
                         {item.mime_type.split('/')[1]?.slice(0, 4)}
                       </span>
                     </td>
-                    <td><span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatBytes(item.size_bytes)}</span></td>
-                    <td><span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{new Date(item.created_at).toLocaleDateString()}</span></td>
+                    <td><span className="text-xs text-[var(--text-muted)]">{formatBytes(item.size_bytes)}</span></td>
+                    <td><span className="text-xs text-[var(--text-muted)]">{new Date(item.created_at).toLocaleDateString()}</span></td>
                     <td>
                       <button
                         type="button"
                         aria-label={`Delete ${item.filename}`}
                         onClick={() => onDelete(item.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', display: 'flex', borderRadius: 4 }}
-                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--cms-danger)'; e.currentTarget.style.background = 'var(--cms-danger-bg)' }}
-                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none' }}
+                        className="bg-transparent border-none cursor-pointer p-1 text-[var(--text-muted)] flex rounded hover:text-[var(--cms-danger)] hover:bg-[var(--cms-danger-bg)]"
                       >
                         <Trash2 size={14} />
                       </button>

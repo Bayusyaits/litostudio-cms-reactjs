@@ -17,15 +17,11 @@ interface DynamicFieldProps {
 
 function FieldLabel({ children, translatable }: { children: React.ReactNode; translatable?: boolean }) {
   return (
-    <p style={{
-      fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 500,
-      color: 'var(--text-secondary)', margin: '0 0 4px',
-      display: 'flex', alignItems: 'center', gap: 4,
-    }}>
+    <p className="font-body text-[11px] font-medium text-[var(--text-secondary)] mt-0 mb-1 flex items-center gap-1">
       {children}
       {translatable && (
-        <span title="This field changes per locale" style={{ display: 'inline-flex', flexShrink: 0 }}>
-          <Globe size={10} style={{ color: 'var(--lito-teal)' }} />
+        <span title="This field changes per locale" className="inline-flex shrink-0">
+          <Globe size={10} className="text-[var(--lito-teal)]" />
         </span>
       )}
     </p>
@@ -34,13 +30,10 @@ function FieldLabel({ children, translatable }: { children: React.ReactNode; tra
 
 function fieldWrap(children: React.ReactNode, hint?: string) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div className="mb-3">
       {children}
       {hint && (
-        <p style={{
-          fontFamily: 'var(--font-body)', fontSize: 10,
-          color: 'var(--text-muted)', margin: '3px 0 0',
-        }}>
+        <p className="font-body text-[10px] text-[var(--text-muted)] mt-[3px] mb-0">
           {hint}
         </p>
       )}
@@ -48,14 +41,7 @@ function fieldWrap(children: React.ReactNode, hint?: string) {
   )
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '6px 10px',
-  border: '1px solid var(--lito-border)', borderRadius: 6,
-  fontFamily: 'var(--font-body)', fontSize: 12,
-  color: 'var(--text-primary)',
-  background: 'var(--cms-surface-2)', outline: 'none',
-  boxSizing: 'border-box',
-}
+const inputCls = 'w-full px-[10px] py-[6px] border border-[var(--lito-border)] rounded-[6px] font-body text-xs text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none box-border'
 
 // ── DynamicField ──────────────────────────────────────────────────────────────
 
@@ -75,7 +61,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
             value={str}
             placeholder={schema.hint}
             onChange={(e) => onChange(e.target.value)}
-            style={inputStyle}
+            className={inputCls}
           />
         </>,
         schema.hint,
@@ -90,7 +76,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
             placeholder={schema.hint ?? '<p>Content...</p>'}
             rows={5}
             onChange={(e) => onChange(e.target.value)}
-            style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.5' }}
+            className={`${inputCls} resize-y leading-[1.5]`}
           />
         </>,
       )
@@ -103,22 +89,19 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
             type="number"
             value={num}
             onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-            style={inputStyle}
+            className={inputCls}
           />
         </>,
       )
 
     case 'boolean':
       return fieldWrap(
-        <label style={{
-          display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-          fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-primary)',
-        }}>
+        <label className="flex items-center gap-2 cursor-pointer font-body text-xs text-[var(--text-primary)]">
           <input
             type="checkbox"
             checked={bool}
             onChange={(e) => onChange(e.target.checked)}
-            style={{ width: 14, height: 14, cursor: 'pointer' }}
+            className="w-[14px] h-[14px] cursor-pointer"
           />
           {schema.label}
         </label>,
@@ -132,7 +115,8 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
           <select
             value={str}
             onChange={(e) => onChange(e.target.value)}
-            style={{ ...inputStyle, appearance: 'auto' }}
+            className={inputCls}
+            style={{ appearance: 'auto' }}
           >
             <option value="">— Select —</option>
             {opts.map((o) => (
@@ -147,19 +131,19 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
       return fieldWrap(
         <>
           <FieldLabel translatable={schema.translatable}>{schema.label}</FieldLabel>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="flex items-center gap-2">
             <input
               type="color"
               value={str || '#000000'}
               onChange={(e) => onChange(e.target.value)}
-              style={{ width: 36, height: 28, border: '1px solid var(--lito-border)', borderRadius: 4, cursor: 'pointer', padding: 2 }}
+              className="w-9 h-7 border border-[var(--lito-border)] rounded cursor-pointer p-0.5"
             />
             <input
               type="text"
               value={str}
               placeholder="#000000"
               onChange={(e) => onChange(e.target.value)}
-              style={{ ...inputStyle, flex: 1 }}
+              className={`${inputCls} flex-1`}
             />
           </div>
         </>,
@@ -186,7 +170,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
             value={str}
             placeholder="https://..."
             onChange={(e) => onChange(e.target.value)}
-            style={inputStyle}
+            className={inputCls}
           />
         </>,
       )
@@ -213,47 +197,36 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
       }
 
       return (
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-2">
             <FieldLabel>{schema.label} ({items.length})</FieldLabel>
             <button
               type="button"
               onClick={addItem}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 4,
-                padding: '3px 8px', borderRadius: 5,
-                border: '1px solid var(--lito-teal)',
-                background: 'none', cursor: 'pointer',
-                fontFamily: 'var(--font-body)', fontSize: 11,
-                color: 'var(--lito-teal)',
-              }}
+              className="flex items-center gap-1 px-2 py-[3px] rounded-[5px] border border-[var(--lito-teal)] bg-transparent cursor-pointer font-body text-[11px] text-[var(--lito-teal)]"
             >
               <Plus size={11} /> Add
             </button>
           </div>
 
           {items.length === 0 && (
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
+            <p className="font-body text-[11px] text-[var(--text-muted)] m-0">
               No items yet. Click Add.
             </p>
           )}
 
           {items.map((item, idx) => (
-            <div key={idx} style={{
-              padding: 10, marginBottom: 8,
-              border: '1px solid var(--lito-border)', borderRadius: 8,
-              background: 'var(--cms-surface-2)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
+            <div key={idx} className="p-[10px] mb-2 border border-[var(--lito-border)] rounded-lg bg-[var(--cms-surface-2)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-body text-[11px] text-[var(--text-muted)]">
                   Item {idx + 1}
                 </span>
                 <button
                   type="button"
                   onClick={() => removeItem(idx)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
+                  className="bg-transparent border-none cursor-pointer p-0.5"
                 >
-                  <Trash2 size={12} style={{ color: '#f87171' }} />
+                  <Trash2 size={12} className="text-[#f87171]" />
                 </button>
               </div>
               {subFields.map((subField) => (

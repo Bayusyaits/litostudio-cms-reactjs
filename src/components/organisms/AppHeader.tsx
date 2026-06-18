@@ -35,6 +35,8 @@ function usePageLabel() {
   return ROUTE_LABELS[base] ?? base
 }
 
+const iconBtnClass = 'flex items-center justify-center w-[34px] h-[34px] rounded-md border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] cursor-pointer transition-[border-color,color,background] duration-150 hover:border-[var(--lito-ink)] hover:text-[var(--text-primary)]'
+
 export function AppHeader() {
   const { isDark, setColorMode, toggleSidebar } = useThemeStore()
   const { user } = useAuthStore()
@@ -70,105 +72,47 @@ export function AppHeader() {
     setColorMode(isDark ? 'light' : 'dark')
   }
 
-  const iconBtnStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 34,
-    height: 34,
-    borderRadius: 6,
-    border: '1px solid var(--lito-border)',
-    background: 'transparent',
-    color: 'var(--text-muted)',
-    cursor: 'pointer',
-    transition: 'border-color 150ms, color 150ms, background 150ms',
-  }
-
   return (
     <>
-      <header style={{
-        height: 'var(--cms-header-h)',
-        background: 'var(--cms-header-bg)',
-        borderBottom: '1px solid var(--lito-border)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '0 20px',
-        flexShrink: 0,
-        position: 'relative',
-        zIndex: 100,
-      }}>
+      <header className="h-[var(--cms-header-h)] bg-[var(--cms-header-bg)] border-b border-[var(--lito-border)] flex items-center gap-3 px-5 shrink-0 relative z-[100]">
         {/* Menu toggle */}
         <button
           type="button"
           aria-label="Toggle sidebar"
           onClick={toggleSidebar}
-          style={iconBtnStyle}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--lito-ink)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--lito-border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
+          className={iconBtnClass}
         >
           <Menu size={15} />
         </button>
 
         {/* Breadcrumb */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        <div className="flex-1 flex items-center gap-1.5 min-w-0">
           {activeSite?.domain && (
             <>
-              <span style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: 12,
-                color: 'var(--text-muted)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
+              <span className="font-body text-xs text-[var(--text-muted)] truncate">
                 {activeSite.domain}
               </span>
-              <span style={{ fontSize: 12, color: 'var(--lito-border)' }}>/</span>
+              <span className="text-xs text-[var(--lito-border)]">/</span>
             </>
           )}
-          <span style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 13,
-            fontWeight: 500,
-            color: 'var(--text-primary)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
+          <span className="font-body text-[13px] font-medium text-[var(--text-primary)] truncate">
             {pageLabel}
           </span>
         </div>
 
         {/* Right actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="flex items-center gap-2">
           {/* ⌘K Search trigger */}
           <button
             type="button"
             aria-label="Open global search (⌘K)"
             onClick={openSearch}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '5px 10px',
-              borderRadius: 999,
-              border: '1px solid var(--lito-border)',
-              background: 'transparent',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              fontSize: 12,
-              fontFamily: 'var(--font-body)',
-              transition: 'border-color 150ms',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--lito-ink)')}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--lito-border)')}
+            className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-full border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] cursor-pointer text-xs font-body transition-[border-color] duration-150 hover:border-[var(--lito-ink)]"
           >
             <Search size={12} />
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span className="flex items-center gap-1">
               Search
-              <kbd style={{
-                display: 'inline-flex', alignItems: 'center',
-                padding: '1px 4px', borderRadius: 3,
-                background: 'var(--lito-border)', color: 'var(--text-muted)',
-                fontSize: 10, fontFamily: 'var(--font-body)',
-              }}>⌘K</kbd>
+              <kbd className="inline-flex items-center px-1 py-px rounded-[3px] bg-[var(--lito-border)] text-[var(--text-muted)] text-[10px] font-body">⌘K</kbd>
             </span>
           </button>
 
@@ -186,24 +130,20 @@ export function AppHeader() {
             type="button"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             onClick={toggleDark}
-            style={iconBtnStyle}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--lito-ink)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--lito-border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
+            className={iconBtnClass}
           >
             {isDark ? <Sun size={14} /> : <Moon size={14} />}
           </button>
 
           {/* Notifications bell */}
-          <div style={{ position: 'relative' }}>
+          <div className="relative">
             <button
               type="button"
               aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
               aria-haspopup="true"
               aria-expanded={notificationsOpen}
               onClick={() => setNotificationsOpen(o => !o)}
-              style={iconBtnStyle}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--lito-ink)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--lito-border)'; e.currentTarget.style.color = 'var(--text-muted)' }}
+              className={iconBtnClass}
             >
               <Bell size={14} />
             </button>
@@ -212,20 +152,7 @@ export function AppHeader() {
             {unreadCount > 0 && (
               <span
                 aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  top: -4, right: -4,
-                  minWidth: 16, height: 16,
-                  padding: '0 3px',
-                  borderRadius: 999,
-                  background: 'var(--lito-gold)',
-                  border: '1.5px solid var(--cms-header-bg)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 9, fontWeight: 700,
-                  color: '#fff',
-                  pointerEvents: 'none',
-                }}
+                className="absolute -top-1 -right-1 min-w-4 h-4 px-[3px] rounded-full bg-[var(--lito-gold)] border-[1.5px] border-[var(--cms-header-bg)] flex items-center justify-center font-body text-[9px] font-bold text-white pointer-events-none"
               >
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
@@ -243,27 +170,10 @@ export function AppHeader() {
             <img
               src={user.avatar_url}
               alt={user.full_name ?? 'User'}
-              style={{
-                width: 32, height: 32,
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '1px solid var(--lito-border)',
-                cursor: 'pointer',
-              }}
+              className="w-8 h-8 rounded-full object-cover border border-[var(--lito-border)] cursor-pointer"
             />
           ) : (
-            <div style={{
-              width: 32, height: 32,
-              borderRadius: '50%',
-              background: 'var(--lito-gold-soft)',
-              border: '1px solid var(--lito-border)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'var(--font-body)',
-              fontSize: 12, fontWeight: 500,
-              color: 'var(--lito-gold-deep)',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}>
+            <div className="w-8 h-8 rounded-full bg-[var(--lito-gold-soft)] border border-[var(--lito-border)] flex items-center justify-center font-body text-xs font-medium text-[var(--lito-gold-deep)] cursor-pointer shrink-0">
               {initials}
             </div>
           )}

@@ -46,11 +46,10 @@ function isBlockDocument(v: unknown): v is BlockDocument {
 
 function Spinner({ bg, fg }: { bg: string; fg: string }) {
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      background: bg, gap: 16,
-    }}>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center gap-4"
+      style={{ background: bg }}
+    >
       <div style={{
         width: 40, height: 40, borderRadius: '50%',
         border: `3px solid ${fg}22`,
@@ -58,7 +57,7 @@ function Spinner({ bg, fg }: { bg: string; fg: string }) {
         animation: 'spin 0.8s linear infinite',
       }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-      <p style={{ fontFamily: 'system-ui', fontSize: 13, color: fg, margin: 0, opacity: 0.6 }}>
+      <p className="text-[13px] m-0 opacity-60" style={{ fontFamily: 'system-ui', color: fg }}>
         Loading preview…
       </p>
     </div>
@@ -190,36 +189,28 @@ export default function PagePreviewPage() {
       } as React.CSSProperties}
     >
       {/* Preview banner — floating notice at top */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-        background: 'rgba(26,74,90,0.92)',
-        backdropFilter: 'blur(8px)',
-        color: '#fff',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 12, padding: '8px 16px',
-        fontFamily: 'system-ui, sans-serif', fontSize: 12, fontWeight: 500,
-      }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', flexShrink: 0, animation: 'pulse 2s ease-in-out infinite' }} />
+      <div className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-center gap-3 px-4 py-2 bg-[rgba(26,74,90,0.92)] backdrop-blur-[8px] text-white text-xs font-medium"
+        style={{ fontFamily: 'system-ui, sans-serif' }}
+      >
+        <span
+          className="w-2 h-2 rounded-full bg-[#4ade80] shrink-0"
+          style={{ animation: 'pulse 2s ease-in-out infinite' }}
+        />
         <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
         <span>Preview — <strong>{(page.page_translations ?? []).find(t => t.locale === LOCALE)?.title ?? page.slug}</strong></span>
-        <span style={{ opacity: 0.5 }}>·</span>
-        <span style={{ opacity: 0.7 }}>Template: {templateSlug}</span>
+        <span className="opacity-50">·</span>
+        <span className="opacity-70">Template: {templateSlug}</span>
         <button
           type="button"
           onClick={() => window.close()}
-          style={{
-            marginLeft: 16, padding: '3px 10px', borderRadius: 20,
-            border: '1px solid rgba(255,255,255,0.3)',
-            background: 'rgba(255,255,255,0.1)',
-            color: '#fff', cursor: 'pointer',
-            fontFamily: 'system-ui, sans-serif', fontSize: 11,
-          }}
+          className="ml-4 px-[10px] py-[3px] rounded-[20px] border border-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.1)] text-white cursor-pointer text-[11px]"
+          style={{ fontFamily: 'system-ui, sans-serif' }}
         >
           Close
         </button>
       </div>
 
-      {/* Page column */}
+      {/* Page column — dynamic bg + shadow uses template tokens, must keep style */}
       <div style={{
         maxWidth: 1200,
         margin: '0 auto',
@@ -231,7 +222,7 @@ export default function PagePreviewPage() {
         flexDirection: 'column',
       }}>
 
-        {/* Site header */}
+        {/* Site header — all colors dynamic from template tokens */}
         <header style={{
           background: headerBg,
           color: headerText,
@@ -312,7 +303,7 @@ export default function PagePreviewPage() {
           )}
         </main>
 
-        {/* Site footer */}
+        {/* Site footer — all colors dynamic from template tokens */}
         <footer style={{
           background: headerBg,
           color: `${headerText}77`,

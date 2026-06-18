@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@litostudio/templates': path.resolve(__dirname, '../../packages/templates/src/index.ts'),
+      '@litostudio/template-system': path.resolve(__dirname, '../../packages/template-system/src/index.ts'),
     },
   },
   server: {

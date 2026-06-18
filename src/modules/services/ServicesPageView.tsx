@@ -55,7 +55,7 @@ export function ServicesPageView({
             <img
               src={s.cover_image}
               alt={getServiceTitle(s)}
-              style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
+              className="w-9 h-9 rounded-md object-cover shrink-0"
             />
           ) : (
             <div className="w-9 h-9 rounded bg-[var(--lito-cream-alt)] flex items-center justify-center flex-shrink-0">
@@ -63,7 +63,7 @@ export function ServicesPageView({
             </div>
           )}
           <div>
-            <p className="font-body text-sm font-medium text-[var(--text-primary)] truncate max-w-[260px]">
+            <p className="font-body text-sm font-medium text-[var(--text-muted)] truncate max-w-[260px]">
               {getServiceTitle(s)}
             </p>
             {getServiceExcerpt(s) && (
@@ -81,17 +81,7 @@ export function ServicesPageView({
       width: '140px',
       render: (s) =>
         s.category ? (
-          <span
-            style={{
-              padding: '3px 9px',
-              borderRadius: 999,
-              fontSize: 11,
-              fontWeight: 500,
-              background: 'rgba(26,74,90,0.08)',
-              color: 'var(--lito-teal)',
-              fontFamily: 'var(--font-body)',
-            }}
-          >
+          <span className="px-[9px] py-[3px] rounded-full text-[11px] font-medium bg-[rgba(26,74,90,0.08)] text-[var(--lito-teal)] font-body">
             {s.category}
           </span>
         ) : (

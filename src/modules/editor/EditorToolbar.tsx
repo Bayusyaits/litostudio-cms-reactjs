@@ -66,34 +66,34 @@ export function EditorToolbar({
   const SaveStatus = useCallback(() => {
     if (saveStatus === 'saving') {
       return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Loader2 size={12} style={{ color: 'var(--text-muted)', animation: 'spin 1s linear infinite' }} />
+        <div className="flex items-center gap-2">
+          <Loader2 size={12} className="text-[var(--text-muted)] animate-spin" />
           <div>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.3 }}>Saving…</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', margin: 0, lineHeight: 1.3 }}>Please wait</p>
+            <p className="font-body text-[11px] font-semibold text-[var(--text-muted)] m-0 leading-[1.3]">Saving…</p>
+            <p className="font-body text-[10px] text-[var(--text-muted)] m-0 leading-[1.3]">Please wait</p>
           </div>
         </div>
       )
     }
     if (saveStatus === 'error') {
       return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#ef4444', flexShrink: 0 }} />
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#ef4444] shrink-0" />
           <div>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, color: '#ef4444', margin: 0, lineHeight: 1.3 }}>Save failed</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', margin: 0, lineHeight: 1.3 }}>Please try again</p>
+            <p className="font-body text-[11px] font-semibold text-[#ef4444] m-0 leading-[1.3]">Save failed</p>
+            <p className="font-body text-[10px] text-[var(--text-muted)] m-0 leading-[1.3]">Please try again</p>
           </div>
         </div>
       )
     }
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#22c55e', flexShrink: 0 }} />
+      <div className="flex items-center gap-2">
+        <span className="inline-block w-2 h-2 rounded-full bg-[#22c55e] shrink-0" />
         <div>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.3 }}>
+          <p className="font-body text-[11px] font-semibold text-[var(--text-muted)] m-0 leading-[1.3]">
             {isDirty ? 'Unsaved changes' : (saveStatus === 'saved' ? 'All saved' : pageTitle)}
           </p>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', margin: 0, lineHeight: 1.3 }}>All changes saved locally</p>
+          <p className="font-body text-[10px] text-[var(--text-muted)] m-0 leading-[1.3]">All changes saved locally</p>
         </div>
       </div>
     )
@@ -107,16 +107,10 @@ export function EditorToolbar({
 
   return (
     <>
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        height: 48, padding: '0 12px',
-        borderBottom: '1px solid var(--lito-border)',
-        background: 'var(--cms-card-bg)',
-        flexShrink: 0, gap: 6,
-      }}>
+      <div className="flex items-center justify-between h-12 px-3 border-b border-[var(--lito-border)] bg-[var(--cms-card-bg)] shrink-0 gap-[6px]">
 
         {/* ── Left: back + save status ─────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
+        <div className="flex items-center gap-2 flex-none">
           <button
             type="button"
             onClick={handleBack}
@@ -128,7 +122,7 @@ export function EditorToolbar({
 
           {/* Save status — click to save manually */}
           <div
-            style={{ cursor: 'pointer' }}
+            className="cursor-pointer"
             onClick={onSave}
             title="Save (⌘S)"
             role="button"
@@ -140,7 +134,7 @@ export function EditorToolbar({
         </div>
 
         {/* ── Centre: device switcher + locale toggle ──────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="flex items-center gap-2">
           <div className="tb-device-group">
             {deviceModes.map(({ mode, Icon, label }) => (
               <button
@@ -158,17 +152,16 @@ export function EditorToolbar({
 
           {/* Locale toggle — EN / ID */}
           {onLocaleChange && (
-            <div className="tb-device-group" style={{ display: 'flex', alignItems: 'center' }}>
-              <Globe size={11} style={{ color: 'var(--text-muted)', marginRight: 2 }} />
+            <div className="tb-device-group flex items-center">
+              <Globe size={11} className="text-[var(--text-muted)] mr-0.5" />
               {SUPPORTED_LOCALES.map(({ code, label }) => (
                 <button
                   key={code}
                   type="button"
                   title={`Edit ${label} content`}
                   onClick={() => onLocaleChange(code)}
-                  className={`tb-device-btn${activeLocale === code ? ' tb-active' : ''}`}
+                  className={`tb-device-btn min-w-7 text-[11px] font-semibold${activeLocale === code ? ' tb-active' : ''}`}
                   aria-pressed={activeLocale === code}
-                  style={{ minWidth: 28, fontSize: 11, fontWeight: 600 }}
                 >
                   {label}
                 </button>
@@ -178,7 +171,7 @@ export function EditorToolbar({
         </div>
 
         {/* ── Right: controls ──────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+        <div className="flex items-center gap-1 shrink-0">
 
           {/* Zoom controls */}
           <div className="tb-zoom-group">

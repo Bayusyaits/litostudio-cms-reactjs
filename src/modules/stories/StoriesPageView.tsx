@@ -52,70 +52,47 @@ function StatusBadge({ status }: { status: ContentStatus }) {
 }
 
 function AuthorCell({ author }: { author?: { name?: string; avatar_url?: string } | null }) {
-  if (!author) return <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
+  if (!author) return <span className="text-xs text-[var(--text-muted)]">—</span>
   const initials = (author.name ?? '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+    <div className="flex items-center gap-[7px]">
       {author.avatar_url ? (
-        <img src={author.avatar_url} alt="" style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} />
+        <img src={author.avatar_url} alt="" className="w-[22px] h-[22px] rounded-full object-cover" />
       ) : (
-        <div style={{
-          width: 22, height: 22, borderRadius: '50%',
-          background: 'rgba(212,168,83,0.12)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 9, fontWeight: 600, color: 'var(--lito-gold-deep)',
-        }}>{initials}</div>
+        <div className="w-[22px] h-[22px] rounded-full bg-[rgba(212,168,83,0.12)] flex items-center justify-center text-[9px] font-semibold text-[var(--lito-gold-deep)]">
+          {initials}
+        </div>
       )}
-      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-primary)' }}>{author.name}</span>
+      <span className="font-body text-xs text-[var(--text-primary)]">{author.name}</span>
     </div>
   )
 }
 
 function ActionMenu({ onEdit, onOpenEditor, onDelete }: { onEdit: () => void; onOpenEditor: () => void; onDelete: () => void }) {
   const [open, setOpen] = useState(false)
+  const itemCls = 'flex items-center gap-2 w-full px-3 py-2 bg-transparent border-none text-xs cursor-pointer text-[var(--text-primary)] text-left hover:bg-[var(--lito-cream-alt)]'
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="relative">
       <button
         type="button"
         aria-label="More actions"
         onClick={() => setOpen(v => !v)}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', display: 'flex', borderRadius: 4 }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'var(--lito-cream-alt)')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+        className="bg-transparent border-none cursor-pointer p-1 text-[var(--text-muted)] flex rounded hover:bg-[var(--lito-cream-alt)]"
       >
         <MoreHorizontal size={15} />
       </button>
       {open && (
-        <div style={{
-          position: 'absolute', right: 0, top: '100%', zIndex: 50,
-          background: 'var(--cms-card-bg)', border: '1px solid var(--lito-border)',
-          borderRadius: 6, boxShadow: 'var(--shadow-md)',
-          overflow: 'hidden', width: 130,
-        }}>
-          <button
-            type="button"
-            onClick={() => { setOpen(false); onEdit() }}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', fontSize: 12, cursor: 'pointer', color: 'var(--text-primary)', textAlign: 'left' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--lito-cream-alt)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-          >
+        <div className="absolute right-0 top-full z-50 bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-md shadow-[var(--shadow-md)] overflow-hidden w-[130px]">
+          <button type="button" onClick={() => { setOpen(false); onEdit() }} className={itemCls}>
             <Pencil size={12} /> Edit fields
           </button>
-          <button
-            type="button"
-            onClick={() => { setOpen(false); onOpenEditor() }}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', fontSize: 12, cursor: 'pointer', color: 'var(--text-primary)', textAlign: 'left' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--lito-cream-alt)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-          >
+          <button type="button" onClick={() => { setOpen(false); onOpenEditor() }} className={itemCls}>
             <LayoutTemplate size={12} /> Open in editor
           </button>
           <button
             type="button"
             onClick={() => { setOpen(false); onDelete() }}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', fontSize: 12, cursor: 'pointer', color: 'var(--cms-danger)', textAlign: 'left' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--cms-danger-bg)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+            className="flex items-center gap-2 w-full px-3 py-2 bg-transparent border-none text-xs cursor-pointer text-[var(--cms-danger)] text-left hover:bg-[var(--cms-danger-bg)]"
           >
             Delete
           </button>
@@ -134,31 +111,28 @@ export function StoriesPageView({
   const filtered = activeTab === 'all' ? stories : stories.filter(s => s.status === activeTab)
 
   return (
-    <div className="cms-page" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div className="cms-page flex flex-col h-full overflow-hidden">
       {/* Page header */}
-      <div style={{ padding: '24px 28px 0', background: 'var(--cms-main-bg)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="px-7 pt-6 pb-0 bg-[var(--cms-main-bg)] shrink-0">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: 'var(--text-primary)' }}>Stories</h1>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+            <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Stories</h1>
+            <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
               Manage and publish travel stories
             </p>
           </div>
-          <Link
-            to="/stories/new"
-            className="cms-btn cms-btn-primary"
-          >
+          <Link to="/stories/new" className="cms-btn cms-btn-primary">
             <Plus size={14} /> New Story
           </Link>
         </div>
 
         {/* Filters row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <div className="flex items-center gap-3 mb-3">
           <SearchInput value={search} onChange={onSearch} placeholder="Search stories…" className="w-64" />
         </div>
 
         {/* Status tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--lito-border)', gap: 0 }}>
+        <div className="flex border-b border-[var(--lito-border)]">
           {TABS.map(tab => {
             const count = statusCounts?.[tab.key]
             return (
@@ -170,12 +144,7 @@ export function StoriesPageView({
               >
                 {tab.label}
                 {count !== undefined && (
-                  <span style={{
-                    marginLeft: 5, padding: '1px 5px',
-                    borderRadius: 999, fontSize: 10, fontWeight: 500,
-                    background: activeTab === tab.key ? 'var(--lito-ink)' : 'var(--lito-cream-alt)',
-                    color: activeTab === tab.key ? 'var(--lito-cream)' : 'var(--text-muted)',
-                  }}>
+                  <span className={`ml-[5px] px-[5px] py-[1px] rounded-full text-[10px] font-medium ${activeTab === tab.key ? 'bg-[var(--lito-ink)] text-[var(--lito-cream)]' : 'bg-[var(--lito-cream-alt)] text-[var(--text-muted)]'}`}>
                     {count}
                   </span>
                 )}
@@ -186,12 +155,12 @@ export function StoriesPageView({
       </div>
 
       {/* Table area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 28px 24px' }}>
-        <div className="cms-card" style={{ marginTop: 16, overflow: 'hidden' }}>
+      <div className="flex-1 overflow-y-auto px-7 pb-6">
+        <div className="cms-card mt-4 overflow-hidden">
           <table className="cms-table">
             <thead>
               <tr>
-                <th style={{ width: 20, paddingRight: 0 }}>
+                <th className="w-5 pr-0">
                   <input type="checkbox" aria-label="Select all" />
                 </th>
                 <th>Title</th>
@@ -199,8 +168,8 @@ export function StoriesPageView({
                 <th>Author</th>
                 <th>Date</th>
                 <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Views</th>
-                <th style={{ width: 48 }} />
+                <th className="text-right">Views</th>
+                <th className="w-12" />
               </tr>
             </thead>
             <tbody>
@@ -209,7 +178,7 @@ export function StoriesPageView({
                   <tr key={i}>
                     <td><Skeleton className="h-4 w-4" /></td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div className="flex items-center gap-[10px]">
                         <Skeleton className="h-10 w-14 rounded" />
                         <div><Skeleton className="h-3.5 w-40 mb-1" /><Skeleton className="h-2.5 w-28" /></div>
                       </div>
@@ -231,56 +200,50 @@ export function StoriesPageView({
               ) : (
                 filtered.map(story => (
                   <tr key={story.id}>
-                    <td style={{ paddingRight: 0 }}>
+                    <td className="pr-0">
                       <input type="checkbox" aria-label={`Select "${getTitle(story)}"`} />
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div className="flex items-center gap-[10px]">
                         {story.cover_image ? (
-                          <img src={story.cover_image} alt="" style={{ width: 54, height: 38, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }} />
+                          <img src={story.cover_image} alt="" className="w-[54px] h-[38px] object-cover rounded-[3px] shrink-0" />
                         ) : (
-                          <div style={{ width: 54, height: 38, borderRadius: 3, background: 'var(--lito-cream-alt)', flexShrink: 0 }} />
+                          <div className="w-[54px] h-[38px] rounded-[3px] bg-[var(--lito-cream-alt)] shrink-0" />
                         )}
                         <div>
-                          <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{getTitle(story)}</div>
-                          <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>{story.slug}</div>
+                          <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">{getTitle(story)}</div>
+                          <div className="font-body text-[11px] text-[var(--text-muted)]">{story.slug}</div>
                         </div>
                       </div>
                     </td>
                     <td>
                       {story.category ? (
-                        <span style={{
-                          padding: '3px 9px', borderRadius: 999,
-                          fontSize: 11, fontWeight: 500,
-                          background: 'rgba(26,74,90,0.08)', color: 'var(--lito-teal)',
-                        }}>
+                        <span className="px-[9px] py-[3px] rounded-full text-[11px] font-medium bg-[rgba(26,74,90,0.08)] text-[var(--lito-teal)] font-body">
                           {story.category}
                         </span>
-                      ) : <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>}
+                      ) : <span className="text-xs text-[var(--text-muted)]">—</span>}
                     </td>
                     <td>
                       <AuthorCell author={null} />
                     </td>
                     <td>
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>
+                      <span className="font-body text-xs text-[var(--text-muted)]">
                         {story.published_at ? formatDate(story.published_at) : formatDate(story.updated_at)}
                       </span>
                     </td>
                     <td><StatusBadge status={story.status} /></td>
-                    <td style={{ textAlign: 'right' }}>
-                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--text-primary)' }}>
+                    <td className="text-right">
+                      <span className="font-display text-[15px] text-[var(--text-primary)]">
                         {story.view_count ?? '—'}
                       </span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+                      <div className="flex items-center gap-1 justify-end">
                         <button
                           type="button"
                           aria-label={`Edit "${getTitle(story)}"`}
                           onClick={() => onEdit(story.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', display: 'flex', borderRadius: 4 }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--lito-cream-alt)')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                          className="bg-transparent border-none cursor-pointer p-1 text-[var(--text-muted)] flex rounded hover:bg-[var(--lito-cream-alt)]"
                         >
                           <Pencil size={13} />
                         </button>
@@ -296,19 +259,13 @@ export function StoriesPageView({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 16 }}>
+          <div className="flex justify-center gap-[6px] mt-4">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
               <button
                 key={p}
                 type="button"
                 onClick={() => onPage(p)}
-                style={{
-                  width: 32, height: 32, borderRadius: 4, border: '1px solid',
-                  borderColor: p === page ? 'var(--lito-ink)' : 'var(--lito-border)',
-                  background: p === page ? 'var(--lito-ink)' : 'transparent',
-                  color: p === page ? 'var(--lito-cream)' : 'var(--text-muted)',
-                  fontSize: 12, cursor: 'pointer', transition: 'all 150ms',
-                }}
+                className={`w-8 h-8 rounded border text-xs cursor-pointer transition-all duration-150 ${p === page ? 'border-[var(--lito-ink)] bg-[var(--lito-ink)] text-[var(--lito-cream)]' : 'border-[var(--lito-border)] bg-transparent text-[var(--text-muted)]'}`}
               >
                 {p}
               </button>

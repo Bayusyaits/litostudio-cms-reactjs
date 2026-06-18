@@ -59,25 +59,15 @@ export function CommentsPageView({
               <img
                 src={c.author_avatar}
                 alt={c.author_name}
-                style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                className="w-8 h-8 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div
-                style={{
-                  width: 32, height: 32, borderRadius: '50%',
-                  background: 'rgba(212,168,83,0.12)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 600,
-                  color: 'var(--lito-gold-deep)',
-                  flexShrink: 0,
-                  fontFamily: 'var(--font-body)',
-                }}
-              >
+              <div className="w-8 h-8 rounded-full bg-[rgba(212,168,83,0.12)] flex items-center justify-center text-[11px] font-semibold text-[var(--lito-gold-deep)] shrink-0 font-body">
                 {initials}
               </div>
             )}
             <div>
-              <p className="font-body text-sm font-medium text-[var(--text-primary)]">
+              <p className="font-body text-sm font-medium text-[var(--text-muted)]">
                 {c.author_name}
               </p>
               {c.author_email && (
@@ -102,17 +92,7 @@ export function CommentsPageView({
       header: 'On',
       width: '110px',
       render: (c) => (
-        <span
-          style={{
-            padding: '3px 9px',
-            borderRadius: 999,
-            fontSize: 11,
-            fontWeight: 500,
-            background: 'rgba(26,74,90,0.08)',
-            color: 'var(--lito-teal)',
-            fontFamily: 'var(--font-body)',
-          }}
-        >
+        <span className="px-[9px] py-[3px] rounded-full text-[11px] font-medium bg-[rgba(26,74,90,0.08)] text-[var(--lito-teal)] font-body">
           {c.entity_type}
         </span>
       ),

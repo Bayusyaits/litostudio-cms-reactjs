@@ -269,7 +269,7 @@ html, body, #root {
 }
 .cms-input:focus { border-color: var(--lito-ink); }
 .cms-input::placeholder { color: var(--text-faint); }
-[data-dark] .cms-input { background: var(--cms-card-bg); color: var(--text-primary); }
+[data-dark] .cms-input { background: var(--cms-card-bg); color: var(--text-muted); }
 
 .cms-label {
   display: block;
@@ -537,7 +537,7 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
   font-family: var(--font-body);
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-muted);
   padding: 0 6px;
   min-width: 38px;
   text-align: center;

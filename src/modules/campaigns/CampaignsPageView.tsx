@@ -51,7 +51,7 @@ export function CampaignsPageView({
             <img
               src={c.cover_image}
               alt={getCampaignTitle(c)}
-              style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
+              className="w-9 h-9 rounded-md object-cover shrink-0"
             />
           ) : (
             <div className="w-9 h-9 rounded bg-[var(--lito-cream-alt)] flex items-center justify-center flex-shrink-0">
@@ -59,7 +59,7 @@ export function CampaignsPageView({
             </div>
           )}
           <div>
-            <p className="font-body text-sm font-medium text-[var(--text-primary)] truncate max-w-[280px]">
+            <p className="font-body text-sm font-medium text-[var(--text-muted)] truncate max-w-[280px]">
               {getCampaignTitle(c)}
             </p>
             {c.slug && (

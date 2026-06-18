@@ -41,18 +41,10 @@ function TierBadge({ tier }: { tier: string }) {
     enterprise: '#8b5cf6',
   }
   return (
-    <span style={{
-      display: 'inline-block',
-      padding: '2px 8px',
-      borderRadius: 4,
-      fontSize: 10,
-      fontWeight: 600,
-      textTransform: 'uppercase',
-      letterSpacing: '0.05em',
-      background: colors[tier] ?? 'rgba(255,255,255,0.07)',
-      color: text[tier] ?? 'var(--text-secondary)',
-      fontFamily: 'var(--font-body)',
-    }}>
+    <span
+      className="inline-block px-2 py-[2px] rounded text-[10px] font-semibold uppercase tracking-[0.05em] font-body"
+      style={{ background: colors[tier] ?? 'rgba(255,255,255,0.07)', color: text[tier] ?? 'var(--text-secondary)' }}
+    >
       {tier}
     </span>
   )
@@ -87,146 +79,69 @@ function AddonCard({ item, onInstall, onToggle, onConfigure, isInstalling, isTog
   const enabled = orgAddon?.enabled ?? false
 
   return (
-    <div style={{
-      background: 'var(--cms-card-bg)',
-      border: `1px solid ${enabled ? 'rgba(212,168,83,0.25)' : 'var(--lito-border)'}`,
-      borderRadius: 8,
-      padding: 20,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12,
-      transition: 'border-color 200ms',
-    }}>
+    <div className={`bg-[var(--cms-card-bg)] rounded-lg p-5 flex flex-col gap-3 transition-[border-color] duration-200 border ${enabled ? 'border-[rgba(212,168,83,0.25)]' : 'border-[var(--lito-border)]'}`}>
       {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        {/* Icon */}
-        <div style={{
-          width: 40, height: 40, flexShrink: 0,
-          borderRadius: 8,
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid var(--lito-border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 20,
-        }}>
-          {addon.icon ?? <Puzzle size={18} style={{ opacity: 0.5 }} />}
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 shrink-0 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[var(--lito-border)] flex items-center justify-center text-xl">
+          {addon.icon ?? <Puzzle size={18} className="opacity-50" />}
         </div>
 
-        {/* Name + tier */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: 14, fontWeight: 600,
-              color: 'var(--text-primary)',
-            }}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-[var(--font-heading)] text-sm font-semibold text-[var(--text-primary)]">
               {addon.name}
             </span>
             <TierBadge tier={addon.tier} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-            <Tag size={10} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
-            <span style={{
-              fontSize: 11,
-              color: 'var(--text-secondary)',
-              fontFamily: 'var(--font-body)',
-            }}>
+          <div className="flex items-center gap-1.5 mt-[3px]">
+            <Tag size={10} className="text-[var(--text-secondary)] shrink-0" />
+            <span className="text-[11px] text-[var(--text-secondary)] font-body">
               {CATEGORY_LABELS[addon.category] ?? addon.category}
             </span>
           </div>
         </div>
 
-        {/* Toggle — only show if installed */}
         {installed && (
           <button
             type="button"
             onClick={onToggle}
             disabled={isToggling}
             title={enabled ? 'Disable add-on' : 'Enable add-on'}
-            style={{
-              background: 'none', border: 'none', padding: 4,
-              cursor: isToggling ? 'not-allowed' : 'pointer',
-              color: enabled ? '#D4A853' : 'var(--text-secondary)',
-              flexShrink: 0, display: 'flex',
-            }}
+            className={`bg-transparent border-none p-1 flex shrink-0 ${isToggling ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            style={{ color: enabled ? '#D4A853' : 'var(--text-secondary)' }}
           >
-            {enabled
-              ? <ToggleRight size={22} />
-              : <ToggleLeft size={22} />}
+            {enabled ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
           </button>
         )}
       </div>
 
-      {/* Description */}
       {addon.description && (
-        <p style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 12, lineHeight: 1.6,
-          color: 'var(--text-secondary)',
-          margin: 0,
-        }}>
+        <p className="font-body text-xs leading-relaxed text-[var(--text-secondary)] m-0">
           {addon.description}
         </p>
       )}
 
-      {/* Footer actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+      <div className="flex items-center gap-2 mt-1">
         {!installed ? (
           <button
             type="button"
             onClick={onInstall}
             disabled={isInstalling}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 6,
-              border: '1px solid var(--lito-gold)',
-              background: 'transparent',
-              color: '#D4A853',
-              fontFamily: 'var(--font-body)',
-              fontSize: 12, fontWeight: 500,
-              cursor: isInstalling ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', gap: 6,
-              opacity: isInstalling ? 0.6 : 1,
-              transition: 'background 150ms',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(212,168,83,0.1)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md border border-[var(--lito-gold)] bg-transparent text-[#D4A853] font-body text-xs font-medium transition-[background] duration-150 hover:bg-[rgba(212,168,83,0.1)] ${isInstalling ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
           >
-            {isInstalling && <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />}
+            {isInstalling && <Loader2 size={12} className="animate-spin" />}
             Install
           </button>
         ) : (
           <>
-            <span style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              fontFamily: 'var(--font-body)',
-              fontSize: 11, color: '#22c55e',
-            }}>
+            <span className="flex items-center gap-1 font-body text-[11px] text-[#22c55e]">
               <Check size={12} />
               Installed
             </span>
             <button
               type="button"
               onClick={onConfigure}
-              style={{
-                marginLeft: 'auto',
-                display: 'flex', alignItems: 'center', gap: 4,
-                padding: '4px 10px',
-                borderRadius: 6,
-                border: '1px solid var(--lito-border)',
-                background: 'transparent',
-                color: 'var(--text-secondary)',
-                fontFamily: 'var(--font-body)',
-                fontSize: 11, cursor: 'pointer',
-                transition: 'border-color 150ms, color 150ms',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'var(--text-secondary)'
-                e.currentTarget.style.color = 'var(--text-primary)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'var(--lito-border)'
-                e.currentTarget.style.color = 'var(--text-secondary)'
-              }}
+              className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-md border border-[var(--lito-border)] bg-transparent text-[var(--text-secondary)] font-body text-[11px] cursor-pointer transition-[border-color,color] duration-150 hover:border-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             >
               <Settings size={11} />
               Configure
@@ -258,7 +173,6 @@ function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: 
     default?: unknown
   }> | null
 
-  // Build initial form state from current settings + defaults
   const initialValues: Record<string, unknown> = {}
   if (schema) {
     for (const [key, def] of Object.entries(schema)) {
@@ -271,24 +185,15 @@ function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: 
 
   if (!schema || Object.keys(schema).length === 0) {
     return (
-      <div style={{ padding: 24 }}>
-        <p style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 13, color: 'var(--text-secondary)',
-          margin: 0, textAlign: 'center',
-        }}>
+      <div className="p-6">
+        <p className="font-body text-[13px] text-[var(--text-secondary)] m-0 text-center">
           This add-on has no configurable settings.
         </p>
-        <button type="button" onClick={onClose} style={{
-          marginTop: 16, width: '100%',
-          padding: '8px 0',
-          border: '1px solid var(--lito-border)',
-          borderRadius: 6,
-          background: 'transparent',
-          color: 'var(--text-secondary)',
-          fontFamily: 'var(--font-body)',
-          fontSize: 13, cursor: 'pointer',
-        }}>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-4 w-full py-2 border border-[var(--lito-border)] rounded-md bg-transparent text-[var(--text-secondary)] font-body text-[13px] cursor-pointer"
+        >
           Close
         </button>
       </div>
@@ -296,62 +201,38 @@ function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: 
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: 24 }}>
+    <div className="flex flex-col gap-5 p-6">
       {error && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '10px 14px',
-          background: 'rgba(239,68,68,0.1)',
-          border: '1px solid rgba(239,68,68,0.2)',
-          borderRadius: 6,
-          color: '#ef4444',
-          fontFamily: 'var(--font-body)', fontSize: 12,
-        }}>
+        <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] rounded-md text-[#ef4444] font-body text-xs">
           <AlertCircle size={14} />
           {error}
         </div>
       )}
       {success && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '10px 14px',
-          background: 'rgba(34,197,94,0.1)',
-          border: '1px solid rgba(34,197,94,0.2)',
-          borderRadius: 6,
-          color: '#22c55e',
-          fontFamily: 'var(--font-body)', fontSize: 12,
-        }}>
+        <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] rounded-md text-[#22c55e] font-body text-xs">
           <Check size={14} />
           Settings saved.
         </div>
       )}
 
       {Object.entries(schema).map(([key, def]) => (
-        <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <label style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 12, fontWeight: 500,
-            color: 'var(--text-primary)',
-          }}>
+        <div key={key} className="flex flex-col gap-1.5">
+          <label className="font-body text-xs font-medium text-[var(--text-primary)]">
             {def.label ?? key}
           </label>
           {def.description && (
-            <p style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 11, color: 'var(--text-secondary)',
-              margin: 0,
-            }}>
+            <p className="font-body text-[11px] text-[var(--text-secondary)] m-0">
               {def.description}
             </p>
           )}
           {def.type === 'boolean' ? (
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={Boolean(values[key])}
                 onChange={e => setValues(prev => ({ ...prev, [key]: e.target.checked }))}
               />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-secondary)' }}>
+              <span className="font-body text-xs text-[var(--text-secondary)]">
                 {values[key] ? 'Enabled' : 'Disabled'}
               </span>
             </label>
@@ -363,37 +244,17 @@ function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: 
                 ...prev,
                 [key]: def.type === 'number' ? Number(e.target.value) : e.target.value,
               }))}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 6,
-                border: '1px solid var(--lito-border)',
-                background: 'var(--cms-input-bg, rgba(255,255,255,0.04))',
-                color: 'var(--text-primary)',
-                fontFamily: 'var(--font-body)',
-                fontSize: 13,
-                outline: 'none',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
+              className="px-3 py-2 rounded-md border border-[var(--lito-border)] bg-[var(--cms-input-bg,rgba(255,255,255,0.04))] text-[var(--text-primary)] font-body text-[13px] outline-none w-full box-border"
             />
           )}
         </div>
       ))}
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+      <div className="flex gap-2 mt-1">
         <button
           type="button"
           onClick={onClose}
-          style={{
-            flex: 1,
-            padding: '8px 0',
-            border: '1px solid var(--lito-border)',
-            borderRadius: 6,
-            background: 'transparent',
-            color: 'var(--text-secondary)',
-            fontFamily: 'var(--font-body)',
-            fontSize: 13, cursor: 'pointer',
-          }}
+          className="flex-1 py-2 border border-[var(--lito-border)] rounded-md bg-transparent text-[var(--text-secondary)] font-body text-[13px] cursor-pointer"
         >
           Cancel
         </button>
@@ -401,21 +262,9 @@ function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: 
           type="button"
           disabled={isSaving}
           onClick={() => onSave(values)}
-          style={{
-            flex: 2,
-            padding: '8px 0',
-            border: 'none',
-            borderRadius: 6,
-            background: '#D4A853',
-            color: '#1a1a1a',
-            fontFamily: 'var(--font-body)',
-            fontSize: 13, fontWeight: 600,
-            cursor: isSaving ? 'not-allowed' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            opacity: isSaving ? 0.7 : 1,
-          }}
+          className={`flex-[2] py-2 border-none rounded-md bg-[#D4A853] text-[#1a1a1a] font-body text-[13px] font-semibold flex items-center justify-center gap-1.5 ${isSaving ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
         >
-          {isSaving && <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />}
+          {isSaving && <Loader2 size={13} className="animate-spin" />}
           Save Settings
         </button>
       </div>
@@ -441,92 +290,53 @@ export function AddonsPageView({
 }: AddonsPageViewProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all')
 
-  // Collect categories from catalog
   const categories = ['all', ...Array.from(new Set(mergedAddons.map(m => m.addon.category)))]
-
   const filtered = activeCategory === 'all'
     ? mergedAddons
     : mergedAddons.filter(m => m.addon.category === activeCategory)
-
   const installedCount = mergedAddons.filter(m => !!m.orgAddon).length
 
   return (
-    <div style={{ display: 'flex', height: '100%', minHeight: 0 }}>
+    <div className="flex h-full min-h-0">
       {/* Main content */}
-      <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '32px 40px' }}>
-        {/* Page header */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{
-            fontFamily: 'var(--font-heading)',
-            fontSize: 22, fontWeight: 600,
-            color: 'var(--text-primary)',
-            margin: 0,
-          }}>
+      <div className="flex-1 min-w-0 overflow-y-auto px-10 py-8">
+        <div className="mb-7">
+          <h1 className="font-[var(--font-heading)] text-[22px] font-semibold text-[var(--text-primary)] m-0">
             Add-Ons
           </h1>
-          <p style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 13, color: 'var(--text-secondary)',
-            margin: '6px 0 0',
-          }}>
+          <p className="font-body text-[13px] text-[var(--text-secondary)] mt-1.5 mb-0">
             {installedCount} of {mergedAddons.length} add-ons installed
           </p>
         </div>
 
-        {/* Category filter tabs */}
-        <div style={{
-          display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24,
-        }}>
+        <div className="flex gap-1.5 flex-wrap mb-6">
           {categories.map(cat => (
             <button
               key={cat}
               type="button"
               onClick={() => setActiveCategory(cat)}
-              style={{
-                padding: '5px 14px',
-                borderRadius: 20,
-                border: '1px solid',
-                borderColor: activeCategory === cat ? '#D4A853' : 'var(--lito-border)',
-                background: activeCategory === cat ? 'rgba(212,168,83,0.12)' : 'transparent',
-                color: activeCategory === cat ? '#D4A853' : 'var(--text-secondary)',
-                fontFamily: 'var(--font-body)',
-                fontSize: 12, fontWeight: 500,
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-                transition: 'all 150ms',
-              }}
+              className={`px-3.5 py-[5px] rounded-full border font-body text-xs font-medium cursor-pointer capitalize transition-all duration-150 ${
+                activeCategory === cat
+                  ? 'border-[#D4A853] bg-[rgba(212,168,83,0.12)] text-[#D4A853]'
+                  : 'border-[var(--lito-border)] bg-transparent text-[var(--text-secondary)]'
+              }`}
             >
               {CATEGORY_LABELS[cat] ?? cat}
             </button>
           ))}
         </div>
 
-        {/* Grid */}
         {isLoading ? (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '80px 0',
-            color: 'var(--text-secondary)',
-            fontFamily: 'var(--font-body)', fontSize: 13,
-            gap: 10,
-          }}>
-            <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', opacity: 0.6 }} />
+          <div className="flex items-center justify-center py-20 text-[var(--text-secondary)] font-body text-[13px] gap-2.5">
+            <Loader2 size={16} className="animate-spin opacity-60" />
             Loading add-ons…
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{
-            padding: '60px 0', textAlign: 'center',
-            color: 'var(--text-secondary)',
-            fontFamily: 'var(--font-body)', fontSize: 13,
-          }}>
+          <div className="py-[60px] text-center text-[var(--text-secondary)] font-body text-[13px]">
             No add-ons in this category.
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 16,
-          }}>
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
             {filtered.map(({ addon, orgAddon }) => (
               <AddonCard
                 key={addon.id}
@@ -544,42 +354,20 @@ export function AddonsPageView({
 
       {/* Settings drawer */}
       {selectedOrgAddon && (
-        <div style={{
-          width: 320,
-          flexShrink: 0,
-          borderLeft: '1px solid var(--lito-border)',
-          background: 'var(--cms-card-bg)',
-          overflowY: 'auto',
-        }}>
-          {/* Drawer header */}
-          <div style={{
-            padding: '16px 24px',
-            borderBottom: '1px solid var(--lito-border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}>
+        <div className="w-80 shrink-0 border-l border-[var(--lito-border)] bg-[var(--cms-card-bg)] overflow-y-auto">
+          <div className="px-6 py-4 border-b border-[var(--lito-border)] flex items-center justify-between">
             <div>
-              <div style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: 14, fontWeight: 600,
-                color: 'var(--text-primary)',
-              }}>
+              <div className="font-[var(--font-heading)] text-sm font-semibold text-[var(--text-primary)]">
                 {selectedOrgAddon.addons?.name}
               </div>
-              <div style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: 11, color: 'var(--text-secondary)', marginTop: 2,
-              }}>
+              <div className="font-body text-[11px] text-[var(--text-secondary)] mt-0.5">
                 Settings
               </div>
             </div>
             <button
               type="button"
               onClick={() => onSelectAddon(null)}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--text-secondary)', padding: 4,
-                fontFamily: 'var(--font-body)', fontSize: 18, lineHeight: 1,
-              }}
+              className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)] p-1 font-body text-lg leading-none"
             >
               ×
             </button>

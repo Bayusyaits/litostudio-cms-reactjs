@@ -70,26 +70,11 @@ export function ReviewsPageView({
           .toUpperCase()
         return (
           <div className="flex items-center gap-3">
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                background: 'rgba(212,168,83,0.12)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 11,
-                fontWeight: 600,
-                color: 'var(--lito-gold-deep)',
-                flexShrink: 0,
-                fontFamily: 'var(--font-body)',
-              }}
-            >
+            <div className="w-8 h-8 rounded-full bg-[rgba(212,168,83,0.12)] flex items-center justify-center text-[11px] font-semibold text-[var(--lito-gold-deep)] shrink-0 font-body">
               {initials}
             </div>
             <div>
-              <p className="font-body text-sm font-medium text-[var(--text-primary)]">
+              <p className="font-body text-sm font-medium text-[var(--text-muted)]">
                 {review.author_name}
               </p>
               {review.body && (
@@ -114,17 +99,7 @@ export function ReviewsPageView({
       width: '120px',
       render: (review) =>
         review.reviewable_type ? (
-          <span
-            style={{
-              padding: '3px 9px',
-              borderRadius: 999,
-              fontSize: 11,
-              fontWeight: 500,
-              background: 'rgba(26,74,90,0.08)',
-              color: 'var(--lito-teal)',
-              fontFamily: 'var(--font-body)',
-            }}
-          >
+          <span className="px-[9px] py-[3px] rounded-full text-[11px] font-medium bg-[rgba(26,74,90,0.08)] text-[var(--lito-teal)] font-body">
             {review.reviewable_type}
           </span>
         ) : (

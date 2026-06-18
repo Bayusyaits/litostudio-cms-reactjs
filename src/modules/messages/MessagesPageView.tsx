@@ -33,7 +33,7 @@ export function MessagesPageView({ messages, meta, isLoading, filter, setFilter,
       header: 'From',
       render: (msg) => (
         <div>
-          <p className="font-body text-sm font-medium text-[var(--text-primary)]">{msg.name}</p>
+          <p className="font-body text-sm font-medium text-[var(--text-muted)]">{msg.name}</p>
           <p className="font-body text-xs text-[var(--text-muted)]">{msg.email}</p>
         </div>
       ),

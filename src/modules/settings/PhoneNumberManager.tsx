@@ -57,20 +57,29 @@ interface PhoneRecord {
 
 type Step = 'idle' | 'input' | 'otp' | 'verified'
 
+// ── Style class constants ─────────────────────────────────────────────────────
+
+const inputCls = 'h-9 px-3 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] font-body text-[13px] text-[var(--text-primary)] outline-none'
+
+const btnBase = 'inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-lg font-body text-xs font-medium transition-[background] duration-150'
+const btnPrimary   = `${btnBase} border-none bg-[var(--lito-teal)] text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`
+const btnSecondary = `${btnBase} border border-[var(--lito-border)] bg-[var(--cms-surface-2)] text-[var(--text-secondary)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`
+const btnDanger    = `${btnBase} border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.1)] text-[#ef4444] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function PhoneNumberManager() {
   const { token: accessToken } = useAuthStore()
 
-  const [record,      setRecord]      = useState<PhoneRecord | null>(null)
-  const [loading,     setLoading]     = useState(true)
-  const [step,        setStep]        = useState<Step>('idle')
-  const [country,     setCountry]     = useState<Country>(COUNTRIES[0])
-  const [localNum,    setLocalNum]    = useState('')
-  const [otp,         setOtp]         = useState('')
-  const [busy,        setBusy]        = useState(false)
-  const [error,       setError]       = useState<string | null>(null)
-  const [devOtp,      setDevOtp]      = useState<string | null>(null)
+  const [record,   setRecord]   = useState<PhoneRecord | null>(null)
+  const [loading,  setLoading]  = useState(true)
+  const [step,     setStep]     = useState<Step>('idle')
+  const [country,  setCountry]  = useState<Country>(COUNTRIES[0])
+  const [localNum, setLocalNum] = useState('')
+  const [otp,      setOtp]      = useState('')
+  const [busy,     setBusy]     = useState(false)
+  const [error,    setError]    = useState<string | null>(null)
+  const [devOtp,   setDevOtp]   = useState<string | null>(null)
 
   // ── Load existing phone record ─────────────────────────────────────────────
   useEffect(() => {
@@ -80,7 +89,6 @@ export function PhoneNumberManager() {
         setRecord(data)
         setStep(data?.verified ? 'verified' : data ? 'otp' : 'idle')
         if (data && !data.verified) {
-          // Pre-fill country + number so user can resend
           const found = COUNTRIES.find(c => c.code === data.country_code)
           if (found) setCountry(found)
           setLocalNum(data.local_number)
@@ -94,9 +102,7 @@ export function PhoneNumberManager() {
 
   async function handleSendOtp() {
     if (!accessToken) return
-    setError(null)
-    setBusy(true)
-    setDevOtp(null)
+    setError(null); setBusy(true); setDevOtp(null)
     try {
       const res = await apiFetch('/send-otp', 'POST', accessToken, {
         country_code: country.code,
@@ -114,11 +120,9 @@ export function PhoneNumberManager() {
 
   async function handleVerifyOtp() {
     if (!accessToken) return
-    setError(null)
-    setBusy(true)
+    setError(null); setBusy(true)
     try {
       await apiFetch('/verify-otp', 'POST', accessToken, { otp })
-      // Refresh record
       const { data } = await apiFetch('', 'GET', accessToken)
       setRecord(data)
       setStep('verified')
@@ -132,15 +136,10 @@ export function PhoneNumberManager() {
 
   async function handleDelete() {
     if (!accessToken || !window.confirm('Remove your phone number?')) return
-    setBusy(true)
-    setError(null)
+    setBusy(true); setError(null)
     try {
       await apiFetch('', 'DELETE', accessToken)
-      setRecord(null)
-      setStep('idle')
-      setLocalNum('')
-      setOtp('')
-      setDevOtp(null)
+      setRecord(null); setStep('idle'); setLocalNum(''); setOtp(''); setDevOtp(null)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to remove phone')
     } finally {
@@ -152,42 +151,36 @@ export function PhoneNumberManager() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: 13 }}>
-        <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+      <div className="flex items-center gap-2 py-3 text-[var(--text-muted)] font-body text-[13px]">
+        <Loader2 size={14} className="animate-spin" />
         Loading…
       </div>
     )
   }
 
   return (
-    <div style={{ fontFamily: 'var(--font-body)' }}>
+    <div className="font-body">
 
       {/* ── Verified banner ─────────────────────────────────────────────── */}
       {step === 'verified' && record && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '12px 16px', borderRadius: 10,
-          background: 'rgba(16,185,129,0.08)',
-          border: '1px solid rgba(16,185,129,0.2)',
-          marginBottom: 14,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <CheckCircle2 size={18} style={{ color: '#10b981', flexShrink: 0 }} />
+        <div className="flex items-center justify-between px-4 py-3 rounded-[10px] bg-[rgba(16,185,129,0.08)] border border-[rgba(16,185,129,0.2)] mb-3.5">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 size={18} className="text-[#10b981] shrink-0" />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+              <div className="text-[13px] font-semibold text-[var(--text-primary)]">
                 {record.country_code} {record.local_number}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+              <div className="text-[11px] text-[var(--text-muted)] mt-px">
                 Verified via WhatsApp
                 {record.verified_at && ` · ${new Date(record.verified_at).toLocaleDateString()}`}
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={() => { setStep('input'); setLocalNum(record.local_number) }}
-              style={btnStyle('secondary')}
+              className={btnSecondary}
             >
               Change
             </button>
@@ -195,7 +188,7 @@ export function PhoneNumberManager() {
               type="button"
               onClick={handleDelete}
               disabled={busy}
-              style={btnStyle('danger')}
+              className={btnDanger}
             >
               <Trash2 size={12} />
               Remove
@@ -207,16 +200,15 @@ export function PhoneNumberManager() {
       {/* ── Input step ──────────────────────────────────────────────────── */}
       {(step === 'idle' || step === 'input') && (
         <div>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+          <p className="text-xs text-[var(--text-muted)] mb-3">
             Add a phone number to receive booking inquiries and enable WhatsApp notifications.
           </p>
 
-          {/* Country selector */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+          <div className="flex gap-2.5 mb-2.5">
             <select
               value={country.code}
               onChange={e => setCountry(COUNTRIES.find(c => c.code === e.target.value) ?? COUNTRIES[0])}
-              style={inputStyle({ width: 180 })}
+              className={`${inputCls} w-[180px]`}
               aria-label="Country code"
             >
               {COUNTRIES.map(c => (
@@ -226,7 +218,6 @@ export function PhoneNumberManager() {
               ))}
             </select>
 
-            {/* Local number input */}
             <input
               type="tel"
               inputMode="numeric"
@@ -235,12 +226,12 @@ export function PhoneNumberManager() {
               maxLength={country.maxDigits + 2}
               onChange={e => setLocalNum(e.target.value.replace(/[^\d]/g, ''))}
               onKeyDown={e => { if (e.key === 'Enter') handleSendOtp() }}
-              style={inputStyle({ flex: 1 })}
+              className={`${inputCls} flex-1`}
               aria-label="Local phone number"
             />
           </div>
 
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 14 }}>
+          <div className="text-[11px] text-[var(--text-muted)] mb-3.5">
             Enter without leading zero or country code. E.g. for +62 Indonesia: <strong>81234567890</strong>
           </div>
 
@@ -250,9 +241,9 @@ export function PhoneNumberManager() {
             type="button"
             onClick={handleSendOtp}
             disabled={busy || localNum.length < 6}
-            style={btnStyle('primary', busy || localNum.length < 6)}
+            className={btnPrimary}
           >
-            {busy ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={13} />}
+            {busy ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
             Send WhatsApp OTP
           </button>
         </div>
@@ -261,32 +252,20 @@ export function PhoneNumberManager() {
       {/* ── OTP step ────────────────────────────────────────────────────── */}
       {step === 'otp' && (
         <div>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '12px 16px', borderRadius: 10,
-            background: 'rgba(59,130,246,0.07)',
-            border: '1px solid rgba(59,130,246,0.2)',
-            marginBottom: 14,
-          }}>
-            <ShieldCheck size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
-            <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>
+          <div className="flex items-center gap-2 px-4 py-3 rounded-[10px] bg-[rgba(59,130,246,0.07)] border border-[rgba(59,130,246,0.2)] mb-3.5">
+            <ShieldCheck size={16} className="text-[#3b82f6] shrink-0" />
+            <div className="text-xs text-[var(--text-primary)]">
               OTP sent via WhatsApp to <strong>{country.code} {localNum}</strong>. Expires in 10 minutes.
             </div>
           </div>
 
-          {/* Dev OTP hint */}
           {devOtp && (
-            <div style={{
-              padding: '10px 14px', borderRadius: 8, marginBottom: 12,
-              background: 'rgba(234,179,8,0.1)',
-              border: '1px solid rgba(234,179,8,0.3)',
-              fontSize: 12, color: 'var(--text-primary)',
-            }}>
-              <strong>Dev mode:</strong> Twilio not configured. OTP = <code style={{ fontWeight: 700, letterSpacing: 3 }}>{devOtp}</code>
+            <div className="px-3.5 py-2.5 rounded-lg mb-3 bg-[rgba(234,179,8,0.1)] border border-[rgba(234,179,8,0.3)] text-xs text-[var(--text-primary)]">
+              <strong>Dev mode:</strong> Twilio not configured. OTP = <code className="font-bold tracking-[3px]">{devOtp}</code>
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+          <div className="flex gap-2.5 mb-2.5">
             <input
               type="text"
               inputMode="numeric"
@@ -295,7 +274,7 @@ export function PhoneNumberManager() {
               maxLength={6}
               onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
               onKeyDown={e => { if (e.key === 'Enter' && otp.length === 6) handleVerifyOtp() }}
-              style={{ ...inputStyle({ flex: 1 }), letterSpacing: 8, fontSize: 18, textAlign: 'center' }}
+              className={`${inputCls} flex-1 tracking-[8px] text-lg text-center`}
               aria-label="One-time password"
               autoComplete="one-time-code"
             />
@@ -303,20 +282,20 @@ export function PhoneNumberManager() {
 
           {error && <ErrorBox message={error} />}
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className="flex gap-2 flex-wrap">
             <button
               type="button"
               onClick={handleVerifyOtp}
               disabled={busy || otp.length !== 6}
-              style={btnStyle('primary', busy || otp.length !== 6)}
+              className={btnPrimary}
             >
-              {busy ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <CheckCircle2 size={13} />}
+              {busy ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
               Verify OTP
             </button>
             <button
               type="button"
               onClick={() => { setStep('input'); setError(null) }}
-              style={btnStyle('secondary')}
+              className={btnSecondary}
             >
               Change Number
             </button>
@@ -324,7 +303,7 @@ export function PhoneNumberManager() {
               type="button"
               onClick={handleSendOtp}
               disabled={busy}
-              style={btnStyle('secondary', busy)}
+              className={btnSecondary}
             >
               Resend OTP
             </button>
@@ -335,44 +314,12 @@ export function PhoneNumberManager() {
   )
 }
 
-// ── Style helpers ─────────────────────────────────────────────────────────────
-
-function inputStyle(extra: React.CSSProperties = {}): React.CSSProperties {
-  return {
-    height: 36, padding: '0 12px', borderRadius: 8,
-    border: '1px solid var(--lito-border)',
-    background: 'var(--cms-surface-3)',
-    fontFamily: 'var(--font-body)', fontSize: 13,
-    color: 'var(--text-primary)',
-    outline: 'none',
-    ...extra,
-  }
-}
-
-function btnStyle(variant: 'primary' | 'secondary' | 'danger', disabled = false): React.CSSProperties {
-  const base: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', gap: 6,
-    padding: '7px 14px', borderRadius: 8,
-    border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
-    fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500,
-    opacity: disabled ? 0.5 : 1,
-    transition: 'background 150ms',
-  }
-  if (variant === 'primary')   return { ...base, background: 'var(--lito-teal)', color: '#fff' }
-  if (variant === 'danger')    return { ...base, background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }
-  return { ...base, background: 'var(--cms-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--lito-border)' }
-}
+// ── Error box ─────────────────────────────────────────────────────────────────
 
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 8,
-      padding: '10px 14px', borderRadius: 8, marginBottom: 12,
-      background: 'rgba(239,68,68,0.08)',
-      border: '1px solid rgba(239,68,68,0.2)',
-      fontSize: 12, color: '#ef4444',
-    }}>
-      <AlertCircle size={13} style={{ flexShrink: 0 }} />
+    <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg mb-3 bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)] text-xs text-[#ef4444]">
+      <AlertCircle size={13} className="shrink-0" />
       {message}
     </div>
   )

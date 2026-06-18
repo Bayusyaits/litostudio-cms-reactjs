@@ -36,22 +36,21 @@ export function TagsPageView({ tags, total, isLoading, search, onSearch, onCreat
   }
 
   return (
-    <div className="cms-page" style={{ padding: 32, overflowY: 'auto', height: '100%' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, color: 'var(--text-primary)' }}>Tags</h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+    <div className="cms-page p-8 overflow-y-auto h-full">
+      <div className="mb-6">
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Tags</h1>
+        <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
           {total} {total === 1 ? 'tag' : 'tags'}
         </p>
       </div>
 
       {/* Add tag */}
-      <div className="cms-card" style={{ padding: '20px 24px', marginBottom: 24 }}>
-        <h2 style={{ fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, marginBottom: 12, color: 'var(--text-primary)' }}>Add tag</h2>
-        <form onSubmit={handleSubmit(handleAdd)} noValidate style={{ display: 'flex', gap: 8 }}>
+      <div className="cms-card px-6 py-5 mb-6">
+        <h2 className="font-body text-[13px] font-medium mb-3 text-[var(--text-primary)]">Add tag</h2>
+        <form onSubmit={handleSubmit(handleAdd)} noValidate className="flex gap-2">
           <input
             {...register('name')}
-            className="cms-input"
-            style={{ height: 34, flex: 1, maxWidth: 320 }}
+            className="cms-input h-[34px] flex-1 max-w-[320px]"
             placeholder="Tag name"
             aria-invalid={!!errors.name}
           />
@@ -59,43 +58,40 @@ export function TagsPageView({ tags, total, isLoading, search, onSearch, onCreat
             <Plus size={13} /> {creating ? 'Adding…' : 'Add'}
           </button>
         </form>
-        {errors.name && <p style={{ marginTop: 6, fontSize: 12, color: 'var(--s-danger)' }} role="alert">{errors.name.message}</p>}
-        {createError && <div style={{ marginTop: 8, padding: '6px 10px', borderRadius: 4, background: 'var(--cms-danger-bg)', fontSize: 12, color: 'var(--s-danger)' }}>{createError}</div>}
+        {errors.name && <p className="mt-[6px] text-xs text-[var(--s-danger)]" role="alert">{errors.name.message}</p>}
+        {createError && <div className="mt-2 px-[10px] py-[6px] rounded bg-[var(--cms-danger-bg)] text-xs text-[var(--s-danger)]">{createError}</div>}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+      <div className="flex justify-between mb-[14px]">
         <SearchInput value={search} onChange={onSearch} placeholder="Search tags…" className="w-64" />
       </div>
 
       {/* Tag cloud */}
       {isLoading ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div className="flex flex-wrap gap-2">
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-8 rounded-full" style={{ width: `${60 + (i % 4) * 20}px` }} />)}
         </div>
       ) : tags.length === 0 ? (
         <EmptyState icon={Hash} title="No tags" description="Add your first tag above" />
       ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div className="flex flex-wrap gap-2">
           {tags.map(tag => (
-            <div key={tag.id} style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '5px 10px 5px 12px',
-              borderRadius: 999,
-              border: '1px solid var(--lito-border)',
-              background: 'var(--cms-card-bg)',
-              fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-primary)',
-            }}>
-              <Hash size={11} style={{ color: 'var(--text-muted)' }} />
+            <div
+              key={tag.id}
+              className="flex items-center gap-[6px] pl-3 pr-[10px] py-[5px] rounded-full border border-[var(--lito-border)] bg-[var(--cms-card-bg)] font-body text-xs text-[var(--text-primary)]"
+            >
+              <Hash size={11} className="text-[var(--text-muted)]" />
               {tag.name}
               {tag.post_count > 0 && (
-                <span style={{ fontSize: 10, color: 'var(--text-muted)', background: 'rgba(17,17,17,0.05)', borderRadius: 999, padding: '1px 6px' }}>
+                <span className="text-[10px] text-[var(--text-muted)] bg-[rgba(17,17,17,0.05)] rounded-full px-[6px] py-[1px]">
                   {tag.post_count}
                 </span>
               )}
-              <button type="button" onClick={() => onDelete(tag.id)} aria-label={`Remove ${tag.name}`}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2, display: 'flex', borderRadius: 999, marginLeft: 2 }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--cms-danger)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
+              <button
+                type="button"
+                onClick={() => onDelete(tag.id)}
+                aria-label={`Remove ${tag.name}`}
+                className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-[2px] flex rounded-full ml-0.5 hover:text-[var(--cms-danger)]"
               >
                 <Trash2 size={11} />
               </button>

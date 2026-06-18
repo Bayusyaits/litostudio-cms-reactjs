@@ -1,16 +1,5 @@
 /**
  * FormCombobox — searchable select/combobox wired to react-hook-form Controller.
- * Renders a text input + filterable dropdown list.
- * For large option sets (100+ items) consider a virtualised list.
- *
- * @example
- *   <FormCombobox
- *     name="category"
- *     control={form.control}
- *     label="Category"
- *     options={categories.map(c => ({ value: c.id, label: c.name }))}
- *     placeholder="Search categories…"
- *   />
  */
 
 import { useState, useRef, useEffect, useId } from 'react'
@@ -117,7 +106,6 @@ function ComboboxInner({
     ? options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
     : options
 
-  // Close on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -157,7 +145,7 @@ function ComboboxInner({
       hint={hint}
       className={className}
     >
-      <div ref={containerRef} style={{ position: 'relative' }}>
+      <div ref={containerRef} className="relative">
         {/* Trigger */}
         <button
           type="button"
@@ -207,38 +195,25 @@ function ComboboxInner({
           <div
             role="listbox"
             aria-label={label}
-            style={{
-              position: 'absolute',
-              top: 'calc(100% + 4px)',
-              left: 0, right: 0,
-              background: 'white',
-              border: '1px solid var(--lito-border)',
-              borderRadius: 8,
-              zIndex: 50,
-              boxShadow: 'var(--shadow-lg)',
-              overflow: 'hidden',
-            }}
+            className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border border-[var(--lito-border)] rounded-lg z-50 shadow-[var(--shadow-lg)] overflow-hidden"
           >
             {/* Search input */}
-            <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--lito-border)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Search size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+            <div className="px-[10px] py-2 border-b border-[var(--lito-border)] flex items-center gap-1.5">
+              <Search size={12} className="text-[var(--text-muted)] shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder={placeholder}
-                style={{
-                  flex: 1, border: 'none', background: 'transparent', outline: 'none',
-                  fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-primary)',
-                }}
+                className="flex-1 border-none bg-transparent outline-none font-body text-xs text-[var(--text-primary)]"
               />
             </div>
 
             {/* Options */}
-            <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+            <div className="max-h-[200px] overflow-y-auto">
               {filtered.length === 0 ? (
-                <div style={{ padding: '12px 14px', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
+                <div className="px-3.5 py-3 font-body text-xs text-[var(--text-muted)] text-center">
                   No results
                 </div>
               ) : filtered.map(opt => (
@@ -248,19 +223,11 @@ function ComboboxInner({
                   role="option"
                   aria-selected={opt.value === value}
                   onClick={() => handleSelect(opt)}
-                  style={{
-                    width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer',
-                    padding: '9px 14px',
-                    background: opt.value === value ? 'var(--cms-surface-3)' : 'white',
-                    borderBottom: '1px solid rgba(217,210,199,0.3)',
-                    transition: 'background 100ms',
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--cms-surface-3)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = opt.value === value ? 'var(--cms-surface-3)' : 'white' }}
+                  className={`w-full text-left border-none cursor-pointer px-3.5 py-[9px] border-b border-[rgba(217,210,199,0.3)] transition-[background] duration-100 hover:bg-[var(--cms-surface-3)] ${opt.value === value ? 'bg-[var(--cms-surface-3)]' : 'bg-white'}`}
                 >
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)' }}>{opt.label}</div>
+                  <div className="font-body text-[13px] text-[var(--text-primary)]">{opt.label}</div>
                   {opt.description && (
-                    <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{opt.description}</div>
+                    <div className="font-body text-[11px] text-[var(--text-muted)] mt-px">{opt.description}</div>
                   )}
                 </button>
               ))}

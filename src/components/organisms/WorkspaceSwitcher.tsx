@@ -20,7 +20,6 @@ export function WorkspaceSwitcher() {
   const { org, setOrg } = useOrgStore()
   const { activeSite, setActiveSite } = useWebsiteStore()
 
-  // Close on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -33,8 +32,6 @@ export function WorkspaceSwitcher() {
     return () => document.removeEventListener('mousedown', handle)
   }, [])
 
-  // Eagerly fetch orgs so the list is ready when the dropdown opens.
-  // `gcTime: 0` prevents stale orgs from appearing after an org is created.
   const { data: orgsData } = useQuery({
     queryKey: ['orgs'],
     queryFn: orgService.getOrgs,
@@ -81,177 +78,111 @@ export function WorkspaceSwitcher() {
   const displayDomain = activeSite?.domain ?? activeSite?.name ?? null
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} className="relative">
       {/* Trigger */}
       <button
         type="button"
         onClick={() => { setOpen(v => !v); setStep('org'); setSearch('') }}
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '14px 16px',
-          background: 'transparent',
-          border: 'none',
-          borderBottom: '1px solid var(--cms-sidebar-div)',
-          cursor: 'pointer',
-          textAlign: 'left',
-        }}
+        className="w-full flex items-center gap-2.5 px-4 py-[14px] bg-transparent border-none border-b border-[var(--cms-sidebar-div)] cursor-pointer text-left"
       >
         {/* Logo mark */}
-        <div style={{
-          width: 32, height: 32, borderRadius: 6,
-          background: 'var(--lito-gold)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 400, color: '#111', lineHeight: 1 }}>L</span>
+        <div className="w-8 h-8 rounded-md bg-[var(--lito-gold)] flex items-center justify-center shrink-0">
+          <span className="font-display text-[14px] font-normal text-[#111] leading-none">L</span>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 15,
-            fontWeight: 400,
-            color: 'var(--lito-cream)',
-            lineHeight: 1.2,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-[15px] font-normal text-[var(--lito-cream)] leading-[1.2] truncate">
             {displayName}
           </div>
           {displayDomain && (
-            <div style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: 11,
-              color: 'var(--cms-sidebar-label)',
-              marginTop: 2,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
+            <div className="font-body text-[11px] text-[var(--cms-sidebar-label)] mt-0.5 truncate">
               {displayDomain}
             </div>
           )}
         </div>
         <ChevronDown
           size={14}
-          style={{ color: 'var(--cms-sidebar-label)', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}
+          className={`text-[var(--cms-sidebar-label)] shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
       {/* Dropdown */}
       {open && (
-        <div style={{
-          position: 'absolute',
-          top: '100%',
-          left: 8,
-          right: 8,
-          background: '#1C1A17',
-          border: '1px solid rgba(247,244,238,0.08)',
-          borderRadius: 8,
-          zIndex: 100,
-          overflow: 'hidden',
-          boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
-        }}>
+        <div className="absolute top-full left-2 right-2 bg-[#1C1A17] border border-[rgba(247,244,238,0.08)] rounded-lg z-[100] overflow-hidden shadow-[0_12px_32px_rgba(0,0,0,0.5)]">
           {/* Step header */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '10px 12px 6px',
-            borderBottom: '1px solid rgba(247,244,238,0.06)',
-          }}>
+          <div className="flex items-center gap-2 px-3 pt-[10px] pb-1.5 border-b border-[rgba(247,244,238,0.06)]">
             {step === 'site' && (
               <button
                 type="button"
                 onClick={handleBack}
-                style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: 'var(--cms-sidebar-label)', display: 'flex' }}
+                className="bg-transparent border-none p-0.5 cursor-pointer text-[var(--cms-sidebar-label)] flex"
               >
                 <ChevronLeft size={14} />
               </button>
             )}
-            <span style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cms-sidebar-label)' }}>
+            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--cms-sidebar-label)]">
               {step === 'org' ? 'Organizations' : org?.name}
             </span>
           </div>
 
           {/* Search */}
-          <div style={{ padding: '8px 10px 4px', borderBottom: '1px solid rgba(247,244,238,0.06)' }}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Search size={12} style={{ position: 'absolute', left: 8, color: 'var(--cms-sidebar-label)', pointerEvents: 'none' }} />
+          <div className="px-[10px] pt-2 pb-1 border-b border-[rgba(247,244,238,0.06)]">
+            <div className="relative flex items-center">
+              <Search size={12} className="absolute left-2 text-[var(--cms-sidebar-label)] pointer-events-none" />
               <input
                 autoFocus
                 type="text"
                 placeholder={step === 'org' ? 'Search organizations…' : 'Search websites…'}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '5px 8px 5px 26px',
-                  background: 'rgba(247,244,238,0.05)',
-                  border: '1px solid rgba(247,244,238,0.08)',
-                  borderRadius: 4,
-                  fontSize: 12,
-                  color: 'var(--lito-cream)',
-                  outline: 'none',
-                  fontFamily: 'var(--font-body)',
-                }}
+                className="w-full py-[5px] pr-2 pl-[26px] bg-[rgba(247,244,238,0.05)] border border-[rgba(247,244,238,0.08)] rounded text-xs text-[var(--lito-cream)] outline-none font-body"
               />
             </div>
           </div>
 
           {/* List */}
-          <div style={{ maxHeight: 220, overflowY: 'auto' }} className="cms-scroll">
+          <div className="max-h-[220px] overflow-y-auto cms-scroll">
             {step === 'org' ? (
               filteredOrgs.length === 0 ? (
-                <div style={{ padding: '16px 14px', fontSize: 12, color: 'var(--cms-sidebar-label)', textAlign: 'center' }}>No organizations</div>
+                <div className="px-3.5 py-4 text-xs text-[var(--cms-sidebar-label)] text-center">No organizations</div>
               ) : filteredOrgs.map(o => (
                 <button
                   key={o.id}
                   type="button"
                   onClick={() => handleSelectOrg(o)}
-                  className="ws-item"
-                  style={{ width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}
+                  className="ws-item w-full border-none bg-transparent text-left cursor-pointer"
                 >
-                  <div style={{
-                    width: 26, height: 26, borderRadius: 4,
-                    background: 'rgba(212,168,83,0.15)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <Building2 size={12} style={{ color: 'var(--lito-gold)' }} />
+                  <div className="w-[26px] h-[26px] rounded bg-[rgba(212,168,83,0.15)] flex items-center justify-center shrink-0">
+                    <Building2 size={12} className="text-[var(--lito-gold)]" />
                   </div>
-                  <span style={{ fontSize: 13, color: 'rgba(247,244,238,0.8)', fontFamily: 'var(--font-body)' }}>{o.name}</span>
+                  <span className="text-[13px] text-[rgba(247,244,238,0.8)] font-body">{o.name}</span>
                   {org?.id === o.id && (
-                    <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: 'var(--lito-gold)', flexShrink: 0 }} />
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--lito-gold)] shrink-0" />
                   )}
                 </button>
               ))
             ) : (
               filteredSites.length === 0 ? (
-                <div style={{ padding: '16px 14px', fontSize: 12, color: 'var(--cms-sidebar-label)', textAlign: 'center' }}>No websites</div>
+                <div className="px-3.5 py-4 text-xs text-[var(--cms-sidebar-label)] text-center">No websites</div>
               ) : filteredSites.map(s => (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => handleSelectSite(s)}
-                  className="ws-item"
-                  style={{ width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}
+                  className="ws-item w-full border-none bg-transparent text-left cursor-pointer"
                 >
-                  <div style={{
-                    width: 26, height: 26, borderRadius: 4,
-                    background: 'rgba(26,74,90,0.2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <Globe size={12} style={{ color: 'var(--lito-teal)' }} />
+                  <div className="w-[26px] h-[26px] rounded bg-[rgba(26,74,90,0.2)] flex items-center justify-center shrink-0">
+                    <Globe size={12} className="text-[var(--lito-teal)]" />
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, color: 'rgba(247,244,238,0.8)', fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] text-[rgba(247,244,238,0.8)] font-body truncate">
                       {s.domain ?? s.name ?? s.id}
                     </div>
                     {s.domain && s.name && (
-                      <div style={{ fontSize: 11, color: 'var(--cms-sidebar-label)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                      <div className="text-[11px] text-[var(--cms-sidebar-label)] truncate">{s.name}</div>
                     )}
                   </div>
                   {activeSite?.id === s.id && (
-                    <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: 'var(--lito-gold)', flexShrink: 0 }} />
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--lito-gold)] shrink-0" />
                   )}
                 </button>
               ))
@@ -259,22 +190,13 @@ export function WorkspaceSwitcher() {
           </div>
 
           {/* Footer */}
-          <div style={{ borderTop: '1px solid rgba(247,244,238,0.06)', padding: '6px 8px' }}>
+          <div className="border-t border-[rgba(247,244,238,0.06)] px-2 py-1.5">
             <button
               type="button"
               onClick={() => {
                 if (step === 'org') { setOpen(false); navigate('/organizations') }
               }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                width: '100%', padding: '7px 8px',
-                background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 11, color: 'var(--cms-sidebar-label)',
-                fontFamily: 'var(--font-body)',
-                borderRadius: 4,
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(247,244,238,0.04)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              className="flex items-center gap-1.5 w-full px-2 py-[7px] bg-transparent border-none cursor-pointer text-[11px] text-[var(--cms-sidebar-label)] font-body rounded hover:bg-[rgba(247,244,238,0.04)]"
             >
               <Plus size={11} />
               {step === 'org' ? 'Create organization' : 'Create website'}
@@ -283,16 +205,7 @@ export function WorkspaceSwitcher() {
               <button
                 type="button"
                 onClick={() => { setOpen(false); navigate('/organizations') }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  width: '100%', padding: '7px 8px',
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 11, color: 'var(--lito-gold)',
-                  fontFamily: 'var(--font-body)',
-                  borderRadius: 4,
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,168,83,0.08)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                className="flex items-center gap-1.5 w-full px-2 py-[7px] bg-transparent border-none cursor-pointer text-[11px] text-[var(--lito-gold)] font-body rounded hover:bg-[rgba(212,168,83,0.08)]"
               >
                 <Building2 size={11} />
                 Manage organizations

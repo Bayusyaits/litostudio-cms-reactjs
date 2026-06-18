@@ -237,47 +237,20 @@ function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockC
     }] : []),
   ]
 
-  const itemStyle = (item: ContextMenuItem): React.CSSProperties => ({
-    display: 'flex', alignItems: 'center', gap: 8,
-    padding: '6px 12px',
-    border: 'none', background: 'none', cursor: item.disabled ? 'default' : 'pointer',
-    width: '100%', textAlign: 'left',
-    fontFamily: 'var(--font-body)', fontSize: 12,
-    color: item.danger
-      ? '#f87171'
-      : item.disabled
-        ? 'rgba(255,255,255,0.25)'
-        : 'rgba(255,255,255,0.85)',
-    borderRadius: 4,
-    transition: 'background 80ms',
-    opacity: item.disabled ? 0.5 : 1,
-  })
-
   return (
     <div
       ref={menuRef}
       role="menu"
       aria-label="Block options"
-      style={{
-        position: 'absolute',
-        top: pos.top,
-        right: pos.right,
-        zIndex: 200,
-        background: '#1a1a1a',
-        borderRadius: 10,
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-        padding: '4px 0',
-        minWidth: 188,
-        overflow: 'hidden',
-      }}
+      className="absolute z-[200] bg-[#1a1a1a] rounded-[10px] border border-[rgba(255,255,255,0.1)] shadow-[0_8px_32px_rgba(0,0,0,0.5)] py-1 min-w-[188px] overflow-hidden"
+      style={{ top: pos.top, right: pos.right }}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
     >
       {groups.map((group, gi) => (
         <div key={gi} role="group">
           {gi > 0 && (
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '3px 8px' }} aria-hidden="true" />
+            <div className="h-px bg-[rgba(255,255,255,0.08)] mx-2 my-[3px]" aria-hidden="true" />
           )}
           {group.items.map((item, ii) => (
             <button
@@ -287,15 +260,15 @@ function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockC
               disabled={item.disabled}
               aria-disabled={item.disabled}
               onClick={item.disabled ? undefined : item.action}
-              style={itemStyle(item)}
-              onMouseEnter={e => {
-                if (!item.disabled) {
-                  e.currentTarget.style.background = item.danger ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.08)'
-                }
-              }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'none' }}
+              className={`flex items-center gap-2 px-3 py-[6px] border-none bg-transparent w-full text-left font-body text-xs rounded-[4px] transition-[background] duration-[80ms] ${
+                item.danger
+                  ? 'text-[#f87171] cursor-pointer hover:bg-[rgba(239,68,68,0.2)]'
+                  : item.disabled
+                    ? 'text-[rgba(255,255,255,0.25)] cursor-default opacity-50'
+                    : 'text-[rgba(255,255,255,0.85)] cursor-pointer hover:bg-[rgba(255,255,255,0.08)]'
+              }`}
             >
-              <span style={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} aria-hidden="true">
+              <span className="w-4 flex items-center justify-center shrink-0" aria-hidden="true">
                 {item.icon}
               </span>
               {item.label}
@@ -323,14 +296,7 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
   const [menuOpen, setMenuOpen] = useState(false)
   const anchorRef = useRef<HTMLDivElement>(null)
 
-  const btnStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: 26, height: 26, borderRadius: 4,
-    border: 'none', background: 'transparent', cursor: 'pointer',
-    color: 'rgba(255,255,255,0.75)',
-    transition: 'background 100ms, color 100ms',
-    flexShrink: 0,
-  }
+  const btnCls = 'flex items-center justify-center w-[26px] h-[26px] rounded border-none bg-transparent cursor-pointer text-[rgba(255,255,255,0.75)] transition-[background,color] duration-100 shrink-0'
 
   const handleMoreClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -341,15 +307,7 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
     <div
       ref={anchorRef as React.RefObject<HTMLDivElement>}
       onClick={(e) => e.stopPropagation()}
-      style={{
-        position: 'absolute', top: 8, right: 8, zIndex: 20,
-        display: 'flex', alignItems: 'center',
-        background: '#1a1a1a',
-        borderRadius: 8,
-        padding: '2px 3px',
-        gap: 1,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-      }}
+      className="absolute top-2 right-2 z-[20] flex items-center bg-[#1a1a1a] rounded-lg px-[3px] py-0.5 gap-px shadow-[0_2px_12px_rgba(0,0,0,0.3)]"
     >
       {/* Drag grip */}
       <div
@@ -359,13 +317,13 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         role="button"
         tabIndex={0}
         aria-label="Drag to reorder block"
-        style={{ ...btnStyle, cursor: 'grab' }}
+        className={`${btnCls} cursor-grab`}
         title="Drag to reorder"
       >
         <GripVertical size={13} />
       </div>
 
-      <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.12)', margin: '0 2px' }} aria-hidden="true" />
+      <div className="w-px h-4 bg-[rgba(255,255,255,0.12)] mx-0.5" aria-hidden="true" />
 
       {/* Move up */}
       <button
@@ -374,9 +332,7 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         onClick={() => moveBlockUp(block.id)}
         title="Move up"
         aria-label="Move block up"
-        style={{ ...btnStyle, opacity: isFirst ? 0.25 : 1 }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+        className={`${btnCls} hover:bg-[rgba(255,255,255,0.12)] ${isFirst ? 'opacity-25' : 'opacity-100'}`}
       >
         <ChevronUp size={13} aria-hidden="true" />
       </button>
@@ -388,14 +344,12 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         onClick={() => moveBlockDown(block.id)}
         title="Move down"
         aria-label="Move block down"
-        style={{ ...btnStyle, opacity: isLast ? 0.25 : 1 }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+        className={`${btnCls} hover:bg-[rgba(255,255,255,0.12)] ${isLast ? 'opacity-25' : 'opacity-100'}`}
       >
         <ChevronDown size={13} aria-hidden="true" />
       </button>
 
-      <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.12)', margin: '0 2px' }} aria-hidden="true" />
+      <div className="w-px h-4 bg-[rgba(255,255,255,0.12)] mx-0.5" aria-hidden="true" />
 
       {/* Duplicate */}
       <button
@@ -403,9 +357,7 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         onClick={() => duplicateBlock(block.id)}
         title="Duplicate block"
         aria-label="Duplicate block"
-        style={btnStyle}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.color = '#fff' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)' }}
+        className={`${btnCls} hover:bg-[rgba(255,255,255,0.12)] hover:text-white`}
       >
         <Copy size={12} aria-hidden="true" />
       </button>
@@ -418,12 +370,7 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         aria-label="More block options"
         aria-haspopup="menu"
         aria-expanded={menuOpen}
-        style={{
-          ...btnStyle,
-          background: menuOpen ? 'rgba(255,255,255,0.14)' : 'transparent',
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = menuOpen ? 'rgba(255,255,255,0.14)' : 'transparent' }}
+        className={`${btnCls} hover:bg-[rgba(255,255,255,0.12)] ${menuOpen ? 'bg-[rgba(255,255,255,0.14)]' : ''}`}
       >
         <MoreVertical size={12} aria-hidden="true" />
       </button>
@@ -434,9 +381,7 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         onClick={() => removeBlock(block.id)}
         title="Delete block"
         aria-label="Delete block"
-        style={btnStyle}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.25)'; (e.currentTarget as HTMLElement).style.color = '#f87171' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)' }}
+        className={`${btnCls} hover:bg-[rgba(239,68,68,0.25)] hover:text-[#f87171]`}
       >
         <Trash2 size={12} aria-hidden="true" />
       </button>
@@ -466,25 +411,12 @@ function InsertButton({ afterBlockId }: { afterBlockId: string }) {
   }
 
   return (
-    <div style={{
-      position: 'absolute', bottom: -14, left: '50%', transform: 'translateX(-50%)',
-      zIndex: 30,
-    }}>
+    <div className="absolute -bottom-[14px] left-1/2 -translate-x-1/2 z-[30]">
       <button
         type="button"
         onClick={handleClick}
         title="Add block here"
-        style={{
-          width: 28, height: 28, borderRadius: '50%',
-          background: 'var(--lito-teal)',
-          border: '2px solid white',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', color: '#fff',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          transition: 'transform 120ms',
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.12)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)' }}
+        className="w-7 h-7 rounded-full bg-[var(--lito-teal)] border-2 border-white flex items-center justify-center cursor-pointer text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-transform duration-[120ms] hover:scale-[1.12]"
       >
         <Plus size={14} />
       </button>
@@ -790,15 +722,8 @@ export function EditorCanvas() {
       data-editor-canvas
       data-device-mode={previewMode}
       ref={canvasRef}
-      style={{
-        flex: 1, overflowY: 'auto',
-        background: cssVars['--cms-main-bg'],
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        minHeight: 0,
-        position: 'relative',
-      }}
+      className="flex-1 overflow-y-auto flex justify-center items-start min-h-0 relative"
+      style={{ background: cssVars['--cms-main-bg'] }}
     >
         {/* Page column — data-template activates scoped CSS vars from canvas-website-tokens.css */}
         <div
@@ -816,49 +741,32 @@ export function EditorCanvas() {
           previewMode={previewMode}
         />
         {/* Page body — template background */}
-        <div style={{ flex: 1, background: cssVars['--cms-card-bg'] as string }}>
+        <div className="flex-1" style={{ background: cssVars['--cms-card-bg'] as string }}>
         {doc.blocks.length === 0 ? (
           /* Empty state */
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            justifyContent: 'center', minHeight: '60vh', gap: 20, padding: 32,
-          }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: 16,
-              background: 'var(--cms-surface-3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Plus size={28} style={{ color: 'var(--text-muted)' }} />
+          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 p-8">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--cms-surface-3)] flex items-center justify-center">
+              <Plus size={28} className="text-[var(--text-muted)]" />
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>
+            <div className="text-center">
+              <p className="font-display text-[15px] font-semibold text-[var(--text-primary)] mt-0 mb-1">
                 No blocks yet
               </p>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+              <p className="font-body text-[13px] text-[var(--text-muted)] m-0">
                 Pick a block from the left panel to start building your page.
               </p>
             </div>
             <button
               type="button"
               onClick={addEmptyBlock}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 16px', borderRadius: 8,
-                border: '2px dashed var(--lito-border)',
-                background: 'none', cursor: 'pointer',
-                fontFamily: 'var(--font-body)', fontSize: 13,
-                color: 'var(--text-muted)',
-                transition: 'border-color 150ms, color 150ms',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--lito-teal)'; (e.currentTarget as HTMLElement).style.color = 'var(--lito-teal)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--lito-border)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-[var(--lito-border)] bg-transparent cursor-pointer font-body text-[13px] text-[var(--text-muted)] transition-[border-color,color] duration-150 hover:border-[var(--lito-teal)] hover:text-[var(--lito-teal)]"
             >
               <Plus size={16} />
               Add Heading block
             </button>
           </div>
         ) : (
-          <div style={{ position: 'relative' }}>
+          <div className="relative">
             {doc.blocks.map((block: Block, idx: number) => {
               const isSelected   = block.id === selectedBlockId
               const isFirst      = idx === 0
@@ -897,20 +805,10 @@ export function EditorCanvas() {
                 >
                   {/* Block type badge (top-left of selected block) */}
                   {!isPreview && isSelected && (
-                    <div style={{
-                      position: 'absolute', left: 0, top: 0,
-                      zIndex: 21, transform: 'translateY(-100%)',
-                    }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 4,
-                        padding: '2px 8px',
-                        background: isLocked ? 'var(--lito-gold)' : 'var(--lito-teal)',
-                        color: isLocked ? 'var(--lito-dark)' : '#fff',
-                        fontFamily: 'var(--font-body)',
-                        fontSize: 10, fontWeight: 600,
-                        borderRadius: '4px 4px 0 0',
-                        textTransform: 'capitalize',
-                      }}>
+                    <div className="absolute left-0 top-0 z-[21] -translate-y-full">
+                      <span className={`inline-flex items-center gap-1 px-2 py-[2px] font-body text-[10px] font-semibold rounded-t capitalize ${
+                        isLocked ? 'bg-[var(--lito-gold)] text-[var(--lito-dark)]' : 'bg-[var(--lito-teal)] text-white'
+                      }`}>
                         {isLocked && <Lock size={9} />}
                         {block.name ?? block.type}
                       </span>
@@ -919,17 +817,8 @@ export function EditorCanvas() {
 
                   {/* Hidden badge */}
                   {!isPreview && isHidden && (
-                    <div style={{
-                      position: 'absolute', left: 8, top: 8, zIndex: 21,
-                    }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 4,
-                        padding: '2px 6px',
-                        background: 'rgba(0,0,0,0.5)',
-                        color: '#fff',
-                        fontFamily: 'var(--font-body)', fontSize: 9, fontWeight: 600,
-                        borderRadius: 4,
-                      }}>
+                    <div className="absolute left-2 top-2 z-[21]">
+                      <span className="inline-flex items-center gap-1 px-[6px] py-[2px] bg-[rgba(0,0,0,0.5)] text-white font-body text-[9px] font-semibold rounded">
                         HIDDEN
                       </span>
                     </div>
@@ -950,25 +839,14 @@ export function EditorCanvas() {
                   {/* Locked overlay — click to unlock */}
                   {!isPreview && isLocked && (
                     <div
-                      style={{
-                        position: 'absolute', inset: 0, zIndex: 15,
-                        display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end',
-                        padding: 8,
-                      }}
+                      className="absolute inset-0 z-[15] flex items-start justify-end p-2"
                       onClick={(e) => {
                         e.stopPropagation()
                         useEditorStore.getState().lockBlock(block.id, false)
                       }}
                       title="Click to unlock"
                     >
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        padding: '3px 8px',
-                        background: 'rgba(234,179,8,0.9)',
-                        borderRadius: 6,
-                        fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600,
-                        color: '#1a1a0a', cursor: 'pointer',
-                      }}>
+                      <div className="flex items-center gap-1 px-2 py-[3px] bg-[rgba(234,179,8,0.9)] rounded-md font-body text-[11px] font-semibold text-[#1a1a0a] cursor-pointer">
                         <Lock size={11} />
                         Locked · Click to unlock
                       </div>
@@ -991,32 +869,20 @@ export function EditorCanvas() {
               <div
                 onDragOver={(e) => { e.preventDefault(); setDragOver(doc.blocks.length) }}
                 onDrop={(e) => handleDrop(e, doc.blocks.length)}
+                className="py-6 flex flex-col items-center gap-[10px]"
                 style={{
-                  padding: '24px 0',
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', gap: 10,
                   borderTop: dragOver === doc.blocks.length
                     ? '2px solid var(--lito-teal)'
                     : '1px dashed var(--lito-border)',
                 }}
               >
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                <p className="font-body text-xs text-[var(--text-muted)] m-0">
                   Drag block here or
                 </p>
                 <button
                   type="button"
                   onClick={addEmptyBlock}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '5px 14px', borderRadius: 7,
-                    border: '1px solid var(--lito-border)',
-                    background: 'var(--cms-card-bg)', cursor: 'pointer',
-                    fontFamily: 'var(--font-body)', fontSize: 12,
-                    color: 'var(--text-secondary)',
-                    transition: 'border-color 150ms, color 150ms',
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--lito-teal)'; (e.currentTarget as HTMLElement).style.color = 'var(--lito-teal)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--lito-border)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
+                  className="flex items-center gap-[6px] px-[14px] py-[5px] rounded-[7px] border border-[var(--lito-border)] bg-[var(--cms-card-bg)] cursor-pointer font-body text-xs text-[var(--text-secondary)] transition-[border-color,color] duration-150 hover:border-[var(--lito-teal)] hover:text-[var(--lito-teal)]"
                 >
                   <Plus size={13} />
                   Add Block

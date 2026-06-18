@@ -101,30 +101,25 @@ export function DashboardLayout() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--cms-main-bg)' }}>
+    <div className="flex h-screen overflow-hidden bg-[var(--cms-main-bg)]">
       {/* Dark ink sidebar */}
       <AppSidebar />
 
       {/* Main column */}
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <AppHeader />
 
         {/* No-site banner — only when org is known but no active site has been selected */}
         {wsState === 'no-site' && location.pathname !== '/organizations' && location.pathname !== '/onboarding' && (
-          <div style={{
-            padding: '7px 20px',
-            background: 'rgba(212,168,83,0.10)',
-            borderBottom: '1px solid rgba(212,168,83,0.20)',
-            textAlign: 'center',
-          }}>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--lito-gold-deep)', margin: 0 }}>
+          <div className="px-5 py-[7px] bg-[rgba(212,168,83,0.10)] border-b border-[rgba(212,168,83,0.20)] text-center">
+            <p className="font-body text-xs text-[var(--lito-gold-deep)] m-0">
               Select a website from the workspace switcher to manage content.
             </p>
           </div>
         )}
 
         {/* Page */}
-        <main id="main-content" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <main id="main-content" className="flex-1 overflow-hidden flex flex-col">
           <Outlet />
         </main>
       </div>

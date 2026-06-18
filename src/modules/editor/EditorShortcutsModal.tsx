@@ -67,16 +67,7 @@ export function EditorShortcutsModal({ onClose }: Props) {
   }, [onClose])
 
   const Kbd = ({ k }: { k: string }) => (
-    <kbd style={{
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      minWidth: 22, height: 22, padding: '0 5px',
-      fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600,
-      background: 'var(--cms-surface-3)',
-      border: '1px solid var(--lito-border)',
-      borderBottom: '2px solid var(--lito-border)',
-      borderRadius: 5, color: 'var(--text-primary)',
-      userSelect: 'none',
-    }}>
+    <kbd className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-[5px] font-body text-[11px] font-semibold bg-[var(--cms-surface-3)] border border-[var(--lito-border)] border-b-2 rounded-[5px] text-[var(--text-primary)] select-none">
       {k}
     </kbd>
   )
@@ -86,91 +77,47 @@ export function EditorShortcutsModal({ onClose }: Props) {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'rgba(0,0,0,0.45)',
-          backdropFilter: 'blur(2px)',
-        }}
+        className="fixed inset-0 z-[9999] bg-[rgba(0,0,0,0.45)] backdrop-blur-[2px]"
       />
 
       {/* Modal */}
-      <div style={{
-        position: 'fixed',
-        top: '50%', left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 10000,
-        width: 520, maxHeight: '80vh',
-        display: 'flex', flexDirection: 'column',
-        background: 'var(--cms-card-bg)',
-        border: '1px solid var(--lito-border)',
-        borderRadius: 14,
-        boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-        overflow: 'hidden',
-      }}>
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] w-[520px] max-h-[80vh] flex flex-col bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-[14px] shadow-[0_24px_64px_rgba(0,0,0,0.35)] overflow-hidden">
         {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '16px 20px',
-          borderBottom: '1px solid var(--lito-border)',
-          flexShrink: 0,
-        }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--lito-border)] shrink-0">
           <div>
-            <p style={{
-              fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 700,
-              color: 'var(--text-primary)', margin: 0,
-            }}>
+            <p className="font-body text-[15px] font-bold text-[var(--text-primary)] m-0">
               Keyboard Shortcuts
             </p>
-            <p style={{
-              fontFamily: 'var(--font-body)', fontSize: 11,
-              color: 'var(--text-muted)', margin: '2px 0 0',
-            }}>
+            <p className="font-body text-[11px] text-[var(--text-muted)] mt-0.5 mb-0">
               Press <strong>Esc</strong> to close
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 30, height: 30, borderRadius: 8,
-              border: '1px solid var(--lito-border)',
-              background: 'var(--cms-surface-3)', cursor: 'pointer',
-              color: 'var(--text-muted)',
-            }}
+            className="flex items-center justify-center w-[30px] h-[30px] rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-3)] cursor-pointer text-[var(--text-muted)]"
           >
             <X size={14} />
           </button>
         </div>
 
         {/* Body */}
-        <div style={{ overflowY: 'auto', padding: '16px 20px 20px' }}>
+        <div className="overflow-y-auto px-5 pt-4 pb-5">
           {GROUPS.map(({ label, shortcuts }) => (
-            <div key={label} style={{ marginBottom: 20 }}>
-              <p style={{
-                fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700,
-                letterSpacing: '0.07em', color: 'var(--text-muted)',
-                margin: '0 0 8px', textTransform: 'uppercase',
-              }}>
+            <div key={label} className="mb-5">
+              <p className="font-body text-[10px] font-bold tracking-[0.07em] text-[var(--text-muted)] mt-0 mb-2 uppercase">
                 {label}
               </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="flex flex-col gap-1">
                 {shortcuts.map(({ keys, description }) => (
-                  <div key={description} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '6px 10px', borderRadius: 8,
-                    background: 'var(--cms-surface-3)',
-                  }}>
-                    <span style={{
-                      fontFamily: 'var(--font-body)', fontSize: 12,
-                      color: 'var(--text-secondary)',
-                    }}>
+                  <div key={description} className="flex items-center justify-between px-[10px] py-[6px] rounded-lg bg-[var(--cms-surface-3)]">
+                    <span className="font-body text-xs text-[var(--text-secondary)]">
                       {description}
                     </span>
-                    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                    <div className="flex gap-[3px] items-center">
                       {keys.map((k, i) => (
-                        <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <span key={i} className="flex items-center gap-[3px]">
                           <Kbd k={k} />
                         </span>
                       ))}
