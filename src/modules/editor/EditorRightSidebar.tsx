@@ -559,12 +559,12 @@ function ContentPanel({ block }: { block: Block }) {
     </div>
   )
 
-  // ── template blocks (campaigns_grid, destinations_grid, etc.) ────────────
-  if (['campaigns_grid', 'destinations_grid', 'experiences', 'portfolio', 'packages', 'booking'].includes(block.type)) return (
+  // ── template blocks (campaigns_grid, portfolio, packages, booking) ────────
+  if (['campaigns_grid', 'destinations_grid', 'portfolio', 'packages', 'booking'].includes(block.type)) return (
     <div style={{ padding: '4px 14px' }}>
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Section heading" onChange={v => update({ heading: v })} />
       <FieldTextarea label="Description" value={d['description'] as string} placeholder="Optional description" onChange={v => update({ description: v })} />
-      {(block.type === 'campaigns_grid' || block.type === 'destinations_grid') && (
+      {block.type === 'campaigns_grid' && (
         <FieldInput label="Items to show" value={String(d['limit'] ?? 6)} placeholder="6" onChange={v => update({ limit: parseInt(v) || 6 })} />
       )}
     </div>

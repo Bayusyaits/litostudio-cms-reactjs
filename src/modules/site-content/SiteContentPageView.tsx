@@ -242,7 +242,7 @@ export function SiteContentPageView({ extra, isLoading, saving, saveError, saveS
     <div className="px-8 py-7 max-w-[760px] font-body">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)] m-0">
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)] m-0">
           Site Content
         </h1>
         <p className="text-xs text-[var(--text-muted)] mt-1">

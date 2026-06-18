@@ -38,7 +38,7 @@ export function TagsPageView({ tags, total, isLoading, search, onSearch, onCreat
   return (
     <div className="cms-page p-8 overflow-y-auto h-full">
       <div className="mb-6">
-        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Tags</h1>
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Tags</h1>
         <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
           {total} {total === 1 ? 'tag' : 'tags'}
         </p>

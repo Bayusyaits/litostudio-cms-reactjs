@@ -314,46 +314,28 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = [
     description: 'Promotions and campaigns grid',
     defaultData: { heading: 'Our Campaigns', limit: 4, status: 'published', columns: 2 },
     defaultStyles: { paddingTop: 80, paddingBottom: 80 },
-    templateScope: ['beauty', 'travel'],
+    templateScope: ['beauty'],
   },
 
-  // ── Travel template sections ─────────────────────────────────────────────
+  // ── Lito (Photography) template sections ─────────────────────────────────
   {
     type: 'destinations_grid',
     label: 'Destinations',
-    icon: 'Globe',
+    icon: 'MapPin',
     category: 'template',
-    description: 'Destination cards grid',
+    description: 'Destinations and locations grid',
     defaultData: {
-      heading: 'Explore Destinations',
+      heading: "Where We've Been",
       items: [
-        { name: 'Bali, Indonesia', country: 'Indonesia', description: 'Tropical paradise with stunning temples and rice terraces.', image: '' },
-        { name: 'Lombok', country: 'Indonesia', description: 'Pristine beaches and majestic Rinjani volcano.', image: '' },
-        { name: 'Raja Ampat', country: 'Indonesia', description: 'World-class diving in crystal-clear waters.', image: '' },
+        { name: 'Jakarta',    country: 'Indonesia', description: 'Urban stories from the capital.', image: '', link: '#', featured: true },
+        { name: 'Yogyakarta', country: 'Indonesia', description: 'Cultural heartland of Java.',     image: '', link: '#', featured: true },
+        { name: 'Bali',       country: 'Indonesia', description: 'Island of the Gods.',            image: '', link: '#', featured: false },
       ],
       columns: 3,
     },
     defaultStyles: { paddingTop: 80, paddingBottom: 80 },
-    templateScope: ['travel'],
+    templateScope: ['lito'],
   },
-  {
-    type: 'experiences',
-    label: 'Experiences',
-    icon: 'Compass',
-    category: 'template',
-    description: 'Travel experiences and activities',
-    defaultData: {
-      heading: 'Curated Experiences',
-      items: [
-        { title: 'Sunrise Trekking', description: 'Watch the sunrise from the summit.', duration: '1 day', price: 'From $75' },
-        { title: 'Diving & Snorkeling', description: 'Explore colorful coral reefs.', duration: '4 hours', price: 'From $50' },
-      ],
-    },
-    defaultStyles: { paddingTop: 80, paddingBottom: 80 },
-    templateScope: ['travel'],
-  },
-
-  // ── Photography template sections ────────────────────────────────────────
   {
     type: 'portfolio',
     label: 'Portfolio',
@@ -370,7 +352,7 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = [
       columns: 3,
     },
     defaultStyles: { paddingTop: 80, paddingBottom: 80 },
-    templateScope: ['photography'],
+    templateScope: ['lito'],
   },
   {
     type: 'packages',
@@ -396,7 +378,7 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = [
       ],
     },
     defaultStyles: { paddingTop: 80, paddingBottom: 80 },
-    templateScope: ['photography'],
+    templateScope: ['lito'],
   },
   {
     type: 'booking',
@@ -411,7 +393,7 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = [
       showForm: true,
     },
     defaultStyles: { paddingTop: 80, paddingBottom: 80 },
-    templateScope: ['photography'],
+    templateScope: ['lito'],
   },
 ]
 

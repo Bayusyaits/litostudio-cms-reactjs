@@ -71,7 +71,7 @@ export function ThemesPageView({ themes, activeThemeId, isLoading, onApplyTheme,
   return (
     <div className="cms-page p-8 overflow-y-auto h-full">
       <div className="mb-6">
-        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Themes</h1>
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Themes</h1>
         <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
           Choose a visual theme for your website
         </p>

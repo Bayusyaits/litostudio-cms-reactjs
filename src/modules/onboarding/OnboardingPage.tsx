@@ -44,12 +44,10 @@ const ORG_TYPES = [
 ]
 
 const TEMPLATES = [
-  { value: 'fashion',   label: 'Fashion',   preview: '🧣', description: 'Bold, editorial, seasonal collections' },
-  { value: 'beauty',    label: 'Beauty',    preview: '💆', description: 'Clean, product-forward, aspirational' },
-  { value: 'travel',    label: 'Travel',    preview: '🗺️',  description: 'Immersive, story-driven, destination-rich' },
-  { value: 'services',  label: 'Services',  preview: '💼', description: 'Professional, conversion-focused' },
-  { value: 'portfolio', label: 'Portfolio', preview: '🎨', description: 'Minimal, work-focused, personal brand' },
-  { value: 'blank',     label: 'Blank',     preview: '📄', description: 'Start from scratch with empty canvas' },
+  { value: 'lito',     label: 'Photography', preview: '📷', description: 'Visual storytelling, stories, and services' },
+  { value: 'fashion',  label: 'Fashion',     preview: '🧣', description: 'Bold, editorial, seasonal collections' },
+  { value: 'beauty',   label: 'Beauty',      preview: '💆', description: 'Clean, product-forward, aspirational' },
+  { value: 'blank',    label: 'Blank',       preview: '📄', description: 'Start from scratch with empty canvas' },
 ]
 
 const CHECKLIST_ITEMS = [

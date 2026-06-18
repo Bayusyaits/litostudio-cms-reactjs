@@ -141,7 +141,7 @@ export function MediaPageView({
       <div className="px-7 pt-6 pb-4 shrink-0 bg-[var(--cms-main-bg)]">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Media Library</h1>
+            <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Media Library</h1>
             <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
               {meta ? `${meta.total.toLocaleString()} files` : 'Upload and manage media'}
             </p>

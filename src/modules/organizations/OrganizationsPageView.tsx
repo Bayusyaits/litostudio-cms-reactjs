@@ -50,7 +50,7 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)] mb-1">
+          <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)] mb-1">
             Organizations
           </h1>
           <p className="font-body text-[13px] text-[var(--text-muted)]">

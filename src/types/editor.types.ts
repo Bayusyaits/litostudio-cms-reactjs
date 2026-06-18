@@ -34,12 +34,11 @@ export type BlockType =
   | 'social_links'
   | 'html'
   // ── Template-specific blocks ───────────────────────────────────────────────
-  | 'destinations_grid'    // Travel: destination cards grid
-  | 'experiences'          // Travel: experience packages list
-  | 'portfolio'            // Photography: portfolio grid
-  | 'booking'              // Photography: booking/calendar section
-  | 'packages'             // Photography: photography packages
-  | 'campaigns_grid'       // Beauty/Travel: campaign promotions
+  | 'destinations_grid'    // Lito: destinations/locations grid
+  | 'portfolio'            // Lito: portfolio grid
+  | 'booking'              // Lito: booking/calendar section
+  | 'packages'             // Lito: photography packages
+  | 'campaigns_grid'       // Beauty: campaign promotions
 
 // ── Per-block data shapes ─────────────────────────────────────────────────────
 
@@ -265,18 +264,6 @@ export interface DestinationsGridBlockData {
   columns: 2 | 3
 }
 
-export interface ExperiencesBlockData {
-  heading?: string
-  items: Array<{
-    title:        string
-    description?: string
-    duration?:    string
-    price?:       string
-    image?:       string
-    link?:        string
-  }>
-}
-
 export interface PortfolioBlockData {
   heading?: string
   items: Array<{
@@ -329,7 +316,7 @@ export type BlockData =
   | ContactFormBlockData | NewsletterBlockData | MapBlockData
   | SocialLinksBlockData | HTMLBlockData
   // Template-specific
-  | DestinationsGridBlockData | ExperiencesBlockData | PortfolioBlockData
+  | DestinationsGridBlockData | PortfolioBlockData
   | BookingBlockData | PackagesBlockData | CampaignsGridBlockData
 
 // ── Block styles ──────────────────────────────────────────────────────────────

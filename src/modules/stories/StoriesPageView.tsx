@@ -116,7 +116,7 @@ export function StoriesPageView({
       <div className="px-7 pt-6 pb-0 bg-[var(--cms-main-bg)] shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Stories</h1>
+            <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Stories</h1>
             <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
               Manage and publish travel stories
             </p>

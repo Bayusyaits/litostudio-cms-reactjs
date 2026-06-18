@@ -178,7 +178,7 @@ export function TeamPageView({
   return (
     <div className="cms-page p-8 overflow-y-auto h-full">
       <div className="mb-6">
-        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Team</h1>
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Team</h1>
         <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
           {meta ? `${meta.total} member${meta.total !== 1 ? 's' : ''}` : 'Manage workspace members and their roles'}
         </p>

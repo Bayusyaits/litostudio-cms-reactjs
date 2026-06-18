@@ -213,7 +213,7 @@ export function SettingsPageView({
 
       {/* Header */}
       <div className="mb-7">
-        <h1 className="font-display text-[28px] font-normal text-[var(--text-primary)]">Settings</h1>
+        <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Settings</h1>
         <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
           Manage your workspace, website, and appearance preferences
         </p>

@@ -37,12 +37,11 @@ const BLOCK_META: Record<string, { label: string; emoji: string }> = {
   map:              { label: 'Map',              emoji: '🗺' },
   social_links:     { label: 'Social Links',     emoji: '🔗' },
   html:             { label: 'HTML',             emoji: '</>' },
-  destinations_grid:{ label: 'Destinations',     emoji: '✈'  },
-  experiences:      { label: 'Experiences',      emoji: '🌄' },
   portfolio:        { label: 'Portfolio',        emoji: '🎨' },
   booking:          { label: 'Booking',          emoji: '📅' },
   packages:         { label: 'Packages',         emoji: '🎁' },
   campaigns_grid:   { label: 'Campaigns',        emoji: '📢' },
+  destinations_grid:{ label: 'Destinations',     emoji: '📍' },
 }
 
 function blockLabel(block: Block): string {

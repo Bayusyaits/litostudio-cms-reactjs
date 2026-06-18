@@ -249,18 +249,6 @@ export const DestinationsGridBlockDataSchema = z.object({
   columns: zCols23,
 })
 
-export const ExperiencesBlockDataSchema = z.object({
-  heading: z.string().optional(),
-  items:   z.array(z.object({
-    title:       z.string(),
-    description: z.string().optional(),
-    duration:    z.string().optional(),
-    price:       z.string().optional(),
-    image:       z.string().optional(),
-    link:        z.string().optional(),
-  })),
-})
-
 export const PortfolioBlockDataSchema = z.object({
   heading: z.string().optional(),
   items:   z.array(z.object({
@@ -351,7 +339,6 @@ export const BLOCK_DATA_SCHEMAS = {
   social_links:      SocialLinksBlockDataSchema,
   html:              HTMLBlockDataSchema,
   destinations_grid: DestinationsGridBlockDataSchema,
-  experiences:       ExperiencesBlockDataSchema,
   portfolio:         PortfolioBlockDataSchema,
   booking:           BookingBlockDataSchema,
   packages:          PackagesBlockDataSchema,
