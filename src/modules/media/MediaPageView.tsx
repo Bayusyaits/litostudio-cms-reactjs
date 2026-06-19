@@ -228,7 +228,7 @@ export function MediaPageView({
 
         {isLoading ? (
           viewMode === 'grid' ? (
-            <div className="grid gap-[10px]" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+            <div className="grid gap-[10px] [grid-template-columns:repeat(auto-fill,minmax(140px,1fr))]">
               {Array.from({ length: 20 }).map((_, i) => <Skeleton key={i} className="aspect-[4/3] rounded-md" />)}
             </div>
           ) : (
@@ -245,7 +245,7 @@ export function MediaPageView({
         ) : items.length === 0 ? (
           <EmptyState icon={FolderOpen} title="No media files" description="Upload images and videos to get started" />
         ) : viewMode === 'grid' ? (
-          <div className="grid gap-[10px]" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+          <div className="grid gap-[10px] [grid-template-columns:repeat(auto-fill,minmax(140px,1fr))]">
             {items.map(item => (
               <GridCard
                 key={item.id}

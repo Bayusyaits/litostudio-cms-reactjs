@@ -28,14 +28,10 @@ const PRODUCT_TYPE_TEXT: Record<ProductType, string> = {
 function ProductTypeBadge({ type }: { type: ProductType }) {
   return (
     <span
+      className="py-[3px] px-[9px] rounded-full text-[11px] font-medium font-body"
       style={{
-        padding: '3px 9px',
-        borderRadius: 999,
-        fontSize: 11,
-        fontWeight: 500,
         background: PRODUCT_TYPE_COLORS[type] ?? 'rgba(107,101,96,0.10)',
         color: PRODUCT_TYPE_TEXT[type] ?? 'var(--text-muted)',
-        fontFamily: 'var(--font-body)',
       }}
     >
       {PRODUCT_TYPE_LABELS[type] ?? type}

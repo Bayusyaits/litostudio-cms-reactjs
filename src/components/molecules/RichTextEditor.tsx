@@ -63,6 +63,8 @@ interface RichTextEditorProps {
   disabled?: boolean
   className?: string
   minHeight?: number
+  /** AC-01: Accessible label for the editing region (announces to screen readers) */
+  ariaLabel?: string
 }
 
 export function RichTextEditor({
@@ -72,6 +74,7 @@ export function RichTextEditor({
   disabled,
   className,
   minHeight = 300,
+  ariaLabel = 'Rich text editor',
 }: RichTextEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,6 +97,9 @@ export function RichTextEditor({
 
       ClassicEditor.create(containerRef.current!, {
         placeholder,
+        // AC-01: Provide accessible label for the toolbar container and
+        // editing region so screen readers announce the editor context.
+        label: ariaLabel,
         toolbar: {
           items: [
             'heading', '|',
@@ -103,6 +109,8 @@ export function RichTextEditor({
             'insertTable', '|',
             'undo', 'redo',
           ],
+          // Accessible label for the toolbar region
+          label: 'Editor toolbar',
         },
         heading: {
           options: [

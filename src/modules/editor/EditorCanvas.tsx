@@ -16,7 +16,7 @@
  *   Delete
  */
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import {
   Plus, ChevronUp, ChevronDown, Copy, Trash2, GripVertical,
   MoreVertical, Scissors, ClipboardPaste, ArrowUpToLine, ArrowDownToLine,
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { useEditorStore }       from '@/stores/editor.store'
 import { BlockRenderer }        from './blocks/BlockRenderer'
+import { FloatingTextToolbar }  from './FloatingTextToolbar'
 import { useTemplateManifest }  from '@/hooks/useTemplateManifest'
 import { getCanvasTokens }      from './templateCanvasTokens'
 import type { Block }           from '@/types/editor.types'
@@ -52,10 +53,9 @@ interface BlockContextMenuProps {
   isFirst: boolean
   isLast: boolean
   onClose: () => void
-  anchorRef: React.RefObject<HTMLDivElement | null>
 }
 
-function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockContextMenuProps) {
+function BlockContextMenu({ block, isFirst, isLast, onClose }: BlockContextMenuProps) {
   const {
     copyBlock, cutBlock, pasteBlock, duplicateBlock,
     insertBlockBefore, addBlock,
@@ -84,18 +84,6 @@ function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockC
       document.removeEventListener('keydown', handleEsc)
     }
   }, [onClose])
-
-  // Position: below the anchor
-  const [pos, setPos] = useState({ top: 0, right: 0 })
-  useEffect(() => {
-    if (anchorRef.current) {
-      const rect = anchorRef.current.getBoundingClientRect()
-      const canvasRect = anchorRef.current.closest('[data-editor-canvas]')?.getBoundingClientRect()
-      const top = rect.bottom - (canvasRect?.top ?? 0) + 4
-      const right = (canvasRect?.right ?? 0) - rect.right
-      setPos({ top, right })
-    }
-  }, [anchorRef])
 
   const handleRename = () => {
     const current = block.name ?? block.type
@@ -242,8 +230,7 @@ function BlockContextMenu({ block, isFirst, isLast, onClose, anchorRef }: BlockC
       ref={menuRef}
       role="menu"
       aria-label="Block options"
-      className="absolute z-[200] bg-[#1a1a1a] rounded-[10px] border border-[rgba(255,255,255,0.1)] shadow-[0_8px_32px_rgba(0,0,0,0.5)] py-1 min-w-[188px] overflow-hidden"
-      style={{ top: pos.top, right: pos.right }}
+      className="absolute top-[calc(100%+4px)] right-0 z-[200] bg-[#1a1a1a] rounded-[10px] border border-[rgba(255,255,255,0.1)] shadow-[0_8px_32px_rgba(0,0,0,0.5)] py-1 min-w-[188px] overflow-hidden"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
     >
@@ -303,6 +290,8 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
     setMenuOpen((o) => !o)
   }
 
+  const divider = <div className="w-px h-4 bg-[rgba(255,255,255,0.12)] mx-0.5 shrink-0" aria-hidden="true" />
+
   return (
     <div
       ref={anchorRef as React.RefObject<HTMLDivElement>}
@@ -323,7 +312,7 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         <GripVertical size={13} />
       </div>
 
-      <div className="w-px h-4 bg-[rgba(255,255,255,0.12)] mx-0.5" aria-hidden="true" />
+      {divider}
 
       {/* Move up */}
       <button
@@ -349,7 +338,7 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         <ChevronDown size={13} aria-hidden="true" />
       </button>
 
-      <div className="w-px h-4 bg-[rgba(255,255,255,0.12)] mx-0.5" aria-hidden="true" />
+      {divider}
 
       {/* Duplicate */}
       <button
@@ -362,18 +351,30 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
         <Copy size={12} aria-hidden="true" />
       </button>
 
-      {/* More options (⋮) */}
-      <button
-        type="button"
-        onClick={handleMoreClick}
-        title="More options"
-        aria-label="More block options"
-        aria-haspopup="menu"
-        aria-expanded={menuOpen}
-        className={`${btnCls} hover:bg-[rgba(255,255,255,0.12)] ${menuOpen ? 'bg-[rgba(255,255,255,0.14)]' : ''}`}
-      >
-        <MoreVertical size={12} aria-hidden="true" />
-      </button>
+      {/* More options (⋮) — renders its own context menu as child */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={handleMoreClick}
+          title="More options"
+          aria-label="More block options"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          className={`${btnCls} hover:bg-[rgba(255,255,255,0.12)] ${menuOpen ? 'bg-[rgba(255,255,255,0.14)]' : ''}`}
+        >
+          <MoreVertical size={12} aria-hidden="true" />
+        </button>
+
+        {/* Context menu — positioned relative to the ⋮ button wrapper */}
+        {menuOpen && (
+          <BlockContextMenu
+            block={block}
+            isFirst={isFirst}
+            isLast={isLast}
+            onClose={() => setMenuOpen(false)}
+          />
+        )}
+      </div>
 
       {/* Delete */}
       <button
@@ -385,17 +386,6 @@ function BlockActions({ block, isFirst, isLast, onDragStart, onDragEnd }: BlockA
       >
         <Trash2 size={12} aria-hidden="true" />
       </button>
-
-      {/* Context menu */}
-      {menuOpen && (
-        <BlockContextMenu
-          block={block}
-          isFirst={isFirst}
-          isLast={isLast}
-          onClose={() => setMenuOpen(false)}
-          anchorRef={anchorRef as React.RefObject<HTMLDivElement | null>}
-        />
-      )}
     </div>
   )
 }
@@ -727,6 +717,11 @@ export function EditorCanvas() {
       className="flex-1 overflow-y-auto flex justify-center items-start min-h-0 relative"
       style={{ background: cssVars['--cms-main-bg'] }}
     >
+      {/* Floating text toolbar — appears on contentEditable text selection */}
+      <FloatingTextToolbar
+        canvasRef={canvasRef as React.RefObject<HTMLDivElement | null>}
+        isPreview={editorMode === 'preview'}
+      />
         {/* Page column — data-template activates scoped CSS vars from canvas-website-tokens.css */}
         <div
           data-template={templateSlug ?? 'lito'}
@@ -784,6 +779,7 @@ export function EditorCanvas() {
               return (
                 <div
                   key={block.id}
+                  data-block-id={block.id}
                   role="region"
                   aria-label={`${block.name ?? block.type} block${isLocked ? ' (locked)' : ''}`}
                   aria-selected={isSelected}
@@ -792,45 +788,20 @@ export function EditorCanvas() {
                   onMouseLeave={() => !isPreview && setHoveredId(null)}
                   onDragOver={(e) => !isPreview && handleDragOver(e, idx)}
                   onDrop={(e) => !isPreview && handleDrop(e, idx)}
-                  className="group"
+                  className={`group relative transition-[box-shadow] duration-[120ms] ${isSelected ? 'z-[10]' : ''} ${isPreview ? 'cursor-default' : isLocked ? 'cursor-not-allowed' : 'cursor-default'} ${isHidden && !isPreview ? 'opacity-40' : 'opacity-100'}`}
                   style={{
-                    position: 'relative',
-                    transition: 'box-shadow 120ms',
                     boxShadow: !isPreview && isSelected
                       ? 'inset 0 0 0 2px rgba(201,162,90,0.6)'
                       : !isPreview && isLocked
                         ? 'inset 0 0 0 1px rgba(201,162,90,0.35)'
                         : 'none',
-                    zIndex: isSelected ? 10 : 'auto',
                     borderTop: !isPreview && isDragTarget ? '2px solid var(--lito-teal)' : '2px solid transparent',
-                    cursor: isPreview ? 'default' : isLocked ? 'not-allowed' : 'default',
-                    opacity: isHidden && !isPreview ? 0.4 : 1,
                   }}
                 >
                   {/* Section Chrome Badge — shown on hover or select */}
                   {!isPreview && !isLocked && (isHovered || isSelected) && (
-                    <div
-                      style={{
-                        position: 'absolute', top: 10, left: 10, zIndex: 22,
-                        display: 'inline-flex', alignItems: 'center', gap: 1,
-                        background: 'rgba(13,13,13,0.85)',
-                        border: '1px solid rgba(201,162,90,0.45)',
-                        borderRadius: 6,
-                        backdropFilter: 'blur(6px)',
-                        boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-                        overflow: 'hidden',
-                        pointerEvents: 'none',
-                      }}
-                    >
-                      <span style={{
-                        padding: '4px 10px',
-                        fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
-                        fontSize: 10,
-                        fontWeight: 600,
-                        letterSpacing: '0.07em',
-                        textTransform: 'uppercase',
-                        color: 'rgba(201,162,90,0.9)',
-                      }}>
+                    <div className="absolute top-2.5 left-2.5 z-[22] inline-flex items-center gap-px bg-[rgba(13,13,13,0.85)] border border-[rgba(201,162,90,0.45)] rounded-md backdrop-blur-[6px] shadow-[0_2px_12px_rgba(0,0,0,0.3)] overflow-hidden pointer-events-none">
+                      <span className="px-2.5 py-1 font-body text-[10px] font-semibold tracking-[0.07em] uppercase text-[rgba(201,162,90,0.9)]">
                         {block.name ?? block.type}
                       </span>
                     </div>

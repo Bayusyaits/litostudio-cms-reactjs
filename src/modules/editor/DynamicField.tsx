@@ -5,6 +5,7 @@
 
 import { Plus, Trash2, Globe } from 'lucide-react'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
+import { RichTextEditor } from '@/components/molecules/RichTextEditor'
 import type { FieldSchema } from '@litostudio/templates'
 
 interface DynamicFieldProps {
@@ -71,12 +72,11 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
       return fieldWrap(
         <>
           <FieldLabel translatable={schema.translatable}>{schema.label}</FieldLabel>
-          <textarea
+          <RichTextEditor
             value={str}
-            placeholder={schema.hint ?? '<p>Content...</p>'}
-            rows={5}
-            onChange={(e) => onChange(e.target.value)}
-            className={`${inputCls} resize-y leading-[1.5]`}
+            onChange={(html) => onChange(html)}
+            placeholder={schema.hint ?? 'Write content here…'}
+            minHeight={160}
           />
         </>,
       )

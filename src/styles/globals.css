@@ -185,6 +185,13 @@ html, body, #root {
   line-height: 1;
 }
 .cms-nav-item:hover { background: var(--cms-nav-hover); color: rgba(247,244,238,0.90); }
+/* AC-11: visible focus ring for keyboard nav (WCAG 2.4.7) */
+.cms-nav-item:focus-visible {
+  outline: 2px solid var(--lito-teal);
+  outline-offset: 1px;
+  background: var(--cms-nav-hover);
+  color: rgba(247,244,238,0.90);
+}
 .cms-nav-item.active {
   background: var(--cms-nav-active-bg);
   color: var(--cms-nav-active-fg);

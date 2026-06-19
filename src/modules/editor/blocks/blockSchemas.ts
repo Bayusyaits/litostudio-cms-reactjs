@@ -13,26 +13,38 @@ import { z } from 'zod'
 
 // ── Primitive helpers ─────────────────────────────────────────────────────────
 
-const zAlign   = z.enum(['left', 'center', 'right'])
-const zSize    = z.enum(['sm', 'md', 'lg'])
-const zWidth   = z.enum(['full', 'wide', 'normal', 'small'])
-const zMaxW    = z.enum(['full', 'xl', 'lg', 'md', 'sm'])
-const zCols234 = z.union([z.literal(2), z.literal(3), z.literal(4)])
-const zCols23  = z.union([z.literal(2), z.literal(3)])
-const zLevel   = z.union([
+const zAlign      = z.enum(['left', 'center', 'right'])
+const zAlignRich  = z.enum(['left', 'center', 'right', 'justify'])
+const zSize       = z.enum(['sm', 'md', 'lg'])
+const zWidth      = z.enum(['full', 'wide', 'normal', 'small'])
+const zMaxW       = z.enum(['full', 'xl', 'lg', 'md', 'sm'])
+const zCols234    = z.union([z.literal(2), z.literal(3), z.literal(4)])
+const zCols23     = z.union([z.literal(2), z.literal(3)])
+const zLevel      = z.union([
   z.literal(1), z.literal(2), z.literal(3),
   z.literal(4), z.literal(5), z.literal(6),
 ])
 
+// ── RichTextData — shared CMS↔website format ─────────────────────────────────
+//
+// html   : raw HTML from CKEditor / contentEditable
+// tag    : semantic wrapper tag ('p', 'h1'–'h6', 'blockquote')
+// align  : block-level alignment persisted alongside html
+
+export const RichTextDataSchema = z.object({
+  html:  z.string(),
+  tag:   z.enum(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote']).optional(),
+  align: zAlignRich.optional(),
+})
+
 // ── Block data schemas ────────────────────────────────────────────────────────
 
-export const TextBlockDataSchema = z.object({
-  html: z.string(),
-})
+export const TextBlockDataSchema = RichTextDataSchema
 
 export const HeadingBlockDataSchema = z.object({
   text:  z.string(),
   level: zLevel,
+  align: zAlignRich.optional(),
 })
 
 export const ImageBlockDataSchema = z.object({
@@ -98,8 +110,10 @@ export const CTABlockDataSchema = z.object({
 })
 
 export const ServicesBlockDataSchema = z.object({
-  heading: z.string().optional(),
-  items:   z.array(z.object({
+  heading:       z.string().optional(),
+  sectionNumber: z.string().optional(),
+  sectionLabel:  z.string().optional(),
+  items:         z.array(z.object({
     icon:        z.string().optional(),
     title:       z.string(),
     description: z.string(),
@@ -123,8 +137,10 @@ export const PricingBlockDataSchema = z.object({
 })
 
 export const TestimonialsBlockDataSchema = z.object({
-  heading: z.string().optional(),
-  items:   z.array(z.object({
+  heading:       z.string().optional(),
+  sectionNumber: z.string().optional(),
+  sectionLabel:  z.string().optional(),
+  items:         z.array(z.object({
     quote:  z.string(),
     name:   z.string(),
     title:  z.string().optional(),
@@ -183,10 +199,12 @@ export const CollectionsBlockDataSchema = z.object({
 })
 
 export const JournalBlockDataSchema = z.object({
-  heading:     z.string().optional(),
-  limit:       z.number().min(1).max(50),
-  columns:     zCols23,
-  showExcerpt: z.boolean().optional(),
+  heading:       z.string().optional(),
+  sectionNumber: z.string().optional(),
+  sectionLabel:  z.string().optional(),
+  limit:         z.number().min(1).max(50),
+  columns:       zCols23,
+  showExcerpt:   z.boolean().optional(),
 })
 
 export const StoryBlockDataSchema = z.object({
@@ -283,6 +301,33 @@ export const PackagesBlockDataSchema = z.object({
   })),
 })
 
+// ── Lito-specific section schemas ─────────────────────────────────────────────
+
+export const AboutBlockDataSchema = z.object({
+  heading:     z.string().optional(),
+  description: z.string().optional(),
+  image:       z.string().optional(),
+  ctaText:     z.string().optional(),
+  ctaUrl:      z.string().optional(),
+  since:       z.string().optional(),
+  cities:      z.string().optional(),
+})
+
+export const CampaignBlockDataSchema = z.object({
+  heading:     z.string().optional(),
+  description: z.string().optional(),
+  image:       z.string().optional(),
+  ctaText:     z.string().optional(),
+  ctaUrl:      z.string().optional(),
+})
+
+export const StoryCategoriesBlockDataSchema = z.object({
+  heading:       z.string().optional(),
+  sectionLabel:  z.string().optional(),
+  sectionNumber: z.string().optional(),
+  limit:         z.number().min(1).max(50).optional(),
+})
+
 export const CampaignsGridBlockDataSchema = z.object({
   heading: z.string().optional(),
   limit:   z.number().min(1).max(50),
@@ -338,10 +383,15 @@ export const BLOCK_DATA_SCHEMAS = {
   map:               MapBlockDataSchema,
   social_links:      SocialLinksBlockDataSchema,
   html:              HTMLBlockDataSchema,
+  // Lito template-specific
+  about:             AboutBlockDataSchema,
+  campaign:          CampaignBlockDataSchema,
+  story_categories:  StoryCategoriesBlockDataSchema,
   destinations_grid: DestinationsGridBlockDataSchema,
   portfolio:         PortfolioBlockDataSchema,
   booking:           BookingBlockDataSchema,
   packages:          PackagesBlockDataSchema,
+  // Beauty template-specific
   campaigns_grid:    CampaignsGridBlockDataSchema,
 } as const
 

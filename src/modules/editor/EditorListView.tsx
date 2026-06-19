@@ -2,9 +2,10 @@
  * EditorListView — Full block tree, Gutenberg "List View" parity.
  *
  * Renders every block in document order.
- * Click → select. Drag handle visible (drag-to-reorder is a future Sprint 2 task).
+ * Click → select. Drag the grip handle to reorder via HTML5 drag API → reorderBlocks().
  */
 
+import { useRef, useState } from 'react'
 import { GripVertical, Eye, EyeOff, Lock, Unlock, Trash2 } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
 import type { Block } from '@/types/editor.types'
@@ -58,24 +59,42 @@ function blockEmoji(block: Block): string {
 
 const actionBtnCls = 'flex items-center justify-center w-[22px] h-[22px] rounded border-none bg-transparent cursor-pointer text-[var(--text-muted)]'
 
-function BlockRow({ block, index }: { block: Block; index: number }) {
+interface BlockRowProps {
+  block:       Block
+  index:       number
+  dragIndex:   number | null
+  overIndex:   number | null
+  onDragStart: (i: number) => void
+  onDragOver:  (i: number) => void
+  onDrop:      () => void
+  onDragEnd:   () => void
+}
+
+function BlockRow({ block, index, dragIndex, overIndex, onDragStart, onDragOver, onDrop, onDragEnd }: BlockRowProps) {
   const { selectedBlockId, selectBlock, updateVisibility, lockBlock, removeBlock } = useEditorStore()
   const isSelected  = selectedBlockId === block.id
   const isHidden    = block.visibility?.desktop === false
   const isLocked    = block.locked === true
+  const isDragging  = dragIndex === index
+  const isOver      = overIndex === index && dragIndex !== null && dragIndex !== index
 
   return (
     <div
+      draggable
+      onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart(index) }}
+      onDragOver={(e)  => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; onDragOver(index) }}
+      onDrop={(e)      => { e.preventDefault(); onDrop() }}
+      onDragEnd={onDragEnd}
       className={`flex items-center py-1 px-[10px] pl-2 gap-[6px] cursor-pointer select-none border-l-2 transition-[background] duration-[80ms] ${
-        isHidden ? 'opacity-40' : 'opacity-100'
-      } ${
+        isDragging ? 'opacity-30' : isHidden ? 'opacity-40' : 'opacity-100'
+      } ${isOver ? 'border-t-2 border-t-[var(--lito-teal)]' : ''} ${
         isSelected
           ? 'bg-[rgba(15,118,110,0.08)] border-l-[var(--lito-teal)]'
           : 'bg-transparent border-l-transparent hover:bg-[var(--cms-surface-3)]'
       }`}
       onClick={() => selectBlock(block.id)}
     >
-      {/* Drag handle (visual only — reorder via moveBlockUp/Down) */}
+      {/* Drag handle — activates HTML5 drag on the whole row */}
       <span className="text-[var(--text-muted)] shrink-0 cursor-grab leading-none">
         <GripVertical size={13} />
       </span>
@@ -147,8 +166,34 @@ function BlockRow({ block, index }: { block: Block; index: number }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function EditorListView() {
-  const { blockDoc } = useEditorStore()
+  const { blockDoc, reorderBlocks } = useEditorStore()
   const blocks = blockDoc.blocks
+
+  // C-02: drag-to-reorder state (HTML5 drag API, no external deps)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [overIndex, setOverIndex] = useState<number | null>(null)
+  // Track latest values in a ref so event handlers always see current state
+  const dragRef = useRef<{ from: number | null; to: number | null }>({ from: null, to: null })
+
+  const handleDragStart = (i: number) => {
+    setDragIndex(i)
+    dragRef.current.from = i
+  }
+  const handleDragOver = (i: number) => {
+    setOverIndex(i)
+    dragRef.current.to = i
+  }
+  const handleDrop = () => {
+    const { from, to } = dragRef.current
+    if (from !== null && to !== null && from !== to) {
+      reorderBlocks(from, to)
+    }
+  }
+  const handleDragEnd = () => {
+    setDragIndex(null)
+    setOverIndex(null)
+    dragRef.current = { from: null, to: null }
+  }
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
@@ -167,7 +212,17 @@ export function EditorListView() {
           </p>
         ) : (
           blocks.map((block, i) => (
-            <BlockRow key={block.id} block={block} index={i} />
+            <BlockRow
+              key={block.id}
+              block={block}
+              index={i}
+              dragIndex={dragIndex}
+              overIndex={overIndex}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
+            />
           ))
         )}
       </div>

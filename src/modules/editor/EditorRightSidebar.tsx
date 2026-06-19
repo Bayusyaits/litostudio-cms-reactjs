@@ -4,6 +4,9 @@
  * Tabs: Content | Style | Spacing | SEO | Visibility
  * Spacing tab: Margin/Padding with lock icon, 2×2 grid (Top/Bottom | Left/Right),
  *              device switcher, Advanced collapsible, footer (Need help? / Keyboard shortcuts)
+ *
+ * All inline style={{}} replaced with Tailwind classes.
+ * CSS-var references use arbitrary-value syntax: text-[var(--name)], bg-[var(--name)] etc.
  */
 
 import { useState } from 'react'
@@ -11,6 +14,7 @@ import { Lock, Monitor, Tablet, Smartphone, HelpCircle, ChevronDown, Crown, Plus
 import { useEditorStore } from '@/stores/editor.store'
 import { useWebsiteStore } from '@/stores/website.store'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
+import { CodeEditor }    from '@/components/molecules/CodeEditor'
 import { DynamicContentPanel } from './DynamicContentPanel'
 import { useTemplateManifest }  from '@/hooks/useTemplateManifest'
 import { getCanvasTokens }      from './templateCanvasTokens'
@@ -20,10 +24,7 @@ import type { EditorTab, Block, BlockStyles } from '@/types/editor.types'
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{
-      fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 500,
-      color: 'var(--text-secondary)', margin: '0 0 4px',
-    }}>
+    <p className="font-body text-[11px] font-medium text-[var(--text-secondary)] m-0 mb-1">
       {children}
     </p>
   )
@@ -34,31 +35,18 @@ function PxInput({
 }: { label: string; value?: number; onChange: (v: number) => void }) {
   return (
     <div>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--text-muted)', margin: '0 0 3px' }}>
+      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-[3px]">
         {label}
       </p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 0,
-        border: '1px solid var(--lito-border)', borderRadius: 6, overflow: 'hidden' }}>
+      <div className="flex items-center border border-[var(--lito-border)] rounded-md overflow-hidden">
         <input
           type="number"
           value={value ?? 0}
           min={0} max={999}
           onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-          style={{
-            width: '100%', padding: '5px 6px',
-            border: 'none', outline: 'none',
-            fontFamily: 'var(--font-body)', fontSize: 12,
-            color: 'var(--text-primary)',
-            background: 'var(--cms-surface-2)',
-          }}
+          className="w-full py-[5px] px-[6px] border-0 outline-none font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)]"
         />
-        <span style={{
-          padding: '0 6px', lineHeight: '28px',
-          fontFamily: 'var(--font-body)', fontSize: 11,
-          color: 'var(--text-muted)', background: 'var(--cms-surface-2)',
-          borderLeft: '1px solid var(--lito-border)',
-          flexShrink: 0,
-        }}>
+        <span className="px-[6px] leading-7 font-body text-[11px] text-[var(--text-muted)] bg-[var(--cms-surface-2)] border-l border-[var(--lito-border)] shrink-0">
           px
         </span>
       </div>
@@ -70,20 +58,13 @@ function FieldInput({ label, value, placeholder, onChange }: {
   label: string; value?: string; placeholder?: string; onChange: (v: string) => void
 }) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div className="mb-3">
       <Label>{label}</Label>
       <input
         value={value ?? ''}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: '100%', padding: '6px 10px',
-          border: '1px solid var(--lito-border)', borderRadius: 6,
-          fontFamily: 'var(--font-body)', fontSize: 12,
-          color: 'var(--text-primary)',
-          background: 'var(--cms-surface-2)', outline: 'none',
-          boxSizing: 'border-box',
-        }}
+        className="w-full py-[6px] px-[10px] border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none box-border"
       />
     </div>
   )
@@ -95,18 +76,12 @@ function FieldSelect({ label, value, options, onChange }: {
   onChange: (v: string) => void
 }) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div className="mb-3">
       <Label>{label}</Label>
       <select
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: '100%', padding: '6px 10px',
-          border: '1px solid var(--lito-border)', borderRadius: 6,
-          fontFamily: 'var(--font-body)', fontSize: 12,
-          color: 'var(--text-primary)',
-          background: 'var(--cms-surface-2)', outline: 'none',
-        }}
+        className="w-full py-[6px] px-[10px] border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none"
       >
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
@@ -118,21 +93,14 @@ function FieldTextarea({ label, value, placeholder, onChange }: {
   label: string; value?: string; placeholder?: string; onChange: (v: string) => void
 }) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div className="mb-3">
       <Label>{label}</Label>
       <textarea
         value={value ?? ''}
         placeholder={placeholder}
         rows={4}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: '100%', padding: '6px 10px',
-          border: '1px solid var(--lito-border)', borderRadius: 6,
-          fontFamily: 'var(--font-body)', fontSize: 12,
-          color: 'var(--text-primary)',
-          background: 'var(--cms-surface-2)', outline: 'none',
-          resize: 'vertical', boxSizing: 'border-box',
-        }}
+        className="w-full py-[6px] px-[10px] border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none resize-y box-border"
       />
     </div>
   )
@@ -142,18 +110,12 @@ function FieldTextarea({ label, value, placeholder, onChange }: {
 
 function SectionHead({ label }: { label: string }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '10px 14px 6px',
-    }}>
-      <p style={{
-        fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600,
-        color: 'var(--text-primary)', margin: 0,
-      }}>
+    <div className="flex items-center justify-between px-[14px] pt-[10px] pb-[6px]">
+      <p className="font-body text-[12px] font-semibold text-[var(--text-primary)] m-0">
         {label}
       </p>
-      <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-        <Lock size={12} style={{ color: 'var(--text-muted)' }} />
+      <button type="button" className="bg-transparent border-0 cursor-pointer p-0">
+        <Lock size={12} className="text-[var(--text-muted)]" />
       </button>
     </div>
   )
@@ -168,7 +130,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── heading ──────────────────────────────────────────────────────────────
   if (block.type === 'heading') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Text" value={d['text'] as string} placeholder="Heading text" onChange={v => update({ text: v })} />
       <FieldSelect label="Level" value={String(d['level'] ?? 2)} options={[
         { value: '1', label: 'H1 — Page Title' },
@@ -183,15 +145,22 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── text ─────────────────────────────────────────────────────────────────
   if (block.type === 'text') return (
-    <div style={{ padding: '4px 14px' }}>
-      <FieldTextarea label="HTML Content" value={d['html'] as string} placeholder="<p>Your text...</p>" onChange={v => update({ html: v })} />
+    <div className="px-[14px] py-2">
+      <CodeEditor
+        label="HTML Content"
+        language="html"
+        value={(d['html'] as string) ?? ''}
+        placeholder="<p>Your text...</p>"
+        minHeight={180}
+        onChange={v => update({ html: v })}
+      />
     </div>
   )
 
   // ── image ────────────────────────────────────────────────────────────────
   if (block.type === 'image') return (
-    <div style={{ padding: '4px 14px' }}>
-      <div style={{ marginBottom: 12 }}>
+    <div className="px-[14px] py-1">
+      <div className="mb-3">
         <Label>Image</Label>
         <ImageUploader
           value={d['src'] as string | undefined}
@@ -216,7 +185,7 @@ function ContentPanel({ block }: { block: Block }) {
     const images = (d['images'] as Array<{ src: string; alt: string; caption?: string }>) ?? []
     const updateImages = (next: typeof images) => update({ images: next })
     return (
-      <div style={{ padding: '4px 14px' }}>
+      <div className="px-[14px] py-1">
         <FieldSelect label="Columns" value={String(d['columns'] ?? 3)} options={[
           { value: '2', label: '2 columns' },
           { value: '3', label: '3 columns' },
@@ -229,47 +198,36 @@ function ContentPanel({ block }: { block: Block }) {
           { value: 'lg', label: 'Large' },
         ]} onChange={v => update({ gap: v })} />
 
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div className="mb-2">
+          <div className="flex items-center justify-between mb-2">
             <Label>Images ({images.length})</Label>
             <button
               type="button"
               onClick={() => updateImages([...images, { src: '', alt: '' }])}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 4,
-                padding: '3px 8px', borderRadius: 5,
-                border: '1px solid var(--lito-teal)',
-                background: 'none', cursor: 'pointer',
-                fontFamily: 'var(--font-body)', fontSize: 11,
-                color: 'var(--lito-teal)',
-              }}
+              className="flex items-center gap-1 py-[3px] px-2 rounded-[5px] border border-[var(--lito-teal)] bg-transparent cursor-pointer font-body text-[11px] text-[var(--lito-teal)]"
             >
               <Plus size={11} /> Add
             </button>
           </div>
 
           {images.length === 0 && (
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
+            <p className="font-body text-[11px] text-[var(--text-muted)] m-0">
               No images yet. Click Add to start.
             </p>
           )}
 
           {images.map((img, idx) => (
-            <div key={idx} style={{
-              padding: 8, marginBottom: 8,
-              border: '1px solid var(--lito-border)', borderRadius: 8,
-              background: 'var(--cms-surface-2)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
+            <div key={idx} className="p-2 mb-2 border border-[var(--lito-border)] rounded-lg bg-[var(--cms-surface-2)]">
+              <div className="flex items-center justify-between mb-[6px]">
+                <span className="font-body text-[11px] text-[var(--text-muted)]">
                   Image {idx + 1}
                 </span>
                 <button
                   type="button"
                   onClick={() => updateImages(images.filter((_, i) => i !== idx))}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
+                  className="bg-transparent border-0 cursor-pointer p-[2px]"
                 >
-                  <Trash2 size={12} style={{ color: 'var(--lito-danger, #f87171)' }} />
+                  <Trash2 size={12} className="text-[var(--lito-danger,#f87171)]" />
                 </button>
               </div>
               <ImageUploader
@@ -281,7 +239,7 @@ function ContentPanel({ block }: { block: Block }) {
                   updateImages(next)
                 }}
               />
-              <div style={{ marginTop: 6 }}>
+              <div className="mt-[6px]">
                 <input
                   value={img.alt}
                   placeholder="Alt text"
@@ -290,13 +248,7 @@ function ContentPanel({ block }: { block: Block }) {
                     next[idx] = { ...next[idx], alt: e.target.value }
                     updateImages(next)
                   }}
-                  style={{
-                    width: '100%', padding: '4px 8px',
-                    border: '1px solid var(--lito-border)', borderRadius: 5,
-                    fontFamily: 'var(--font-body)', fontSize: 11,
-                    color: 'var(--text-primary)', background: 'var(--cms-card-bg)',
-                    outline: 'none', boxSizing: 'border-box',
-                  }}
+                  className="w-full py-1 px-2 border border-[var(--lito-border)] rounded-[5px] font-body text-[11px] text-[var(--text-primary)] bg-[var(--cms-card-bg)] outline-none box-border"
                 />
               </div>
             </div>
@@ -308,7 +260,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── video ────────────────────────────────────────────────────────────────
   if (block.type === 'video') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Video URL" value={d['url'] as string} placeholder="YouTube or Vimeo URL" onChange={v => update({ url: v })} />
       <FieldInput label="Caption" value={d['caption'] as string} placeholder="Optional caption" onChange={v => update({ caption: v })} />
     </div>
@@ -316,7 +268,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── button ───────────────────────────────────────────────────────────────
   if (block.type === 'button') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Button text" value={d['text'] as string} placeholder="Click here" onChange={v => update({ text: v })} />
       <FieldInput label="URL" value={d['url'] as string} placeholder="https://" onChange={v => update({ url: v })} />
       <FieldSelect label="Variant" value={d['variant'] as string ?? 'primary'} options={[
@@ -340,7 +292,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── hero ─────────────────────────────────────────────────────────────────
   if (block.type === 'hero') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Eyebrow Label" value={d['eyebrow'] as string ?? ''} placeholder="EDITORIAL · JAKARTA" onChange={v => update({ eyebrow: v })} />
       <FieldInput label="Title" value={d['title'] as string} placeholder="Your headline" onChange={v => update({ title: v })} />
       <FieldInput label="Title (Italic)" value={d['titleItalic'] as string ?? ''} placeholder="italic portion" onChange={v => update({ titleItalic: v })} />
@@ -351,7 +303,7 @@ function ContentPanel({ block }: { block: Block }) {
       <FieldInput label="Secondary CTA URL" value={d['ctaSecondaryUrl'] as string ?? ''} placeholder="#" onChange={v => update({ ctaSecondaryUrl: v })} />
       <FieldInput label="Stat Label" value={d['stat'] as string ?? ''} placeholder="500+ sesi" onChange={v => update({ stat: v })} />
       <FieldInput label="Location" value={d['location'] as string ?? ''} placeholder="Jakarta · Yogyakarta" onChange={v => update({ location: v })} />
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         <Label>Background image</Label>
         <ImageUploader
           value={d['backgroundImage'] as string | undefined}
@@ -370,7 +322,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── cta ──────────────────────────────────────────────────────────────────
   if (block.type === 'cta') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Title" value={d['title'] as string} placeholder="Call to action title" onChange={v => update({ title: v })} />
       <FieldTextarea label="Description" value={d['description'] as string} placeholder="Supporting description" onChange={v => update({ description: v })} />
       <FieldInput label="Button text" value={d['buttonText'] as string} placeholder="Get Started" onChange={v => update({ buttonText: v })} />
@@ -390,7 +342,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── services ─────────────────────────────────────────────────────────────
   if (block.type === 'services') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Our Services" onChange={v => update({ heading: v })} />
       <FieldSelect label="Columns" value={String(d['columns'] ?? 3)} options={[
         { value: '1', label: '1 column' },
@@ -403,14 +355,14 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── pricing ──────────────────────────────────────────────────────────────
   if (block.type === 'pricing') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Pricing" onChange={v => update({ heading: v })} />
     </div>
   )
 
   // ── testimonials ─────────────────────────────────────────────────────────
   if (block.type === 'testimonials') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="What our clients say" onChange={v => update({ heading: v })} />
       <FieldSelect label="Layout" value={d['layout'] as string ?? 'grid'} options={[
         { value: 'grid', label: 'Grid' },
@@ -421,14 +373,14 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── faq ──────────────────────────────────────────────────────────────────
   if (block.type === 'faq') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Frequently Asked Questions" onChange={v => update({ heading: v })} />
     </div>
   )
 
   // ── team ─────────────────────────────────────────────────────────────────
   if (block.type === 'team') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Meet the Team" onChange={v => update({ heading: v })} />
       <FieldSelect label="Columns" value={String(d['columns'] ?? 4)} options={[
         { value: '2', label: '2 columns' },
@@ -440,7 +392,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── statistics ───────────────────────────────────────────────────────────
   if (block.type === 'statistics') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="By the Numbers" onChange={v => update({ heading: v })} />
       <FieldSelect label="Columns" value={String(d['columns'] ?? 4)} options={[
         { value: '2', label: '2 columns' },
@@ -452,7 +404,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── products ─────────────────────────────────────────────────────────────
   if (block.type === 'products') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Featured Products" onChange={v => update({ heading: v })} />
       <FieldInput label="Items to show" value={String(d['limit'] ?? 6)} placeholder="6" onChange={v => update({ limit: parseInt(v) || 6 })} />
       <FieldSelect label="Columns" value={String(d['columns'] ?? 3)} options={[
@@ -465,7 +417,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── collections ──────────────────────────────────────────────────────────
   if (block.type === 'collections') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Shop by Collection" onChange={v => update({ heading: v })} />
       <FieldInput label="Items to show" value={String(d['limit'] ?? 4)} placeholder="4" onChange={v => update({ limit: parseInt(v) || 4 })} />
       <FieldSelect label="Columns" value={String(d['columns'] ?? 2)} options={[
@@ -478,7 +430,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── journal / story ──────────────────────────────────────────────────────
   if (block.type === 'journal' || block.type === 'story') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Latest Posts" onChange={v => update({ heading: v })} />
       <FieldInput label="Items to show" value={String(d['limit'] ?? 3)} placeholder="3" onChange={v => update({ limit: parseInt(v) || 3 })} />
       <FieldSelect label="Columns" value={String(d['columns'] ?? 3)} options={[
@@ -491,7 +443,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── contact_form ─────────────────────────────────────────────────────────
   if (block.type === 'contact_form') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Heading" value={d['heading'] as string} placeholder="Get in Touch" onChange={v => update({ heading: v })} />
       <FieldTextarea label="Description" value={d['description'] as string} placeholder="Optional description" onChange={v => update({ description: v })} />
       <FieldInput label="Submit button text" value={d['submitText'] as string} placeholder="Send Message" onChange={v => update({ submitText: v })} />
@@ -500,7 +452,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── newsletter ───────────────────────────────────────────────────────────
   if (block.type === 'newsletter') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Heading" value={d['heading'] as string} placeholder="Stay in the Loop" onChange={v => update({ heading: v })} />
       <FieldTextarea label="Description" value={d['description'] as string} placeholder="Subscribe for updates" onChange={v => update({ description: v })} />
       <FieldInput label="Input placeholder" value={d['placeholder'] as string} placeholder="Enter your email" onChange={v => update({ placeholder: v })} />
@@ -510,7 +462,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── map ──────────────────────────────────────────────────────────────────
   if (block.type === 'map') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Google Maps embed URL" value={d['src'] as string} placeholder="https://www.google.com/maps/embed?..." onChange={v => update({ src: v })} />
       <FieldInput label="Height (px)" value={String(d['height'] ?? 400)} placeholder="400" onChange={v => update({ height: parseInt(v) || 400 })} />
     </div>
@@ -518,7 +470,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── social_links ─────────────────────────────────────────────────────────
   if (block.type === 'social_links') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldSelect label="Size" value={d['size'] as string ?? 'md'} options={[
         { value: 'sm', label: 'Small' },
         { value: 'md', label: 'Medium' },
@@ -534,21 +486,28 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── html ─────────────────────────────────────────────────────────────────
   if (block.type === 'html') return (
-    <div style={{ padding: '4px 14px' }}>
-      <FieldTextarea label="HTML Code" value={d['html'] as string} placeholder="<!-- Custom HTML -->" onChange={v => update({ html: v })} />
+    <div className="px-[14px] py-2">
+      <CodeEditor
+        label="HTML Code"
+        language="html"
+        value={(d['html'] as string) ?? ''}
+        placeholder="<!-- Custom HTML -->"
+        minHeight={220}
+        onChange={v => update({ html: v })}
+      />
     </div>
   )
 
   // ── spacer ───────────────────────────────────────────────────────────────
   if (block.type === 'spacer') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Height (px)" value={String(d['height'] ?? 48)} placeholder="48" onChange={v => update({ height: parseInt(v) || 0 })} />
     </div>
   )
 
   // ── divider ──────────────────────────────────────────────────────────────
   if (block.type === 'divider') return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldSelect label="Style" value={d['style'] as string ?? 'solid'} options={[
         { value: 'solid', label: 'Solid' },
         { value: 'dashed', label: 'Dashed' },
@@ -565,7 +524,7 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── template blocks (campaigns_grid, portfolio, packages, booking) ────────
   if (['campaigns_grid', 'destinations_grid', 'portfolio', 'packages', 'booking'].includes(block.type)) return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Section heading" onChange={v => update({ heading: v })} />
       <FieldTextarea label="Description" value={d['description'] as string} placeholder="Optional description" onChange={v => update({ description: v })} />
       {block.type === 'campaigns_grid' && (
@@ -576,16 +535,12 @@ function ContentPanel({ block }: { block: Block }) {
 
   // ── fallback ─────────────────────────────────────────────────────────────
   return (
-    <div style={{ padding: '12px 14px' }}>
-      <div style={{
-        padding: 10, borderRadius: 8,
-        background: 'var(--cms-surface-3)',
-        border: '1px solid var(--lito-border)',
-      }}>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>
+    <div className="px-[14px] py-3">
+      <div className="p-[10px] rounded-lg bg-[var(--cms-surface-3)] border border-[var(--lito-border)]">
+        <p className="font-body text-[12px] font-semibold text-[var(--text-primary)] m-0 mb-1">
           {block.type} block
         </p>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
+        <p className="font-body text-[11px] text-[var(--text-muted)] m-0">
           No editable fields for this block type.
         </p>
       </div>
@@ -601,7 +556,6 @@ function TemplatePalette({ onPick }: { onPick: (color: string) => void }) {
   const templateSlug   = (settings?.template_slug as string | undefined) ?? 'lito'
   const tokens         = getCanvasTokens(templateSlug)
 
-  // Extract the 6 key palette colours from canvas tokens
   const palette = [
     { label: 'Primary',   color: tokens['--lito-teal']   },
     { label: 'Accent',    color: tokens['--lito-gold']   },
@@ -612,21 +566,17 @@ function TemplatePalette({ onPick }: { onPick: (color: string) => void }) {
   ]
 
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div className="mb-3">
       <Label>Template palette</Label>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <div className="flex gap-[6px] flex-wrap">
         {palette.map(({ label, color }) => (
           <button
             key={label}
             type="button"
             title={`${label}: ${color}`}
             onClick={() => onPick(color)}
-            style={{
-              width: 24, height: 24, borderRadius: 6,
-              background: color,
-              border: '1.5px solid var(--lito-border)',
-              cursor: 'pointer', padding: 0, flexShrink: 0,
-            }}
+            style={{ background: color }}
+            className="w-6 h-6 rounded-md border-[1.5px] border-[var(--lito-border)] cursor-pointer p-0 shrink-0"
           />
         ))}
       </div>
@@ -642,40 +592,30 @@ function StylePanel({ block }: { block: Block }) {
   const upd = (patch: Partial<BlockStyles>) => updateStyles(block.id, patch)
 
   return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       {/* Template palette — quick-pick colours from the active template */}
       <TemplatePalette onPick={(color) => upd({ backgroundColor: color })} />
 
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         <Label>Background colour</Label>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="flex gap-2 items-center">
           <input type="color" value={s.backgroundColor ?? '#ffffff'}
             onChange={e => upd({ backgroundColor: e.target.value })}
-            style={{ width: 32, height: 32, borderRadius: 6, border: '1px solid var(--lito-border)', cursor: 'pointer', padding: 2 }} />
+            className="w-8 h-8 rounded-md border border-[var(--lito-border)] cursor-pointer p-[2px]" />
           <input value={s.backgroundColor ?? ''} onChange={e => upd({ backgroundColor: e.target.value })}
             placeholder="transparent"
-            style={{
-              flex: 1, padding: '5px 8px',
-              border: '1px solid var(--lito-border)', borderRadius: 6,
-              fontFamily: 'var(--font-body)', fontSize: 12,
-              color: 'var(--text-primary)', background: 'var(--cms-surface-2)', outline: 'none',
-            }} />
+            className="flex-1 py-[5px] px-2 border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none" />
         </div>
       </div>
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         <Label>Text colour</Label>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="flex gap-2 items-center">
           <input type="color" value={s.textColor ?? '#000000'}
             onChange={e => upd({ textColor: e.target.value })}
-            style={{ width: 32, height: 32, borderRadius: 6, border: '1px solid var(--lito-border)', cursor: 'pointer', padding: 2 }} />
+            className="w-8 h-8 rounded-md border border-[var(--lito-border)] cursor-pointer p-[2px]" />
           <input value={s.textColor ?? ''} onChange={e => upd({ textColor: e.target.value })}
             placeholder="inherit"
-            style={{
-              flex: 1, padding: '5px 8px',
-              border: '1px solid var(--lito-border)', borderRadius: 6,
-              fontFamily: 'var(--font-body)', fontSize: 12,
-              color: 'var(--text-primary)', background: 'var(--cms-surface-2)', outline: 'none',
-            }} />
+            className="flex-1 py-[5px] px-2 border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none" />
         </div>
       </div>
       <FieldSelect label="Text alignment" value={s.textAlign ?? ''} options={[
@@ -699,7 +639,7 @@ function StylePanel({ block }: { block: Block }) {
   )
 }
 
-// ── Spacing panel — matches screenshot exactly ────────────────────────────────
+// ── Spacing panel ─────────────────────────────────────────────────────────────
 
 function SpacingPanel({ block }: { block: Block }) {
   const { updateStyles } = useEditorStore()
@@ -718,8 +658,8 @@ function SpacingPanel({ block }: { block: Block }) {
     <div>
       {/* Margin */}
       <SectionHead label="Margin" />
-      <div style={{ padding: '0 14px 8px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div className="px-[14px] pb-2">
+        <div className="grid grid-cols-2 gap-2">
           <PxInput label="Top"    value={s.marginTop}    onChange={v => upd({ marginTop: v })} />
           <PxInput label="Bottom" value={s.marginBottom} onChange={v => upd({ marginBottom: v })} />
         </div>
@@ -727,8 +667,8 @@ function SpacingPanel({ block }: { block: Block }) {
 
       {/* Padding */}
       <SectionHead label="Padding" />
-      <div style={{ padding: '0 14px 12px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div className="px-[14px] pb-3">
+        <div className="grid grid-cols-2 gap-2">
           <PxInput label="Top"    value={s.paddingTop}    onChange={v => upd({ paddingTop: v })} />
           <PxInput label="Bottom" value={s.paddingBottom} onChange={v => upd({ paddingBottom: v })} />
           <PxInput label="Left"   value={s.paddingLeft}   onChange={v => upd({ paddingLeft: v })} />
@@ -737,26 +677,13 @@ function SpacingPanel({ block }: { block: Block }) {
       </div>
 
       {/* Device switcher */}
-      <div style={{
-        display: 'flex', gap: 0, margin: '0 14px 12px',
-        border: '1px solid var(--lito-border)',
-        borderRadius: 8, overflow: 'hidden',
-      }}>
+      <div className="flex mx-[14px] mb-3 border border-[var(--lito-border)] rounded-lg overflow-hidden">
         {deviceTabs.map(({ label, Icon }) => (
           <button
             key={label}
             type="button"
             onClick={() => setActiveDevice(label)}
-            style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              gap: 4, padding: '6px 4px',
-              border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 500,
-              background: activeDevice === label ? 'var(--lito-teal)' : 'var(--cms-surface-3)',
-              color: activeDevice === label ? '#fff' : 'var(--text-muted)',
-              borderRight: label !== 'Mobile' ? '1px solid var(--lito-border)' : 'none',
-              transition: 'background 120ms, color 120ms',
-            }}
+            className={`flex-1 flex items-center justify-center gap-1 py-[6px] px-1 border-0 cursor-pointer font-body text-[11px] font-medium transition-[background,color] duration-[120ms] ${label !== 'Mobile' ? 'border-r border-[var(--lito-border)]' : ''} ${activeDevice === label ? 'bg-[var(--lito-teal)] text-white' : 'bg-[var(--cms-surface-3)] text-[var(--text-muted)]'}`}
           >
             <Icon size={12} />
             {label}
@@ -768,27 +695,18 @@ function SpacingPanel({ block }: { block: Block }) {
       <button
         type="button"
         onClick={() => setAdvancedOpen(o => !o)}
-        style={{
-          width: '100%', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '10px 14px', border: 'none', background: 'none',
-          cursor: 'pointer', borderTop: '1px solid var(--lito-border)',
-        }}
+        className="w-full flex items-center justify-between px-[14px] py-[10px] border-0 border-t border-[var(--lito-border)] bg-transparent cursor-pointer"
       >
-        <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
+        <span className="font-body text-[12px] font-semibold text-[var(--text-primary)]">
           Advanced
         </span>
         <ChevronDown
           size={14}
-          style={{
-            color: 'var(--text-muted)',
-            transform: advancedOpen ? 'rotate(180deg)' : 'none',
-            transition: 'transform 150ms',
-          }}
+          className={`text-[var(--text-muted)] transition-transform duration-150 ${advancedOpen ? 'rotate-180' : ''}`}
         />
       </button>
       {advancedOpen && (
-        <div style={{ padding: '4px 14px 12px' }}>
+        <div className="px-[14px] pb-3 pt-1">
           <FieldInput
             label="Custom ID"
             value={s.customId ?? ''}
@@ -812,8 +730,8 @@ function SpacingPanel({ block }: { block: Block }) {
 function SEOPanel() {
   const { pageSeo, setPageSeo } = useEditorStore()
   return (
-    <div style={{ padding: '4px 14px' }}>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', margin: '0 0 12px' }}>
+    <div className="px-[14px] py-1">
+      <p className="font-body text-[11px] text-[var(--text-muted)] m-0 mb-3">
         Page-level SEO metadata. Saved with the page on publish.
       </p>
       <FieldInput
@@ -839,35 +757,25 @@ function VisibilityPanel({ block }: { block: Block }) {
   const v = block.visibility ?? { desktop: true, tablet: true, mobile: true }
 
   return (
-    <div style={{ padding: '4px 14px' }}>
+    <div className="px-[14px] py-1">
       {(['desktop', 'tablet', 'mobile'] as const).map((device) => {
         const isOn = v[device] !== false
         return (
           <div
             key={device}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '8px 0', borderBottom: '1px solid var(--lito-border)',
-            }}
+            className="flex items-center justify-between py-2 border-b border-[var(--lito-border)]"
           >
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+            <span className="font-body text-[13px] text-[var(--text-primary)] capitalize">
               {device}
             </span>
+            {/* Toggle switch */}
             <div
+              role="switch"
+              aria-checked={isOn}
               onClick={() => updateVisibility(block.id, { [device]: !isOn })}
-              style={{
-                width: 36, height: 20, borderRadius: 10, cursor: 'pointer',
-                background: isOn ? 'var(--lito-teal)' : 'var(--cms-surface-3)',
-                border: '1px solid var(--lito-border)',
-                position: 'relative', transition: 'background 150ms',
-              }}
+              className={`relative w-9 h-5 rounded-[10px] cursor-pointer border border-[var(--lito-border)] transition-[background] duration-150 ${isOn ? 'bg-[var(--lito-teal)]' : 'bg-[var(--cms-surface-3)]'}`}
             >
-              <div style={{
-                position: 'absolute', top: 2, width: 14, height: 14, borderRadius: '50%',
-                background: 'var(--cms-card-bg)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-                transition: 'left 150ms',
-                left: isOn ? 'calc(100% - 16px)' : 2,
-              }} />
+              <div className={`absolute top-[2px] w-[14px] h-[14px] rounded-full bg-[var(--cms-card-bg)] shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-150 ${isOn ? 'left-[calc(100%-16px)]' : 'left-[2px]'}`} />
             </div>
           </div>
         )
@@ -888,39 +796,30 @@ const ANIMATION_TYPES = [
   { value: 'bounce',    label: 'Bounce'   },
 ]
 
+// Shared classes for the row layout and select inputs in AnimationPanel
+const ROW_CLS   = 'flex items-center justify-between mb-[10px]'
+const SEL_CLS   = 'flex-1 py-[5px] px-2 border border-[var(--lito-border)] rounded-md bg-[var(--cms-surface-2)] font-body text-[12px] text-[var(--text-primary)] outline-none'
+
 function AnimationPanel({ block }: { block: Block }) {
   const { updateAnimation } = useEditorStore()
   const anim = block.animation ?? {}
 
-  const patch = (patch: Partial<NonNullable<Block['animation']>>) =>
-    updateAnimation(block.id, { ...anim, ...patch })
-
-  const row: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: 10,
-  }
-  const selectStyle: React.CSSProperties = {
-    flex: 1, padding: '5px 8px',
-    border: '1px solid var(--lito-border)', borderRadius: 6,
-    background: 'var(--cms-surface-2)',
-    fontFamily: 'var(--font-body)', fontSize: 12,
-    color: 'var(--text-primary)', outline: 'none',
-  }
+  const patch = (p: Partial<NonNullable<Block['animation']>>) =>
+    updateAnimation(block.id, { ...anim, ...p })
 
   return (
-    <div style={{ padding: '14px' }}>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 700,
-        letterSpacing: '0.06em', color: 'var(--text-muted)', margin: '0 0 12px' }}>
-        ENTRANCE ANIMATION
+    <div className="p-[14px]">
+      <p className="font-body text-[10px] font-bold tracking-[0.06em] text-[var(--text-muted)] m-0 mb-3 uppercase">
+        Entrance Animation
       </p>
 
-      {/* Type */}
-      <div style={row}>
+      {/* Effect */}
+      <div className={ROW_CLS}>
         <Label>Effect</Label>
         <select
           value={anim.type ?? ''}
           onChange={(e) => patch({ type: e.target.value || undefined })}
-          style={selectStyle}
+          className={SEL_CLS}
         >
           {ANIMATION_TYPES.map(({ value, label }) => (
             <option key={value} value={value}>{label}</option>
@@ -931,35 +830,29 @@ function AnimationPanel({ block }: { block: Block }) {
       {anim.type && (
         <>
           {/* Duration */}
-          <div style={row}>
+          <div className={ROW_CLS}>
             <Label>Duration (ms)</Label>
             <input
               type="number" min={100} max={3000} step={50}
               value={anim.duration ?? 400}
               onChange={(e) => patch({ duration: parseInt(e.target.value) || 400 })}
-              style={{ ...selectStyle, maxWidth: 90, textAlign: 'right' }}
+              className={`${SEL_CLS} max-w-[90px] text-right`}
             />
           </div>
 
           {/* Delay */}
-          <div style={row}>
+          <div className={ROW_CLS}>
             <Label>Delay (ms)</Label>
             <input
               type="number" min={0} max={3000} step={50}
               value={anim.delay ?? 0}
               onChange={(e) => patch({ delay: parseInt(e.target.value) || 0 })}
-              style={{ ...selectStyle, maxWidth: 90, textAlign: 'right' }}
+              className={`${SEL_CLS} max-w-[90px] text-right`}
             />
           </div>
 
           {/* Preview hint */}
-          <p style={{
-            fontFamily: 'var(--font-body)', fontSize: 10,
-            color: 'var(--text-muted)', margin: '8px 0 0',
-            padding: '6px 8px', borderRadius: 6,
-            background: 'var(--cms-surface-3)',
-            border: '1px solid var(--lito-border)',
-          }}>
+          <p className="font-body text-[10px] text-[var(--text-muted)] mt-2 mb-0 py-[6px] px-2 rounded-md bg-[var(--cms-surface-3)] border border-[var(--lito-border)]">
             Animation applied on page load. Preview in the live site.
           </p>
         </>
@@ -980,9 +873,6 @@ const TABS: Array<{ id: EditorTab; label: string }> = [
 ]
 
 // ── Content tab router ────────────────────────────────────────────────────────
-// If the active template manifest has a SectionSchema for this block type,
-// render the manifest-driven DynamicContentPanel.
-// Otherwise fall back to the hardcoded ContentPanel.
 
 function ContentTabRouter({ block }: { block: Block }) {
   const { manifest } = useTemplateManifest()
@@ -999,17 +889,12 @@ export function EditorRightSidebar() {
 
   if (!block) {
     return (
-      <div style={{
-        width: 232, flexShrink: 0,
-        background: 'var(--cms-surface-3)',
-        borderLeft: '1px solid var(--lito-border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>
+      <div className="w-[232px] shrink-0 bg-[var(--cms-surface-3)] border-l border-[var(--lito-border)] flex items-center justify-center p-6">
+        <div className="text-center">
+          <p className="font-body text-[12px] font-semibold text-[var(--text-primary)] m-0 mb-1">
             No block selected
           </p>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
+          <p className="font-body text-[11px] text-[var(--text-muted)] m-0">
             Click a block in the canvas to edit it.
           </p>
         </div>
@@ -1018,38 +903,16 @@ export function EditorRightSidebar() {
   }
 
   return (
-    <div style={{
-      width: 232, flexShrink: 0,
-      background: 'var(--cms-surface-3)',
-      borderLeft: '1px solid var(--lito-border)',
-      display: 'flex', flexDirection: 'column',
-      height: '100%',
-    }}>
+    <div className="w-[232px] shrink-0 bg-[var(--cms-surface-3)] border-l border-[var(--lito-border)] flex flex-col h-full">
       {/* Block header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '10px 14px',
-        borderBottom: '1px solid var(--lito-border)',
-        flexShrink: 0,
-      }}>
-        <div style={{
-          width: 24, height: 24, borderRadius: 6,
-          background: 'var(--lito-teal)', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <Crown size={12} style={{ color: '#fff' }} />
+      <div className="flex items-center gap-2 px-[14px] py-[10px] border-b border-[var(--lito-border)] shrink-0">
+        <div className="w-6 h-6 rounded-md bg-[var(--lito-teal)] flex items-center justify-center shrink-0">
+          <Crown size={12} className="text-white" />
         </div>
-        <span style={{
-          fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600,
-          color: 'var(--text-primary)', textTransform: 'capitalize',
-        }}>
+        <span className="font-body text-[13px] font-semibold text-[var(--text-primary)] capitalize">
           {block.type}
         </span>
-        <span style={{
-          fontFamily: 'var(--font-body)', fontSize: 9,
-          color: 'var(--text-muted)', fontVariant: 'monospace',
-          marginLeft: 'auto', flexShrink: 0,
-        }}>
+        <span className="font-body text-[9px] text-[var(--text-muted)] font-[monospace] ml-auto shrink-0">
           Block ID: {block.id.slice(0, 8)}
         </span>
       </div>
@@ -1058,12 +921,7 @@ export function EditorRightSidebar() {
       <div
         role="tablist"
         aria-label="Block inspector panels"
-        style={{
-          display: 'flex',
-          borderBottom: '1px solid var(--lito-border)',
-          flexShrink: 0,
-          overflowX: 'auto',
-        }}
+        className="flex border-b border-[var(--lito-border)] shrink-0 overflow-x-auto gap-3"
       >
         {TABS.map((tab) => (
           <button
@@ -1074,16 +932,11 @@ export function EditorRightSidebar() {
             aria-controls={`editor-panel-${tab.id}`}
             id={`editor-tab-${tab.id}`}
             onClick={() => setEditorTab(tab.id)}
-            style={{
-              flex: 1, padding: '9px 2px',
-              border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 500,
-              background: 'transparent',
-              color: activeEditorTab === tab.id ? 'var(--lito-teal)' : 'var(--text-muted)',
-              borderBottom: activeEditorTab === tab.id ? '2px solid var(--lito-teal)' : '2px solid transparent',
-              whiteSpace: 'nowrap',
-              transition: 'color 120ms',
-            }}
+            className={`flex-1 py-[9px] px-[2px] border-0 cursor-pointer font-body text-[11px] font-medium bg-transparent whitespace-nowrap transition-[color] duration-[120ms] border-b-2 ${
+              activeEditorTab === tab.id
+                ? 'text-[var(--lito-teal)] border-b-[var(--lito-teal)]'
+                : 'text-[var(--text-muted)] border-b-transparent'
+            }`}
           >
             {tab.label}
           </button>
@@ -1095,7 +948,7 @@ export function EditorRightSidebar() {
         role="tabpanel"
         id={`editor-panel-${activeEditorTab}`}
         aria-labelledby={`editor-tab-${activeEditorTab}`}
-        style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}
+        className="flex-1 overflow-y-auto min-h-0"
       >
         {activeEditorTab === 'content'    && <ContentTabRouter block={block} />}
         {activeEditorTab === 'styles'     && <StylePanel      block={block} />}
@@ -1105,31 +958,19 @@ export function EditorRightSidebar() {
         {activeEditorTab === 'animation'  && <AnimationPanel  block={block} />}
       </div>
 
-      {/* Footer — Need help? / Keyboard shortcuts */}
-      <div style={{
-        padding: '10px 14px',
-        borderTop: '1px solid var(--lito-border)',
-        flexShrink: 0,
-        display: 'flex', flexDirection: 'column', gap: 8,
-      }}>
-        <button type="button" style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-        }}>
-          <HelpCircle size={13} style={{ color: 'var(--text-muted)' }} />
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
+      {/* Footer */}
+      <div className="px-[14px] py-[10px] border-t border-[var(--lito-border)] shrink-0 flex flex-col gap-2">
+        <button type="button" className="flex items-center gap-[6px] bg-transparent border-0 cursor-pointer p-0">
+          <HelpCircle size={13} className="text-[var(--text-muted)]" />
+          <span className="font-body text-[11px] text-[var(--text-muted)]">
             Need help?
           </span>
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted)' }}>
+        <div className="flex items-center justify-between">
+          <span className="font-body text-[11px] text-[var(--text-muted)]">
             Keyboard shortcuts
           </span>
-          <kbd style={{
-            fontFamily: 'var(--font-body)', fontSize: 10,
-            background: 'var(--lito-border)', color: 'var(--text-muted)',
-            borderRadius: 4, padding: '2px 5px',
-          }}>
+          <kbd className="font-body text-[10px] bg-[var(--lito-border)] text-[var(--text-muted)] rounded-[4px] px-[5px] py-[2px]">
             ⌘ /
           </kbd>
         </div>

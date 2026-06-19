@@ -254,6 +254,33 @@ export default function BlockEditorPage() {
         tryStaticDefaults(effectiveSlug, pageSlug)
       }
 
+      // ── E-04: Restore from localStorage draft backup ────────────────────
+      // Runs BEFORE doSeed() so a draft always wins over seeded defaults.
+      // The draft is written by EditorShell on every dirty change.
+      const restoreFromDraft = (): boolean => {
+        try {
+          const raw = localStorage.getItem(`editor_draft_${pageId}`)
+          if (!raw) return false
+          const { blockDoc: draftDoc, savedAt } = JSON.parse(raw) as {
+            blockDoc: BlockDocument
+            savedAt:  number
+          }
+          // Ignore drafts older than 7 days
+          if (Date.now() - savedAt > 7 * 24 * 60 * 60 * 1000) {
+            localStorage.removeItem(`editor_draft_${pageId}`)
+            return false
+          }
+          if (!isBlockDocument(draftDoc) || draftDoc.blocks.length === 0) return false
+          init(draftDoc, pageId, locale)
+          return true
+        } catch {
+          return false
+        }
+      }
+
+      // Only restore draft if the saved version has no blocks (blank canvas)
+      if (doc.blocks.length === 0 && restoreFromDraft()) return
+
       doSeed()
     }
 

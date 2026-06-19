@@ -136,7 +136,7 @@ export function CategoriesPageView({ categories, total, isLoading, search, onSea
 
       <div className="cms-card overflow-hidden">
         <table className="cms-table">
-          <thead><tr><th>Name</th><th>Slug</th><th>Type</th><th>Created</th><th style={{ width: 40 }} /></tr></thead>
+          <thead><tr><th>Name</th><th>Slug</th><th>Type</th><th>Created</th><th className="w-10" /></tr></thead>
           <tbody>
             {isLoading ? Array.from({ length: 5 }).map((_, i) => (
               <tr key={i}><td><Skeleton className="h-4 w-40" /></td><td><Skeleton className="h-4 w-24" /></td><td><Skeleton className="h-4 w-20" /></td><td><Skeleton className="h-4 w-24" /></td><td /></tr>

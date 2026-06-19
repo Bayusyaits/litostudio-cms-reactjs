@@ -117,8 +117,7 @@ export function EditorCodeView() {
           value={raw}
           onChange={(e) => { setRaw(e.target.value); setError(null); setNotice(null) }}
           spellCheck={false}
-          className={`w-full h-full px-5 py-4 font-mono text-[13px] leading-[1.6] bg-[var(--cms-main-bg)] border-none outline-none resize-none box-border whitespace-pre overflow-x-auto ${error ? 'text-[#ef4444]' : 'text-[var(--text-primary)]'}`}
-          style={{ fontFamily: '"Fira Code", "JetBrains Mono", "Cascadia Code", Menlo, Monaco, "Courier New", monospace', overflowWrap: 'normal' }}
+          className={`w-full h-full px-5 py-4 font-mono text-[13px] leading-[1.6] bg-[var(--cms-main-bg)] border-none outline-none resize-none box-border whitespace-pre overflow-x-auto break-normal ${error ? 'text-[#ef4444]' : 'text-[var(--text-primary)]'}`}
         />
       </div>
 

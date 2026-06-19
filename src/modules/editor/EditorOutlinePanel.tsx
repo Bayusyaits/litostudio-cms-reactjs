@@ -68,13 +68,13 @@ export function EditorOutlinePanel() {
                 key={item.id}
                 type="button"
                 onClick={() => handleJump(item.id)}
-                className={`flex items-center gap-2 w-full text-left border-none cursor-pointer border-l-2 transition-[background] duration-100 ${
+                className={`flex items-center gap-2 w-full text-left border-none cursor-pointer border-l-2 transition-[background] duration-100 pt-[5px] pr-[14px] pb-[5px] ${
                   isActive
                     ? 'bg-[rgba(15,118,110,0.08)] border-l-[var(--lito-teal)]'
                     : 'bg-transparent border-l-transparent hover:bg-[var(--cms-surface-3)]'
                 }`}
-                // padding-left is dynamic (indent level) — keep as style
-                style={{ padding: `5px 14px 5px ${14 + indent}px` }}
+                // padding-left is dynamic (indent level), static padding goes in className
+                style={{ paddingLeft: 14 + indent }}
               >
                 <span className={`shrink-0 font-body text-[9px] font-bold tracking-[0.04em] rounded-[3px] px-1 py-[1px] min-w-6 text-center border ${
                   isActive

@@ -8,6 +8,7 @@ import {
 import type { Organization, Site } from '@/types/auth.types'
 import type { Theme } from '@/services/theme.service'
 import { PhoneNumberManager } from './PhoneNumberManager'
+import { ThemePreview } from '@/components/molecules/ThemePreview'
 
 type ColorMode = 'light' | 'dark' | 'system'
 
@@ -69,7 +70,7 @@ function SectionCard({ icon: Icon, title, description, children }: {
 
 function FormRow({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="grid gap-6 items-start mb-[18px]" style={{ gridTemplateColumns: '200px 1fr' }}>
+    <div className="grid gap-6 items-start mb-[18px] [grid-template-columns:200px_1fr]">
       <div>
         <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">{label}</div>
         {hint && (
@@ -99,7 +100,7 @@ function ThemePicker({ themes, activeThemeId, onApply, applying }: {
   }
 
   return (
-    <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
+    <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
       {themes.map((theme) => {
         const isActive = theme.id === activeThemeId
         return (
@@ -127,9 +128,7 @@ function ThemePicker({ themes, activeThemeId, onApply, applying }: {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  <Palette size={20} className="text-[var(--text-muted)] opacity-30" aria-hidden="true" />
-                </div>
+                <ThemePreview templateSlug={theme.template_slug} />
               )}
               {isActive && (
                 <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[var(--lito-gold)] flex items-center justify-center">
@@ -251,10 +250,7 @@ export function SettingsPageView({
             </div>
           </FormRow>
           <FormRow label="Plan" hint="Your current subscription tier">
-            <span
-              className="status-badge capitalize"
-              style={{ color: 'var(--lito-teal)', background: 'rgba(26,74,90,0.10)' }}
-            >
+            <span className="status-badge capitalize text-[var(--lito-teal)] bg-[rgba(26,74,90,0.10)]">
               {org?.plan ?? 'Free'}
             </span>
           </FormRow>
@@ -372,11 +368,8 @@ export function SettingsPageView({
                     : 'border-[var(--lito-border)] bg-transparent'
                 }`}
               >
-                <Icon size={20} style={{ color: active ? 'var(--lito-cream)' : 'var(--text-muted)' }} aria-hidden="true" />
-                <span
-                  className="font-body text-xs font-medium"
-                  style={{ color: active ? 'var(--lito-cream)' : 'var(--text-muted)' }}
-                >
+                <Icon size={20} className={active ? 'text-[var(--lito-cream)]' : 'text-[var(--text-muted)]'} aria-hidden="true" />
+                <span className={`font-body text-xs font-medium ${active ? 'text-[var(--lito-cream)]' : 'text-[var(--text-muted)]'}`}>
                   {label}
                 </span>
                 {active && (

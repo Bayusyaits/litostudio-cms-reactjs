@@ -132,8 +132,7 @@ export default function PagesNewPageContainer() {
           <div
             role="group"
             aria-labelledby={labelId}
-            className="grid gap-2"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}
+            className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(140px,1fr))]"
           >
             {presets.map((p) => {
               const active = selectedSlug === p.slug

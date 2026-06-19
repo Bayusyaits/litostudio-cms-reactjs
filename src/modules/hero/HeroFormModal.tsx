@@ -13,7 +13,7 @@
  *   cta_label   → extra.cta_label
  *   category    → extra.category
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Save } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
@@ -21,6 +21,7 @@ import { FormField, TextAreaField } from '@/components/molecules/FormField'
 import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroStatus } from '@/types/content.types'
 import { heroService } from '@/services/content.service'
 import { draftMediaStore } from '@/stores/draftMedia.store'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,6 +72,9 @@ function generateHeroSlug(sortOrder: number): string {
 
 export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
   const isEdit = !!slide
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  // AC-08: focus trap + Escape key for native <dialog> opened with `open` attr (not showModal)
+  useFocusTrap(dialogRef, true, onClose)
 
   // Core fields — mapped to content_items columns
   const [coverImage, setCoverImage] = useState<string>(slide?.cover_image ?? '')
@@ -192,11 +196,16 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
   const saveButtonLabel = saving ? 'Saving…' : idleLabel
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
       <dialog
+        ref={dialogRef}
         open
-        className="bg-[var(--cms-card-bg)] rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border-0 p-0"
+        aria-modal="true"
         aria-label={isEdit ? 'Edit Hero Slide' : 'New Hero Slide'}
+        className="bg-[var(--cms-card-bg)] rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border-0 p-0"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--lito-border)]">

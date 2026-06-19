@@ -117,7 +117,7 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
                   <div className={`w-10 h-10 rounded-lg shrink-0 flex items-center justify-center ${
                     isActive ? 'bg-[rgba(212,168,83,0.15)]' : 'bg-[var(--lito-cream-alt)]'
                   }`}>
-                    <Building2 size={18} style={{ color: isActive ? 'var(--lito-gold-deep)' : 'var(--text-muted)' }} />
+                    <Building2 size={18} className={isActive ? 'text-[var(--lito-gold-deep)]' : 'text-[var(--text-muted)]'} />
                   </div>
 
                   {/* Info */}

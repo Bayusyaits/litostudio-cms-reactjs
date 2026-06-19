@@ -1,5 +1,6 @@
 // apps/cms/src/modules/organizations/OrgFormModal.tsx
 import { useEffect, useRef } from 'react'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -42,7 +43,10 @@ interface Props {
 
 export function OrgFormModal({ org, onSave, onClose }: Props) {
   const isEdit = !!org
-  const nameRef = useRef<HTMLInputElement>(null)
+  const nameRef    = useRef<HTMLInputElement>(null)
+  const dialogRef  = useRef<HTMLDivElement>(null)
+  // AC-08: full Tab trap + Escape; replaces the manual window keydown listener below
+  useFocusTrap(dialogRef, true, onClose)
 
   const {
     register,
@@ -74,12 +78,7 @@ export function OrgFormModal({ org, onSave, onClose }: Props) {
     setTimeout(() => nameRef.current?.focus(), 60)
   }, [])
 
-  // Close on Escape
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  // Note: Escape + Tab trap handled by useFocusTrap above
 
   async function onSubmit(values: OrgFormValues) {
     try {
@@ -91,6 +90,7 @@ export function OrgFormModal({ org, onSave, onClose }: Props) {
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="org-modal-title"

@@ -25,18 +25,19 @@ import {
 } from 'lucide-react'
 
 // ── High-fidelity Lito section renderers (95%+ visual parity) ────────────────
-import { HeroSection }        from '../sections/HeroSection'
-import { MapSection }         from '../sections/MapSection'
-import { PricingSection }     from '../sections/PricingSection'
-import { OfferingsSection }   from '../sections/OfferingsSection'
+import { HeroSection }         from '../sections/HeroSection'
+import { MapSection }          from '../sections/MapSection'
+import { PricingSection }      from '../sections/PricingSection'
+import { OfferingsSection }    from '../sections/OfferingsSection'
 import { TestimonialsSection } from '../sections/TestimonialsSection'
-import { JournalSection }     from '../sections/JournalSection'
-import { GallerySection }     from '../sections/GallerySection'
-import { AboutSection }       from '../sections/AboutSection'
-import { CampaignSection }    from '../sections/CampaignSection'
-import { ContactSection }     from '../sections/ContactSection'
-import { StoriesSection }     from '../sections/StoriesSection'
-import { CategoriesSection }  from '../sections/CategoriesSection'
+import { JournalSection }      from '../sections/JournalSection'
+import { GallerySection }      from '../sections/GallerySection'
+import { PortfolioSection }    from '../sections/PortfolioSection'
+import { AboutSection }        from '../sections/AboutSection'
+import { CampaignSection }     from '../sections/CampaignSection'
+import { ContactSection }      from '../sections/ContactSection'
+import { StoriesSection }      from '../sections/StoriesSection'
+import { CategoriesSection }   from '../sections/CategoriesSection'
 
 // ── Style helper ──────────────────────────────────────────────────────────────
 
@@ -560,6 +561,34 @@ function HTMLBlockComp({ block }: { block: Block }) {
   )
 }
 
+// ── Beauty template blocks ────────────────────────────────────────────────────
+
+function CampaignsGridBlock({ block }: { block: Block }) {
+  // Beauty template: promotions / campaign cards grid (not the same as Lito CampaignSection)
+  const d = block.data as Record<string, unknown>
+  const limit  = typeof d.limit  === 'number' ? d.limit  : 4
+  const cols   = typeof d.columns === 'number' ? d.columns : 2
+  return (
+    <div style={{ ...blockStyle(block), ...innerWidth(block) }} className="px-6">
+      {d.heading != null && <h2 className="font-display text-2xl font-bold text-center mb-8 text-[var(--text-primary)]">{String(d.heading)}</h2>}
+      <div className={`grid grid-cols-1 sm:grid-cols-${cols} gap-5`}>
+        {Array.from({ length: limit }).map((_, i) => (
+          <div key={i} className="rounded-xl bg-[var(--cms-surface-2)] border border-[var(--lito-border)] overflow-hidden">
+            <div className="h-44 bg-[var(--cms-surface-3)] flex items-center justify-center">
+              <span className="text-3xl">📢</span>
+            </div>
+            <div className="p-4">
+              <p className="font-display text-sm font-semibold text-[var(--text-primary)] mb-1">Campaign {i + 1}</p>
+              <p className="font-body text-xs text-[var(--text-muted)] line-clamp-2">Campaign description goes here.</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="font-body text-xs text-[var(--text-muted)] text-center mt-4">Live data from the Campaigns catalog</p>
+    </div>
+  )
+}
+
 // ── Main renderer ─────────────────────────────────────────────────────────────
 
 export function BlockRenderer({ block }: { block: Block }) {
@@ -577,22 +606,27 @@ export function BlockRenderer({ block }: { block: Block }) {
     case 'products':     return <ProductsBlock block={block} />
     case 'collections':  return <CollectionsBlock block={block} />
     case 'newsletter':   return <NewsletterBlock block={block} />
-    case 'map':          return <MapSection block={block} />          // → Lito location section with cards
+    case 'map':              return <MapSection block={block} />      // → generic map embed (website: story_map)
+    case 'destinations_grid': return <MapSection block={block} />   // → Lito destinations grid (website: story_map)
     case 'social_links': return <SocialLinksBlock block={block} />
     case 'html':         return <HTMLBlockComp block={block} />
     // ── High-fidelity Lito section renderers ──────────────────────────────────
     case 'hero':         return <HeroSection block={block} />        // → full-bleed dark hero, editable inline
     case 'pricing':      return <PricingSection block={block} />     // → Lito photography pricing cards
-    case 'services':     return <OfferingsSection block={block} />   // → 4-col card grid
-    case 'gallery':      return <GallerySection block={block} />     // → masonry + hover overlay
+    case 'services':     return <OfferingsSection block={block} />   // → 4-col services card grid (website: offerings)
+    case 'gallery':      return <GallerySection block={block} />     // → masonry + hover overlay (website: selected_works)
+    case 'portfolio':    return <PortfolioSection block={block} />   // → dark-bg editorial portfolio grid (website: portfolio)
     case 'testimonials': return <TestimonialsSection block={block} />// → dark bg + client list + quote
     case 'journal':      return <JournalSection block={block} />     // → 1 large + 2 small editorial
-    case 'story':        return <StoriesSection block={block} />     // → 3-col story cards
-    case 'contact_form': return <ContactSection block={block} />     // → split info + form
-    case 'cta':          return <CampaignSection block={block} />    // → full-width dark banner
-    case 'campaigns_grid': return <CategoriesSection block={block} />// → category card grid
-    // Aliases used by lito template page defaults
-    case 'about':        return <AboutSection block={block} />       // → 2-col image + text
+    case 'story':        return <StoriesSection block={block} />     // → 3-col story cards (website: stories)
+    case 'contact_form': return <ContactSection block={block} />     // → split info + form (website: contact)
+    case 'cta':          return <CTABlock block={block} />           // → generic CTA band
+    // ── Lito template section types ───────────────────────────────────────────
+    case 'about':        return <AboutSection block={block} />       // → 2-col image + text (website: about)
+    case 'campaign':     return <CampaignSection block={block} />    // → full-width campaign banner (website: campaign)
+    case 'story_categories': return <CategoriesSection block={block} />// → story category cards (website: story_categories)
+    // ── Beauty template section types ─────────────────────────────────────────
+    case 'campaigns_grid': return <CampaignsGridBlock block={block} />// → Beauty promotions grid
     default:
       return (
         <div className="p-4 text-center font-body text-sm text-[var(--text-muted)]">

@@ -47,8 +47,12 @@ export const useThemeStore = create<ThemeStore>()(
       },
     }),
     {
-      name:       'cms-theme',
-      partialize: (state) => ({ colorMode: state.colorMode }),
+      name: 'cms-theme',
+      // DB-06: persist sidebar collapse state across sessions
+      partialize: (state) => ({
+        colorMode:   state.colorMode,
+        sidebarOpen: state.sidebarOpen,
+      }),
     },
   ),
 )

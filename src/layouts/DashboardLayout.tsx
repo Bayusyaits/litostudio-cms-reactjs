@@ -42,6 +42,15 @@ export function DashboardLayout() {
   // Apply persisted theme on mount
   useEffect(() => { applyTheme() }, [applyTheme])
 
+  // AC-06: Move focus to #main-content on SPA route change (WCAG 2.4.3 / 4.1.3)
+  // Gives screen-reader users a clear "page changed" signal without a full reload.
+  useEffect(() => {
+    const main = document.getElementById('main-content')
+    if (main) {
+      main.focus({ preventScroll: true })
+    }
+  }, [location.pathname])
+
   // Global ⌘K shortcut
   useEffect(() => {
     function handler(e: KeyboardEvent) {
@@ -102,6 +111,14 @@ export function DashboardLayout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--cms-main-bg)]">
+      {/* AC-02: Skip nav link — WCAG 2.4.1 (Bypass Blocks) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:rounded focus:bg-[var(--lito-teal)] focus:px-3 focus:py-2 focus:text-white focus:text-sm focus:font-semibold focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
+
       {/* Dark ink sidebar */}
       <AppSidebar />
 

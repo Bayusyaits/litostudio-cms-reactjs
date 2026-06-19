@@ -19,41 +19,41 @@ export function StoriesSection({ block }: { block: Block }) {
   const stories = MOCK_STORIES.slice(0, limit)
 
   return (
-    <section style={{ padding: '120px 0', background: 'var(--cms-card-bg, var(--lito-cream, #F7F4EE))' }}>
-      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 80px' }}>
+    <section className="py-[120px] bg-[var(--cms-card-bg,var(--lito-cream,#F7F4EE))]">
+      <div className="max-w-[1440px] mx-auto px-[80px]">
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 56 }}>
+        <div className="flex items-end justify-between mb-[56px]">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--lito-gold, #D4A853)' }}>05</span>
-              <span style={{ width: 32, height: 1, background: 'var(--lito-gold, #D4A853)', opacity: 0.5 }} />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted, #9E9E9E)' }}>Featured Stories</span>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="font-body text-[11px] font-semibold tracking-[0.15em] uppercase text-[var(--lito-gold,#D4A853)]">05</span>
+              <span className="w-8 h-px bg-[var(--lito-gold,#D4A853)] opacity-50" />
+              <span className="font-body text-[11px] font-medium tracking-[0.12em] uppercase text-[var(--text-muted,#9E9E9E)]">Featured Stories</span>
             </div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(40px,5vw,60px)', fontWeight: 300, lineHeight: 1, letterSpacing: '-0.02em', color: 'var(--text-primary, #111111)', margin: 0 }}>
+            <h2 className="font-display text-[clamp(40px,5vw,60px)] font-light leading-none tracking-[-0.02em] text-[var(--text-primary,#111111)] m-0">
               {headingLines[0]}
               {headingLines[1] && <><br /><em>{headingLines[1]}</em></>}
             </h2>
           </div>
-          <a href="#" onClick={e => e.preventDefault()} style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted, #9E9E9E)', textDecoration: 'none' }}>
+          <a href="#" onClick={e => e.preventDefault()} className="font-body text-[13px] text-[var(--text-muted,#9E9E9E)] no-underline">
             Lihat Semua Cerita →
           </a>
         </div>
 
         {/* 3-col grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+        <div className="grid grid-cols-3 gap-4">
           {stories.map(s => (
-            <a key={s.id} href="#" onClick={e => e.preventDefault()} style={{ textDecoration: 'none', display: 'block', position: 'relative', overflow: 'hidden', borderRadius: 2 }}>
-              <div style={{ aspectRatio: '3/4' }}>
-                <img src={s.image} alt={s.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <a key={s.id} href="#" onClick={e => e.preventDefault()} className="no-underline block relative overflow-hidden rounded-[2px]">
+              <div className="aspect-[3/4]">
+                <img src={s.image} alt={s.title} className="w-full h-full object-cover block" />
               </div>
               {/* Gradient overlay — always visible at bottom */}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)' }} />
+              <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.75)_0%,transparent_50%)]" />
               {/* Content */}
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 20px' }}>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--lito-gold, #D4A853)', marginBottom: 8 }}>{s.category}</p>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: '#FFFFFF', lineHeight: 1.2, marginBottom: 8 }}>{s.title}</h3>
-                <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>📍 {s.location} · {s.date}</p>
+              <div className="absolute bottom-0 left-0 right-0 py-6 px-5">
+                <p className="font-body text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--lito-gold,#D4A853)] mb-2">{s.category}</p>
+                <h3 className="font-display text-[20px] font-normal text-white leading-[1.2] mb-2">{s.title}</h3>
+                <p className="font-body text-[11px] text-[rgba(255,255,255,0.6)]">📍 {s.location} · {s.date}</p>
               </div>
             </a>
           ))}

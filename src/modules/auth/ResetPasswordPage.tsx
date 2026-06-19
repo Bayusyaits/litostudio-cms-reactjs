@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useState, useMemo } from 'react'
+import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -24,7 +24,28 @@ type ResetForm = z.infer<typeof schema>
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams()
-  const token = params.get('token') ?? ''
+  const location = useLocation()
+
+  /**
+   * Supabase password-reset email redirect formats:
+   *  - Implicit flow (default): #access_token=JWT&token_type=bearer&type=recovery
+   *  - PKCE flow:               ?token_hash=HASH&type=recovery  (needs OTP exchange)
+   *
+   * We read the hash-fragment access_token first (implicit), then fall back to
+   * token_hash (PKCE). The hash-fragment token is a valid JWT → used directly as
+   * Authorization: Bearer in authService.resetPassword().
+   */
+  const token = useMemo(() => {
+    // Implicit flow: access_token in hash fragment, type=recovery
+    const hash = new URLSearchParams(location.hash.replace(/^#/, ''))
+    const hashToken = hash.get('access_token')
+    const hashType  = hash.get('type')
+    if (hashToken && hashType === 'recovery') return hashToken
+
+    // PKCE flow: token_hash in query string (legacy fallback)
+    return params.get('token_hash') ?? params.get('token') ?? ''
+  }, [location.hash, params])
+
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 

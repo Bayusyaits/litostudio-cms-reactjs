@@ -8,6 +8,8 @@ export interface Theme {
   version: string
   description: string | null
   preview_image: string | null
+  template_slug: string | null   // 'lito' | 'fashion' | 'beauty' — matches template dir
+  category: string | null        // 'photography' | 'fashion' | 'beauty'
   is_active: boolean
   settings_schema: Record<string, unknown>
   created_at: string

@@ -1,6 +1,7 @@
 import { Palette, Check } from 'lucide-react'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { EmptyState } from '@/components/molecules/EmptyState'
+import { ThemePreview } from '@/components/molecules/ThemePreview'
 import type { Theme } from '@/services/theme.service'
 
 interface Props {
@@ -28,9 +29,7 @@ function ThemeCard({ theme, isActive, onApply, applying }: {
         {theme.preview_image ? (
           <img src={theme.preview_image} alt={theme.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="flex items-center justify-center h-full">
-            <Palette size={32} className="text-[var(--text-muted)] opacity-40" />
-          </div>
+          <ThemePreview templateSlug={theme.template_slug} />
         )}
         {isActive && (
           <div className="absolute top-[10px] right-[10px] bg-[var(--lito-gold)] rounded-full w-6 h-6 flex items-center justify-center">
@@ -89,7 +88,7 @@ export function ThemesPageView({ themes, activeThemeId, isLoading, onApplyTheme,
       )}
 
       {isLoading ? (
-        <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+        <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="cms-card overflow-hidden">
               <Skeleton className="h-36 w-full rounded-none" />
@@ -104,7 +103,7 @@ export function ThemesPageView({ themes, activeThemeId, isLoading, onApplyTheme,
       ) : themes.length === 0 ? (
         <EmptyState icon={Palette} title="No themes available" description="Themes will appear here once they are configured" />
       ) : (
-        <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+        <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
           {themes.map(theme => (
             <ThemeCard
               key={theme.id}

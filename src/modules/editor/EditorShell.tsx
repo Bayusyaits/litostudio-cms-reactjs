@@ -59,6 +59,11 @@ export function EditorShell({
     try {
       await saveFn()
       markClean()
+      // E-04: clear draft backup after successful API save
+      const pid = useEditorStore.getState().pageId
+      if (pid) {
+        try { localStorage.removeItem(`editor_draft_${pid}`) } catch { /* ok */ }
+      }
     } catch {
       setSaveStatus('error')
     }
@@ -146,6 +151,26 @@ export function EditorShell({
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [isDirty])
+
+  // ── E-04: localStorage draft backup — last-resort recovery ───────────────
+  // Writes blockDoc to localStorage on every dirty change.
+  // Key: editor_draft_{pageId} — BlockEditorPage reads this on init
+  // when the saved version has no blocks (empty canvas).
+  // Cleared on successful save (markClean sets isDirty=false).
+
+  const { blockDoc, pageId: storePageId } = useEditorStore()
+
+  useEffect(() => {
+    if (!storePageId || !isDirty) return
+    try {
+      localStorage.setItem(
+        `editor_draft_${storePageId}`,
+        JSON.stringify({ blockDoc, savedAt: Date.now() }),
+      )
+    } catch {
+      // Quota exceeded or private browsing — silently skip
+    }
+  }, [blockDoc, isDirty, storePageId])
 
   // ── Layout ────────────────────────────────────────────────────────────────
 

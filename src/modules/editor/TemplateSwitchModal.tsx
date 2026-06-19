@@ -10,7 +10,9 @@
  * action after the modal resolves.
  */
 
+import { useRef } from 'react'
 import { X, RefreshCw, Layers } from 'lucide-react'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 export interface TemplateSwitchResult {
   action: 'keep' | 'apply-defaults' | 'cancel'
@@ -23,6 +25,10 @@ interface TemplateSwitchModalProps {
 }
 
 export function TemplateSwitchModal({ newTemplateName, onResolve }: TemplateSwitchModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  // AC-08: trap Tab/Shift+Tab within dialog; Escape closes
+  useFocusTrap(dialogRef, true, () => onResolve({ action: 'cancel' }))
+
   return (
     <div
       role="dialog"
@@ -30,6 +36,7 @@ export function TemplateSwitchModal({ newTemplateName, onResolve }: TemplateSwit
       aria-labelledby="tpl-switch-title"
       className="fixed inset-0 z-[9000] flex items-center justify-center bg-[rgba(0,0,0,0.45)]"
       onClick={(e) => { if (e.target === e.currentTarget) onResolve({ action: 'cancel' }) }}
+      ref={dialogRef}
     >
       <div className="bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-xl px-7 py-6 w-[420px] max-w-[90vw] shadow-[0_16px_48px_rgba(0,0,0,0.18)]">
         {/* Header */}

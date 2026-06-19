@@ -33,22 +33,58 @@ export type BlockType =
   | 'map'
   | 'social_links'
   | 'html'
-  // ── Template-specific blocks ───────────────────────────────────────────────
+  // ── Lito template-specific blocks ────────────────────────────────────────
+  | 'about'                // Lito: about / studio intro section
+  | 'campaign'             // Lito: campaign banner (image + CTA)
+  | 'story_categories'     // Lito: story categories grid
   | 'destinations_grid'    // Lito: destinations/locations grid
-  | 'portfolio'            // Lito: portfolio grid
+  | 'portfolio'            // Lito: dark-bg portfolio grid
   | 'booking'              // Lito: booking/calendar section
   | 'packages'             // Lito: photography packages
-  | 'campaigns_grid'       // Beauty: campaign promotions
+  // ── Beauty template-specific blocks ──────────────────────────────────────
+  | 'campaigns_grid'       // Beauty: campaign promotions grid
+
+// ── Rich text metadata ────────────────────────────────────────────────────────
+//
+// Shared by CMS editor canvas + website renderer.
+// CKEditor / contentEditable stores formatting as HTML; tag/align are
+// explicit structural metadata persisted alongside the HTML so the
+// website can apply them without parsing the HTML string.
+//
+// Schema version: "1.0-rich"
+
+export type RichTextAlign = 'left' | 'center' | 'right' | 'justify'
+
+export type RichTextTag =
+  | 'p'
+  | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  | 'blockquote'
+
+export interface RichTextData {
+  /** Raw HTML string — output from CKEditor or contentEditable */
+  html:    string
+  /**
+   * Semantic tag applied to the outermost wrapper.
+   * 'p' = paragraph (default), 'h1'–'h6' = headings.
+   */
+  tag?:    RichTextTag
+  /** Block-level text alignment */
+  align?:  RichTextAlign
+}
 
 // ── Per-block data shapes ─────────────────────────────────────────────────────
 
-export interface TextBlockData {
+/** Text block: full CKEditor output — HTML + structural metadata */
+export interface TextBlockData extends RichTextData {
+  /** Alias kept for backwards-compat when old docs only have html key */
   html: string
 }
 
 export interface HeadingBlockData {
-  text: string
+  text:  string
   level: 1 | 2 | 3 | 4 | 5 | 6
+  /** Optional alignment override — defaults to left */
+  align?: RichTextAlign
 }
 
 export interface ImageBlockData {
@@ -119,6 +155,8 @@ export interface CTABlockData {
 
 export interface ServicesBlockData {
   heading?: string
+  sectionNumber?: string
+  sectionLabel?: string
   items: Array<{
     icon?: string
     title: string
@@ -144,6 +182,8 @@ export interface PricingBlockData {
 
 export interface TestimonialsBlockData {
   heading?: string
+  sectionNumber?: string
+  sectionLabel?: string
   items: Array<{
     quote: string
     name: string
@@ -203,6 +243,8 @@ export interface CollectionsBlockData {
 
 export interface JournalBlockData {
   heading?: string
+  sectionNumber?: string
+  sectionLabel?: string
   limit: number
   columns: 2 | 3
   showExcerpt?: boolean
@@ -302,6 +344,33 @@ export interface PackagesBlockData {
   }>
 }
 
+// ── Lito-specific section data ────────────────────────────────────────────────
+
+export interface AboutBlockData {
+  heading?:     string
+  description?: string
+  image?:       string
+  ctaText?:     string
+  ctaUrl?:      string
+  since?:       string
+  cities?:      string
+}
+
+export interface CampaignBlockData {
+  heading?:     string
+  description?: string
+  image?:       string
+  ctaText?:     string
+  ctaUrl?:      string
+}
+
+export interface StoryCategoriesBlockData {
+  heading?:       string
+  sectionLabel?:  string
+  sectionNumber?: string
+  limit?:         number
+}
+
 export interface CampaignsGridBlockData {
   heading?: string
   limit:    number
@@ -322,6 +391,7 @@ export type BlockData =
   // Template-specific
   | DestinationsGridBlockData | PortfolioBlockData
   | BookingBlockData | PackagesBlockData | CampaignsGridBlockData
+  | AboutBlockData | CampaignBlockData | StoryCategoriesBlockData
 
 // ── Block styles ──────────────────────────────────────────────────────────────
 
