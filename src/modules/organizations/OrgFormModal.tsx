@@ -107,7 +107,7 @@ export function OrgFormModal({ org, onSave, onClose }: Props) {
             </div>
             <h2
               id="org-modal-title"
-              className="font-display text-[18px] font-normal text-[var(--text-primary)]"
+              className="font-display text-[18px] font-normal text-[var(--text-muted)]"
             >
               {isEdit ? 'Edit Organization' : 'Create Organization'}
             </h2>

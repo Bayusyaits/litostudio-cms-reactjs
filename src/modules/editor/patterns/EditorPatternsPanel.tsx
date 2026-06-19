@@ -96,7 +96,7 @@ export function EditorPatternsPanel() {
                 </span>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-body text-xs font-semibold text-[var(--text-primary)] mt-0 mb-[3px] overflow-hidden text-ellipsis whitespace-nowrap">
+                  <p className="font-body text-xs font-semibold text-[var(--text-muted)] mt-0 mb-[3px] overflow-hidden text-ellipsis whitespace-nowrap">
                     {pattern.name}
                   </p>
                   <p className="font-body text-[11px] text-[var(--text-muted)] m-0 overflow-hidden text-ellipsis whitespace-nowrap">

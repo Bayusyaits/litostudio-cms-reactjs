@@ -1,33 +1,15 @@
 // apps/cms/src/modules/pages/PageSectionsManager.tsx
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   GripVertical, Eye, EyeOff, Plus, Trash2, ChevronUp, ChevronDown, X, Check, AlertCircle,
 } from 'lucide-react'
 import {
-  pageSectionsService, SECTION_TYPES,
+  pageSectionsService,
   type PageSection, type SectionType,
 } from '@/services/pageSectionsService'
-
-const SECTION_LABELS: Record<string, string> = {
-  hero: 'Hero', about: 'About', services: 'Services', stories: 'Stories',
-  destinations: 'Destinations', gallery: 'Gallery', testimonials: 'Testimonials',
-  pricing: 'Pricing', journal: 'Journal', contact: 'Contact',
-  custom_html: 'Custom HTML', faq: 'FAQ', team: 'Team', timeline: 'Timeline', map: 'Map',
-  featured_stories: 'Featured Stories', featured_content: 'Featured Content',
-  selected_works: 'Selected Works', story_map: 'Story Map',
-  story_categories: 'Story Categories', offerings: 'Offerings',
-  client_reviews: 'Client Reviews', campaign: 'Campaign Banner',
-  latest_journal: 'Latest Journal', new_arrival: 'New Arrival',
-  promo_banners: 'Promo Banners', campaign_banner: 'Campaign Banner',
-  product_carousel: 'Product Carousel', marquee: 'Marquee',
-  brand_story: 'Brand Story', lookbook: 'Lookbook', about_cta: 'About CTA',
-  collaborations: 'Collaborations', social_grid: 'Social Grid', philosophy: 'Philosophy',
-  collection_banner: 'Collection Banner', product_benefits: 'Product Benefits',
-  product_categories: 'Product Categories', founder_quote: 'Founder Quote',
-  blog_highlight: 'Blog Highlight', newsletter: 'Newsletter',
-  featured_products: 'Featured Products',
-}
+import { getTemplate, getPageManifest } from '@litostudio/template-registry'
+import { getSectionLabel } from '@litostudio/section-schema'
 
 const iconBtnCls = 'inline-flex items-center justify-center px-[6px] py-1 rounded-md border border-[var(--lito-border)] bg-transparent cursor-pointer text-[var(--text-secondary)] transition-[color,border-color,background] duration-[120ms] leading-none'
 const iconBtnDisabledCls = `${iconBtnCls} opacity-35 cursor-not-allowed`
@@ -80,7 +62,7 @@ function SectionRow({
 
       {/* Section label */}
       <span className={`flex-1 font-body text-[13px] font-medium overflow-hidden text-ellipsis whitespace-nowrap ${section.is_visible ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}`}>
-        {SECTION_LABELS[section.section_type] ?? section.section_type}
+        {getSectionLabel(section.section_type)}
         {section.name && (
           <span className="ml-[6px] text-[11px] text-[var(--text-muted)] font-normal">
             — {section.name}
@@ -175,16 +157,34 @@ function SectionRow({
 }
 
 interface PageSectionsManagerProps {
-  pageId:    string
-  pageTitle: string
-  onClose:   () => void
+  pageId:       string
+  pageTitle:    string
+  pageSlug:     string
+  templateSlug: string
+  onClose:      () => void
 }
 
-export function PageSectionsManager({ pageId, pageTitle, onClose }: PageSectionsManagerProps) {
+export function PageSectionsManager({ pageId, pageTitle, pageSlug, templateSlug, onClose }: PageSectionsManagerProps) {
   const qc = useQueryClient()
   const [dragIdx,     setDragIdx]     = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
   const [addType,     setAddType]     = useState<SectionType | ''>('')
+
+  // Allowed section types come from template-registry, not a hardcoded list.
+  // Priority: page-specific allowedTypes → template globalSections → empty (block add).
+  const allowedSectionTypes = useMemo<string[]>(() => {
+    try {
+      const tmpl = getTemplate(templateSlug)
+      // Try page-specific allowed list first
+      try {
+        const page = getPageManifest(templateSlug, `/${pageSlug.replace(/^\//, '')}`)
+        if (page.allowedTypes && page.allowedTypes.length > 0) return page.allowedTypes
+      } catch { /* page slug not in registry — fall through to globalSections */ }
+      return tmpl.globalSections ?? []
+    } catch {
+      return [] // unknown template — no add allowed
+    }
+  }, [templateSlug, pageSlug])
 
   const queryKey = ['page-sections', pageId]
 
@@ -320,8 +320,8 @@ export function PageSectionsManager({ pageId, pageTitle, onClose }: PageSections
             style={{ colorScheme: 'light dark' }}
           >
             <option value="">— Add section type —</option>
-            {SECTION_TYPES.map(t => (
-              <option key={t} value={t}>{SECTION_LABELS[t] ?? t}</option>
+            {allowedSectionTypes.map(t => (
+              <option key={t} value={t}>{getSectionLabel(t)}</option>
             ))}
           </select>
 

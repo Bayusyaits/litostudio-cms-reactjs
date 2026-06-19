@@ -6,6 +6,8 @@ import { StatusBadge } from '@/components/atoms/StatusBadge'
 import type { Page, PageStatus } from '@/services/pages.service'
 import type { PageListMeta } from '@/services/pages.service'
 import { PageSectionsManager } from './PageSectionsManager'
+import { useTemplateManifest } from '@/hooks/useTemplateManifest'
+import { listTemplates } from '@litostudio/template-registry'
 
 interface Filter {
   status: PageStatus | ''
@@ -64,7 +66,16 @@ export function PagesPageView({
   onDelete, onToggleMenu, onToggleHeader, onToggleFooter, onToggleMobileMenu,
   onUpdateMenuLabel, onUpdateParentId, onUpdateSortOrder,
 }: Props) {
-  const [sectionManagerPage, setSectionManagerPage] = useState<{ id: string; title: string } | null>(null)
+  const [sectionManagerPage, setSectionManagerPage] = useState<{ id: string; title: string; slug: string } | null>(null)
+  const { templateSlug } = useTemplateManifest()
+
+  // Map template slug → display name from registry
+  const templateName = (slug: string | null | undefined): string => {
+    if (!slug) return 'Default'
+    try {
+      return listTemplates().find(t => t.slug === slug)?.name ?? slug
+    } catch { return slug }
+  }
 
   const pageLabel = (p: Page) => p.title ?? p.slug
 
@@ -217,10 +228,10 @@ export function PagesPageView({
                       </select>
                     </td>
 
-                    {/* Template */}
+                    {/* Template — read-only from registry */}
                     <td className="px-[14px] py-3">
-                      <span className="font-body text-xs text-[var(--text-muted)] capitalize">
-                        {page.template || 'default'}
+                      <span className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded bg-[rgba(212,168,83,0.1)] font-body text-[11px] font-medium text-[var(--lito-gold)] whitespace-nowrap">
+                        {templateName(templateSlug)}
                       </span>
                     </td>
 
@@ -256,7 +267,7 @@ export function PagesPageView({
                         <button
                           type="button"
                           title="Manage sections"
-                          onClick={() => setSectionManagerPage({ id: page.id, title: page.title ?? page.slug })}
+                          onClick={() => setSectionManagerPage({ id: page.id, title: page.title ?? page.slug, slug: page.slug })}
                           className="flex items-center gap-1 px-2 py-1 rounded-[5px] border border-[var(--lito-border)] bg-transparent cursor-pointer font-body text-[11px] text-[var(--text-secondary)] transition-[color,border-color] duration-150 hover:text-[var(--lito-teal)] hover:border-[var(--lito-teal)]"
                         >
                           Sections
@@ -283,6 +294,8 @@ export function PagesPageView({
         <PageSectionsManager
           pageId={sectionManagerPage.id}
           pageTitle={sectionManagerPage.title}
+          pageSlug={sectionManagerPage.slug}
+          templateSlug={templateSlug ?? 'lito'}
           onClose={() => setSectionManagerPage(null)}
         />
       )}

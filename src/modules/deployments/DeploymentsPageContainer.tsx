@@ -69,7 +69,7 @@ export default function DeploymentsPageContainer() {
         <select
           value={siteFilter}
           onChange={e => { setSiteFilter(e.target.value); setPage(0) }}
-          className="border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+          className="border border-[var(--lito-border)] rounded px-3 py-2 text-sm !text-[#000000]"
         >
           <option value="">All sites</option>
           {activeSite && <option value={activeSite.id}>{activeSite.name ?? activeSite.id}</option>}
@@ -77,7 +77,7 @@ export default function DeploymentsPageContainer() {
         <select
           value={statusFilter}
           onChange={e => { setStatusFilter(e.target.value); setPage(0) }}
-          className="border border-[var(--lito-border)] rounded px-3 py-2 text-sm"
+          className="border border-[var(--lito-border)] rounded px-3 py-2 text-sm !text-[#000000]"
         >
           <option value="">All statuses</option>
           <option value="success">Success</option>

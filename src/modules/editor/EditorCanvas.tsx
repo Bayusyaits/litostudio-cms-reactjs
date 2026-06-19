@@ -668,7 +668,8 @@ export function EditorCanvas() {
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const dragIdx   = useRef<number | null>(null)
-  const [dragOver, setDragOver] = useState<number | null>(null)
+  const [dragOver,   setDragOver]   = useState<number | null>(null)
+  const [hoveredId,  setHoveredId]  = useState<string | null>(null)
 
   const canvasWidth  =
     previewMode === 'mobile' ? 375 :
@@ -717,6 +718,7 @@ export function EditorCanvas() {
     ...cssVars,
   } as React.CSSProperties
 
+  // ── Standalone canvas — CMS renders sections with internal visual renderers ──
   return (
     <div
       data-editor-canvas
@@ -778,6 +780,7 @@ export function EditorCanvas() {
                                    block.visibility?.tablet  === false &&
                                    block.visibility?.mobile  === false
 
+              const isHovered = hoveredId === block.id
               return (
                 <div
                   key={block.id}
@@ -785,31 +788,49 @@ export function EditorCanvas() {
                   aria-label={`${block.name ?? block.type} block${isLocked ? ' (locked)' : ''}`}
                   aria-selected={isSelected}
                   onClick={() => !isPreview && !isLocked && selectBlock(block.id)}
+                  onMouseEnter={() => !isPreview && setHoveredId(block.id)}
+                  onMouseLeave={() => !isPreview && setHoveredId(null)}
                   onDragOver={(e) => !isPreview && handleDragOver(e, idx)}
                   onDrop={(e) => !isPreview && handleDrop(e, idx)}
                   className="group"
                   style={{
                     position: 'relative',
-                    transition: 'outline 100ms',
-                    outline: !isPreview && isSelected
-                      ? '2px solid var(--lito-teal)'
+                    transition: 'box-shadow 120ms',
+                    boxShadow: !isPreview && isSelected
+                      ? 'inset 0 0 0 2px rgba(201,162,90,0.6)'
                       : !isPreview && isLocked
-                        ? '1px dashed var(--lito-gold)'
+                        ? 'inset 0 0 0 1px rgba(201,162,90,0.35)'
                         : 'none',
-                    outlineOffset: isSelected ? -2 : 0,
                     zIndex: isSelected ? 10 : 'auto',
                     borderTop: !isPreview && isDragTarget ? '2px solid var(--lito-teal)' : '2px solid transparent',
                     cursor: isPreview ? 'default' : isLocked ? 'not-allowed' : 'default',
                     opacity: isHidden && !isPreview ? 0.4 : 1,
                   }}
                 >
-                  {/* Block type badge (top-left of selected block) */}
-                  {!isPreview && isSelected && (
-                    <div className="absolute left-0 top-0 z-[21] -translate-y-full">
-                      <span className={`inline-flex items-center gap-1 px-2 py-[2px] font-body text-[10px] font-semibold rounded-t capitalize ${
-                        isLocked ? 'bg-[var(--lito-gold)] text-[var(--lito-dark)]' : 'bg-[var(--lito-teal)] text-white'
-                      }`}>
-                        {isLocked && <Lock size={9} />}
+                  {/* Section Chrome Badge — shown on hover or select */}
+                  {!isPreview && !isLocked && (isHovered || isSelected) && (
+                    <div
+                      style={{
+                        position: 'absolute', top: 10, left: 10, zIndex: 22,
+                        display: 'inline-flex', alignItems: 'center', gap: 1,
+                        background: 'rgba(13,13,13,0.85)',
+                        border: '1px solid rgba(201,162,90,0.45)',
+                        borderRadius: 6,
+                        backdropFilter: 'blur(6px)',
+                        boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+                        overflow: 'hidden',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <span style={{
+                        padding: '4px 10px',
+                        fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        letterSpacing: '0.07em',
+                        textTransform: 'uppercase',
+                        color: 'rgba(201,162,90,0.9)',
+                      }}>
                         {block.name ?? block.type}
                       </span>
                     </div>

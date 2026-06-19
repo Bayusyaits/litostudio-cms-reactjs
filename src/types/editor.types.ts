@@ -93,11 +93,15 @@ export interface DividerBlockData {
 
 export interface HeroBlockData {
   title: string
+  titleItalic?: string         // italic/display portion appended to title
+  eyebrow?: string             // small label above title e.g. "EDITORIAL · JAKARTA"
   subtitle?: string
   ctaText?: string
   ctaUrl?: string
   ctaSecondaryText?: string
   ctaSecondaryUrl?: string
+  stat?: string                // bottom stat label e.g. "500+ sesi"
+  location?: string            // bottom location e.g. "Jakarta · Yogyakarta"
   backgroundImage?: string
   backgroundOverlay?: number   // 0-100
   minHeight?: number           // px

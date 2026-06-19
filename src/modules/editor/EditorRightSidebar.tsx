@@ -341,12 +341,16 @@ function ContentPanel({ block }: { block: Block }) {
   // ── hero ─────────────────────────────────────────────────────────────────
   if (block.type === 'hero') return (
     <div style={{ padding: '4px 14px' }}>
+      <FieldInput label="Eyebrow Label" value={d['eyebrow'] as string ?? ''} placeholder="EDITORIAL · JAKARTA" onChange={v => update({ eyebrow: v })} />
       <FieldInput label="Title" value={d['title'] as string} placeholder="Your headline" onChange={v => update({ title: v })} />
-      <FieldInput label="Subtitle" value={d['subtitle'] as string} placeholder="Supporting text" onChange={v => update({ subtitle: v })} />
-      <FieldInput label="CTA text" value={d['ctaText'] as string} placeholder="Get Started" onChange={v => update({ ctaText: v })} />
-      <FieldInput label="CTA URL" value={d['ctaUrl'] as string} placeholder="#" onChange={v => update({ ctaUrl: v })} />
-      <FieldInput label="Secondary CTA text" value={d['ctaSecondaryText'] as string} placeholder="Learn More" onChange={v => update({ ctaSecondaryText: v })} />
-      <FieldInput label="Secondary CTA URL" value={d['ctaSecondaryUrl'] as string} placeholder="#" onChange={v => update({ ctaSecondaryUrl: v })} />
+      <FieldInput label="Title (Italic)" value={d['titleItalic'] as string ?? ''} placeholder="italic portion" onChange={v => update({ titleItalic: v })} />
+      <FieldInput label="Subtitle" value={d['subtitle'] as string ?? ''} placeholder="Supporting text" onChange={v => update({ subtitle: v })} />
+      <FieldInput label="CTA text" value={d['ctaText'] as string ?? ''} placeholder="Get Started" onChange={v => update({ ctaText: v })} />
+      <FieldInput label="CTA URL" value={d['ctaUrl'] as string ?? ''} placeholder="#" onChange={v => update({ ctaUrl: v })} />
+      <FieldInput label="Secondary CTA text" value={d['ctaSecondaryText'] as string ?? ''} placeholder="Learn More" onChange={v => update({ ctaSecondaryText: v })} />
+      <FieldInput label="Secondary CTA URL" value={d['ctaSecondaryUrl'] as string ?? ''} placeholder="#" onChange={v => update({ ctaSecondaryUrl: v })} />
+      <FieldInput label="Stat Label" value={d['stat'] as string ?? ''} placeholder="500+ sesi" onChange={v => update({ stat: v })} />
+      <FieldInput label="Location" value={d['location'] as string ?? ''} placeholder="Jakarta · Yogyakarta" onChange={v => update({ location: v })} />
       <div style={{ marginBottom: 12 }}>
         <Label>Background image</Label>
         <ImageUploader

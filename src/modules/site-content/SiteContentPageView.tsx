@@ -21,7 +21,7 @@ interface Props {
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
-      <label className="block font-body text-xs font-semibold text-[var(--text-primary)] mb-1 tracking-[0.02em]">
+      <label className="block font-body text-xs font-semibold text-[var(--text-muted)] mb-1 tracking-[0.02em]">
         {label}
       </label>
       {hint && <p className="font-body text-[11px] text-[var(--text-muted)] mb-[6px]">{hint}</p>}
@@ -78,7 +78,7 @@ function ArrayTextarea({ value, onChange, placeholder }: { value: string[]; onCh
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="font-display text-base font-normal text-[var(--text-primary)] mt-0 mb-4 pb-2 border-b border-[var(--color-border)]">
+    <h3 className="font-display text-base font-normal text-[var(--text-muted)] mt-0 mb-4 pb-2 border-b border-[var(--color-border)]">
       {children}
     </h3>
   )

@@ -24,6 +24,20 @@ import {
   Youtube, Globe, Star,
 } from 'lucide-react'
 
+// ── High-fidelity Lito section renderers (95%+ visual parity) ────────────────
+import { HeroSection }        from '../sections/HeroSection'
+import { MapSection }         from '../sections/MapSection'
+import { PricingSection }     from '../sections/PricingSection'
+import { OfferingsSection }   from '../sections/OfferingsSection'
+import { TestimonialsSection } from '../sections/TestimonialsSection'
+import { JournalSection }     from '../sections/JournalSection'
+import { GallerySection }     from '../sections/GallerySection'
+import { AboutSection }       from '../sections/AboutSection'
+import { CampaignSection }    from '../sections/CampaignSection'
+import { ContactSection }     from '../sections/ContactSection'
+import { StoriesSection }     from '../sections/StoriesSection'
+import { CategoriesSection }  from '../sections/CategoriesSection'
+
 // ── Style helper ──────────────────────────────────────────────────────────────
 
 /**
@@ -238,54 +252,6 @@ function DividerBlock({ block }: { block: Block }) {
   )
 }
 
-function HeroBlock({ block }: { block: Block }) {
-  const d = block.data as HeroBlockData
-  const alignMap = { left: 'text-left items-start', center: 'text-center items-center', right: 'text-right items-end' }
-  const overlay = d.backgroundOverlay ?? 50
-  return (
-    <div
-      style={{
-        ...blockStyle(block),
-        backgroundImage: d.backgroundImage ? `url(${d.backgroundImage})` : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        minHeight: d.minHeight ?? 480,
-        position: 'relative',
-      }}
-      className="flex items-center justify-center"
-    >
-      {d.backgroundImage && (
-        <div
-          className="absolute inset-0"
-          style={{ background: `rgba(0,0,0,${overlay / 100})` }}
-        />
-      )}
-      <div
-        className={`relative z-[1] max-w-[800px] px-6 w-full flex flex-col gap-4 ${alignMap[d.align]}`}
-      >
-        <h1 className="font-display text-4xl md:text-5xl font-bold text-white drop-shadow">
-          {d.title || 'Hero Title'}
-        </h1>
-        {d.subtitle && (
-          <p className="font-body text-lg text-white/90">{d.subtitle}</p>
-        )}
-        <div className="flex gap-3 flex-wrap">
-          {d.ctaText && (
-            <a href={d.ctaUrl} onClick={(e) => e.preventDefault()} className="inline-block px-6 py-3 rounded-lg bg-[var(--lito-teal)] text-white font-semibold font-body text-sm">
-              {d.ctaText}
-            </a>
-          )}
-          {d.ctaSecondaryText && (
-            <a href={d.ctaSecondaryUrl} onClick={(e) => e.preventDefault()} className="inline-block px-6 py-3 rounded-lg border-2 border-white text-white font-semibold font-body text-sm">
-              {d.ctaSecondaryText}
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function CTABlock({ block }: { block: Block }) {
   const d = block.data as CTABlockData
   const bgMap = {
@@ -318,37 +284,6 @@ function ServicesBlock({ block }: { block: Block }) {
             {item.icon && <div className="text-2xl mb-3">{item.icon}</div>}
             <h3 className="font-display text-base font-semibold mb-2 text-[var(--text-primary)]">{item.title}</h3>
             <p className="font-body text-sm text-[var(--text-muted)]">{item.description}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function PricingBlock({ block }: { block: Block }) {
-  const d = block.data as PricingBlockData
-  return (
-    <div style={{ ...blockStyle(block), ...innerWidth(block) }} className="px-6">
-      {d.heading && <h2 className="font-display text-2xl font-bold text-center mb-8 text-[var(--text-primary)]">{d.heading}</h2>}
-      <div className={`grid grid-cols-1 sm:grid-cols-${d.plans.length <= 2 ? d.plans.length : 3} gap-6 max-w-4xl mx-auto`}>
-        {d.plans.map((plan, i) => (
-          <div key={i} className={`p-6 rounded-2xl border-2 flex flex-col gap-3 ${plan.featured ? 'border-[var(--lito-teal)] bg-[var(--lito-teal)]/5' : 'border-[var(--lito-border)] bg-[var(--cms-surface-2)]'}`}>
-            {plan.featured && <span className="text-xs font-body font-bold text-[var(--lito-teal)] uppercase tracking-wider">Most Popular</span>}
-            <h3 className="font-display text-xl font-bold text-[var(--text-primary)]">{plan.name}</h3>
-            <div className="flex items-end gap-1">
-              <span className="font-display text-3xl font-bold text-[var(--text-primary)]">{plan.price}</span>
-              {plan.period && <span className="font-body text-sm text-[var(--text-muted)] mb-1">{plan.period}</span>}
-            </div>
-            <ul className="space-y-1 flex-1">
-              {plan.features.map((f, fi) => (
-                <li key={fi} className="font-body text-sm text-[var(--text-secondary)] flex items-center gap-2">
-                  <span className="text-[var(--lito-teal)]">✓</span> {f}
-                </li>
-              ))}
-            </ul>
-            <a href={plan.ctaUrl} onClick={(e) => e.preventDefault()} className={`block text-center py-2.5 rounded-lg text-sm font-semibold font-body mt-2 ${plan.featured ? 'bg-[var(--lito-teal)] text-white' : 'border border-[var(--lito-border)] text-[var(--text-primary)] hover:bg-[var(--cms-surface-3)]'}`}>
-              {plan.ctaText}
-            </a>
           </div>
         ))}
       </div>
@@ -581,21 +516,6 @@ function NewsletterBlock({ block }: { block: Block }) {
   )
 }
 
-function MapBlock({ block }: { block: Block }) {
-  const d = block.data as MapBlockData
-  return (
-    <div style={{ ...blockStyle(block) }}>
-      {d.src ? (
-        <iframe src={d.src} width="100%" height={d.height ?? 400} loading="lazy" className="rounded-xl border-0" />
-      ) : (
-        <div className="flex items-center justify-center rounded-xl bg-[var(--cms-surface-3)] border-2 border-dashed border-[var(--lito-border)]" style={{ height: d.height ?? 400 }}>
-          <p className="font-body text-sm text-[var(--text-muted)]">Paste a Google Maps embed URL</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
 function SocialLinksBlock({ block }: { block: Block }) {
   const d = block.data as SocialLinksBlockData
   const alignMap = { left: 'justify-start', center: 'justify-center', right: 'justify-end' }
@@ -647,28 +567,32 @@ export function BlockRenderer({ block }: { block: Block }) {
     case 'text':         return <TextBlock block={block} />
     case 'heading':      return <HeadingBlock block={block} />
     case 'image':        return <ImageBlock block={block} />
-    case 'gallery':      return <GalleryBlock block={block} />
     case 'video':        return <VideoBlock block={block} />
     case 'button':       return <ButtonBlock block={block} />
     case 'spacer':       return <SpacerBlock block={block} />
     case 'divider':      return <DividerBlock block={block} />
-    case 'hero':         return <HeroBlock block={block} />
-    case 'cta':          return <CTABlock block={block} />
-    case 'services':     return <ServicesBlock block={block} />
-    case 'pricing':      return <PricingBlock block={block} />
-    case 'testimonials': return <TestimonialsBlock block={block} />
     case 'faq':          return <FAQBlock block={block} />
     case 'team':         return <TeamBlock block={block} />
     case 'statistics':   return <StatisticsBlock block={block} />
     case 'products':     return <ProductsBlock block={block} />
     case 'collections':  return <CollectionsBlock block={block} />
-    case 'journal':      return <JournalBlock block={block} />
-    case 'story':        return <StoryBlock block={block} />
-    case 'contact_form': return <ContactFormBlock block={block} />
     case 'newsletter':   return <NewsletterBlock block={block} />
-    case 'map':          return <MapBlock block={block} />
+    case 'map':          return <MapSection block={block} />          // → Lito location section with cards
     case 'social_links': return <SocialLinksBlock block={block} />
     case 'html':         return <HTMLBlockComp block={block} />
+    // ── High-fidelity Lito section renderers ──────────────────────────────────
+    case 'hero':         return <HeroSection block={block} />        // → full-bleed dark hero, editable inline
+    case 'pricing':      return <PricingSection block={block} />     // → Lito photography pricing cards
+    case 'services':     return <OfferingsSection block={block} />   // → 4-col card grid
+    case 'gallery':      return <GallerySection block={block} />     // → masonry + hover overlay
+    case 'testimonials': return <TestimonialsSection block={block} />// → dark bg + client list + quote
+    case 'journal':      return <JournalSection block={block} />     // → 1 large + 2 small editorial
+    case 'story':        return <StoriesSection block={block} />     // → 3-col story cards
+    case 'contact_form': return <ContactSection block={block} />     // → split info + form
+    case 'cta':          return <CampaignSection block={block} />    // → full-width dark banner
+    case 'campaigns_grid': return <CategoriesSection block={block} />// → category card grid
+    // Aliases used by lito template page defaults
+    case 'about':        return <AboutSection block={block} />       // → 2-col image + text
     default:
       return (
         <div className="p-4 text-center font-body text-sm text-[var(--text-muted)]">

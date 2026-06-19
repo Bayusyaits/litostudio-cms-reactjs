@@ -139,7 +139,7 @@ export default function DomainsPageContainer() {
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-sm font-semibold text-[var(--text-primary)]">{domain.domain}</span>
+                    <span className="font-mono text-sm font-semibold text-[var(--text-muted)]">{domain.domain}</span>
                     {domain.is_primary && (
                       <span className="px-2 py-0.5 text-xs text-[var(--s-pub-fg)] bg-[var(--s-pub-bg)] rounded-full">Primary</span>
                     )}
@@ -157,7 +157,7 @@ export default function DomainsPageContainer() {
 
                   {!domain.is_verified && domain.verification_token && (
                     <div className="mt-2 p-2 bg-[var(--cms-surface-2,rgba(0,0,0,0.02))] border border-[var(--lito-border)] rounded text-xs">
-                      <p className="font-medium text-[var(--text-primary)] mb-1">Add this DNS TXT record to verify:</p>
+                      <p className="font-medium text-[var(--text-muted)] mb-1">Add this DNS TXT record to verify:</p>
                       {(domain.dns_records ?? []).map((rec, i) => (
                         <div key={i} className="font-mono text-[var(--text-muted)]">
                           <span className="text-[var(--text-faint)]">{rec.type} </span>{rec.name} → <span className="break-all">{rec.value}</span>
