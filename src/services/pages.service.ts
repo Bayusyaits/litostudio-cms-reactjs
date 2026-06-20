@@ -76,6 +76,32 @@ export interface PageUpdateRequest {
   translations?: PageTranslation[]
 }
 
+// ── Revision types ────────────────────────────────────────────────────────────
+
+export type RevisionStatus = 'draft' | 'published' | 'archived'
+
+export interface PageRevision {
+  id:           string
+  version:      number
+  label:        string | null
+  status:       RevisionStatus
+  published_at: string | null
+  created_at:   string
+  created_by:   string | null
+}
+
+export interface CreateRevisionRequest {
+  locale?: string
+  label?:  string
+  status?: RevisionStatus
+}
+
+export interface RestoreRevisionResult {
+  restored_from_version: number
+  restored_from_date:    string
+  message:               string
+}
+
 const BASE = '/api/v1/cms/content/pages'
 
 export const pagesService = {
@@ -168,5 +194,70 @@ export const pagesService = {
     const q = new URLSearchParams({ site_id, limit: '200', locale: 'id' })
     const data = await http.get<{ success: boolean; data: Page[]; meta: PageListMeta }>(`${BASE}?${q}`)
     return data.data ?? []
+  },
+
+  // ── Page sections sync (publish bridge) ───────────────────────────────────
+
+  /**
+   * Full-replace page_sections from block editor blocks.
+   * Called by BlockEditorPage.publishFn after saveFn so the website's
+   * DynamicSectionRenderer picks up the published content.
+   *
+   * @param pageId  - UUID of the page
+   * @param blocks  - Block[] from useEditorStore().blockDoc.blocks
+   */
+  async syncSections(
+    pageId: string,
+    blocks: Array<{
+      id: string
+      type: string
+      data?: Record<string, unknown>
+      visibility?: { desktop?: boolean; mobile?: boolean }
+      name?: string
+    }>,
+  ): Promise<{ synced: number }> {
+    const sections = blocks.map((block, idx) => ({
+      section_type: block.type,
+      sort_order:   idx,
+      props:        block.data    ?? {},
+      is_visible:   block.visibility?.desktop !== false,
+      name:         block.name    ?? null,
+      anchor_id:    null,
+    }))
+    const data = await http.post<{ success: boolean; synced: number }>(
+      `${BASE}/${pageId}/sections/sync`,
+      { sections },
+    )
+    return { synced: data.synced ?? sections.length }
+  },
+
+  // ── Revisions ──────────────────────────────────────────────────────────────
+
+  /** List the last N revision snapshots for a page+locale (default 10). */
+  async getRevisions(pageId: string, locale = 'id', limit = 10): Promise<PageRevision[]> {
+    const q = new URLSearchParams({ locale, limit: String(limit) })
+    const data = await http.get<ApiResponse<PageRevision[]>>(`${BASE}/${pageId}/revisions?${q}`)
+    return data.data ?? []
+  },
+
+  /**
+   * Snapshot the current draft body → new revision.
+   * Call on Publish or explicit "Save version".
+   */
+  async createRevision(pageId: string, payload: CreateRevisionRequest = {}): Promise<PageRevision> {
+    const data = await http.post<ApiResponse<PageRevision>>(`${BASE}/${pageId}/revisions`, payload)
+    return data.data!
+  },
+
+  /**
+   * Restore a historical revision: copies its body back into the draft.
+   * The caller must then save/publish to apply the restored content.
+   */
+  async restoreRevision(pageId: string, revisionId: string, locale = 'id'): Promise<RestoreRevisionResult> {
+    const data = await http.post<ApiResponse<RestoreRevisionResult>>(
+      `${BASE}/${pageId}/revisions/${revisionId}/restore`,
+      { locale },
+    )
+    return data.data!
   },
 }

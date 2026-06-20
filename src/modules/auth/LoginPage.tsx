@@ -39,7 +39,7 @@ export default function LoginPage() {
     setError(null)
     try {
       const result = await authService.login(values.email, values.password)
-      setAuth(result.user, result.access_token, result.expires_at)
+      setAuth(result.user, result.access_token, result.expires_at, result.refresh_token)
       // Navigate back to the page the user was on before session expired.
       // Validate the returnTo is a local path to prevent open-redirect attacks.
       const dest = returnToParam?.startsWith('/')

@@ -9,8 +9,8 @@
  * CSS-var references use arbitrary-value syntax: text-[var(--name)], bg-[var(--name)] etc.
  */
 
-import { useState } from 'react'
-import { Lock, Monitor, Tablet, Smartphone, HelpCircle, ChevronDown, Crown, Plus, Trash2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Lock, Monitor, Tablet, Smartphone, HelpCircle, ChevronDown, Crown, Plus, Trash2, History, RotateCcw, Loader2 } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
 import { useWebsiteStore } from '@/stores/website.store'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
@@ -18,6 +18,8 @@ import { CodeEditor }    from '@/components/molecules/CodeEditor'
 import { DynamicContentPanel } from './DynamicContentPanel'
 import { useTemplateManifest }  from '@/hooks/useTemplateManifest'
 import { getCanvasTokens }      from './templateCanvasTokens'
+import { pagesService } from '@/services/pages.service'
+import type { PageRevision } from '@/services/pages.service'
 import type { EditorTab, Block, BlockStyles } from '@/types/editor.types'
 
 // ── Reusable form helpers ─────────────────────────────────────────────────────
@@ -861,6 +863,160 @@ function AnimationPanel({ block }: { block: Block }) {
   )
 }
 
+// ── History panel ─────────────────────────────────────────────────────────────
+
+function HistoryPanel({ pageId }: { pageId: string | undefined }) {
+  const [revisions,  setRevisions]  = useState<PageRevision[]>([])
+  const [loading,    setLoading]    = useState(false)
+  const [restoring,  setRestoring]  = useState<string | null>(null)
+  const [error,      setError]      = useState<string | null>(null)
+  const [restoredId, setRestoredId] = useState<string | null>(null)
+
+  const loadRevisions = useCallback(async () => {
+    if (!pageId) return
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await pagesService.getRevisions(pageId, 'id', 10)
+      setRevisions(data)
+    } catch {
+      setError('Could not load revision history.')
+    } finally {
+      setLoading(false)
+    }
+  }, [pageId])
+
+  useEffect(() => {
+    void loadRevisions()
+  }, [loadRevisions])
+
+  const handleRestore = async (rev: PageRevision) => {
+    if (!pageId) return
+    setRestoring(rev.id)
+    setError(null)
+    try {
+      await pagesService.restoreRevision(pageId, rev.id, 'id')
+      setRestoredId(rev.id)
+      // Prompt user to reload the editor to pick up restored draft
+    } catch {
+      setError('Restore failed. Please try again.')
+    } finally {
+      setRestoring(null)
+    }
+  }
+
+  const fmtDate = (iso: string) => {
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    })
+  }
+
+  if (!pageId) {
+    return (
+      <div className="px-[14px] py-3">
+        <p className="font-body text-[11px] text-[var(--text-muted)] m-0">
+          Save the page first to enable revision history.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="px-[14px] py-2">
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-body text-[11px] text-[var(--text-muted)] m-0">
+          Last 10 published snapshots.
+        </p>
+        <button
+          type="button"
+          onClick={() => void loadRevisions()}
+          className="bg-transparent border-0 cursor-pointer p-1 text-[var(--text-muted)] hover:text-[var(--lito-teal)]"
+          title="Refresh"
+        >
+          <RotateCcw size={12} />
+        </button>
+      </div>
+
+      {loading && (
+        <div className="flex items-center gap-2 py-4 justify-center">
+          <Loader2 size={14} className="animate-spin text-[var(--lito-teal)]" />
+          <span className="font-body text-[11px] text-[var(--text-muted)]">Loading…</span>
+        </div>
+      )}
+
+      {error && (
+        <p className="font-body text-[11px] text-[var(--lito-danger,#f87171)] m-0 mb-2">{error}</p>
+      )}
+
+      {restoredId && (
+        <div className="mb-3 p-2 rounded-md bg-[var(--lito-teal)] bg-opacity-10 border border-[var(--lito-teal)] border-opacity-40">
+          <p className="font-body text-[11px] text-[var(--lito-teal)] m-0">
+            ✓ Draft restored. Reload the page editor to see the changes.
+          </p>
+        </div>
+      )}
+
+      {!loading && revisions.length === 0 && !error && (
+        <div className="py-4 text-center">
+          <History size={20} className="text-[var(--text-muted)] mx-auto mb-2 opacity-40" />
+          <p className="font-body text-[11px] text-[var(--text-muted)] m-0">
+            No revisions yet. Publish the page to create the first snapshot.
+          </p>
+        </div>
+      )}
+
+      {revisions.map((rev) => (
+        <div
+          key={rev.id}
+          className={`mb-2 p-[10px] rounded-lg border transition-[border-color] ${
+            restoredId === rev.id
+              ? 'border-[var(--lito-teal)] bg-[var(--cms-surface-2)]'
+              : 'border-[var(--lito-border)] bg-[var(--cms-surface-2)]'
+          }`}
+        >
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-[5px]">
+                <span className="font-body text-[10px] font-bold text-[var(--lito-teal)]">
+                  v{rev.version}
+                </span>
+                {rev.label && (
+                  <span className="font-body text-[10px] text-[var(--text-primary)] truncate">
+                    {rev.label}
+                  </span>
+                )}
+                <span className={`ml-auto shrink-0 inline-block px-[5px] py-[1px] rounded-full font-body text-[9px] font-semibold uppercase ${
+                  rev.status === 'published'
+                    ? 'bg-[var(--lito-teal)] bg-opacity-15 text-[var(--lito-teal)]'
+                    : 'bg-[var(--lito-border)] text-[var(--text-muted)]'
+                }`}>
+                  {rev.status}
+                </span>
+              </div>
+              <p className="font-body text-[9px] text-[var(--text-muted)] m-0 mt-[2px]">
+                {fmtDate(rev.created_at)}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={restoring === rev.id}
+            onClick={() => void handleRestore(rev)}
+            className="w-full mt-[6px] py-[4px] px-2 rounded-[5px] border border-[var(--lito-border)] bg-transparent cursor-pointer font-body text-[10px] text-[var(--text-muted)] hover:border-[var(--lito-teal)] hover:text-[var(--lito-teal)] flex items-center justify-center gap-1 transition-[color,border-color] disabled:opacity-50"
+          >
+            {restoring === rev.id
+              ? <><Loader2 size={10} className="animate-spin" /> Restoring…</>
+              : <><RotateCcw size={10} /> Restore this version</>
+            }
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
 const TABS: Array<{ id: EditorTab; label: string }> = [
@@ -870,6 +1026,7 @@ const TABS: Array<{ id: EditorTab; label: string }> = [
   { id: 'seo',        label: 'SEO' },
   { id: 'visibility', label: 'Visibility' },
   { id: 'animation',  label: 'Motion' },
+  { id: 'history',    label: 'History' },
 ]
 
 // ── Content tab router ────────────────────────────────────────────────────────
@@ -884,7 +1041,7 @@ function ContentTabRouter({ block }: { block: Block }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function EditorRightSidebar() {
-  const { selectedBlock, activeEditorTab, setEditorTab } = useEditorStore()
+  const { selectedBlock, activeEditorTab, setEditorTab, pageId } = useEditorStore()
   const block = selectedBlock()
 
   if (!block) {
@@ -909,7 +1066,7 @@ export function EditorRightSidebar() {
         <div className="w-6 h-6 rounded-md bg-[var(--lito-teal)] flex items-center justify-center shrink-0">
           <Crown size={12} className="text-white" />
         </div>
-        <span className="font-body text-[13px] font-semibold text-[var(--text-primary)] capitalize">
+        <span className="font-body text-[13px] font-semibold text-[var(--text-muted)] capitalize">
           {block.type}
         </span>
         <span className="font-body text-[9px] text-[var(--text-muted)] font-[monospace] ml-auto shrink-0">
@@ -956,6 +1113,7 @@ export function EditorRightSidebar() {
         {activeEditorTab === 'seo'        && <SEOPanel />}
         {activeEditorTab === 'visibility' && <VisibilityPanel block={block} />}
         {activeEditorTab === 'animation'  && <AnimationPanel  block={block} />}
+        {activeEditorTab === 'history'    && <HistoryPanel    pageId={pageId ?? undefined} />}
       </div>
 
       {/* Footer */}

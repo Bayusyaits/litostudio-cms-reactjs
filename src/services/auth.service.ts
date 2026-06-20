@@ -82,12 +82,23 @@ export const authService = {
   async exchangeOAuthCode(
     code: string,
     codeVerifier: string,
-  ): Promise<{ access_token: string; expires_at: number; user: { id: string; email: string; full_name: string | null; avatar_url: string | null } }> {
+  ): Promise<{ access_token: string; refresh_token: string | null; expires_at: number; user: { id: string; email: string; full_name: string | null; avatar_url: string | null } }> {
     const res = await http.post<{
       success: boolean
-      data: { access_token: string; expires_at: number; user: { id: string; email: string; full_name: string | null; avatar_url: string | null } }
+      data: { access_token: string; refresh_token: string | null; expires_at: number; user: { id: string; email: string; full_name: string | null; avatar_url: string | null } }
     }>(`${BASE}/exchange-code`, { code, code_verifier: codeVerifier })
     return res.data
+  },
+
+  /**
+   * Exchange a Supabase refresh_token for a new access_token + refresh_token pair.
+   * Called by useTokenRefresh before the current access_token expires.
+   */
+  async refresh(refreshToken: string): Promise<{ access_token: string; refresh_token: string; expires_at: number }> {
+    return http.post<{ success: boolean; access_token: string; refresh_token: string; expires_at: number }>(
+      `${BASE}/refresh`,
+      { refresh_token: refreshToken },
+    )
   },
 
   /** Get current session user from cookie-backed token */
@@ -109,5 +120,13 @@ export const authService = {
   /** Sign out and clear server cookie */
   async signOut(): Promise<void> {
     await http.post(`${BASE}/sign-out`, {})
+  },
+
+  /**
+   * Patch user_metadata on the server (Supabase admin.updateUserById).
+   * Only the supplied fields are changed — existing metadata is preserved.
+   */
+  async updateProfile(payload: { full_name?: string; onboarding_tasks?: string[] }): Promise<void> {
+    await http.patch(`${BASE}/me`, payload)
   },
 }

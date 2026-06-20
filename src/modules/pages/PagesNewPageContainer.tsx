@@ -47,7 +47,7 @@ export default function PagesNewPageContainer() {
       return pagesService.create({
         site_id:   activeSite.id,
         slug,
-        template:  templateSlug ?? 'default',
+        template:  templateSlug ?? 'lito',
         status:    'draft',
         parent_id: parentId || null,
         translations: title ? [{ locale: 'id', title }] : undefined,

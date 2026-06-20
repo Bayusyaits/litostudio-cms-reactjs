@@ -56,6 +56,7 @@ export default function OAuthCallbackPage() {
           },
           result.access_token,
           result.expires_at,
+          result.refresh_token ?? null,
         )
         // Restore the page the user was trying to reach before Google OAuth.
         // Stored in sessionStorage by LoginPage before the external redirect.

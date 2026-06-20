@@ -33,6 +33,10 @@ export interface Site {
   domain: string | null
   status: string
   settings: Record<string, unknown>
+  /** Direct DB column on the sites table — 'lito' | 'fashion' | 'beauty'.
+   *  Set at site creation and updated by theme-switch mutations.
+   *  Preferred over settings.template_slug because it's always present. */
+  template_slug?: string | null
   created_at: string
   updated_at: string
 }

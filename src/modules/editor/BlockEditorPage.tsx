@@ -17,6 +17,7 @@ import { useWebsiteStore }         from '@/stores/website.store'
 import { draftMediaStore }         from '@/stores/draftMedia.store'
 import { getPageDefaults }         from '@litostudio/templates'
 import { getCanvasTokens }         from './templateCanvasTokens'
+import { normalizeTemplateSlug }   from '@/hooks/useTemplateManifest'
 import { getPageLayout }           from '@/services/pageLayouts.service'
 import { EditorShell }             from './EditorShell'
 import type { SupportedLocale }    from './EditorToolbar'
@@ -189,8 +190,10 @@ export default function BlockEditorPage() {
     //   3. PAGE_DEFAULTS_REGISTRY (static in-package defaults keyed by template + pageSlug)
     if (doc.blocks.length === 0) {
       // Read template_slug safely — settings is Record<string,unknown>
-      const settings     = activeSite?.settings as Record<string, unknown> | null | undefined
-      const templateSlug = (settings?.template_slug as string | undefined) ?? ''
+      const settings        = activeSite?.settings as Record<string, unknown> | null | undefined
+      const rawTemplateSlug = (settings?.template_slug as string | undefined)
+                           ?? (activeSite?.template_slug ?? '')
+      const templateSlug    = rawTemplateSlug ? normalizeTemplateSlug(rawTemplateSlug) : ''
       const orgId        = activeSite?.organization_id ?? ''
       const pageSlug     = page.slug ?? ''
 
@@ -293,9 +296,11 @@ export default function BlockEditorPage() {
   // ── Google Fonts injection — keeps canvas fonts in sync with active template ─
 
   useEffect(() => {
-    const settings    = activeSite?.settings as Record<string, unknown> | null | undefined
-    const templateSlug = (settings?.template_slug as string | undefined) ?? 'lito'
-    const tokens      = getCanvasTokens(templateSlug)
+    const settings           = activeSite?.settings as Record<string, unknown> | null | undefined
+    const rawTemplateSlug2   = (settings?.template_slug as string | undefined)
+                            ?? (activeSite?.template_slug ?? 'lito')
+    const templateSlug       = normalizeTemplateSlug(rawTemplateSlug2 || 'lito')
+    const tokens             = getCanvasTokens(templateSlug)
     if (!tokens.fontUrl) return
 
     const LINK_ID = 'cms-editor-font-link'
@@ -343,9 +348,30 @@ export default function BlockEditorPage() {
   // ── Publish function ──────────────────────────────────────────────────────
 
   const publishFn = useCallback(async () => {
+    // 1. Persist the current blockDoc to page_translations.body
     await saveFn()
-    if (pageId) await pagesService.update(pageId, { status: 'active' })
-  }, [pageId, saveFn])
+
+    if (pageId) {
+      // 2. Sync blocks → page_sections so the website's DynamicSectionRenderer
+      //    picks up the published content (BUG-002 fix).
+      //    Failures here are non-fatal — page_translations.body is the source of truth.
+      const blocks = blockDoc.blocks.map((b) => ({
+        id:         b.id,
+        type:       b.type,
+        data:       b.data as Record<string, unknown>,
+        visibility: b.visibility,
+        name:       b.name,
+      }))
+      try {
+        await pagesService.syncSections(pageId, blocks)
+      } catch (err) {
+        console.warn('[publishFn] page_sections sync failed — content still saved to translations.body', err)
+      }
+
+      // 3. Set page status to active (published)
+      await pagesService.update(pageId, { status: 'active' })
+    }
+  }, [pageId, blockDoc, saveFn])
 
   // ── Guards ────────────────────────────────────────────────────────────────
 
@@ -384,6 +410,7 @@ export default function BlockEditorPage() {
       pageTitle={pageTitle}
       pageId={pageId}
       pageSlug={page.slug}
+      pageStatus={page.status}
       saveFn={saveFn}
       publishFn={publishFn}
       activeLocale={locale}

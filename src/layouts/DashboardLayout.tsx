@@ -9,6 +9,7 @@ import { AppHeader } from '@/components/organisms/AppHeader'
 import { CommandPalette } from '@/components/organisms/CommandPalette'
 import { DashboardSkeleton } from '@/components/atoms/Skeleton'
 import { useWorkspaceHydration } from '@/hooks/useWorkspaceHydration'
+import { useTokenRefresh } from '@/hooks/useTokenRefresh'
 import { getWorkspaceState } from '@/lib/workspace'
 
 /**
@@ -43,12 +44,45 @@ export function DashboardLayout() {
   useEffect(() => { applyTheme() }, [applyTheme])
 
   // AC-06: Move focus to #main-content on SPA route change (WCAG 2.4.3 / 4.1.3)
-  // Gives screen-reader users a clear "page changed" signal without a full reload.
   useEffect(() => {
     const main = document.getElementById('main-content')
-    if (main) {
-      main.focus({ preventScroll: true })
+    if (main) main.focus({ preventScroll: true })
+  }, [location.pathname])
+
+  // A1-4: Update document.title on route change
+  useEffect(() => {
+    const routeLabels: Record<string, string> = {
+      '/dashboard':   'Dashboard',
+      '/pages':       'Pages',
+      '/stories':     'Stories',
+      '/media':       'Media',
+      '/settings':    'Settings',
+      '/themes':      'Themes',
+      '/seo':         'SEO',
+      '/analytics':   'Analytics',
+      '/domains':     'Domains',
+      '/team':        'Team',
+      '/products':    'Products',
+      '/orders':      'Orders',
+      '/reviews':     'Reviews',
+      '/newsletter':  'Newsletter',
+      '/messages':    'Messages',
+      '/gallery':     'Gallery',
+      '/services':    'Services',
+      '/testimonials':'Testimonials',
+      '/faqs':        'FAQs',
+      '/pricing':     'Pricing',
+      '/campaigns':   'Campaigns',
+      '/journal':     'Journal',
+      '/destinations':'Destinations',
+      '/hero':        'Hero',
+      '/onboarding':  'Welcome',
     }
+    const match = Object.keys(routeLabels)
+      .sort((a, b) => b.length - a.length) // longest first for specificity
+      .find(k => location.pathname.startsWith(k))
+    const label = match ? routeLabels[match] : 'Lito Studio'
+    document.title = `${label} — Lito Studio`
   }, [location.pathname])
 
   // Global ⌘K shortcut
@@ -62,6 +96,9 @@ export function DashboardLayout() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  // ── Proactive token refresh (keeps session alive up to 6 hours) ─────────────
+  useTokenRefresh()
 
   // ── Auto-hydrate org + site stores from API ───────────────────────────────
   // This runs whenever user.org_id is set but org/activeSite are null.

@@ -470,7 +470,7 @@ export interface BlockDocument {
 
 // ── Editor state ──────────────────────────────────────────────────────────────
 
-export type EditorTab = 'content' | 'styles' | 'spacing' | 'layout' | 'seo' | 'visibility' | 'conditions' | 'animation'
+export type EditorTab = 'content' | 'styles' | 'spacing' | 'layout' | 'seo' | 'visibility' | 'conditions' | 'animation' | 'history'
 export type LeftPanelTab = 'blocks' | 'pages' | 'templates' | 'media' | 'patterns'
 export type PreviewMode = 'desktop' | 'tablet' | 'mobile'
 /** Top-level editor mode — Content edits blocks, Design edits visuals, Preview shows final output, Code edits raw JSON */

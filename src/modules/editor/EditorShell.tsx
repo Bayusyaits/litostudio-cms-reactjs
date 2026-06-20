@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useCallback } from 'react'
+import { useBlocker }         from 'react-router-dom'
 import { EditorToolbar }      from './EditorToolbar'
 import type { SupportedLocale } from './EditorToolbar'
 import { EditorLeftSidebar }  from './EditorLeftSidebar'
@@ -23,6 +24,8 @@ interface EditorShellProps {
   pageId?:         string
   /** Slug used as fallback for external preview */
   pageSlug?:       string
+  /** Page publish status — shown as DRAFT/LIVE badge */
+  pageStatus?:     string
   /**
    * Called when the user saves. Must handle setting saveStatus via
    * setSaveStatus / markClean from useEditorStore.
@@ -41,7 +44,7 @@ interface EditorShellProps {
 }
 
 export function EditorShell({
-  pageTitle, pageId, pageSlug, saveFn, publishFn,
+  pageTitle, pageId, pageSlug, pageStatus, saveFn, publishFn,
   activeLocale, onLocaleChange,
 }: EditorShellProps) {
   const {
@@ -50,6 +53,22 @@ export function EditorShell({
     leftSidebarOpen, rightSidebarOpen, aiPanelOpen,
     editorMode, setEditorMode,
   } = useEditorStore()
+
+  // ── In-app navigation guard (SPA routes) ─────────────────────────────────
+  // Blocks React Router navigation when there are unsaved changes.
+  // beforeunload (below) covers browser tab close / refresh.
+  const blocker = useBlocker(
+    useCallback(({ currentLocation, nextLocation }: { currentLocation: { pathname: string }; nextLocation: { pathname: string } }) =>
+      isDirty && currentLocation.pathname !== nextLocation.pathname,
+    [isDirty]),
+  )
+
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return
+    const ok = window.confirm('You have unsaved changes. Leave anyway?')
+    if (ok) blocker.proceed()
+    else blocker.reset()
+  }, [blocker])
 
   // ── Save ──────────────────────────────────────────────────────────────────
 
@@ -130,14 +149,22 @@ export function EditorShell({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [canUndo, canRedo, undo, redo, handleSave, editorMode, setEditorMode])
 
-  // ── Auto-save every 30 s when dirty ──────────────────────────────────────
+  // ── Debounced autosave + localStorage backup ──────────────────────────────
+  // blockDoc and storePageId are read once here and shared by both effects below.
 
+  const { blockDoc, pageId: storePageId } = useEditorStore()
+
+  // Debounced autosave: save 2 s after the last blockDoc change.
+  // Replaces the old 30 s setInterval. We watch blockDoc (not isDirty) so the
+  // timer fires on every content change, not just when re-renders flip isDirty.
   useEffect(() => {
-    const id = setInterval(() => {
-      if (isDirty) void handleSave()
-    }, 30_000)
-    return () => clearInterval(id)
-  }, [isDirty, handleSave])
+    if (!isDirty) return          // no-op if nothing has changed since last save
+    const id = setTimeout(() => {
+      void handleSave()
+    }, 2_000)
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blockDoc, isDirty, handleSave])
 
   // ── Warn on unload ────────────────────────────────────────────────────────
 
@@ -158,8 +185,6 @@ export function EditorShell({
   // when the saved version has no blocks (empty canvas).
   // Cleared on successful save (markClean sets isDirty=false).
 
-  const { blockDoc, pageId: storePageId } = useEditorStore()
-
   useEffect(() => {
     if (!storePageId || !isDirty) return
     try {
@@ -178,6 +203,7 @@ export function EditorShell({
     <div className="flex flex-col h-full w-full overflow-hidden bg-[var(--cms-main-bg)]">
       <EditorToolbar
         pageTitle={pageTitle}
+        pageStatus={pageStatus}
         onSave={() => void handleSave()}
         onPublish={handlePublish}
         onPreview={handlePreview}

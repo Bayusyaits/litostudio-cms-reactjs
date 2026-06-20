@@ -15,7 +15,7 @@ import { Button } from '@/components/atoms/Button'
 interface ContentEditorLayoutProps {
   /** Page title (e.g. "Edit Service") */
   title: string
-  /** Label for the Gutenberg editor link (optional) */
+  /** Label for the Block Editor link (optional). Defaults to "Block Editor". */
   editorBLabel?: string
   onEditorBClick?: () => void
   onBack?: () => void
@@ -53,9 +53,9 @@ export function ContentEditorLayout({
           )}
         </div>
 
-        {editorBLabel && onEditorBClick && (
+        {onEditorBClick && (
           <Button variant="ghost" size="sm" onClick={onEditorBClick}>
-            {editorBLabel}
+            {editorBLabel ?? 'Block Editor'}
           </Button>
         )}
       </header>

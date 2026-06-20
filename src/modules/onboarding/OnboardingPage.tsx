@@ -11,7 +11,7 @@
  * Forms use react-hook-form + zod (schema validation). No Formik. No manual validation.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -23,6 +23,7 @@ import {
   ChevronRight, Palette, FileText,
 } from 'lucide-react'
 import { orgService } from '@/services/org.service'
+import { authService } from '@/services/auth.service'
 import { useOrgStore } from '@/stores/org.store'
 import { useWebsiteStore } from '@/stores/website.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -339,9 +340,35 @@ function CreateSiteStep({
 
 // ── Step 3: Setup Checklist ───────────────────────────────────────────────────
 
+const CHECKLIST_LS_KEY = 'lito_onboarding_tasks'
+
 function SetupChecklistStep({ onDone }: { onDone: () => void }) {
-  const [checked, setChecked] = useState<Set<string>>(new Set())
+  const [checked, setChecked] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(CHECKLIST_LS_KEY)
+      if (raw) return new Set<string>(JSON.parse(raw) as string[])
+    } catch { /* ignore */ }
+    return new Set<string>()
+  })
   const navigate = useNavigate()
+
+  // Persist to localStorage immediately on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHECKLIST_LS_KEY, JSON.stringify([...checked]))
+    } catch { /* quota exceeded — silently skip */ }
+  }, [checked])
+
+  // Persist to Supabase user_metadata with 1.5 s debounce
+  // Failure is non-critical — localStorage is the primary source of truth.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      void authService.updateProfile({ onboarding_tasks: [...checked] }).catch(() => {
+        // silently ignore — localStorage already has the state
+      })
+    }, 1_500)
+    return () => clearTimeout(id)
+  }, [checked])
 
   const toggle = (id: string) =>
     setChecked(prev => {

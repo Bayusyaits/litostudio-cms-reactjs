@@ -70,7 +70,7 @@ export const orgService = {
     return data.data
   },
 
-  async updateSite(siteId: string, payload: { name?: string; domain?: string; settings?: Record<string, unknown> }) {
+  async updateSite(siteId: string, payload: { name?: string; domain?: string; settings?: Record<string, unknown>; template_slug?: string }) {
     const data = await http.patch<ApiResponse<Site>>(`/api/v1/cms/organizations/sites/${siteId}`, payload)
     return data.data
   },

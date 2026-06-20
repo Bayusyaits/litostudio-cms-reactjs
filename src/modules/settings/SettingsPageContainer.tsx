@@ -59,19 +59,28 @@ export default function SettingsPageContainer() {
       // 2. Derive template_slug from the theme slug, write to site.settings
       //    so BlockEditorPage can seed the correct page defaults
       const theme = (themesData?.data ?? []).find((t) => t.id === themeId)
-      if (theme?.slug) {
+      // BUG-CMS-02 fix: use theme.template_slug ('beauty'/'fashion'/'lito'),
+      // NOT theme.slug ('lito-beauty'/'lito-fashion') — they are different fields.
+      const tplSlug = theme?.template_slug ?? theme?.slug
+      if (tplSlug) {
         const existing = (activeSite?.settings ?? {}) as Record<string, unknown>
         const updated = await orgService.updateSite(activeSite!.id, {
-          settings: { ...existing, template_slug: theme.slug },
+          // Sync both the direct DB column and the settings JSON key.
+          template_slug: tplSlug,
+          settings: { ...existing, template_slug: tplSlug },
         })
         setActiveSite(updated)
       }
 
-      // 3. If user chose "apply defaults", wipe the editor blockDoc so the
-      //    editor's init effect re-seeds with the new template's page defaults
-      //    next time the editor opens.
+      // 3. BUG-007 fix: if user chose "apply defaults", wipe the editor blockDoc
+      //    AND invalidate the page-editor query cache so BlockEditorPage's
+      //    useEffect re-runs and re-seeds blocks from the new template's defaults.
+      //    Without the invalidation, the editor's useEffect only re-runs on
+      //    pageId change — resetEditor() alone is not enough.
       if (!keepContent) {
         resetEditor()
+        // Invalidate all open page-editor queries so the init effect re-seeds
+        qc.invalidateQueries({ queryKey: ['page-editor'] })
       }
     },
     onSuccess: () => {

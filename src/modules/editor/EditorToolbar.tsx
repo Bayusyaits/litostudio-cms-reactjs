@@ -14,12 +14,12 @@
  *   Publish        → #fff on #1A4A5A = 8.0:1  ✓
  */
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Monitor, Tablet, Smartphone,
   Undo2, Redo2, Settings2, Eye, Rocket, Loader2,
-  Minus, Plus, ChevronDown, ArrowLeft, Code2, PanelLeft, Keyboard, Globe,
+  Minus, Plus, ArrowLeft, Code2, PanelLeft, Keyboard, Globe,
 } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
 import { EditorShortcutsModal } from './EditorShortcutsModal'
@@ -34,6 +34,7 @@ export type SupportedLocale = typeof SUPPORTED_LOCALES[number]['code']
 
 interface EditorToolbarProps {
   pageTitle:       string
+  pageStatus?:     string
   onSave:          () => void
   onPublish:       () => void
   onPreview?:      () => void
@@ -43,7 +44,7 @@ interface EditorToolbarProps {
 }
 
 export function EditorToolbar({
-  pageTitle, onSave, onPublish, onPreview, backUrl,
+  pageTitle, pageStatus, onSave, onPublish, onPreview, backUrl,
   activeLocale = 'id', onLocaleChange,
 }: EditorToolbarProps) {
   const navigate = useNavigate()
@@ -55,6 +56,29 @@ export function EditorToolbar({
   } = useEditorStore()
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const isCodeMode = editorMode === 'code'
+
+  // ── Last-saved timestamp ─────────────────────────────────────────────────
+  const lastSavedRef = useRef<Date | null>(null)
+  const [lastSavedLabel, setLastSavedLabel] = useState<string>('')
+
+  useEffect(() => {
+    if (saveStatus === 'saved') {
+      lastSavedRef.current = new Date()
+      setLastSavedLabel('Just now')
+    }
+  }, [saveStatus])
+
+  // Update relative label every minute
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!lastSavedRef.current) return
+      const diffMin = Math.round((Date.now() - lastSavedRef.current.getTime()) / 60_000)
+      if (diffMin < 1) setLastSavedLabel('Just now')
+      else if (diffMin === 1) setLastSavedLabel('1 min ago')
+      else setLastSavedLabel(`${diffMin} min ago`)
+    }, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const handleBack = useCallback(() => {
     if (backUrl) navigate(backUrl)
@@ -88,16 +112,18 @@ export function EditorToolbar({
     }
     return (
       <div className="flex items-center gap-2">
-        <span className="inline-block w-2 h-2 rounded-full bg-[#22c55e] shrink-0" />
+        <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${isDirty ? 'bg-[#f59e0b]' : 'bg-[#22c55e]'}`} />
         <div>
           <p className="font-body text-[11px] font-semibold text-[var(--text-muted)] m-0 leading-[1.3]">
             {isDirty ? 'Unsaved changes' : (saveStatus === 'saved' ? 'All saved' : pageTitle)}
           </p>
-          <p className="font-body text-[10px] text-[var(--text-muted)] m-0 leading-[1.3]">All changes saved locally</p>
+          <p className="font-body text-[10px] text-[var(--text-muted)] m-0 leading-[1.3]">
+            {lastSavedLabel ? `Saved ${lastSavedLabel}` : 'Changes saved locally'}
+          </p>
         </div>
       </div>
     )
-  }, [saveStatus, isDirty, pageTitle])
+  }, [saveStatus, isDirty, pageTitle, lastSavedLabel])
 
   const deviceModes: Array<{ mode: PreviewMode; Icon: typeof Monitor; label: string }> = [
     { mode: 'desktop', Icon: Monitor,    label: 'Desktop' },
@@ -276,25 +302,28 @@ export function EditorToolbar({
             </button>
           )}
 
-          {/* Publish + dropdown */}
-          <div className="tb-publish-group">
-            <button
-              type="button"
-              onClick={onPublish}
-              className="tb-publish-btn"
-            >
-              <Rocket size={13} />
-              Publish
-            </button>
-            <button
-              type="button"
-              title="Publish options"
-              aria-label="Publish options"
-              className="tb-publish-chevron"
-            >
-              <ChevronDown size={11} />
-            </button>
-          </div>
+          {/* DRAFT / LIVE badge */}
+          {pageStatus && (
+            <span className={[
+              'inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-[10px] font-semibold font-body tracking-wide',
+              pageStatus === 'active'
+                ? 'bg-[rgba(34,197,94,0.12)] text-[#16a34a]'
+                : 'bg-[rgba(245,158,11,0.12)] text-[#b45309]',
+            ].join(' ')}>
+              <span className={`inline-block w-[5px] h-[5px] rounded-full ${pageStatus === 'active' ? 'bg-[#22c55e]' : 'bg-[#f59e0b]'}`} />
+              {pageStatus === 'active' ? 'LIVE' : 'DRAFT'}
+            </span>
+          )}
+
+          {/* Publish */}
+          <button
+            type="button"
+            onClick={onPublish}
+            className="tb-publish-btn"
+          >
+            <Rocket size={13} />
+            Publish
+          </button>
         </div>
       </div>
 

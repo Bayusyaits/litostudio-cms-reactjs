@@ -9,15 +9,27 @@ type LoginUser = LoginResponse['user']
 // Keys used by our persisted Zustand stores — cleared on full logout
 const PERSISTED_STORE_KEYS = ['cms-auth', 'cms-org', 'cms-website'] as const
 
+/** Hard session TTL: 6 hours in milliseconds. After this the session is evicted
+ *  even if the Supabase refresh_token is still valid. */
+export const SESSION_DURATION_MS = 6 * 60 * 60 * 1_000
+
 interface AuthStore {
   user: User | null
   token: string | null
+  /** Supabase refresh_token — persisted so we can auto-refresh before expiry */
+  refreshToken: string | null
+  /** Unix timestamp (ms) when the current access_token expires */
+  expiresAt: number | null
+  /** Unix timestamp (ms) of the hard 6-hour session ceiling — set once at login */
+  sessionExpiresAt: number | null
   isAuthenticated: boolean
   /** True once Zustand persist has finished rehydrating from localStorage */
   _hasHydrated: boolean
 
-  setAuth: (user: LoginUser, token: string, expiresAt: number) => void
+  setAuth: (user: LoginUser, token: string, expiresAt: number, refreshToken?: string | null) => void
   setUser: (user: User) => void
+  /** Update access token + refresh token after a successful refresh call (no session reset). */
+  updateTokens: (token: string, refreshToken: string, expiresAt: number) => void
   /**
    * Soft logout — clears auth state only. Use `fullLogout()` for the
    * complete eviction path (401, explicit sign-out).
@@ -39,18 +51,21 @@ interface AuthStore {
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
-      user:            null,
-      token:           null,
-      isAuthenticated: false,
-      _hasHydrated:    false,
+      user:             null,
+      token:            null,
+      refreshToken:     null,
+      expiresAt:        null,
+      sessionExpiresAt: null,
+      isAuthenticated:  false,
+      _hasHydrated:     false,
 
       setHasHydrated: (value) => set({ _hasHydrated: value }),
 
-      setAuth: (loginUser, token, expiresAt) => {
-        const maxAge  = expiresAt - Math.floor(Date.now() / 1000)
-        const safeDays = maxAge > 0 ? maxAge / 86400 : 1
+      setAuth: (loginUser, token, expiresAt, refreshToken = null) => {
+        // Cookie lifetime = 6 hours (matches SESSION_DURATION_MS)
+        const cookieDays = SESSION_DURATION_MS / 86_400_000
         Cookies.set(SESSION_COOKIE, token, {
-          expires:  safeDays,
+          expires:  cookieDays,
           sameSite: 'Lax',
           secure:   location.protocol === 'https:',
         })
@@ -62,14 +77,38 @@ export const useAuthStore = create<AuthStore>()(
           org_id:     loginUser.org_id,
           org_role:   loginUser.org_role,
         }
-        set({ user, token, isAuthenticated: true })
+        // sessionExpiresAt is set ONCE at login — not renewed on refresh
+        set({
+          user,
+          token,
+          refreshToken:     refreshToken ?? null,
+          expiresAt:        expiresAt * 1_000,  // convert from Unix seconds to ms
+          sessionExpiresAt: Date.now() + SESSION_DURATION_MS,
+          isAuthenticated:  true,
+        })
+      },
+
+      updateTokens: (token, refreshToken, expiresAt) => {
+        // Refresh cookie lifetime to another 6 hours from now
+        const cookieDays = SESSION_DURATION_MS / 86_400_000
+        Cookies.set(SESSION_COOKIE, token, {
+          expires:  cookieDays,
+          sameSite: 'Lax',
+          secure:   location.protocol === 'https:',
+        })
+        set({
+          token,
+          refreshToken,
+          expiresAt: expiresAt * 1_000,
+          // sessionExpiresAt intentionally NOT updated — hard 6-hour ceiling
+        })
       },
 
       setUser: (user) => set({ user }),
 
       logout: () => {
         Cookies.remove(SESSION_COOKIE)
-        set({ user: null, token: null, isAuthenticated: false })
+        set({ user: null, token: null, refreshToken: null, expiresAt: null, sessionExpiresAt: null, isAuthenticated: false })
       },
 
       fullLogout: (redirectTo) => {
@@ -85,7 +124,7 @@ export const useAuthStore = create<AuthStore>()(
         }
 
         // 3. Reset in-memory auth state (other stores reset on next reload)
-        set({ user: null, token: null, isAuthenticated: false })
+        set({ user: null, token: null, refreshToken: null, expiresAt: null, sessionExpiresAt: null, isAuthenticated: false })
 
         // 4. Redirect (hard reload clears all React state + query cache)
         if (typeof window !== 'undefined') {
@@ -99,9 +138,13 @@ export const useAuthStore = create<AuthStore>()(
     {
       name: 'cms-auth',
       partialize: (state) => ({
-        user:            state.user,
-        isAuthenticated: state.isAuthenticated,
-        // Do NOT persist token — read it from cookie on each request
+        user:             state.user,
+        isAuthenticated:  state.isAuthenticated,
+        // Persist refresh data so the token-refresh hook survives page reloads.
+        // The access_token itself is NOT persisted — it lives in the cookie.
+        refreshToken:     state.refreshToken,
+        expiresAt:        state.expiresAt,
+        sessionExpiresAt: state.sessionExpiresAt,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true)

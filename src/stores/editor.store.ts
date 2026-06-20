@@ -104,7 +104,7 @@ type EditorStore = EditorState & EditorActions
 // ── Snapshot helper ───────────────────────────────────────────────────────────
 
 function snap(doc: BlockDocument): BlockDocument {
-  return JSON.parse(JSON.stringify(doc)) as BlockDocument
+  return structuredClone(doc)
 }
 
 // ── Store ─────────────────────────────────────────────────────────────────────

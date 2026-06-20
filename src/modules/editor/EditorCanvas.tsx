@@ -16,7 +16,8 @@
  *   Delete
  */
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Plus, ChevronUp, ChevronDown, Copy, Trash2, GripVertical,
   MoreVertical, Scissors, ClipboardPaste, ArrowUpToLine, ArrowDownToLine,
@@ -24,6 +25,7 @@ import {
   ImageIcon, Code2,
 } from 'lucide-react'
 import { useEditorStore }       from '@/stores/editor.store'
+import { useWebsiteStore }     from '@/stores/website.store'
 import { BlockRenderer }        from './blocks/BlockRenderer'
 import { FloatingTextToolbar }  from './FloatingTextToolbar'
 import { useTemplateManifest }  from '@/hooks/useTemplateManifest'
@@ -425,11 +427,13 @@ interface MockSiteHeaderProps {
   fontDisplay:  string
   fontBody:     string
   previewMode:  PreviewMode
+  navLinks:     string[]
 }
 
-const NAV_LINKS = ['Home', 'About', 'Portfolio', 'Stories', 'Journal', 'Contact']
+/** Fallback nav links shown when no pages have been created yet */
+const FALLBACK_NAV_LINKS = ['Home', 'About', 'Portfolio', 'Stories', 'Journal', 'Contact']
 
-function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode }: MockSiteHeaderProps) {
+function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode, navLinks }: MockSiteHeaderProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = previewMode === 'mobile'
   const isTablet = previewMode === 'tablet'
@@ -480,7 +484,7 @@ function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisp
         {/* Desktop / tablet nav */}
         {!isMobile && (
           <nav aria-label="Primary navigation" style={{ display: 'flex', alignItems: 'center', gap: isTablet ? 20 : 28 }}>
-            {NAV_LINKS.slice(0, isTablet ? 4 : 6).map((item) => (
+            {navLinks.slice(0, isTablet ? 4 : 6).map((item) => (
               <span key={item} style={navLinkStyle}>{item}</span>
             ))}
           </nav>
@@ -546,7 +550,7 @@ function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisp
             padding: '8px 20px 20px',
           }}
         >
-          {NAV_LINKS.map((item, i) => (
+          {navLinks.map((item, i) => (
             <div
               key={item}
               style={{
@@ -557,7 +561,7 @@ function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisp
                 textTransform: 'uppercase',
                 color: i === 0 ? headerText : `${headerText}99`,
                 padding: '12px 0',
-                borderBottom: i < NAV_LINKS.length - 1 ? `1px solid ${headerAccent}18` : 'none',
+                borderBottom: i < navLinks.length - 1 ? `1px solid ${headerAccent}18` : 'none',
                 userSelect: 'none', cursor: 'default',
               }}
             >
@@ -582,7 +586,7 @@ function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisp
 
 // ── Mock site footer ──────────────────────────────────────────────────────────
 
-function MockSiteFooter({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode }: MockSiteHeaderProps) {
+function MockSiteFooter({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode, navLinks }: MockSiteHeaderProps) {
   const isMobile = previewMode === 'mobile'
   return (
     <div
@@ -618,7 +622,7 @@ function MockSiteFooter({ headerBg, headerText, headerAccent, siteName, fontDisp
         {/* Footer nav */}
         {!isMobile && (
           <div style={{ display: 'flex', gap: 32 }}>
-            {['Portfolio', 'Stories', 'Journal', 'About', 'Contact'].map(link => (
+            {navLinks.slice(0, 5).map(link => (
               <span key={link} style={{ fontFamily: fontBody, fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: `${headerText}88`, cursor: 'default', userSelect: 'none' }}>
                 {link}
               </span>
@@ -650,11 +654,37 @@ export function EditorCanvas() {
   const { templateSlug } = useTemplateManifest()
   const tokens           = getCanvasTokens(templateSlug)
   const {
-    headerBg, headerText, headerAccent, siteName,
+    headerBg, headerText, headerAccent,
     '--font-display': fontDisplay,
     '--font-body':    fontBody,
     ...cssVars
   } = tokens
+
+  // BUG-008 fix: use the real site name from the Zustand store instead of the
+  // hardcoded name in templateCanvasTokens. Falls back to token default when no
+  // active site is loaded (e.g. during initial auth flow).
+  const activeSite     = useWebsiteStore((s) => s.activeSite)
+  const siteName       = activeSite?.name ?? tokens.siteName
+
+  // BUG-009 fix: derive nav links from the 'pages-all' React Query cache so the
+  // mock header reflects the actual pages created in the CMS.
+  // Uses getQueryData (no refetch) — PagesPageContainer already populates this cache.
+  const qc = useQueryClient()
+  const navLinks = useMemo(() => {
+    if (!activeSite?.id) return FALLBACK_NAV_LINKS
+    type CachedPage = { slug: string; status?: string; page_translations?: { title?: string; locale?: string }[] }
+    const cached = qc.getQueryData<CachedPage[]>(['pages-all', activeSite.id])
+    if (!cached || cached.length === 0) return FALLBACK_NAV_LINKS
+    // Only show active/published pages; derive display label from translation or slug
+    return cached
+      .filter((p) => !p.status || p.status === 'active')
+      .slice(0, 6)
+      .map((p) => {
+        const t = p.page_translations?.find((tr) => tr.locale === 'en') ?? p.page_translations?.[0]
+        const title = t?.title ?? p.slug
+        return title.charAt(0).toUpperCase() + title.slice(1)
+      })
+  }, [activeSite?.id, qc])
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const dragIdx   = useRef<number | null>(null)
@@ -736,6 +766,7 @@ export function EditorCanvas() {
           fontDisplay={fontDisplay}
           fontBody={fontBody}
           previewMode={previewMode}
+          navLinks={navLinks}
         />
         {/* Page body — template background */}
         <div className="flex-1" style={{ background: cssVars['--cms-card-bg'] as string }}>
@@ -894,6 +925,7 @@ export function EditorCanvas() {
           fontDisplay={fontDisplay}
           fontBody={fontBody}
           previewMode={previewMode}
+          navLinks={navLinks}
         />
         </div>{/* end page column */}
     </div>

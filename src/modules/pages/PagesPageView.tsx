@@ -7,7 +7,6 @@ import type { Page, PageStatus } from '@/services/pages.service'
 import type { PageListMeta } from '@/services/pages.service'
 import { PageSectionsManager } from './PageSectionsManager'
 import { useTemplateManifest } from '@/hooks/useTemplateManifest'
-import { listTemplates } from '@litostudio/template-registry'
 
 interface Filter {
   status: PageStatus | ''
@@ -69,12 +68,18 @@ export function PagesPageView({
   const [sectionManagerPage, setSectionManagerPage] = useState<{ id: string; title: string; slug: string } | null>(null)
   const { templateSlug } = useTemplateManifest()
 
-  // Map template slug → display name from registry
+  // Human-readable display names keyed by template slug.
+  // Matches the names shown on the Themes page so users see consistent labels.
+  const TEMPLATE_LABELS: Record<string, string> = {
+    lito:    'Lito Studio',
+    fashion: 'Lito Fashion',
+    beauty:  'Lito Beauty',
+  }
+
+  // Map normalised template slug → display label
   const templateName = (slug: string | null | undefined): string => {
     if (!slug) return 'Default'
-    try {
-      return listTemplates().find(t => t.slug === slug)?.name ?? slug
-    } catch { return slug }
+    return TEMPLATE_LABELS[slug] ?? slug
   }
 
   const pageLabel = (p: Page) => p.title ?? p.slug

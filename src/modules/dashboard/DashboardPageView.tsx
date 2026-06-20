@@ -1,4 +1,4 @@
-import { FileText, Globe, Image, Users, BookOpen, ArrowRight, Clock } from 'lucide-react'
+import { FileText, Globe, Image, Link2, BookOpen, ArrowRight, Clock } from 'lucide-react'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { Link } from 'react-router-dom'
 import type { DashboardStats, DashboardRecentItem } from '@/services/org.service'
@@ -15,8 +15,9 @@ interface Props {
   site?: Site
 }
 
-function toIndoDate(date: Date) {
-  return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+function toLocalDate(date: Date) {
+  const locale = navigator.language || 'en-US'
+  return date.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -118,14 +119,14 @@ function RecentRow({ item }: { item: DashboardRecentItem }) {
 
 export function DashboardPageView({ stats, recent, loading, org: _org, site: _site }: Props) {
   const { user } = useAuthStore()
-  const today = toIndoDate(new Date())
+  const today = toLocalDate(new Date())
   const firstName = user?.full_name?.split(' ')[0] ?? 'Admin'
 
   const statCards: StatCardProps[] = [
     { icon: FileText, iconBg: 'rgba(26,74,90,0.10)',  iconColor: 'var(--lito-teal)',       label: 'Pages',       value: stats?.pages ?? 0,       loading },
     { icon: Globe,    iconBg: 'rgba(212,168,83,0.12)', iconColor: 'var(--lito-gold)',       label: 'Sites',       value: stats?.sites ?? 0,       loading },
     { icon: Image,    iconBg: 'rgba(212,168,83,0.08)', iconColor: 'var(--lito-gold-deep)', label: 'Media Files', value: stats?.media ?? 0,       loading },
-    { icon: Users,    iconBg: 'rgba(17,17,17,0.06)',   iconColor: 'var(--text-muted)',      label: 'Deployments', value: stats?.deployments ?? 0, loading },
+    { icon: Link2,    iconBg: 'rgba(17,17,17,0.06)',   iconColor: 'var(--text-muted)',      label: 'Domains',     value: stats?.deployments ?? 0, loading },
   ]
 
   return (
