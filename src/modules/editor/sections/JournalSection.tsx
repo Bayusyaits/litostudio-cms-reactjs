@@ -6,6 +6,7 @@
 
 import type { Block } from '@/types/editor.types'
 import type { JournalBlockData } from '@/types/editor.types'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 
 const MOCK_POSTS = [
   {
@@ -54,7 +55,7 @@ export function JournalSection({ block }: { block: Block }) {
             </div>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(40px,5vw,60px)', fontWeight: 300, lineHeight: 1, letterSpacing: '-0.02em', color: 'var(--text-primary, #111111)', margin: 0 }}>
               {headingLines[0]}
-              {headingLines[1] && <><br /><em dangerouslySetInnerHTML={{ __html: headingLines[1] }} /></>}
+              {headingLines[1] && <><br /><em dangerouslySetInnerHTML={{ __html: sanitizeHtml(headingLines[1]) }} /></>}
             </h2>
           </div>
           <a href="#" onClick={e => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted, #9E9E9E)', textDecoration: 'none' }}>

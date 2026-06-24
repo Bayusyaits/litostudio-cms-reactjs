@@ -31,8 +31,6 @@ import {
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type Align = 'left' | 'center' | 'right' | 'justify'
-
 /** Viewport-fixed coordinates (used with position:fixed via portal) */
 interface ToolbarPos {
   top:  number
@@ -47,16 +45,6 @@ function execFmt(cmd: string, value?: string) {
 
 function isActive(cmd: string): boolean {
   try { return document.queryCommandState(cmd) } catch { return false }
-}
-
-/** Find closest contentEditable ancestor or self */
-function inCanvas(node: Node | null): boolean {
-  let el = node instanceof Element ? node : node?.parentElement
-  while (el) {
-    if (el.hasAttribute('data-editor-canvas')) return true
-    el = el.parentElement
-  }
-  return false
 }
 
 // ── Shared button class helper ────────────────────────────────────────────────
@@ -224,7 +212,7 @@ function LinkDialog({ onInsert, onClose }: LinkDialogProps) {
       <button
         type="button"
         onMouseDown={e => { e.preventDefault(); onInsert(url) }}
-        className="flex items-center justify-center min-w-7 h-7 px-[10px] border-0 rounded-[5px] cursor-pointer bg-[rgba(212,168,83,0.25)] text-[#D4A853] transition-[background] duration-[80ms]"
+        className="flex items-center justify-center min-w-7 h-7 px-[10px] border-0 rounded-[5px] cursor-pointer bg-[rgba(212,168,83,0.25)] text-[var(--lito-gold)] transition-[background] duration-[80ms]"
       >
         Insert
       </button>

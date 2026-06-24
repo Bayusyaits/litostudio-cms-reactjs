@@ -104,7 +104,7 @@ export function PricingSection({ block }: { block: Block }) {
             {eyebrow}
           </span>
           <h2 style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
             fontSize: 'clamp(36px, 4vw, 52px)',
             fontWeight: 300,
             lineHeight: 1.05,
@@ -119,7 +119,7 @@ export function PricingSection({ block }: { block: Block }) {
               fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
               fontSize: 15,
               lineHeight: 1.65,
-              color: 'rgba(17,17,17,0.55)',
+              color: 'var(--text-secondary, rgba(17,17,17,0.55))',
               maxWidth: 560,
               margin: '0 auto',
             }}>
@@ -171,7 +171,7 @@ export function PricingSection({ block }: { block: Block }) {
                     fontWeight: 700,
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    color: '#111111',
+                    color: 'var(--canvas-accent-fg, #111111)',
                   }}>
                     Paling Populer
                   </span>
@@ -197,11 +197,11 @@ export function PricingSection({ block }: { block: Block }) {
               {/* Price */}
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 12 }}>
                 <span style={{
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
                   fontSize: 'clamp(28px, 3vw, 40px)',
                   fontWeight: 400,
                   lineHeight: 1,
-                  color: plan.featured ? '#ffffff' : 'var(--lito-ink, #111111)',
+                  color: plan.featured ? 'var(--canvas-hero-title, #ffffff)' : 'var(--lito-ink, #111111)',
                 }}>
                   {plan.price}
                 </span>
@@ -209,7 +209,7 @@ export function PricingSection({ block }: { block: Block }) {
                   <span style={{
                     fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
                     fontSize: 13,
-                    color: plan.featured ? 'rgba(255,255,255,0.5)' : 'rgba(17,17,17,0.4)',
+                    color: plan.featured ? 'rgba(255,255,255,0.5)' : 'var(--text-muted, rgba(17,17,17,0.4))',
                     paddingBottom: 4,
                   }}>
                     {plan.period}
@@ -223,7 +223,7 @@ export function PricingSection({ block }: { block: Block }) {
                   fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
                   fontSize: 13,
                   lineHeight: 1.6,
-                  color: plan.featured ? 'rgba(255,255,255,0.6)' : 'rgba(17,17,17,0.5)',
+                  color: plan.featured ? 'rgba(255,255,255,0.6)' : 'var(--text-muted, rgba(17,17,17,0.5))',
                   margin: '0 0 24px',
                 }}>
                   {plan.description}
@@ -255,7 +255,7 @@ export function PricingSection({ block }: { block: Block }) {
                       fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
                       fontSize: 13,
                       lineHeight: 1.5,
-                      color: plan.featured ? 'rgba(255,255,255,0.75)' : 'rgba(17,17,17,0.65)',
+                      color: plan.featured ? 'rgba(255,255,255,0.75)' : 'var(--text-secondary, rgba(17,17,17,0.65))',
                     }}>
                       {f}
                     </span>
@@ -281,7 +281,7 @@ export function PricingSection({ block }: { block: Block }) {
                   ...(plan.featured
                     ? {
                         background: 'var(--lito-gold, #D4A853)',
-                        color: '#111111',
+                        color: 'var(--canvas-accent-fg, #111111)',
                       }
                     : {
                         background: 'transparent',
@@ -305,7 +305,7 @@ export function PricingSection({ block }: { block: Block }) {
             fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
             fontSize: 12,
             lineHeight: 1.6,
-            color: 'rgba(17,17,17,0.4)',
+            color: 'var(--text-muted, rgba(17,17,17,0.4))',
           }}>
             {note}
           </p>

@@ -9,7 +9,7 @@
  * CSS-var references use arbitrary-value syntax: text-[var(--name)], bg-[var(--name)] etc.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Lock, Monitor, Tablet, Smartphone, HelpCircle, ChevronDown, Crown, Plus, Trash2, History, RotateCcw, Loader2 } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
 import { useWebsiteStore } from '@/stores/website.store'
@@ -46,7 +46,7 @@ function PxInput({
           value={value ?? 0}
           min={0} max={999}
           onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-          className="w-full py-[5px] px-[6px] border-0 outline-none font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)]"
+          className="w-full py-[5px] px-[6px] border-0 outline-none font-body text-[12px] text-[var(--cms-field-text)] bg-[var(--cms-surface-2)] transition-colors"
         />
         <span className="px-[6px] leading-7 font-body text-[11px] text-[var(--text-muted)] bg-[var(--cms-surface-2)] border-l border-[var(--lito-border)] shrink-0">
           px
@@ -66,7 +66,7 @@ function FieldInput({ label, value, placeholder, onChange }: {
         value={value ?? ''}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full py-[6px] px-[10px] border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none box-border"
+        className="w-full py-[6px] px-[10px] border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--cms-field-text)] bg-[var(--cms-surface-2)] outline-none box-border transition-colors placeholder:text-[var(--text-muted)]"
       />
     </div>
   )
@@ -83,7 +83,7 @@ function FieldSelect({ label, value, options, onChange }: {
       <select
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full py-[6px] px-[10px] border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none"
+        className="w-full py-[6px] px-[10px] border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--cms-field-text)] bg-[var(--cms-surface-2)] outline-none appearance-auto transition-colors"
       >
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
@@ -102,7 +102,7 @@ function FieldTextarea({ label, value, placeholder, onChange }: {
         placeholder={placeholder}
         rows={4}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full py-[6px] px-[10px] border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none resize-y box-border"
+        className="w-full py-[6px] px-[10px] border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--cms-field-text)] bg-[var(--cms-surface-2)] outline-none resize-y box-border transition-colors placeholder:text-[var(--text-muted)]"
       />
     </div>
   )
@@ -606,7 +606,7 @@ function StylePanel({ block }: { block: Block }) {
             className="w-8 h-8 rounded-md border border-[var(--lito-border)] cursor-pointer p-[2px]" />
           <input value={s.backgroundColor ?? ''} onChange={e => upd({ backgroundColor: e.target.value })}
             placeholder="transparent"
-            className="flex-1 py-[5px] px-2 border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none" />
+            className="flex-1 py-[5px] px-2 border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--cms-field-text)] bg-[var(--cms-surface-2)] outline-none" />
         </div>
       </div>
       <div className="mb-3">
@@ -617,7 +617,7 @@ function StylePanel({ block }: { block: Block }) {
             className="w-8 h-8 rounded-md border border-[var(--lito-border)] cursor-pointer p-[2px]" />
           <input value={s.textColor ?? ''} onChange={e => upd({ textColor: e.target.value })}
             placeholder="inherit"
-            className="flex-1 py-[5px] px-2 border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none" />
+            className="flex-1 py-[5px] px-2 border border-[var(--lito-border)] rounded-md font-body text-[12px] text-[var(--cms-field-text)] bg-[var(--cms-surface-2)] outline-none" />
         </div>
       </div>
       <FieldSelect label="Text alignment" value={s.textAlign ?? ''} options={[
@@ -952,8 +952,11 @@ function HistoryPanel({ pageId }: { pageId: string | undefined }) {
 
       {restoredId && (
         <div className="mb-3 p-2 rounded-md bg-[var(--lito-teal)] bg-opacity-10 border border-[var(--lito-teal)] border-opacity-40">
-          <p className="font-body text-[11px] text-[var(--lito-teal)] m-0">
-            ✓ Draft restored. Reload the page editor to see the changes.
+          <p className="font-body text-[11px] text-[var(--lito-teal)] m-0 font-semibold mb-[3px]">
+            ✓ Version restored to draft.
+          </p>
+          <p className="font-body text-[11px] text-[var(--lito-teal)] m-0 opacity-80">
+            Click <strong>Publish</strong> to make it live.
           </p>
         </div>
       )}
@@ -1041,10 +1044,37 @@ function ContentTabRouter({ block }: { block: Block }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function EditorRightSidebar() {
-  const { selectedBlock, activeEditorTab, setEditorTab, pageId } = useEditorStore()
+  const { selectedBlock, blockDoc, activeEditorTab, setEditorTab, pageId, justAddedBlockId, clearJustAdded } = useEditorStore()
   const block = selectedBlock()
 
-  if (!block) {
+  // Persist the last non-null block to prevent "No block selected" flash during
+  // focus transitions (e.g. clicking into CKEditor or other sidebar inputs).
+  // Only show the empty state when the last known block is truly gone from blockDoc.
+  const lastBlockRef = useRef<typeof block>(null)
+  if (block) lastBlockRef.current = block
+  const lastBlockStillExists = lastBlockRef.current
+    ? blockDoc.blocks.some((b) => b.id === lastBlockRef.current!.id)
+    : false
+  const displayBlock = block ?? (lastBlockStillExists ? lastBlockRef.current : null)
+
+  // Auto-focus the first text input when a new block is freshly added
+  const contentPanelRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!justAddedBlockId || !displayBlock || justAddedBlockId !== displayBlock.id) return
+    // Small delay so the panel has finished rendering its inputs
+    const id = setTimeout(() => {
+      const panel = contentPanelRef.current
+      if (!panel) return
+      const first = panel.querySelector<HTMLElement>(
+        'input[type="text"], input:not([type]), textarea'
+      )
+      first?.focus()
+      clearJustAdded()
+    }, 60)
+    return () => clearTimeout(id)
+  }, [justAddedBlockId, displayBlock, clearJustAdded])
+
+  if (!displayBlock) {
     return (
       <div className="w-[232px] shrink-0 bg-[var(--cms-surface-3)] border-l border-[var(--lito-border)] flex items-center justify-center p-6">
         <div className="text-center">
@@ -1058,6 +1088,8 @@ export function EditorRightSidebar() {
       </div>
     )
   }
+  // Alias so the rest of the component uses the stable display block
+  const stableBlock = displayBlock
 
   return (
     <div className="w-[232px] shrink-0 bg-[var(--cms-surface-3)] border-l border-[var(--lito-border)] flex flex-col h-full">
@@ -1067,10 +1099,10 @@ export function EditorRightSidebar() {
           <Crown size={12} className="text-white" />
         </div>
         <span className="font-body text-[13px] font-semibold text-[var(--text-muted)] capitalize">
-          {block.type}
+          {stableBlock.type}
         </span>
         <span className="font-body text-[9px] text-[var(--text-muted)] font-[monospace] ml-auto shrink-0">
-          Block ID: {block.id.slice(0, 8)}
+          Block ID: {stableBlock.id.slice(0, 8)}
         </span>
       </div>
 
@@ -1102,17 +1134,18 @@ export function EditorRightSidebar() {
 
       {/* Tab content */}
       <div
+        ref={contentPanelRef}
         role="tabpanel"
         id={`editor-panel-${activeEditorTab}`}
         aria-labelledby={`editor-tab-${activeEditorTab}`}
         className="flex-1 overflow-y-auto min-h-0"
       >
-        {activeEditorTab === 'content'    && <ContentTabRouter block={block} />}
-        {activeEditorTab === 'styles'     && <StylePanel      block={block} />}
-        {activeEditorTab === 'spacing'    && <SpacingPanel    block={block} />}
+        {activeEditorTab === 'content'    && <ContentTabRouter block={stableBlock} />}
+        {activeEditorTab === 'styles'     && <StylePanel      block={stableBlock} />}
+        {activeEditorTab === 'spacing'    && <SpacingPanel    block={stableBlock} />}
         {activeEditorTab === 'seo'        && <SEOPanel />}
-        {activeEditorTab === 'visibility' && <VisibilityPanel block={block} />}
-        {activeEditorTab === 'animation'  && <AnimationPanel  block={block} />}
+        {activeEditorTab === 'visibility' && <VisibilityPanel block={stableBlock} />}
+        {activeEditorTab === 'animation'  && <AnimationPanel  block={stableBlock} />}
         {activeEditorTab === 'history'    && <HistoryPanel    pageId={pageId ?? undefined} />}
       </div>
 

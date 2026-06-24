@@ -11,6 +11,7 @@ import { DashboardSkeleton } from '@/components/atoms/Skeleton'
 import { useWorkspaceHydration } from '@/hooks/useWorkspaceHydration'
 import { useTokenRefresh } from '@/hooks/useTokenRefresh'
 import { getWorkspaceState } from '@/lib/workspace'
+import { useAnalyticsIdentify } from '@/hooks/useAnalyticsIdentify'
 
 /**
  * Routes accessible without an active organization or website.
@@ -39,6 +40,16 @@ export function DashboardLayout() {
   const { applyTheme } = useThemeStore()
   const location = useLocation()
   const [cmdOpen, setCmdOpen] = useState(false)
+
+  // Wire PostHog identify — re-runs when user id, role, or org plan changes.
+  // resetAnalytics() clears the PostHog distinct_id cookie on logout.
+  const { resetAnalytics } = useAnalyticsIdentify()
+
+  // Reset PostHog identity when the session ends (catches both soft and full logout)
+  useEffect(() => {
+    if (!isAuthenticated) resetAnalytics()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
 
   // Apply persisted theme on mount
   useEffect(() => { applyTheme() }, [applyTheme])

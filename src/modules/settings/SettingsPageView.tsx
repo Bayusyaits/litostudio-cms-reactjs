@@ -1,14 +1,15 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
-  Building2, Globe, Moon, Sun, Monitor, Check, AlertCircle, Layout, Palette, Phone,
+  Building2, Globe, Moon, Sun, Monitor, Check, AlertCircle, Layout, Palette, Phone, ImageIcon,
 } from 'lucide-react'
 import type { Organization, Site } from '@/types/auth.types'
 import type { Theme } from '@/services/theme.service'
 import { PhoneNumberManager } from './PhoneNumberManager'
 import { ThemePreview } from '@/components/molecules/ThemePreview'
+import { ImageUploader } from '@/components/molecules/ImageUploader'
 
 type ColorMode = 'light' | 'dark' | 'system'
 
@@ -43,6 +44,11 @@ interface Props {
   activeThemeId:   string | null
   onApplyTheme:    (id: string) => void
   applyingTheme:   boolean
+  // Branding / logos
+  logoUrl:         string | null
+  darkLogoUrl:     string | null
+  onSaveBranding:  (payload: { logo_url: string | null; dark_logo_url: string | null }) => Promise<void>
+  savingBranding:  boolean
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -180,7 +186,28 @@ export function SettingsPageView({
   org, activeSite, colorMode, onSetColorMode,
   onSaveOrg, onSaveSite, saving, saveError, saveSuccess,
   themes, activeThemeId, onApplyTheme, applyingTheme,
+  logoUrl, darkLogoUrl, onSaveBranding, savingBranding,
 }: Props) {
+  // ── Local branding state — initialised from server props ─────────────────
+  const [localLogoUrl, setLocalLogoUrl]         = useState<string | null>(logoUrl)
+  const [localDarkLogoUrl, setLocalDarkLogoUrl] = useState<string | null>(darkLogoUrl)
+  const [brandingError, setBrandingError]       = useState<string | null>(null)
+  const [brandingSaved, setBrandingSaved]       = useState(false)
+
+  // Re-sync when props load (first render may be before query resolves)
+  useEffect(() => { setLocalLogoUrl(logoUrl) },     [logoUrl])
+  useEffect(() => { setLocalDarkLogoUrl(darkLogoUrl) }, [darkLogoUrl])
+
+  async function handleSaveBranding() {
+    setBrandingError(null)
+    try {
+      await onSaveBranding({ logo_url: localLogoUrl, dark_logo_url: localDarkLogoUrl })
+      setBrandingSaved(true)
+      setTimeout(() => setBrandingSaved(false), 2500)
+    } catch (e: unknown) {
+      setBrandingError(e instanceof Error ? e.message : 'Failed to save branding')
+    }
+  }
   const orgForm = useForm<OrgValues>({
     resolver: zodResolver(orgSchema),
     mode: 'onChange',
@@ -348,6 +375,66 @@ export function SettingsPageView({
               Active theme slug is used as the editor template for page defaults.
             </div>
           )}
+        </SectionCard>
+      )}
+
+      {/* ── Branding / Logos ── */}
+      {activeSite && (
+        <SectionCard
+          icon={ImageIcon}
+          title="Branding"
+          description="Upload a colour logo (for light/transparent backgrounds) and a white logo (for dark backgrounds)"
+        >
+          {brandingError && (
+            <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-md bg-[var(--cms-danger-bg)] border border-[rgba(163,48,40,0.2)] text-xs font-body text-[var(--cms-danger)]">
+              <AlertCircle size={14} aria-hidden="true" /> {brandingError}
+            </div>
+          )}
+          {brandingSaved && (
+            <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-md bg-[var(--s-pub-bg)] border border-[rgba(26,74,90,0.2)] text-xs font-body text-[var(--s-pub-fg)]">
+              <Check size={14} aria-hidden="true" /> Branding saved
+            </div>
+          )}
+
+          <FormRow
+            label="Logo — colour"
+            hint="Used when the header/footer background is white or transparent. Typically a full-colour version of your logo."
+          >
+            <ImageUploader
+              value={localLogoUrl}
+              onChange={setLocalLogoUrl}
+              folder="branding"
+            />
+          </FormRow>
+
+          <FormRow
+            label="Logo — white"
+            hint="Used when the header/footer background is dark or a non-white colour. Must be a white/light logo."
+          >
+            <div className="rounded-lg overflow-hidden">
+              <div className="p-2 rounded-t-lg bg-[#1a1a1a]">
+                <ImageUploader
+                  value={localDarkLogoUrl}
+                  onChange={setLocalDarkLogoUrl}
+                  folder="branding"
+                />
+              </div>
+              <p className="font-body text-[11px] text-[var(--text-muted)] mt-1">
+                Preview shown on dark background so you can verify visibility.
+              </p>
+            </div>
+          </FormRow>
+
+          <div className="flex justify-end mt-1">
+            <button
+              type="button"
+              onClick={handleSaveBranding}
+              disabled={savingBranding}
+              className="cms-btn cms-btn-primary cms-btn-sm"
+            >
+              {savingBranding ? 'Saving…' : 'Save branding'}
+            </button>
+          </div>
         </SectionCard>
       )}
 

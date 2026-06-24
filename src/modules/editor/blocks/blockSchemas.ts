@@ -90,14 +90,23 @@ export const DividerBlockDataSchema = z.object({
 export const HeroBlockDataSchema = z.object({
   title:               z.string(),
   subtitle:            z.string().optional(),
+  eyebrow:             z.string().optional(),
+  titleItalic:         z.string().optional(),
   ctaText:             z.string().optional(),
+  /** Canonical CTA URL field — passed to component as ctaUrl; component also accepts ctaLink */
   ctaUrl:              z.string().optional(),
   ctaSecondaryText:    z.string().optional(),
   ctaSecondaryUrl:     z.string().optional(),
+  /** Button visual style: primary | inverse | secondary | ghost */
+  ctaVariant:          z.string().optional(),
   backgroundImage:     z.string().optional(),
   backgroundOverlay:   z.number().min(0).max(100).optional(),
   minHeight:           z.number().optional(),
-  align:               zAlign,
+  align:               zAlign.optional(),
+  /** Lito hero: stat badge e.g. "500+ sesi" */
+  stat:                z.string().optional(),
+  /** Lito hero: location line */
+  location:            z.string().optional(),
 })
 
 export const CTABlockDataSchema = z.object({
@@ -301,6 +310,20 @@ export const PackagesBlockDataSchema = z.object({
   })),
 })
 
+// ── Fashion-specific section schemas ─────────────────────────────────────────
+
+export const BrandStoryBlockDataSchema = z.object({
+  heading:     z.string().optional(),
+  title:       z.string().optional(),
+  description: z.string().optional(),
+  image:       z.string().optional(),
+  ctaText:     z.string().optional(),
+  ctaUrl:      z.string().optional(),
+  /** Button visual style: primary | secondary | ghost */
+  ctaVariant:  z.string().optional(),
+  since:       z.string().optional(),
+})
+
 // ── Lito-specific section schemas ─────────────────────────────────────────────
 
 export const AboutBlockDataSchema = z.object({
@@ -309,16 +332,22 @@ export const AboutBlockDataSchema = z.object({
   image:       z.string().optional(),
   ctaText:     z.string().optional(),
   ctaUrl:      z.string().optional(),
+  /** Button visual style: primary | secondary | ghost */
+  ctaVariant:  z.string().optional(),
   since:       z.string().optional(),
   cities:      z.string().optional(),
 })
 
 export const CampaignBlockDataSchema = z.object({
-  heading:     z.string().optional(),
-  description: z.string().optional(),
-  image:       z.string().optional(),
-  ctaText:     z.string().optional(),
-  ctaUrl:      z.string().optional(),
+  heading:      z.string().optional(),
+  description:  z.string().optional(),
+  image:        z.string().optional(),
+  eyebrow:      z.string().optional(),
+  discountText: z.string().optional(),
+  ctaText:      z.string().optional(),
+  ctaUrl:       z.string().optional(),
+  /** Button visual style: primary | inverse | secondary | ghost */
+  ctaVariant:   z.string().optional(),
 })
 
 export const StoryCategoriesBlockDataSchema = z.object({
@@ -391,6 +420,8 @@ export const BLOCK_DATA_SCHEMAS = {
   portfolio:         PortfolioBlockDataSchema,
   booking:           BookingBlockDataSchema,
   packages:          PackagesBlockDataSchema,
+  // Fashion template-specific
+  brand_story:       BrandStoryBlockDataSchema,
   // Beauty template-specific
   campaigns_grid:    CampaignsGridBlockDataSchema,
 } as const

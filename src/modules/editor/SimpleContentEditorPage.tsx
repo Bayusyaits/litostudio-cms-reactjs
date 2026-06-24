@@ -14,7 +14,7 @@
  *   - collections:  entity.name = title (required on entity)
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useLocation, useNavigate, Navigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -601,6 +601,29 @@ export default function SimpleContentEditorPage() {
     setSlugLocked(true)
     setExtras(getModuleExtras(entity, module))
   }, [entity, module])
+
+  // ── Autosave (EDIT mode only — 2s debounce on any field change) ──────────
+  // Mirrors the pattern in EditorShell.tsx. Skips NEW mode (no entity yet).
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasHydrated   = useRef(false)
+
+  useEffect(() => {
+    // Mark hydrated after first entity load
+    if (entity) hasHydrated.current = true
+  }, [entity])
+
+  useEffect(() => {
+    // Only autosave in EDIT mode after initial hydration, and when not already saving
+    if (isNew || !hasHydrated.current || isSaving) return
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current)
+    autosaveTimer.current = setTimeout(() => {
+      void doSave()
+    }, 2_000)
+    return () => {
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, excerpt, body, coverImage, tags, metaTitle, metaDesc, extras])
 
   // ── Save ─────────────────────────────────────────────────────────────
 

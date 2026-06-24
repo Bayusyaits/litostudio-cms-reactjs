@@ -42,7 +42,7 @@ function fieldWrap(children: React.ReactNode, hint?: string) {
   )
 }
 
-const inputCls = 'w-full px-[10px] py-[6px] border border-[var(--lito-border)] rounded-[6px] font-body text-xs text-[var(--text-primary)] bg-[var(--cms-surface-2)] outline-none box-border'
+const inputCls = 'w-full px-[10px] py-[6px] border border-[var(--lito-border)] rounded-[6px] font-body text-xs text-[var(--cms-field-text)] bg-[var(--cms-surface-2)] outline-none box-border transition-colors placeholder:text-[var(--text-muted)]'
 
 // ── DynamicField ──────────────────────────────────────────────────────────────
 
@@ -96,7 +96,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
 
     case 'boolean':
       return fieldWrap(
-        <label className="flex items-center gap-2 cursor-pointer font-body text-xs text-[var(--text-primary)]">
+        <label className="flex items-center gap-2 cursor-pointer font-body text-xs text-[var(--cms-field-text)]">
           <input
             type="checkbox"
             checked={bool}
@@ -115,8 +115,7 @@ export function DynamicField({ schema, value, onChange }: DynamicFieldProps) {
           <select
             value={str}
             onChange={(e) => onChange(e.target.value)}
-            className={inputCls}
-            style={{ appearance: 'auto' }}
+            className={`${inputCls} appearance-auto`}
           >
             <option value="">— Select —</option>
             {opts.map((o) => (

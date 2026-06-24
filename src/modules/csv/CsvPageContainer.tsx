@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useWebsiteStore } from '@/stores/website.store'
 import { useOrgStore } from '@/stores/org.store'
+import { useAuthStore } from '@/stores/auth.store'
 import { http } from '@/lib/request'
 import type { ApiResponse } from '@/types/api.types'
 
@@ -26,6 +27,7 @@ interface ImportResult {
 export default function CsvPageContainer() {
   const { activeSite } = useWebsiteStore()
   const { org } = useOrgStore()
+  const { token } = useAuthStore()
   const siteId = activeSite?.id ?? ''
   const orgId = org?.id ?? ''
 
@@ -46,7 +48,7 @@ export default function CsvPageContainer() {
       else if (orgId) qs.set('org_id', orgId)
 
       const res = await fetch(`/api/v1/cms/csv/${selectedModule}/export?${qs.toString()}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('access_token') ?? ''}` },
+        headers: { Authorization: `Bearer ${token ?? ''}` },
       })
 
       if (!res.ok) throw new Error('Export failed')

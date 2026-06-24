@@ -745,7 +745,7 @@ export function EditorCanvas() {
       data-device-mode={previewMode}
       ref={canvasRef}
       className="flex-1 overflow-y-auto flex justify-center items-start min-h-0 relative"
-      style={{ background: cssVars['--cms-main-bg'] }}
+      style={{ background: cssVars['--cms-main-bg'], colorScheme: 'light' }}
     >
       {/* Floating text toolbar — appears on contentEditable text selection */}
       <FloatingTextToolbar

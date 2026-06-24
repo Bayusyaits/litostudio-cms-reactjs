@@ -37,6 +37,11 @@ interface EditorShellProps {
    * override to also set content status to 'active'.
    */
   publishFn?:      () => Promise<void>
+  /**
+   * Called when the user unpublishes (Unpublish button, visible only when
+   * pageStatus === 'active'). Callers should set page status back to 'draft'.
+   */
+  unpublishFn?:    () => Promise<void>
   /** Currently active locale for multi-language editing */
   activeLocale?:   SupportedLocale
   /** Called when user switches locale in the toolbar */
@@ -44,7 +49,7 @@ interface EditorShellProps {
 }
 
 export function EditorShell({
-  pageTitle, pageId, pageSlug, pageStatus, saveFn, publishFn,
+  pageTitle, pageId, pageSlug, pageStatus, saveFn, publishFn, unpublishFn,
   activeLocale, onLocaleChange,
 }: EditorShellProps) {
   const {
@@ -103,6 +108,19 @@ export function EditorShell({
       setSaveStatus('error')
     }
   }, [publishFn, saveFn, setSaveStatus, markClean])
+
+  // ── Unpublish ─────────────────────────────────────────────────────────────
+
+  const handleUnpublish = useCallback(async () => {
+    if (!unpublishFn) return
+    setSaveStatus('saving')
+    try {
+      await unpublishFn()
+      markClean()
+    } catch {
+      setSaveStatus('error')
+    }
+  }, [unpublishFn, setSaveStatus, markClean])
 
   // ── Preview ───────────────────────────────────────────────────────────────
 
@@ -206,6 +224,7 @@ export function EditorShell({
         pageStatus={pageStatus}
         onSave={() => void handleSave()}
         onPublish={handlePublish}
+        onUnpublish={unpublishFn ? handleUnpublish : undefined}
         onPreview={handlePreview}
         activeLocale={activeLocale}
         onLocaleChange={onLocaleChange}

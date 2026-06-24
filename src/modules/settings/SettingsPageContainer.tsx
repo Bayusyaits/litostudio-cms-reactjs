@@ -10,6 +10,7 @@ import { useState, useCallback } from 'react'
 import { TemplateSwitchModal } from '@/modules/editor/TemplateSwitchModal'
 import type { TemplateSwitchResult } from '@/modules/editor/TemplateSwitchModal'
 import { useEditorStore } from '@/stores/editor.store'
+import { draftMediaStore } from '@/stores/draftMedia.store'
 
 export default function SettingsPageContainer() {
   const qc = useQueryClient()
@@ -119,6 +120,29 @@ export default function SettingsPageContainer() {
     onError: (err) => setSaveError(getErrorMessage(err)),
   })
 
+  // ── Branding (logo_url + dark_logo_url) ──────────────────────────────────
+
+  const updateBrandingMutation = useMutation({
+    mutationFn: (payload: { logo_url: string | null; dark_logo_url: string | null }) =>
+      themeService.updateSiteTheme(activeSite!.id, {
+        logo_url:      payload.logo_url      ?? undefined,
+        dark_logo_url: payload.dark_logo_url ?? undefined,
+      }),
+    onSuccess: () => {
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+      qc.invalidateQueries({ queryKey: ['site-theme', activeSite?.id] })
+    },
+    onError: (err) => setSaveError(getErrorMessage(err)),
+  })
+
+  async function handleSaveBranding(payload: { logo_url: string | null; dark_logo_url: string | null }) {
+    // Resolve any blob: URLs (deferred R2 uploads) before persisting
+    const logoResolved     = payload.logo_url      ? await draftMediaStore.resolveUrl(payload.logo_url).catch(() => payload.logo_url)      : null
+    const darkLogoResolved = payload.dark_logo_url ? await draftMediaStore.resolveUrl(payload.dark_logo_url).catch(() => payload.dark_logo_url) : null
+    updateBrandingMutation.mutate({ logo_url: logoResolved, dark_logo_url: darkLogoResolved })
+  }
+
   // Gate theme changes through the modal —
   // find the theme name so the modal copy is specific.
   const handleApplyTheme = useCallback((id: string) => {
@@ -144,6 +168,11 @@ export default function SettingsPageContainer() {
         activeThemeId={siteTheme?.theme_id ?? null}
         onApplyTheme={handleApplyTheme}
         applyingTheme={applyThemeMutation.isPending}
+        // Branding props
+        logoUrl={siteTheme?.logo_url ?? null}
+        darkLogoUrl={siteTheme?.dark_logo_url ?? null}
+        onSaveBranding={handleSaveBranding}
+        savingBranding={updateBrandingMutation.isPending}
       />
 
       {pendingTheme && (

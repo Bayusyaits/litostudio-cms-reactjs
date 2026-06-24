@@ -65,7 +65,7 @@ export const orgService = {
     return data
   },
 
-  async createSite(payload: { name: string; slug?: string; domain?: string }) {
+  async createSite(payload: { name: string; slug?: string; domain?: string; template_slug?: string }) {
     const data = await http.post<ApiResponse<Site>>('/api/v1/cms/organizations/sites', payload)
     return data.data
   },

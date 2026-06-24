@@ -178,7 +178,7 @@ export function AppSidebar() {
                 className={({ isActive }) => `cms-nav-item flex ${isActive ? 'active' : ''}`}
               >
                 <Icon size={15} className="shrink-0 opacity-85" />
-                <span className="leading-none">{label}</span>
+                <span className="leading-none truncate">{label}</span>
               </NavLink>
             ))}
 

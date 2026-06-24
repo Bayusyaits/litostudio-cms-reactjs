@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useOrgStore } from '@/stores/org.store'
+import { useWebsiteStore } from '@/stores/website.store'
 import { domainsService } from '@/services/domains.service'
 import type { DomainRecord } from '@/services/domains.service'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTracking } from '@/tracking'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -27,8 +29,10 @@ const SSL_BADGE: Record<string, string> = {
 
 export default function DomainsPageContainer() {
   const { org } = useOrgStore()
+  const { activeSite } = useWebsiteStore()
   const qc = useQueryClient()
   const orgId = org?.id ?? ''
+  const { trackDomainConnected } = useTracking()
 
   const domainsQuery = useQuery({
     queryKey: ['domains', orgId],
@@ -45,10 +49,17 @@ export default function DomainsPageContainer() {
   const addMutation = useMutation({
     mutationFn: (v: Pick<DomainRecord, 'domain' | 'is_primary' | 'redirect_to_www'>) =>
       domainsService.add(orgId, v),
-    onSuccess: () => {
+    onSuccess: (_, _variables) => {
       void qc.invalidateQueries({ queryKey: ['domains', orgId] })
       setShowAdd(false)
       reset()
+      if (activeSite) {
+        trackDomainConnected({
+          site_id:     activeSite.id,
+          org_id:      orgId,
+          domain_type: 'custom',
+        })
+      }
     },
   })
 

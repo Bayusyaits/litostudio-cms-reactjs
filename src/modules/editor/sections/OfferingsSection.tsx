@@ -63,7 +63,7 @@ export function OfferingsSection({ block }: { block: Block }) {
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 50%)' }} />
                 {/* badge */}
                 {offer.badge && (
-                  <span style={{ position: 'absolute', top: 12, left: 12, background: 'var(--lito-gold, #D4A853)', color: '#fff', fontFamily: 'var(--font-body)', fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 2 }}>
+                  <span style={{ position: 'absolute', top: 12, left: 12, background: 'var(--lito-gold, #D4A853)', color: 'var(--canvas-accent-fg, #111111)', fontFamily: 'var(--font-body)', fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 2 }}>
                     {offer.badge}
                   </span>
                 )}

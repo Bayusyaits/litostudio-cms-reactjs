@@ -41,7 +41,7 @@ export function HeroSection({ block }: { block: Block }) {
   })
 
   const hasBg   = !!d.backgroundImage
-  const bgColor = (block.styles?.backgroundColor as string | undefined) ?? '#0d0d0d'
+  const bgColor = (block.styles?.backgroundColor as string | undefined) ?? 'var(--canvas-hero-bg-fallback, #0d0d0d)'
 
   return (
     <div
@@ -105,12 +105,12 @@ export function HeroSection({ block }: { block: Block }) {
           {...editableProps('title')}
           style={{
             ...editableProps('title').style,
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
             fontSize: 'clamp(48px, 6vw, 78px)',
             fontWeight: 300,
             lineHeight: 0.98,
             letterSpacing: '-0.02em',
-            color: '#ffffff',
+            color: 'var(--canvas-hero-title, #ffffff)',
             margin: 0,
             marginBottom: d.titleItalic ? 4 : 20,
           }}
@@ -125,13 +125,13 @@ export function HeroSection({ block }: { block: Block }) {
             style={{
               ...editableProps('titleItalic').style,
               display: 'block',
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
               fontSize: 'clamp(48px, 6vw, 78px)',
               fontWeight: 300,
               fontStyle: 'italic',
               lineHeight: 1.05,
               letterSpacing: '-0.02em',
-              color: '#ffffff',
+              color: 'var(--canvas-hero-title, #ffffff)',
               marginBottom: 28,
               opacity: d.titleItalic ? 1 : 0.3,
             }}
@@ -149,7 +149,7 @@ export function HeroSection({ block }: { block: Block }) {
               fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
               fontSize: 15,
               lineHeight: 1.6,
-              color: 'rgba(255,255,255,0.72)',
+              color: 'var(--canvas-hero-subtitle, rgba(255,255,255,0.72))',
               maxWidth: 520,
               margin: 0,
               marginBottom: 36,
@@ -175,7 +175,7 @@ export function HeroSection({ block }: { block: Block }) {
                 display: 'inline-block',
                 padding: '12px 28px',
                 background: 'var(--lito-gold, #D4A853)',
-                color: '#111111',
+                color: 'var(--canvas-accent-fg, #111111)',
                 fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
                 fontSize: 12,
                 fontWeight: 600,
@@ -197,7 +197,7 @@ export function HeroSection({ block }: { block: Block }) {
                 padding: '12px 28px',
                 background: 'transparent',
                 border: '1px solid rgba(255,255,255,0.4)',
-                color: 'rgba(255,255,255,0.85)',
+                color: 'var(--canvas-hero-ghost, rgba(255,255,255,0.85))',
                 fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
                 fontSize: 12,
                 fontWeight: 600,
@@ -226,9 +226,9 @@ export function HeroSection({ block }: { block: Block }) {
                 {...editableProps('stat')}
                 style={{
                   ...editableProps('stat').style,
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
                   fontSize: 13,
-                  color: 'rgba(255,255,255,0.5)',
+                  color: 'var(--canvas-hero-stat, rgba(255,255,255,0.5))',
                   letterSpacing: '0.06em',
                   opacity: d.stat ? 1 : 0.3,
                 }}
@@ -241,9 +241,9 @@ export function HeroSection({ block }: { block: Block }) {
                 {...editableProps('location')}
                 style={{
                   ...editableProps('location').style,
-                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
                   fontSize: 13,
-                  color: 'rgba(255,255,255,0.5)',
+                  color: 'var(--canvas-hero-stat, rgba(255,255,255,0.5))',
                   letterSpacing: '0.06em',
                   opacity: d.location ? 1 : 0.3,
                 }}

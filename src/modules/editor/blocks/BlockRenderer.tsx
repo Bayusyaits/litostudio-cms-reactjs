@@ -9,19 +9,20 @@
 import type { Block } from '@/types/editor.types'
 import { useEditorStore } from '@/stores/editor.store'
 import type {
-  TextBlockData, HeadingBlockData, ImageBlockData, GalleryBlockData,
+  TextBlockData, HeadingBlockData, ImageBlockData,
   VideoBlockData, ButtonBlockData, SpacerBlockData, DividerBlockData,
-  HeroBlockData, CTABlockData, ServicesBlockData, PricingBlockData,
-  TestimonialsBlockData, FAQBlockData, TeamBlockData, StatisticsBlockData,
-  ProductsBlockData, CollectionsBlockData, JournalBlockData, StoryBlockData,
-  ContactFormBlockData, NewsletterBlockData, MapBlockData, SocialLinksBlockData,
+  CTABlockData,
+  FAQBlockData, TeamBlockData, StatisticsBlockData,
+  ProductsBlockData, CollectionsBlockData,
+  NewsletterBlockData, SocialLinksBlockData,
   HTMLBlockData,
 } from '@/types/editor.types'
 import { useState } from 'react'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 import { AppImage } from '@/components/atoms/AppImage'
 import {
   ChevronDown, ChevronUp, Instagram, Facebook, Twitter, Linkedin,
-  Youtube, Globe, Star,
+  Youtube, Globe,
 } from 'lucide-react'
 
 // ── High-fidelity Lito section renderers (95%+ visual parity) ────────────────
@@ -89,7 +90,7 @@ function TextBlock({ block }: { block: Block }) {
     <div style={{ ...blockStyle(block), ...innerWidth(block) }}>
       <div
         className="prose prose-sm max-w-none font-body text-[var(--text-primary)]"
-        dangerouslySetInnerHTML={{ __html: d.html || '<p class="text-[var(--text-muted)]">Empty text block</p>' }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(d.html) || '<p class="text-[var(--text-muted)]">Empty text block</p>' }}
       />
     </div>
   )
@@ -142,26 +143,6 @@ function ImageBlock({ block }: { block: Block }) {
       ) : (
         <div className="flex items-center justify-center h-40 rounded-xl bg-[var(--cms-surface-3)] border-2 border-dashed border-[var(--lito-border)]">
           <p className="text-xs text-[var(--text-muted)] font-body">Click to add image</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function GalleryBlock({ block }: { block: Block }) {
-  const d = block.data as GalleryBlockData
-  const gapMap = { none: 'gap-0', sm: 'gap-1', md: 'gap-3', lg: 'gap-6' }
-  return (
-    <div style={{ ...blockStyle(block), ...innerWidth(block) }}>
-      {d.images.length > 0 ? (
-        <div className={`grid grid-cols-${d.columns} ${gapMap[d.gap] ?? 'gap-3'}`}>
-          {d.images.map((img, i) => (
-            <AppImage key={i} src={img.src} alt={img.alt} className="w-full h-40 object-cover rounded" />
-          ))}
-        </div>
-      ) : (
-        <div className="flex items-center justify-center h-40 rounded-xl bg-[var(--cms-surface-3)] border-2 border-dashed border-[var(--lito-border)]">
-          <p className="text-xs text-[var(--text-muted)] font-body">Gallery — no images added</p>
         </div>
       )}
     </div>
@@ -269,57 +250,6 @@ function CTABlock({ block }: { block: Block }) {
         <a href={d.buttonUrl} onClick={(e) => e.preventDefault()} className="inline-block px-8 py-3 rounded-lg bg-white text-[var(--lito-dark)] font-semibold font-body text-sm">
           {d.buttonText}
         </a>
-      </div>
-    </div>
-  )
-}
-
-function ServicesBlock({ block }: { block: Block }) {
-  const d = block.data as ServicesBlockData
-  return (
-    <div style={{ ...blockStyle(block), ...innerWidth(block) }} className="px-6">
-      {d.heading && <h2 className="font-display text-2xl font-bold text-center mb-8 text-[var(--text-primary)]">{d.heading}</h2>}
-      <div className={`grid grid-cols-1 sm:grid-cols-${d.columns} gap-6`}>
-        {d.items.map((item, i) => (
-          <div key={i} className="p-6 rounded-xl bg-[var(--cms-surface-2)] border border-[var(--lito-border)]">
-            {item.icon && <div className="text-2xl mb-3">{item.icon}</div>}
-            <h3 className="font-display text-base font-semibold mb-2 text-[var(--text-primary)]">{item.title}</h3>
-            <p className="font-body text-sm text-[var(--text-muted)]">{item.description}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function TestimonialsBlock({ block }: { block: Block }) {
-  const d = block.data as TestimonialsBlockData
-  return (
-    <div style={{ ...blockStyle(block), ...innerWidth(block) }} className="px-6">
-      {d.heading && <h2 className="font-display text-2xl font-bold text-center mb-8 text-[var(--text-primary)]">{d.heading}</h2>}
-      <div className={`grid grid-cols-1 ${d.layout === 'grid' ? 'sm:grid-cols-2' : ''} gap-6`}>
-        {d.items.map((item, i) => (
-          <div key={i} className="p-6 rounded-xl bg-[var(--cms-surface-2)] border border-[var(--lito-border)]">
-            {item.rating && (
-              <div className="flex gap-0.5 mb-3">
-                {Array.from({ length: item.rating }).map((_, ri) => (
-                  <Star key={ri} className="w-3.5 h-3.5 fill-[var(--lito-gold)] text-[var(--lito-gold)]" />
-                ))}
-              </div>
-            )}
-            <p className="font-body text-sm text-[var(--text-secondary)] italic mb-4">"{item.quote}"</p>
-            <div className="flex items-center gap-3">
-              {item.avatar
-                ? <AppImage src={item.avatar} alt={item.name} className="w-8 h-8 rounded-full object-cover" />
-                : <div className="w-8 h-8 rounded-full bg-[var(--lito-teal)]/20 flex items-center justify-center text-xs font-bold text-[var(--lito-teal)]">{item.name[0]}</div>
-              }
-              <div>
-                <p className="font-body text-sm font-semibold text-[var(--text-primary)]">{item.name}</p>
-                {item.title && <p className="font-body text-xs text-[var(--text-muted)]">{item.title}</p>}
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   )
@@ -435,72 +365,6 @@ function CollectionsBlock({ block }: { block: Block }) {
   )
 }
 
-function JournalBlock({ block }: { block: Block }) {
-  const d = block.data as JournalBlockData
-  return (
-    <div style={{ ...blockStyle(block), ...innerWidth(block) }} className="px-6">
-      {d.heading && <h2 className="font-display text-2xl font-bold text-center mb-8 text-[var(--text-primary)]">{d.heading}</h2>}
-      <div className={`grid grid-cols-1 sm:grid-cols-${d.columns} gap-6`}>
-        {Array.from({ length: d.limit }).map((_, i) => (
-          <div key={i} className="rounded-xl bg-[var(--cms-surface-2)] border border-[var(--lito-border)] overflow-hidden">
-            <div className="h-36 bg-[var(--cms-surface-3)]" />
-            <div className="p-4">
-              <p className="font-body text-xs text-[var(--text-muted)] mb-1">Jan 1, 2025</p>
-              <p className="font-display text-sm font-semibold text-[var(--text-primary)]">Journal Post {i + 1}</p>
-              {d.showExcerpt && <p className="font-body text-xs text-[var(--text-muted)] mt-1 line-clamp-2">Brief excerpt from the journal post goes here...</p>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function StoryBlock({ block }: { block: Block }) {
-  const d = block.data as StoryBlockData
-  return (
-    <div style={{ ...blockStyle(block), ...innerWidth(block) }} className="px-6">
-      {d.heading && <h2 className="font-display text-2xl font-bold text-center mb-8 text-[var(--text-primary)]">{d.heading}</h2>}
-      <div className={d.layout === 'grid' ? 'grid grid-cols-2 gap-4' : 'space-y-3'}>
-        {Array.from({ length: d.limit }).map((_, i) => (
-          <div key={i} className="rounded-xl bg-[var(--cms-surface-2)] border border-[var(--lito-border)] p-4 flex gap-3 items-center">
-            <div className="w-12 h-12 rounded-lg bg-[var(--cms-surface-3)] flex-shrink-0" />
-            <p className="font-body text-sm font-medium text-[var(--text-muted)]">Story {i + 1}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ContactFormBlock({ block }: { block: Block }) {
-  const d = block.data as ContactFormBlockData
-  return (
-    <div style={{ ...blockStyle(block), ...innerWidth(block) }} className="px-6">
-      <div className="max-w-lg mx-auto">
-        {d.heading && <h2 className="font-display text-2xl font-bold mb-2 text-[var(--text-primary)]">{d.heading}</h2>}
-        {d.description && <p className="font-body text-sm text-[var(--text-muted)] mb-6">{d.description}</p>}
-        <div className="space-y-4">
-          {d.fields.map((f, i) => (
-            <div key={i}>
-              <label className="block font-body text-sm font-medium text-[var(--text-muted)] mb-1">
-                {f.label}{f.required && <span className="text-red-500"> *</span>}
-              </label>
-              {f.type === 'textarea'
-                ? <textarea rows={4} disabled className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-2)] font-body text-sm resize-none" placeholder={f.label} />
-                : <input type={f.type} disabled className="w-full px-3 py-2 rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-2)] font-body text-sm" placeholder={f.label} />
-              }
-            </div>
-          ))}
-          <button disabled className="w-full py-3 rounded-lg bg-[var(--lito-teal)] text-white font-body text-sm font-semibold">
-            {d.submitText ?? 'Send Message'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function NewsletterBlock({ block }: { block: Block }) {
   const d = block.data as NewsletterBlockData
   return (
@@ -544,7 +408,7 @@ function HTMLBlockComp({ block }: { block: Block }) {
         <div className="relative">
           <div
             className="pointer-events-none opacity-60 font-mono text-xs bg-[var(--cms-surface-2)] rounded-xl p-3 overflow-auto max-h-40"
-            dangerouslySetInnerHTML={{ __html: d.html }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(d.html) }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="font-body text-xs text-[var(--text-muted)] bg-[var(--cms-surface-2)]/80 px-2 py-1 rounded">

@@ -210,6 +210,10 @@ export const messagesService = {
     const data = await http.patch<ApiResponse<ContactMessage>>(`/api/v1/cms/contact/${id}`, { status: 'read' })
     return data.data
   },
+  async markReplied(id: string) {
+    const data = await http.patch<ApiResponse<ContactMessage>>(`/api/v1/cms/contact/${id}`, { status: 'replied' })
+    return data.data
+  },
   async remove(id: string) {
     await http.delete(`/api/v1/cms/contact/${id}`)
   },

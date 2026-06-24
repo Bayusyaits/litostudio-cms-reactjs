@@ -131,11 +131,90 @@ function sectionToBlock(s: PageSection): Block {
       return make('pricing', { heading: (p.heading as string) ?? 'Pricing', plans: (p.plans as unknown[]) ?? [], ...p })
 
     case 'about':
+      // Use the dedicated 'about' BlockType so the round-trip section_type is preserved.
+      // Previously mapped to 'text' which fails the page_sections CHECK constraint on publish.
+      return make('about', {
+        heading:     (p.heading     as string) ?? (p.title as string) ?? 'About',
+        description: (p.description as string) ?? '',
+        image:       (p.image       as string) ?? '',
+        ctaText:     (p.ctaText     as string) ?? '',
+        ctaUrl:      (p.ctaUrl      as string) ?? '',
+        since:       (p.since       as string) ?? '',
+        cities:      (p.cities      as string) ?? '',
+        ...p,
+      })
+
     case 'about_cta':
+      return make('about_cta', {
+        eyebrow:  (p.eyebrow  as string) ?? '',
+        title:    (p.title    as string) ?? (p.heading as string) ?? '',
+        desc:     (p.desc     as string) ?? (p.description as string) ?? '',
+        ctaText:  (p.ctaText  as string) ?? '',
+        ctaLink:  (p.ctaLink  as string) ?? (p.ctaUrl as string) ?? '',
+        ...p,
+      })
+
     case 'brand_story':
-      return make('text', { html: `<h2>${(p.title as string) ?? s.section_type}</h2><p>${(p.description as string) ?? ''}</p>` })
+      return make('brand_story', {
+        heading:     (p.heading     as string) ?? (p.title as string) ?? '',
+        description: (p.description as string) ?? '',
+        image:       (p.image       as string) ?? '',
+        ctaText:     (p.ctaText     as string) ?? '',
+        ctaUrl:      (p.ctaUrl      as string) ?? '',
+        since:       (p.since       as string) ?? '',
+        ...p,
+      })
+
+    case 'destinations':
+    case 'story_map':
+      return make('destinations_grid', {
+        heading: (p.heading as string) ?? '',
+        items:   (p.items   as unknown[]) ?? [],
+        columns: 3,
+        ...p,
+      })
+
+    case 'portfolio':
+      return make('portfolio', {
+        heading: (p.heading as string) ?? '',
+        items:   (p.items   as unknown[]) ?? [],
+        columns: 3,
+        ...p,
+      })
+
+    case 'stories':
+    case 'featured_stories':
+    case 'featured_content':
+      return make('story', {
+        heading: (p.heading as string) ?? '',
+        limit:   (p.limit   as number) ?? 6,
+        layout:  'grid',
+        ...p,
+      })
+
+    case 'campaign':
+    case 'campaign_banner':
+      return make('campaign_banner', {
+        heading:         (p.heading         as string) ?? '',
+        description:     (p.description     as string) ?? '',
+        backgroundImage: (p.backgroundImage as string) ?? (p.image as string) ?? '',
+        buttonText:      (p.ctaText         as string) ?? '',
+        primaryLink:     (p.ctaUrl          as string) ?? '',
+        ...p,
+      })
+
+    case 'story_categories':
+      return make('story_categories', {
+        heading:       (p.heading       as string) ?? '',
+        sectionLabel:  (p.sectionLabel  as string) ?? '',
+        sectionNumber: (p.sectionNumber as string) ?? '',
+        limit:         (p.limit         as number) ?? 6,
+        ...p,
+      })
 
     default:
+      // Unknown section type: render as a labelled heading so it's visible
+      // in the editor but doesn't break publish (heading is skipped by sync mapping).
       return make('heading', { level: 2, text: (s.name ?? s.section_type).replace(/_/g, ' ') })
   }
 }
@@ -345,6 +424,15 @@ export default function BlockEditorPage() {
     qc.invalidateQueries({ queryKey: ['page-editor', pageId] })
   }, [pageId, page, blockDoc, pageSeo, qc])
 
+  // ── Unpublish function ────────────────────────────────────────────────────
+
+  const unpublishFn = useCallback(async () => {
+    if (pageId) {
+      await pagesService.update(pageId, { status: 'draft' })
+      qc.invalidateQueries({ queryKey: ['page-editor', pageId] })
+    }
+  }, [pageId, qc])
+
   // ── Publish function ──────────────────────────────────────────────────────
 
   const publishFn = useCallback(async () => {
@@ -413,6 +501,7 @@ export default function BlockEditorPage() {
       pageStatus={page.status}
       saveFn={saveFn}
       publishFn={publishFn}
+      unpublishFn={unpublishFn}
       activeLocale={locale}
       onLocaleChange={setLocale}
     />

@@ -195,7 +195,7 @@ function ComboboxInner({
           <div
             role="listbox"
             aria-label={label}
-            className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border border-[var(--lito-border)] rounded-lg z-50 shadow-[var(--shadow-lg)] overflow-hidden"
+            className="absolute top-[calc(100%+4px)] left-0 right-0 bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-lg z-50 shadow-[var(--shadow-lg)] overflow-hidden"
           >
             {/* Search input */}
             <div className="px-[10px] py-2 border-b border-[var(--lito-border)] flex items-center gap-1.5">
@@ -223,7 +223,7 @@ function ComboboxInner({
                   role="option"
                   aria-selected={opt.value === value}
                   onClick={() => handleSelect(opt)}
-                  className={`w-full text-left border-none cursor-pointer px-3.5 py-[9px] border-b border-[rgba(217,210,199,0.3)] transition-[background] duration-100 hover:bg-[var(--cms-surface-3)] ${opt.value === value ? 'bg-[var(--cms-surface-3)]' : 'bg-white'}`}
+                  className={`w-full text-left border-none cursor-pointer px-3.5 py-[9px] border-b border-[rgba(217,210,199,0.3)] transition-[background] duration-100 hover:bg-[var(--cms-surface-3)] ${opt.value === value ? 'bg-[var(--cms-surface-3)]' : 'bg-[var(--cms-card-bg)]'}`}
                 >
                   <div className="font-body text-[13px] text-[var(--text-primary)]">{opt.label}</div>
                   {opt.description && (

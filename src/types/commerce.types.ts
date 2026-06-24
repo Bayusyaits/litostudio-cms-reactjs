@@ -97,6 +97,7 @@ export interface ContactMessage {
   phone: string | null
   service_interest: string | null
   event_date: string | null
+  subject: string | null
   message: string
   status: 'new' | 'read' | 'replied' | 'archived'
   ip_address: string | null

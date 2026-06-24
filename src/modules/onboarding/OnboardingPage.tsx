@@ -237,7 +237,7 @@ function CreateSiteStep({
   const { handleSubmit, setValue, formState: { errors } } = form
 
   const createMutation = useMutation({
-    mutationFn: (payload: { name: string; slug: string }) =>
+    mutationFn: (payload: { name: string; slug: string; template_slug?: string }) =>
       orgService.createSite(payload),
     onSuccess: (newSite) => {
       if (!newSite) return
@@ -254,7 +254,12 @@ function CreateSiteStep({
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
-    await createMutation.mutateAsync({ name: values.name, slug })
+    // Pass selected template so the backend stores it in sites.settings.template_slug
+    await createMutation.mutateAsync({
+      name: values.name,
+      slug,
+      template_slug: selectedTemplate !== 'blank' ? selectedTemplate : undefined,
+    })
   }
 
   return (

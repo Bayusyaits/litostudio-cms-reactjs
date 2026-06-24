@@ -95,4 +95,28 @@ export const themeService = {
     )
     return data.data
   },
+
+  /**
+   * Seed extra_settings with template default content.
+   * Safe by default — only fills missing/empty keys (overwrite=false).
+   * Call after switching a template so users don't start from zero.
+   */
+  async seedTemplateDefaults(
+    siteId:        string,
+    templateSlug:  'fashion' | 'beauty' | 'lito',
+    locale?:       'en' | 'id',
+    overwrite?:    boolean,
+  ) {
+    const data = await http.post<{
+      success:    boolean
+      message:    string
+      keys_added: number
+      overwrite:  boolean
+    }>(`/api/v1/cms/themes/sites/${siteId}/seed-defaults`, {
+      template_slug: templateSlug,
+      locale:        locale ?? 'en',
+      overwrite:     overwrite ?? false,
+    })
+    return data
+  },
 }

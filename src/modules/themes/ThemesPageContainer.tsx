@@ -17,12 +17,15 @@ import { useWebsiteStore } from '@/stores/website.store'
 import { getErrorMessage } from '@/lib/axios'
 import { useState } from 'react'
 import { ThemesPageView } from './ThemesPageView'
+import { useTracking } from '@/tracking'
+import type { TemplateName } from '@/tracking/types'
 
 export default function ThemesPageContainer() {
   const { activeSite, setActiveSite } = useWebsiteStore()
   const qc = useQueryClient()
   const [applyError,   setApplyError]   = useState<string | null>(null)
   const [applySuccess, setApplySuccess] = useState(false)
+  const { trackTemplateSelected } = useTracking()
 
   const { data: themesData, isLoading: loadingThemes } = useQuery({
     queryKey: ['themes'],
@@ -62,13 +65,36 @@ export default function ThemesPageContainer() {
         // so all consumers (useTemplateManifest, TemplateSystemProvider, EditorCanvas)
         // re-derive their template context reactively.
         setActiveSite(updated)
+
+        // 3. Seed extra_settings with template default content (missing keys only).
+        //    This ensures the About page sections, philosophy items, timeline etc. all
+        //    have placeholder content when the user first switches to a new template.
+        //    Existing customised values are never overwritten (overwrite=false).
+        const validSlug = ['fashion', 'beauty', 'lito'].includes(tplSlug)
+          ? tplSlug as 'fashion' | 'beauty' | 'lito'
+          : null
+        if (validSlug) {
+          // Fire-and-forget — seed failure is non-critical; user can still customise manually
+          themeService.seedTemplateDefaults(activeSite.id, validSlug).catch(() => { /* silent */ })
+        }
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, themeId) => {
       setApplyError(null)
       setApplySuccess(true)
       setTimeout(() => setApplySuccess(false), 3000)
       qc.invalidateQueries({ queryKey: ['site-theme', activeSite?.id] })
+      const theme = (themesData?.data ?? []).find((t) => t.id === themeId)
+      const tplSlug = theme?.template_slug ?? theme?.slug
+      if (activeSite && tplSlug) {
+        trackTemplateSelected({
+          site_id:                 activeSite.id,
+          org_id:                  activeSite.organization_id,
+          template_slug:           tplSlug! as TemplateName,
+          is_initial_selection:    !activeSite.template_slug,
+          previous_template_slug:  (activeSite.template_slug ?? undefined) as TemplateName | undefined,
+        })
+      }
     },
     onError: (err) => setApplyError(getErrorMessage(err)),
   })

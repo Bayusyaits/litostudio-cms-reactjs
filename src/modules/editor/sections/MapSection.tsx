@@ -58,7 +58,7 @@ export function MapSection({ block }: { block: Block }) {
           </span>
 
           <h2 style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontFamily: 'var(--font-display, "Cormorant Garamond", Georgia, serif)',
             fontSize: 'clamp(36px, 4vw, 52px)',
             fontWeight: 300,
             lineHeight: 1.05,
@@ -78,7 +78,7 @@ export function MapSection({ block }: { block: Block }) {
             fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
             fontSize: 15,
             lineHeight: 1.65,
-            color: 'rgba(17,17,17,0.6)',
+            color: 'var(--text-secondary, rgba(17,17,17,0.6))',
             margin: 0,
           }}>
             {subtitle}
@@ -100,7 +100,7 @@ export function MapSection({ block }: { block: Block }) {
                 alignItems: 'flex-start',
                 gap: 14,
                 padding: '20px 24px',
-                background: 'rgba(17,17,17,0.04)',
+                background: 'var(--cms-surface-2, rgba(17,17,17,0.04))',
                 borderRadius: 2,
                 borderLeft: '2px solid var(--lito-gold, #D4A853)',
               }}
@@ -129,7 +129,7 @@ export function MapSection({ block }: { block: Block }) {
                   fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
                   fontSize: 13,
                   lineHeight: 1.5,
-                  color: 'rgba(17,17,17,0.55)',
+                  color: 'var(--text-secondary, rgba(17,17,17,0.55))',
                 }}>
                   {loc.description}
                 </div>
@@ -154,7 +154,7 @@ export function MapSection({ block }: { block: Block }) {
           <div
             style={{
               height: mapHeight,
-              background: 'rgba(17,17,17,0.06)',
+              background: 'var(--cms-surface-2, rgba(17,17,17,0.06))',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -170,7 +170,7 @@ export function MapSection({ block }: { block: Block }) {
             <p style={{
               fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
               fontSize: 13,
-              color: 'rgba(17,17,17,0.4)',
+              color: 'var(--text-muted, rgba(17,17,17,0.4))',
               margin: 0,
             }}>
               {isSelected

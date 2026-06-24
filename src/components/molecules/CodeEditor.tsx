@@ -175,7 +175,7 @@ function useDarkMode(): boolean {
 
 const LINE_H    = 20   // px  ↔ leading-5
 const PAD_V     = 12   // px  ↔ p-3
-const LINE_NUM_W = 36  // px  ↔ w-9
+// LINE_NUM_W = 36px (w-9) — used in pl-12 comment above, not as a value
 
 // Tailwind classes shared between <pre> and <textarea>
 // (font, size, line-height, padding, sizing, overflow, whitespace)

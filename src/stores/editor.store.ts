@@ -46,13 +46,19 @@ interface EditorState {
   clipboardBlock:  Block | null
   /** Clipboard for copy/paste style operations */
   clipboardStyles: BlockStyles | null
+  /**
+   * Set to a block's id immediately after addBlock() so the right sidebar
+   * can auto-focus its first input. Cleared once consumed.
+   */
+  justAddedBlockId: string | null
 }
 
 interface EditorActions {
   init:  (doc: BlockDocument, pageId: string, locale?: string) => void
   reset: () => void
 
-  addBlock:        (block: Block, afterId?: string | null) => void
+  addBlock:           (block: Block, afterId?: string | null) => void
+  clearJustAdded:     () => void
   removeBlock:     (id: string) => void
   updateBlock:     (id: string, data: Partial<BlockData>) => void
   updateStyles:    (id: string, styles: Partial<BlockStyles>) => void
@@ -129,6 +135,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   pageSeo:          { metaTitle: '', metaDescription: '', ogImage: '' },
   clipboardBlock:   null,
   clipboardStyles:  null,
+  justAddedBlockId: null,
 
   // ── Init / reset ──────────────────────────────────────────────────────────
 
@@ -169,8 +176,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       isDirty:          true,
       selectedBlockId:  block.id,
       rightSidebarOpen: true,
+      justAddedBlockId: block.id,
     })
   },
+
+  clearJustAdded: () => set({ justAddedBlockId: null }),
 
   removeBlock: (id) => {
     const { blockDoc, past, selectedBlockId } = get()

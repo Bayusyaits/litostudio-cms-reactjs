@@ -1,12 +1,14 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { seoService } from '@/services/content.service'
+import { pagesService } from '@/services/pages.service'
 import { useWebsiteStore } from '@/stores/website.store'
 import { getErrorMessage } from '@/lib/axios'
 import { SeoPageView } from './SeoPageView'
 import type { SeoSaveRequest } from '@/types/content.types'
 
-const PAGE_TYPES = [
+/** Static base types — always present regardless of CMS pages */
+const BASE_PAGE_TYPES = [
   { key: 'site',         label: 'Site Default' },
   { key: 'home',         label: 'Home' },
   { key: 'stories',      label: 'Stories' },
@@ -17,13 +19,13 @@ const PAGE_TYPES = [
   { key: 'contact',      label: 'Contact' },
 ] as const
 
-export type SeoPageType = (typeof PAGE_TYPES)[number]['key']
-
-export { PAGE_TYPES }
+// Keep exported alias for legacy imports
+export const PAGE_TYPES = BASE_PAGE_TYPES
+export type SeoPageType = (typeof BASE_PAGE_TYPES)[number]['key']
 
 export default function SeoPageContainer() {
   const { activeSite } = useWebsiteStore()
-  const [activeTab, setActiveTab] = useState<SeoPageType>('site')
+  const [activeTab, setActiveTab] = useState<string>('site')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -33,6 +35,25 @@ export default function SeoPageContainer() {
     enabled:  !!activeSite,
     staleTime: 5 * 60 * 1000,
   })
+
+  // Fetch published pages and merge slugs not in base list as dynamic tabs
+  const { data: pagesData } = useQuery({
+    queryKey: ['pages-list-seo', activeSite?.id],
+    queryFn:  () => pagesService.getList({ site_id: activeSite!.id, status: 'active' as const, limit: 100 }),
+    enabled:  !!activeSite,
+    staleTime: 60 * 1000,
+  })
+
+  const pageTypes = useMemo(() => {
+    const baseKeys = new Set<string>(BASE_PAGE_TYPES.map(t => t.key))
+    const dynamic = (pagesData?.data ?? [])
+      .filter(p => !baseKeys.has(p.slug))
+      .map(p => ({
+        key: p.slug,
+        label: p.page_translations?.[0]?.title ?? p.slug.replace(/-/g, ' '),
+      }))
+    return [...BASE_PAGE_TYPES, ...dynamic]
+  }, [pagesData])
 
   const saveMutation = useMutation({
     mutationFn: (payload: SeoSaveRequest) => seoService.save(activeSite!.id, payload),
@@ -57,8 +78,8 @@ export default function SeoPageContainer() {
 
   return (
     <SeoPageView
-      pageTypes={PAGE_TYPES}
-      activeTab={activeTab}
+      pageTypes={pageTypes as unknown as typeof BASE_PAGE_TYPES}
+      activeTab={activeTab as SeoPageType}
       onTabChange={setActiveTab}
       data={data ?? {}}
       isLoading={isLoading}

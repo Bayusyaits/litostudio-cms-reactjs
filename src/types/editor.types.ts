@@ -41,6 +41,19 @@ export type BlockType =
   | 'portfolio'            // Lito: dark-bg portfolio grid
   | 'booking'              // Lito: booking/calendar section
   | 'packages'             // Lito: photography packages
+  // ── Fashion template-specific blocks ─────────────────────────────────────
+  | 'new_arrival'          // Fashion: new arrivals product grid
+  | 'brand_story'          // Fashion: brand story / about section
+  | 'lookbook'             // Fashion: lookbook editorial grid
+  | 'campaign_banner'      // Fashion: full-width campaign banner
+  | 'philosophy'           // Fashion: brand philosophy pillars
+  | 'timeline'             // Fashion: brand timeline
+  | 'collaborations'       // Fashion: collaborations / partners grid
+  | 'social_grid'          // Fashion: social media links grid
+  | 'marquee'              // Fashion: scrolling text marquee
+  | 'promo_banners'        // Fashion: dual promo banner blocks
+  | 'about_cta'            // Fashion: about page CTA section
+  | 'product_carousel'     // Fashion: product carousel / swiper
   // ── Beauty template-specific blocks ──────────────────────────────────────
   | 'campaigns_grid'       // Beauty: campaign promotions grid
 
@@ -378,6 +391,89 @@ export interface CampaignsGridBlockData {
   columns:  2 | 3
 }
 
+// ── Fashion-specific section data ─────────────────────────────────────────────
+
+export interface NewArrivalBlockData {
+  title?:        string
+  catalogueText?: string
+  catalogueLink?: string
+  productCount?: number
+}
+
+export interface BrandStoryBlockData {
+  heading?:     string
+  title?:       string
+  description?: string
+  image?:       string
+  ctaText?:     string
+  ctaUrl?:      string
+  since?:       string
+}
+
+export interface LookbookBlockData {
+  title?:   string
+  eyebrow?: string
+}
+
+export interface CampaignBannerBlockData {
+  heading?:         string
+  description?:     string
+  eyebrow?:         string
+  title?:           string
+  backgroundImage?: string
+  buttonText?:      string
+  primaryLink?:     string
+  ctaSecondaryText?: string
+  ctaSecondaryLink?: string
+  image?:           string
+}
+
+export interface PhilosophyBlockData {
+  title?:   string
+  eyebrow?: string
+}
+
+export interface TimelineBlockData {
+  title?:   string
+  eyebrow?: string
+  entries?: Array<{ year: string; title: string; description: string }>
+}
+
+export interface CollaborationsBlockData {
+  title?:   string
+  eyebrow?: string
+}
+
+export interface SocialGridBlockData {
+  title?:   string
+  eyebrow?: string
+}
+
+export interface MarqueeBlockData {
+  items?: string[]
+}
+
+export interface PromoBannersBlockData {
+  items?: Array<{ image: string; title: string; link: string; buttonText?: string; sub?: string }>
+}
+
+export interface AboutCTABlockData {
+  eyebrow?:  string
+  title?:    string
+  desc?:     string
+  email?:    string
+  ctaText?:  string
+  ctaLink?:  string
+  homeText?: string
+  homeLink?: string
+}
+
+export interface ProductCarouselBlockData {
+  title?:        string
+  limit?:        number
+  categorySlug?: string
+}
+
 // ── Union ─────────────────────────────────────────────────────────────────────
 
 export type BlockData =
@@ -388,10 +484,15 @@ export type BlockData =
   | ProductsBlockData | CollectionsBlockData | JournalBlockData | StoryBlockData
   | ContactFormBlockData | NewsletterBlockData | MapBlockData
   | SocialLinksBlockData | HTMLBlockData
-  // Template-specific
+  // Template-specific (Lito/Beauty)
   | DestinationsGridBlockData | PortfolioBlockData
   | BookingBlockData | PackagesBlockData | CampaignsGridBlockData
   | AboutBlockData | CampaignBlockData | StoryCategoriesBlockData
+  // Template-specific (Fashion)
+  | NewArrivalBlockData | BrandStoryBlockData | LookbookBlockData
+  | CampaignBannerBlockData | PhilosophyBlockData | TimelineBlockData
+  | CollaborationsBlockData | SocialGridBlockData | MarqueeBlockData
+  | PromoBannersBlockData | AboutCTABlockData | ProductCarouselBlockData
 
 // ── Block styles ──────────────────────────────────────────────────────────────
 

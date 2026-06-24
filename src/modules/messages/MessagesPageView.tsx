@@ -1,4 +1,4 @@
-import { Trash2, Inbox, MailOpen } from 'lucide-react'
+import { Trash2, Inbox, MailOpen, Reply } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
 import { SearchInput } from '@/components/molecules/SearchInput'
@@ -23,10 +23,12 @@ interface Props {
   filter: Filter
   setFilter: (f: Partial<Filter>) => void
   onMarkRead: (id: string) => void
+  onMarkReplied?: (id: string) => void
+  onReply?: (msg: ContactMessage) => void
   onDelete: (id: string) => void
 }
 
-export function MessagesPageView({ messages, meta, isLoading, filter, setFilter, onMarkRead, onDelete }: Props) {
+export function MessagesPageView({ messages, meta, isLoading, filter, setFilter, onMarkRead, onReply, onDelete }: Props) {
   const columns: Column<ContactMessage>[] = [
     {
       key: 'name',
@@ -79,6 +81,17 @@ export function MessagesPageView({ messages, meta, isLoading, filter, setFilter,
               title="Mark as read"
             >
               <MailOpen className="w-3.5 h-3.5 text-[var(--lito-teal)]" />
+            </Button>
+          )}
+          {onReply && msg.status !== 'replied' && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => onReply(msg)}
+              aria-label="Reply via email"
+              title="Reply via email"
+            >
+              <Reply className="w-3.5 h-3.5 text-[var(--lito-teal)]" />
             </Button>
           )}
           <Button size="icon" variant="ghost" onClick={() => onDelete(msg.id)} aria-label="Delete">

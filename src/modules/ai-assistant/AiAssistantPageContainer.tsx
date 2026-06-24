@@ -113,7 +113,7 @@ export default function AiAssistantPageContainer() {
   const entries = knowledgeQuery.data?.data ?? []
 
   return (
-    <div className="p-6 space-y-8 max-w-3xl">
+    <div className="p-6 space-y-8 max-w-3xl overflow-y-auto">
       <div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">AI Assistant</h1>
         <p className="text-sm text-[var(--text-muted)] mt-1">Configure the AI assistant and manage the knowledge base.</p>

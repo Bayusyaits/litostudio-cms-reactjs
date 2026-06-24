@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Monitor, Tablet, Smartphone,
   Undo2, Redo2, Settings2, Eye, Rocket, Loader2,
-  Minus, Plus, ArrowLeft, Code2, PanelLeft, Keyboard, Globe,
+  Minus, Plus, ArrowLeft, Code2, PanelLeft, Keyboard, Globe, CloudOff,
 } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
 import { EditorShortcutsModal } from './EditorShortcutsModal'
@@ -33,18 +33,19 @@ export const SUPPORTED_LOCALES = [
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number]['code']
 
 interface EditorToolbarProps {
-  pageTitle:       string
-  pageStatus?:     string
-  onSave:          () => void
-  onPublish:       () => void
-  onPreview?:      () => void
-  backUrl?:        string
-  activeLocale?:   SupportedLocale
-  onLocaleChange?: (locale: SupportedLocale) => void
+  pageTitle:        string
+  pageStatus?:      string
+  onSave:           () => void
+  onPublish:        () => void
+  onUnpublish?:     () => void
+  onPreview?:       () => void
+  backUrl?:         string
+  activeLocale?:    SupportedLocale
+  onLocaleChange?:  (locale: SupportedLocale) => void
 }
 
 export function EditorToolbar({
-  pageTitle, pageStatus, onSave, onPublish, onPreview, backUrl,
+  pageTitle, pageStatus, onSave, onPublish, onUnpublish, onPreview, backUrl,
   activeLocale = 'id', onLocaleChange,
 }: EditorToolbarProps) {
   const navigate = useNavigate()
@@ -102,9 +103,9 @@ export function EditorToolbar({
     if (saveStatus === 'error') {
       return (
         <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-[#ef4444] shrink-0" />
+          <span className="inline-block w-2 h-2 rounded-full bg-[var(--s-danger)] shrink-0" />
           <div>
-            <p className="font-body text-[11px] font-semibold text-[#ef4444] m-0 leading-[1.3]">Save failed</p>
+            <p className="font-body text-[11px] font-semibold text-[var(--s-danger)] m-0 leading-[1.3]">Save failed</p>
             <p className="font-body text-[10px] text-[var(--text-muted)] m-0 leading-[1.3]">Please try again</p>
           </div>
         </div>
@@ -112,7 +113,7 @@ export function EditorToolbar({
     }
     return (
       <div className="flex items-center gap-2">
-        <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${isDirty ? 'bg-[#f59e0b]' : 'bg-[#22c55e]'}`} />
+        <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${isDirty ? 'bg-[var(--s-draft-fg)]' : 'bg-[var(--s-pub-fg)]'}`} />
         <div>
           <p className="font-body text-[11px] font-semibold text-[var(--text-muted)] m-0 leading-[1.3]">
             {isDirty ? 'Unsaved changes' : (saveStatus === 'saved' ? 'All saved' : pageTitle)}
@@ -307,12 +308,25 @@ export function EditorToolbar({
             <span className={[
               'inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-[10px] font-semibold font-body tracking-wide',
               pageStatus === 'active'
-                ? 'bg-[rgba(34,197,94,0.12)] text-[#16a34a]'
-                : 'bg-[rgba(245,158,11,0.12)] text-[#b45309]',
+                ? 'bg-[var(--s-pub-bg)] text-[var(--s-pub-fg)]'
+                : 'bg-[var(--s-draft-bg)] text-[var(--s-draft-fg)]',
             ].join(' ')}>
-              <span className={`inline-block w-[5px] h-[5px] rounded-full ${pageStatus === 'active' ? 'bg-[#22c55e]' : 'bg-[#f59e0b]'}`} />
+              <span className={`inline-block w-[5px] h-[5px] rounded-full ${pageStatus === 'active' ? 'bg-[var(--s-pub-fg)]' : 'bg-[var(--s-draft-fg)]'}`} />
               {pageStatus === 'active' ? 'LIVE' : 'DRAFT'}
             </span>
+          )}
+
+          {/* Unpublish — only visible when page is live */}
+          {pageStatus === 'active' && onUnpublish && (
+            <button
+              type="button"
+              onClick={onUnpublish}
+              title="Unpublish — revert to draft"
+              className="tb-action-btn"
+            >
+              <CloudOff size={13} />
+              Unpublish
+            </button>
           )}
 
           {/* Publish */}
@@ -322,7 +336,7 @@ export function EditorToolbar({
             className="tb-publish-btn"
           >
             <Rocket size={13} />
-            Publish
+            {pageStatus === 'active' ? 'Re-publish' : 'Publish'}
           </button>
         </div>
       </div>

@@ -2,22 +2,26 @@
  * PagePreviewPage — full-screen, chrome-free preview of a CMS page.
  *
  * Opens as a standalone route (/pages/:pageId/preview) in a new browser tab.
- * Fetches the saved BlockDocument from the backend, applies the active template's
- * CSS tokens, and renders blocks in read-only mode with no editor chrome.
  *
- * Why CMS-internal instead of opening the website URL:
- *   - The live website renders from the `page_sections` table (legacy format).
- *   - The block editor saves to `page_translations[n].body` (BlockDocument JSON).
- *   - The two data sources are different — the website does not yet render BlockDocuments.
- *   - This preview page reads the BlockDocument directly so it always shows
- *     the content the user just saved in the editor.
+ * Architecture:
+ *   Renders blocks directly using the CMS-internal BlockRenderer — the same
+ *   component tree used by the editor canvas. This means the preview is
+ *   100% independent: it works whether or not the Nuxt website is running.
+ *
+ * Data flow:
+ *   1. EditorShell auto-saves before opening this page.
+ *   2. This page fetches the saved BlockDocument from the backend.
+ *   3. Template CSS tokens are derived from the active site's template_slug
+ *      (persisted to localStorage by the Zustand website store, so available
+ *      in a new tab on the same origin).
+ *   4. Google Fonts for the template are injected via a <link> element.
+ *   5. Blocks are rendered via <BlockRenderer> — zero iframe / postMessage.
  */
 
 import { useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { pagesService }    from '@/services/pages.service'
-import { useEditorStore }  from '@/stores/editor.store'
 import { useWebsiteStore } from '@/stores/website.store'
 import { getCanvasTokens } from './templateCanvasTokens'
 import { BlockRenderer }   from './blocks/BlockRenderer'
@@ -25,16 +29,11 @@ import type { BlockDocument, Block } from '@/types/editor.types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
+/** Locale from query param — passed through when EditorShell opens preview */
 const LOCALE = (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('locale')) || 'id'
 
-/** Google Fonts URLs keyed by template slug */
-const GOOGLE_FONTS: Record<string, string> = {
-  lito:        'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap',
-  photography: 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap',
-  beauty:      'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap',
-  travel:      'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap',
-  fashion:     'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
-}
+/** Height reserved for the preview top banner */
+const BANNER_H = 36
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -42,23 +41,270 @@ function isBlockDocument(v: unknown): v is BlockDocument {
   return typeof v === 'object' && v !== null && Array.isArray((v as BlockDocument).blocks)
 }
 
+function getBlockDocFromPage(
+  page: Awaited<ReturnType<typeof pagesService.getOne>>,
+  locale: string,
+): BlockDocument {
+  const translation = (page.page_translations ?? []).find((t) => t.locale === locale)
+  const rawBody = translation?.body
+  return isBlockDocument(rawBody)
+    ? { ...(rawBody as BlockDocument), version: '1.0', locale }
+    : { version: '1.0', locale, blocks: [] }
+}
+
+// ── Google Fonts injector ─────────────────────────────────────────────────────
+
+function useFontInjection(fontUrl: string | undefined) {
+  useEffect(() => {
+    if (!fontUrl) return
+    const existing = document.getElementById('preview-font-link')
+    if (existing) {
+      ;(existing as HTMLLinkElement).href = fontUrl
+      return
+    }
+    const link = document.createElement('link')
+    link.id   = 'preview-font-link'
+    link.rel  = 'stylesheet'
+    link.href = fontUrl
+    document.head.appendChild(link)
+    return () => {
+      const el = document.getElementById('preview-font-link')
+      if (el) el.remove()
+    }
+  }, [fontUrl])
+}
+
+// ── Scroll enabler ────────────────────────────────────────────────────────────
+// globals.css sets overflow:hidden on html/body/#root for the CMS shell.
+// The preview opens as a standalone route in a new tab — we need to
+// override that so the page scrolls normally.
+
+function usePreviewScroll() {
+  useEffect(() => {
+    const html = document.documentElement
+    const body = document.body
+    const root = document.getElementById('root')
+
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      bodyOverflow: body.style.overflow,
+      rootOverflow: root?.style.overflow ?? '',
+      htmlHeight:   html.style.height,
+      bodyHeight:   body.style.height,
+      rootHeight:   root?.style.height ?? '',
+    }
+
+    html.style.overflow = 'auto'
+    body.style.overflow = 'auto'
+    html.style.height   = 'auto'
+    body.style.height   = 'auto'
+    if (root) {
+      root.style.overflow = 'auto'
+      root.style.height   = 'auto'
+    }
+
+    return () => {
+      html.style.overflow = prev.htmlOverflow
+      body.style.overflow = prev.bodyOverflow
+      html.style.height   = prev.htmlHeight
+      body.style.height   = prev.bodyHeight
+      if (root) {
+        root.style.overflow = prev.rootOverflow
+        root.style.height   = prev.rootHeight
+      }
+    }
+  }, [])
+}
+
 // ── Spinner ───────────────────────────────────────────────────────────────────
 
-function Spinner({ bg, fg }: { bg: string; fg: string }) {
+function Spinner() {
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center gap-4"
-      style={{ background: bg }}
+      style={{
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        minHeight: 'calc(100vh - 36px)',
+        gap: 16,
+        background: '#0D0B09',
+      }}
     >
       <div style={{
         width: 40, height: 40, borderRadius: '50%',
-        border: `3px solid ${fg}22`,
-        borderTopColor: fg,
+        border: '3px solid rgba(45,212,191,0.15)',
+        borderTopColor: '#2DD4BF',
         animation: 'spin 0.8s linear infinite',
       }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-      <p className="text-[13px] m-0 opacity-60" style={{ fontFamily: 'system-ui', color: fg }}>
+      <p style={{ fontFamily: 'system-ui, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
         Loading preview…
+      </p>
+    </div>
+  )
+}
+
+// ── Banner ────────────────────────────────────────────────────────────────────
+
+interface BannerProps {
+  title:        string
+  templateSlug: string
+  blockCount:   number
+}
+
+function PreviewBanner({ title, templateSlug, blockCount }: BannerProps) {
+  return (
+    <div
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+        height: BANNER_H,
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '0 16px',
+        background: 'rgba(26,74,90,0.95)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        boxShadow: '0 1px 0 rgba(0,0,0,0.2)',
+        color: 'white',
+        fontSize: 12,
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontWeight: 500,
+      }}
+    >
+      {/* Live dot */}
+      <span style={{
+        width: 7, height: 7, borderRadius: '50%',
+        background: '#4ade80',
+        flexShrink: 0,
+        animation: 'pulse 2s ease-in-out infinite',
+      }} />
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}`}</style>
+
+      <span style={{ color: 'rgba(255,255,255,0.9)' }}>
+        Preview —{' '}
+        <strong style={{ fontWeight: 700 }}>{title}</strong>
+      </span>
+
+      <span style={{ color: 'rgba(255,255,255,0.3)' }}>·</span>
+
+      <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+        {templateSlug} · {blockCount} block{blockCount !== 1 ? 's' : ''}
+      </span>
+
+      <span style={{ flex: 1 }} />
+
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        style={{
+          padding: '3px 11px', borderRadius: 20,
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)',
+          cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
+        }}
+      >
+        Reload
+      </button>
+
+      <button
+        type="button"
+        onClick={() => window.close()}
+        style={{
+          padding: '3px 11px', borderRadius: 20,
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)',
+          cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
+        }}
+      >
+        Close ✕
+      </button>
+    </div>
+  )
+}
+
+// ── Mock site header ──────────────────────────────────────────────────────────
+
+interface MockHeaderProps {
+  siteName:    string
+  headerBg:    string
+  headerText:  string
+  headerAccent: string
+}
+
+function MockSiteHeader({ siteName, headerBg, headerText, headerAccent }: MockHeaderProps) {
+  return (
+    <header
+      style={{
+        position: 'sticky', top: BANNER_H, zIndex: 100,
+        background: headerBg,
+        borderBottom: `1px solid ${headerAccent}22`,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 48px',
+        height: 64,
+      }}
+    >
+      {/* Logo / site name */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span
+          style={{
+            display: 'inline-block',
+            width: 28, height: 28,
+            borderRadius: '50%',
+            background: headerAccent,
+            opacity: 0.85,
+          }}
+        />
+        <span
+          style={{
+            fontFamily: 'var(--font-display, Georgia, serif)',
+            fontSize: 15,
+            fontWeight: 500,
+            letterSpacing: '0.04em',
+            color: headerText,
+          }}
+        >
+          {siteName}
+        </span>
+      </div>
+
+      {/* Nav placeholder */}
+      <nav style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
+        {['Home', 'About', 'Portfolio', 'Contact'].map((label) => (
+          <span
+            key={label}
+            style={{
+              fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
+              fontSize: 12,
+              fontWeight: 500,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: `${headerText}99`,
+              cursor: 'default',
+            }}
+          >
+            {label}
+          </span>
+        ))}
+      </nav>
+    </header>
+  )
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+function EmptyBlocks({ bg }: { bg: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        minHeight: 400, gap: 12,
+        background: bg,
+      }}
+    >
+      <p style={{ fontFamily: 'system-ui, sans-serif', fontSize: 14, color: '#999', margin: 0 }}>
+        No blocks added yet
+      </p>
+      <p style={{ fontFamily: 'system-ui, sans-serif', fontSize: 12, color: '#666', margin: 0 }}>
+        Add blocks in the editor and the preview will update here.
       </p>
     </div>
   )
@@ -68,267 +314,142 @@ function Spinner({ bg, fg }: { bg: string; fg: string }) {
 
 export default function PagePreviewPage() {
   const { pageId } = useParams<{ pageId: string }>()
-
-  // activeSite is persisted to localStorage under 'cms-website' key —
-  // it is available even when opened in a new browser tab.
   const { activeSite } = useWebsiteStore()
-  const { init, setEditorMode, blockDoc } = useEditorStore()
 
+  // Derive template slug — falls back to 'lito' if store is empty
   const settings     = activeSite?.settings as Record<string, unknown> | undefined
   const templateSlug = (settings?.template_slug as string | undefined) ?? 'lito'
-  const tokens       = getCanvasTokens(templateSlug)
 
-  const {
-    headerBg,
-    headerText,
-    headerAccent,
-    siteName,
-    '--font-display': fontDisplay,
-    '--font-body':    fontBody,
-    ...cssVars
-  } = tokens
+  // Template tokens — CSS vars, fonts, header branding
+  const tokens = getCanvasTokens(templateSlug)
 
-  // ── Fetch page ──────────────────────────────────────────────────────────────
+  // Inject Google Fonts for this template
+  useFontInjection(tokens.fontUrl)
 
+  // Override the global overflow:hidden so the preview page scrolls normally
+  usePreviewScroll()
+
+  // ── Fetch page from DB ──────────────────────────────────────────────────────
   const { data: page, isLoading } = useQuery({
     queryKey:  ['page-preview', pageId],
     queryFn:   () => pagesService.getOne(pageId!),
     enabled:   !!pageId,
     staleTime: 0,
+    refetchOnWindowFocus: false,
   })
 
-  // ── Load Google Fonts ───────────────────────────────────────────────────────
+  // ── Derived data ─────────────────────────────────────────────────────────────
+
+  const blockDoc: BlockDocument = page
+    ? getBlockDocFromPage(page, LOCALE)
+    : { version: '1.0', locale: LOCALE, blocks: [] }
+
+  const pageTitle = (() => {
+    if (!page) return pageId ?? ''
+    const tr = (page.page_translations ?? []).find((t) => t.locale === LOCALE)
+    return tr?.title ?? page.slug
+  })()
+
+  // ── Document title ────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const href = GOOGLE_FONTS[templateSlug] ?? GOOGLE_FONTS.lito
-    // Avoid duplicate links
-    if (document.querySelector(`link[href="${href}"]`)) return
-    const link  = document.createElement('link')
-    link.rel    = 'preconnect'
-    const link2 = document.createElement('link')
-    link2.rel  = 'stylesheet'
-    link2.href = href
-    const preconnect = document.createElement('link')
-    preconnect.rel   = 'preconnect'
-    preconnect.href  = 'https://fonts.googleapis.com'
-    const preconnect2 = document.createElement('link')
-    preconnect2.rel        = 'preconnect'
-    preconnect2.href       = 'https://fonts.gstatic.com'
-    preconnect2.crossOrigin = 'anonymous'
-    document.head.append(preconnect, preconnect2, link2)
-    return () => {
-      ;[preconnect, preconnect2, link2].forEach((el) => {
-        if (el.parentNode) el.parentNode.removeChild(el)
-      })
-    }
-  }, [templateSlug])
+    if (!page) return
+    const tr = (page.page_translations ?? []).find((t) => t.locale === LOCALE)
+    document.title = `Preview — ${tr?.title ?? page.slug}`
+  }, [page])
 
-  // ── Set page title ──────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (page) {
-      const tr = (page.page_translations ?? []).find((t) => t.locale === LOCALE)
-      document.title = `Preview — ${tr?.title ?? page.slug} | ${siteName}`
-    }
-  }, [page, siteName])
-
-  // ── Init editor store in preview mode ───────────────────────────────────────
-
-  useEffect(() => {
-    if (!page || !pageId) return
-    const translation = (page.page_translations ?? []).find((t) => t.locale === LOCALE)
-    const rawBody     = translation?.body
-    const doc: BlockDocument = isBlockDocument(rawBody)
-      ? { ...(rawBody as BlockDocument), version: '1.0', locale: LOCALE }
-      : { version: '1.0', locale: LOCALE, blocks: [] }
-    init(doc, pageId, LOCALE)
-    setEditorMode('preview')
-  }, [page, pageId, init, setEditorMode])
-
-  // ── Guards ──────────────────────────────────────────────────────────────────
+  // ── Guard ─────────────────────────────────────────────────────────────────────
 
   if (!pageId) return <Navigate to="/pages" replace />
 
-  if (isLoading) {
-    return <Spinner bg={cssVars['--cms-card-bg'] as string} fg={tokens['--lito-teal']} />
-  }
+  // ── CSS token vars for the content wrapper ────────────────────────────────────
 
-  if (!page) {
-    return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: cssVars['--cms-card-bg'] as string,
-        fontFamily: fontBody,
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 20, fontWeight: 600, color: cssVars['--text-primary'] as string, margin: '0 0 8px' }}>
-            Page not found
-          </p>
-          <p style={{ fontSize: 13, color: cssVars['--text-muted'] as string, margin: 0 }}>
-            The page "{pageId}" could not be loaded.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  const blocks: Block[] = blockDoc.blocks
-
-  // ── Render ──────────────────────────────────────────────────────────────────
+  const cssVars = {
+    '--cms-card-bg':    tokens['--cms-card-bg'],
+    '--cms-main-bg':    tokens['--cms-main-bg'],
+    '--cms-surface-2':  tokens['--cms-surface-2'],
+    '--cms-surface-3':  tokens['--cms-surface-3'],
+    '--text-primary':   tokens['--text-primary'],
+    '--text-secondary': tokens['--text-secondary'],
+    '--text-muted':     tokens['--text-muted'],
+    '--lito-teal':      tokens['--lito-teal'],
+    '--lito-gold':      tokens['--lito-gold'],
+    '--lito-gold-deep': tokens['--lito-gold-deep'],
+    '--lito-border':    tokens['--lito-border'],
+    '--font-display':   tokens['--font-display'],
+    '--font-body':      tokens['--font-body'],
+  } as React.CSSProperties
 
   return (
-    <div
-      data-preview-page
-      style={{
-        minHeight: '100vh',
-        background: cssVars['--cms-main-bg'] as string,
-        // Inject template CSS vars at the root so BlockRenderer's CSS-var classes resolve correctly
-        '--font-display': fontDisplay,
-        '--font-body':    fontBody,
-        ...cssVars,
-      } as React.CSSProperties}
-    >
-      {/* Preview banner — floating notice at top */}
-      <div className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-center gap-3 px-4 py-2 bg-[rgba(26,74,90,0.92)] backdrop-blur-[8px] text-white text-xs font-medium"
-        style={{ fontFamily: 'system-ui, sans-serif' }}
-      >
-        <span
-          className="w-2 h-2 rounded-full bg-[#4ade80] shrink-0"
-          style={{ animation: 'pulse 2s ease-in-out infinite' }}
-        />
-        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
-        <span>Preview — <strong>{(page.page_translations ?? []).find(t => t.locale === LOCALE)?.title ?? page.slug}</strong></span>
-        <span className="opacity-50">·</span>
-        <span className="opacity-70">Template: {templateSlug}</span>
-        <button
-          type="button"
-          onClick={() => window.close()}
-          className="ml-4 px-[10px] py-[3px] rounded-[20px] border border-[rgba(255,255,255,0.3)] bg-[rgba(255,255,255,0.1)] text-white cursor-pointer text-[11px]"
-          style={{ fontFamily: 'system-ui, sans-serif' }}
-        >
-          Close
-        </button>
-      </div>
+    <div style={{ minHeight: '100vh', background: tokens['--cms-card-bg'] }}>
 
-      {/* Page column — dynamic bg + shadow uses template tokens, must keep style */}
-      <div style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        paddingTop: 36, // offset for preview banner
-        minHeight: '100vh',
-        background: cssVars['--cms-card-bg'] as string,
-        boxShadow: '0 0 0 1px var(--lito-border), 0 8px 48px rgba(0,0,0,0.08)',
-        display: 'flex',
-        flexDirection: 'column',
-      }}>
+      {/* Fixed preview banner at very top */}
+      <PreviewBanner
+        title={pageTitle}
+        templateSlug={templateSlug}
+        blockCount={blockDoc.blocks.length}
+      />
 
-        {/* Site header — all colors dynamic from template tokens */}
-        <header style={{
-          background: headerBg,
-          color: headerText,
-          padding: '0 48px',
-          height: 72,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexShrink: 0,
-        }}>
-          {/* Logo */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            fontFamily: fontDisplay, fontSize: 20, fontWeight: 600,
-            letterSpacing: '0.04em', color: headerText,
-            userSelect: 'none',
-          }}>
-            <span style={{
-              width: 9, height: 9, borderRadius: '50%',
-              background: headerAccent, display: 'inline-block',
-            }} />
-            {siteName}
-          </div>
+      {/* Page content — shifted below the banner */}
+      <div style={{ paddingTop: BANNER_H, ...cssVars }}>
 
-          {/* Nav */}
-          <nav style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-            {['Home', 'About', 'Portfolio', 'Journal', 'Contact'].map((item) => (
+        {isLoading ? (
+          <Spinner />
+        ) : (
+          <>
+            {/* Mock site header */}
+            <MockSiteHeader
+              siteName={tokens.siteName}
+              headerBg={tokens.headerBg}
+              headerText={tokens.headerText}
+              headerAccent={tokens.headerAccent}
+            />
+
+            {/* Page blocks */}
+            <main style={{ background: tokens['--cms-card-bg'] }}>
+              {blockDoc.blocks.length === 0 ? (
+                <EmptyBlocks bg={tokens['--cms-card-bg']} />
+              ) : (
+                blockDoc.blocks.map((block: Block) => (
+                  <BlockRenderer key={block.id} block={block} />
+                ))
+              )}
+            </main>
+
+            {/* Mock site footer */}
+            <footer
+              style={{
+                background: tokens.headerBg,
+                borderTop: `1px solid ${tokens.headerAccent}22`,
+                padding: '32px 48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
               <span
-                key={item}
                 style={{
-                  fontFamily: fontBody, fontSize: 11, fontWeight: 600,
-                  letterSpacing: '0.1em', textTransform: 'uppercase',
-                  color: `${headerText}bb`,
-                  userSelect: 'none',
+                  fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
+                  fontSize: 12,
+                  color: `${tokens.headerText}66`,
                 }}
               >
-                {item}
+                © {new Date().getFullYear()} {tokens.siteName}
               </span>
-            ))}
-          </nav>
-
-          {/* CTA */}
-          <div style={{
-            padding: '8px 20px', borderRadius: 4,
-            border: `1px solid ${headerAccent}`,
-            fontFamily: fontBody, fontSize: 11, fontWeight: 600,
-            letterSpacing: '0.08em', textTransform: 'uppercase',
-            color: headerAccent, cursor: 'default',
-            userSelect: 'none',
-          }}>
-            Book Now
-          </div>
-        </header>
-
-        {/* Page content */}
-        <main style={{ flex: 1 }}>
-          {blocks.length === 0 ? (
-            <div style={{
-              padding: '100px 48px', textAlign: 'center',
-              fontFamily: fontBody,
-            }}>
-              <p style={{ fontSize: 16, color: cssVars['--text-muted'] as string, margin: '0 0 8px' }}>
-                No content to preview.
-              </p>
-              <p style={{ fontSize: 13, color: cssVars['--text-muted'] as string, margin: 0, opacity: 0.6 }}>
-                Add blocks in the editor and save (⌘S) before previewing.
-              </p>
-            </div>
-          ) : (
-            blocks.map((block: Block) => {
-              const isHidden =
-                block.visibility?.desktop === false &&
-                block.visibility?.tablet  === false &&
-                block.visibility?.mobile  === false
-              if (isHidden) return null
-              return <BlockRenderer key={block.id} block={block} />
-            })
-          )}
-        </main>
-
-        {/* Site footer — all colors dynamic from template tokens */}
-        <footer style={{
-          background: headerBg,
-          color: `${headerText}77`,
-          padding: '48px',
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'center',
-          borderTop: `1px solid ${headerAccent}22`,
-          flexShrink: 0,
-          gap: 16,
-        }}>
-          <span style={{ fontFamily: fontDisplay, fontSize: 16, fontWeight: 600, color: headerText }}>
-            {siteName}
-          </span>
-          <span style={{ fontFamily: fontBody, fontSize: 11, textAlign: 'center', userSelect: 'none' }}>
-            © {new Date().getFullYear()} {siteName} · All rights reserved
-          </span>
-          <span style={{
-            fontFamily: fontBody, fontSize: 10, fontWeight: 700,
-            textTransform: 'uppercase', letterSpacing: '0.1em',
-            color: headerAccent, textAlign: 'right', userSelect: 'none',
-          }}>
-            Powered by Lito Studio
-          </span>
-        </footer>
+              <span
+                style={{
+                  fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
+                  fontSize: 11,
+                  color: `${tokens.headerText}44`,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Preview Mode
+              </span>
+            </footer>
+          </>
+        )}
       </div>
     </div>
   )

@@ -13,6 +13,8 @@ export interface AnalyticsSettings {
   meta_access_token?: string
   tiktok_pixel_id?: string
   tiktok_enabled?: boolean
+  sentry_dsn?: string
+  sentry_enabled?: boolean
   anonymize_ip?: boolean
   cookie_consent?: boolean
   updated_at?: string

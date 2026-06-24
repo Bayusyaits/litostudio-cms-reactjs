@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { messagesService } from '@/services/content.service'
 import { useWebsiteStore } from '@/stores/website.store'
 import { MessagesPageView } from './MessagesPageView'
+import type { ContactMessage } from '@/types/commerce.types'
 
 export default function MessagesPageContainer() {
   const { activeSite } = useWebsiteStore()
@@ -34,10 +35,28 @@ export default function MessagesPageContainer() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['messages', activeSite?.id] }),
   })
 
+  const markRepliedMutation = useMutation({
+    mutationFn: (id: string) => messagesService.markReplied(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['messages', activeSite?.id] }),
+  })
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => messagesService.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['messages', activeSite?.id] }),
   })
+
+  /**
+   * Open system mail client with message context pre-filled.
+   * Marks message as 'replied' after opening mailto link.
+   */
+  const handleReply = useCallback((msg: ContactMessage) => {
+    const subject = encodeURIComponent(`Re: ${msg.subject ?? 'Your message'}`)
+    const body    = encodeURIComponent(
+      `\n\n---\nOriginal message from ${msg.name}:\n${msg.message}`,
+    )
+    window.open(`mailto:${msg.email}?subject=${subject}&body=${body}`, '_blank')
+    markRepliedMutation.mutate(msg.id)
+  }, [markRepliedMutation])
 
   return (
     <MessagesPageView
@@ -47,6 +66,8 @@ export default function MessagesPageContainer() {
       filter={filter}
       setFilter={(f) => setFilter((prev) => ({ ...prev, ...f }))}
       onMarkRead={(id) => markReadMutation.mutate(id)}
+      onMarkReplied={(id) => markRepliedMutation.mutate(id)}
+      onReply={handleReply}
       onDelete={(id) => deleteMutation.mutate(id)}
     />
   )

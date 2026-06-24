@@ -68,7 +68,7 @@ export function ContentEditorLayout({
         </main>
 
         {/* Right — sidebar */}
-        <aside className="w-72 shrink-0 space-y-4">
+        <aside className="w-72 shrink-0 space-y-4 overflow-y-auto">
           {sidebarContent}
         </aside>
       </div>

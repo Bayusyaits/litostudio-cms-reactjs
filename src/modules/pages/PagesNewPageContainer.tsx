@@ -9,6 +9,8 @@ import { useTemplateManifest } from '@/hooks/useTemplateManifest'
 import { useWebsiteStore }   from '@/stores/website.store'
 import { pagesService }      from '@/services/pages.service'
 import { FileText, ChevronLeft, Plus, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { useTracking } from '@/tracking'
+import type { PageType } from '@/tracking/types'
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '')
@@ -18,6 +20,7 @@ export default function PagesNewPageContainer() {
   const navigate           = useNavigate()
   const { activeSite }     = useWebsiteStore()
   const { manifest, templateSlug } = useTemplateManifest()
+  const { trackPageCreated } = useTracking()
 
   const labelId = useId()
 
@@ -53,7 +56,17 @@ export default function PagesNewPageContainer() {
         translations: title ? [{ locale: 'id', title }] : undefined,
       })
     },
-    onSuccess: (page) => navigate(`/pages/${page.id}/edit`, { replace: true }),
+    onSuccess: (page) => {
+      if (activeSite) {
+        trackPageCreated({
+          site_id:  activeSite.id,
+          org_id:   activeSite.organization_id,
+          page_id:  page.id,
+          page_type: (page.slug as PageType) ?? 'custom',
+        })
+      }
+      navigate(`/pages/${page.id}/edit`, { replace: true })
+    },
     onError: (err: unknown) => setError(err instanceof Error ? err.message : 'Failed to create page'),
   })
 

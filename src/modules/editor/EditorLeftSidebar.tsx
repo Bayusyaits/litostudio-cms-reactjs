@@ -7,16 +7,20 @@
  */
 
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Search, Globe, Compass, Aperture, Camera, CalendarDays, Layers2,
   List, AlignLeft as OutlineIcon, LayoutGrid as BlocksIcon, Puzzle,
 } from 'lucide-react'
 import { BLOCK_LIBRARY } from './blocks/blockLibrary'
+import { hydrateBlockDefaults } from './blocks/blockDefaults'
 import { useEditorStore, makeBlock } from '@/stores/editor.store'
+import { useWebsiteStore } from '@/stores/website.store'
 import { useTemplateManifest } from '@/hooks/useTemplateManifest'
 import { EditorOutlinePanel }  from './EditorOutlinePanel'
 import { EditorListView }      from './EditorListView'
 import { EditorPatternsPanel } from './patterns/EditorPatternsPanel'
+import type { SiteThemeSettings } from '@/services/theme.service'
 
 // ── Lucide icon map (must match icon names in blockLibrary.ts) ────────────────
 import {
@@ -98,7 +102,9 @@ const tabClass = (active: boolean, isTemplateInactive = false) =>
 
 export function EditorLeftSidebar() {
   const { addBlock, selectedBlockId, blockDoc } = useEditorStore()
+  const { activeSite } = useWebsiteStore()
   const { manifest, templateSlug } = useTemplateManifest()
+  const queryClient = useQueryClient()
   const [search, setSearch]         = useState('')
   const [activeTab, setActiveTab]   = useState<FilterTab>('All')
   const [sidebarView, setSidebarView] = useState<SidebarView>('blocks')
@@ -118,9 +124,30 @@ export function EditorLeftSidebar() {
 
   const handleInsert = (item: typeof BLOCK_LIBRARY[number]) => {
     if (maxedBlockTypes.has(item.type)) return // guard: shouldn't be clickable anyway
+
+    // ── Build site context from cached theme query + active site ────────────
+    const siteTheme = queryClient.getQueryData<SiteThemeSettings>(
+      ['site-theme', activeSite?.id],
+    )
+    const footerContact = (siteTheme?.extra_settings?.['footer_contact'] as Record<string, string> | undefined) ?? {}
+
+    const siteCtx = {
+      name:        siteTheme?.site_name   || activeSite?.name   || '',
+      description: siteTheme?.site_description || undefined,
+      email:       footerContact['email']   || undefined,
+      phone:       footerContact['phone']   || undefined,
+      address:     footerContact['address'] || undefined,
+    }
+
+    // Hydrate defaultData with real site data before inserting the block
+    const rawData    = structuredClone(item.defaultData)
+    const hydrated   = siteCtx.name
+      ? hydrateBlockDefaults(item.type, rawData as Record<string, unknown>, siteCtx)
+      : rawData
+
     const block = makeBlock(
       item.type,
-      structuredClone(item.defaultData),
+      hydrated,
       item.defaultStyles ? structuredClone(item.defaultStyles) : undefined,
     )
     addBlock(block, selectedBlockId ?? undefined)
@@ -138,13 +165,20 @@ export function EditorLeftSidebar() {
   const matchSearch = (label: string) =>
     !search.trim() || label.toLowerCase().includes(search.toLowerCase().trim())
 
+  // Only show template-scoped blocks that match the active template (or have no scope)
+  const isVisibleForTemplate = (b: typeof BLOCK_LIBRARY[number]) => {
+    if (!b.templateScope) return true
+    if (!templateSlug) return true
+    return b.templateScope.includes(templateSlug)
+  }
+
   // Filtered flat list for non-All tabs
   const filteredFlat = search.trim()
-    ? BLOCK_LIBRARY.filter((b) => matchSearch(b.label))
+    ? BLOCK_LIBRARY.filter((b) => matchSearch(b.label) && isVisibleForTemplate(b))
     : activeTab === 'Template'
       ? templateBlocks
       : activeTab !== 'All'
-        ? BLOCK_LIBRARY.filter((b) => b.category === TAB_TO_CATEGORY[activeTab])
+        ? BLOCK_LIBRARY.filter((b) => b.category === TAB_TO_CATEGORY[activeTab] && isVisibleForTemplate(b))
         : []
 
   const blockCard = (item: typeof BLOCK_LIBRARY[number]) => {

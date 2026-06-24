@@ -81,6 +81,8 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
   --cms-danger:     #A33028;
   --cms-danger-bg:  rgba(163,48,40,0.08);
+  --s-danger:       #A33028;   /* alias used throughout UI — keep in sync with --cms-danger */
+  --lito-danger:    #A33028;   /* alias for inline-style fallback (e.g. gallery delete btn) */
 
   /* ── Surface elevations (used by editor + block renderer) ────────────────── */
   --cms-surface-2:  #FFFFFF;    /* card / input background */
@@ -89,6 +91,7 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
   /* ── Form input tokens ───────────────────────────────────────────────────── */
   --cms-input-bg:   #FFFFFF;    /* input / textarea / select background */
+  --cms-field-text: #111111;    /* input/field typed text — lighter in dark mode */
   --color-border:   #D9D2C7;    /* alias for --lito-border (used by SiteContentPageView) */
 
   /* ── CMS action button — stays high-contrast in both modes ──────────────── */
@@ -126,11 +129,15 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   --cms-sidebar-div:  rgba(240,237,231,0.07);
   --cms-nav-hover:    rgba(240,237,231,0.03);
 
-  --s-pub-bg:      rgba(26,74,90,0.18);
-  --s-draft-bg:    rgba(212,168,83,0.16);
+  --s-pub-bg:      rgba(74,222,128,0.12);   /* green tint — matches s-pub-fg */
+  --s-pub-fg:      #4ade80;                /* light green — readable on dark */
+  --s-draft-bg:    rgba(251,191,36,0.12);  /* amber tint — matches s-draft-fg */
+  --s-draft-fg:    #fbbf24;               /* light amber — readable on dark */
   --s-sched-bg:    rgba(90,85,80,0.18);
   --s-arch-bg:     rgba(136,136,136,0.15);
   --cms-danger-bg: rgba(163,48,40,0.15);
+  --s-danger:      #D95F55;   /* lighter red for dark bg contrast */
+  --lito-danger:   #D95F55;   /* lighter red alias for dark bg */
 
   /* Surface elevations — dark mode overrides */
   --cms-surface-2:  #1A1814;    /* = cms-card-bg in dark */
@@ -139,6 +146,7 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 
   /* Form input tokens — dark mode */
   --cms-input-bg:   #1A1814;    /* same as cms-card-bg */
+  --cms-field-text: #C8C3BC;    /* warm light gray — readable on dark, not stark white (10.9:1 on #1A1814) */
   --color-border:   #2C2A26;    /* same as --lito-border in dark */
 
   /* Primary button flips to light bg + dark text in dark mode */
@@ -276,7 +284,7 @@ html, body, #root {
 }
 .cms-input:focus { border-color: var(--lito-ink); }
 .cms-input::placeholder { color: var(--text-faint); }
-[data-dark] .cms-input { background: var(--cms-card-bg); color: var(--text-muted); }
+[data-dark] .cms-input { background: var(--cms-card-bg); color: var(--cms-field-text); }
 
 .cms-label {
   display: block;
@@ -606,13 +614,15 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
 }
 
 /* ── Form control dark mode ──────────────────────────────────────────────── */
-/* color-scheme on [data-dark] propagates to native select/input rendering,
-   but we also explicitly set field-text so browsers honour our CSS vars.    */
+/* color-scheme on [data-dark] propagates to native select/input rendering.
+   Use --cms-field-text (not --text-primary) so this rule and Tailwind agree.
+   Specificity: [attr]+element = (0,1,1) > Tailwind class (0,1,0),
+   so this rule is the authoritative color source for all inputs in dark mode. */
 [data-dark] input,
 [data-dark] select,
 [data-dark] textarea {
   color-scheme: dark;
-  color: var(--text-primary);
+  color: var(--cms-field-text);  /* #C8C3BC — warm readable light gray, 10.9:1 on #1A1814 */
 }
 /* number input spinner arrow color */
 [data-dark] input[type="number"]::-webkit-inner-spin-button,
@@ -696,9 +706,204 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
 [data-dark] .ck-editor-host .ck-reset_all {
   color: var(--text-primary) !important;
 }
+/* CKEditor — placeholder text in dark mode */
+[data-dark] .ck-editor-host .ck.ck-editor__editable .ck-placeholder::before,
+[data-dark] .ck-editor-host .ck.ck-editor__editable[data-placeholder]::before {
+  color: var(--text-muted) !important;
+}
 [data-dark] .ck-editor-host .ck.ck-toolbar__separator {
   background: var(--lito-border) !important;
 }
 [data-dark] .ck-editor-host .ck.ck-icon {
   filter: brightness(1.6);
+}
+/* CKEditor — extra dark mode polish */
+[data-dark] .ck-editor-host .ck.ck-balloon-panel,
+[data-dark] .ck-editor-host .ck.ck-balloon-panel * {
+  background: var(--cms-card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--lito-border) !important;
+}
+[data-dark] .ck-editor-host .ck.ck-input {
+  background: var(--cms-surface-3) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--lito-border) !important;
+}
+[data-dark] .ck-editor-host .ck.ck-labeled-field-view {
+  background: var(--cms-card-bg) !important;
+}
+
+/* ── Native <select> option background — dark mode ───────────────────────────
+   Native options inherit the system dark-mode colour when colour-scheme: dark
+   is set — this makes them unreadable if the browser uses system dark bg with
+   our custom text colour.  Force explicit colours so they're always legible.  */
+[data-dark] select option {
+  background: var(--cms-card-bg);
+  color: var(--text-primary);
+}
+
+/* ── Input / textarea / select focus ring — dark mode ───────────────────── */
+/* Covers both .cms-input class and Tailwind-based editor field inputs that
+   use outline-none and rely on border-color for focus indication.            */
+[data-dark] .cms-input:focus,
+[data-dark] input:focus,
+[data-dark] textarea:focus,
+[data-dark] select:focus {
+  border-color: var(--lito-teal-soft) !important;
+  outline: none;
+}
+
+/* ── Tooltip / popover surfaces that may render outside data-dark root ─────── */
+[data-dark] [role="tooltip"],
+[data-dark] [data-tooltip] {
+  background: var(--cms-card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--lito-border) !important;
+}
+
+/* ── Placeholder text — dark mode ────────────────────────────────────────── */
+/* Use --text-muted (#7A7570) not --text-faint (#4A4845) — faint is nearly
+   invisible on the #1A1814 dark surface (< 2:1 contrast ratio).             */
+[data-dark] ::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+/* ── Switch / toggle thumb — stays high-contrast in dark mode ───────────── */
+[data-dark] [role="switch"] > div {
+  background: var(--cms-header-bg);
+}
+
+/* ── Dropdown menus rendered via portals ─────────────────────────────────── */
+[data-dark] [role="listbox"],
+[data-dark] [role="menu"],
+[data-dark] [data-radix-popper-content-wrapper] {
+  background: var(--cms-card-bg) !important;
+  border-color: var(--lito-border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Code editor (Monaco / CodeMirror) within CMS ────────────────────────── */
+[data-dark] .monaco-editor,
+[data-dark] .monaco-editor .margin {
+  background: var(--cms-surface-2) !important;
+}
+
+/* ── Image placeholder in dark mode — invert the light-gray fill ─────────── */
+[data-dark] img[src*="data:image/svg+xml"][src*="F3F4F6"] {
+  filter: invert(0.88) hue-rotate(180deg) brightness(0.9);
+}
+
+/* ── Skeleton / loading shimmer — dark mode ──────────────────────────────── */
+[data-dark] .skeleton,
+[data-dark] [class*="skeleton"] {
+  background: linear-gradient(
+    90deg,
+    var(--cms-surface-2) 25%,
+    var(--cms-surface-3) 50%,
+    var(--cms-surface-2) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+}
+
+/* ── Table row hover — darker tint in dark mode ──────────────────────────── */
+[data-dark] .cms-table tbody tr:hover {
+  background: rgba(212,168,83,0.06);
+}
+
+/* ── Divider lines ────────────────────────────────────────────────────────── */
+[data-dark] hr {
+  border-color: var(--lito-border);
+}
+
+/* ── Kbd element ─────────────────────────────────────────────────────────── */
+[data-dark] kbd {
+  background: var(--cms-surface-2);
+  color: var(--text-muted);
+  border-color: var(--lito-border);
+}
+
+/* ── CKEditor .ck-body-wrapper — panels rendered at <body> root ─────────────
+   CKEditor 5 appends dropdown panels, balloon panels, and link-form panels
+   to a .ck-body-wrapper div that is a DIRECT child of <body>.  None of the
+   .ck-editor-host scoped rules above reach it.  These rules target the
+   body-root panels for both light mode (correct bg / shadow) and dark mode. */
+
+/* Light mode — align with CMS surface token */
+.ck-body-wrapper .ck.ck-dropdown__panel,
+.ck-body-wrapper .ck.ck-balloon-panel {
+  background: var(--cms-card-bg, #ffffff) !important;
+  border: 1px solid var(--lito-border, #e5e7eb) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+}
+
+.ck-body-wrapper .ck.ck-list {
+  background: var(--cms-card-bg, #ffffff) !important;
+  border-radius: 6px !important;
+}
+
+.ck-body-wrapper .ck.ck-list__item .ck-button {
+  color: var(--text-primary, #111111) !important;
+  border-radius: 4px !important;
+}
+
+.ck-body-wrapper .ck.ck-list__item .ck-button:hover,
+.ck-body-wrapper .ck.ck-list__item .ck-button.ck-on {
+  background: var(--cms-surface-3, #f3f4f6) !important;
+  color: var(--text-primary, #111111) !important;
+}
+
+/* Balloon panel inputs (link URL etc.) */
+.ck-body-wrapper .ck.ck-input {
+  background: var(--cms-surface-3, #f3f4f6) !important;
+  color: var(--text-primary, #111111) !important;
+  border-color: var(--lito-border, #e5e7eb) !important;
+}
+
+/* Dark mode — all .ck-body-wrapper descendants */
+[data-dark] .ck-body-wrapper .ck.ck-dropdown__panel,
+[data-dark] .ck-body-wrapper .ck.ck-balloon-panel {
+  background: var(--cms-card-bg) !important;
+  border-color: var(--lito-border) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45) !important;
+}
+
+[data-dark] .ck-body-wrapper .ck.ck-list {
+  background: var(--cms-card-bg) !important;
+}
+
+[data-dark] .ck-body-wrapper .ck.ck-list__item .ck-button {
+  color: var(--text-primary) !important;
+}
+
+[data-dark] .ck-body-wrapper .ck.ck-list__item .ck-button:hover,
+[data-dark] .ck-body-wrapper .ck.ck-list__item .ck-button.ck-on {
+  background: var(--cms-surface-3) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-dark] .ck-body-wrapper .ck.ck-icon {
+  filter: brightness(1.6);
+}
+
+[data-dark] .ck-body-wrapper .ck.ck-input {
+  background: var(--cms-surface-3) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--lito-border) !important;
+}
+
+[data-dark] .ck-body-wrapper .ck.ck-labeled-field-view {
+  background: var(--cms-card-bg) !important;
+}
+
+[data-dark] .ck-body-wrapper .ck.ck-toolbar__separator {
+  background: var(--lito-border) !important;
+}
+
+/* Z-index — ensure body-root panels sit above the editor sidebar (z ~40)
+   but below CMS modals (z ~50+) */
+.ck-body-wrapper .ck.ck-dropdown__panel,
+.ck-body-wrapper .ck.ck-balloon-panel {
+  z-index: 45 !important;
 }
