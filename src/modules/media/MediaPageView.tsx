@@ -282,7 +282,7 @@ export function MediaPageView({
                             <MediaTypeIcon mimeType={item.mime_type} className="w-4 h-4" />
                           </div>
                         )}
-                        <span className="font-body text-[13px] font-medium text-[var(--text-primary)]">{item.filename}</span>
+                        <span className="font-body text-[13px] font-medium text-[var(--text-muted)]">{item.filename}</span>
                       </div>
                     </td>
                     <td>

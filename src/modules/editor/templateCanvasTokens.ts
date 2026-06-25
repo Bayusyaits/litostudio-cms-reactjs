@@ -54,27 +54,6 @@ const LITO: TemplateCanvasTokens = {
   fontUrl:            'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap',
 }
 
-const PHOTOGRAPHY: TemplateCanvasTokens = {
-  '--cms-card-bg':    '#FAFAFA',
-  '--cms-main-bg':    '#EFEFEF',
-  '--cms-surface-2':  '#F0F0F0',
-  '--cms-surface-3':  '#FFFFFF',
-  '--text-primary':   '#1A1A1A',
-  '--text-secondary': '#4A4A4A',
-  '--text-muted':     '#777777',
-  '--lito-teal':      '#2D5A6B',
-  '--lito-gold':      '#C9A865',
-  '--lito-gold-deep': '#A08040',
-  '--lito-border':    '#E5E5E5',
-  '--font-display':   "'Playfair Display', Georgia, serif",
-  '--font-body':      "'Inter', system-ui, -apple-system, sans-serif",
-  headerBg:           '#1A1A1A',
-  headerText:         '#FAFAFA',
-  headerAccent:       '#C9A865',
-  siteName:           'Photography',
-  fontUrl:            'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap',
-}
-
 const FASHION: TemplateCanvasTokens = {
   '--cms-card-bg':    '#FAFAF9',      // fashion --nx-bg
   '--cms-main-bg':    '#E8E8E7',
@@ -117,33 +96,10 @@ const BEAUTY: TemplateCanvasTokens = {
   fontUrl:            'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap',
 }
 
-const TRAVEL: TemplateCanvasTokens = {
-  '--cms-card-bg':    '#F8FAFC',
-  '--cms-main-bg':    '#E8EDF3',
-  '--cms-surface-2':  '#EEF2F7',
-  '--cms-surface-3':  '#FFFFFF',
-  '--text-primary':   '#0F172A',
-  '--text-secondary': '#334155',
-  '--text-muted':     '#64748B',
-  '--lito-teal':      '#1A4A5A',
-  '--lito-gold':      '#1DA462',
-  '--lito-gold-deep': '#15803D',
-  '--lito-border':    '#E2E8F0',
-  '--font-display':   "'Poppins', system-ui, sans-serif",
-  '--font-body':      "'Inter', system-ui, -apple-system, sans-serif",
-  headerBg:           '#0F172A',
-  headerText:         '#F8FAFC',
-  headerAccent:       '#1DA462',
-  siteName:           'Travel',
-  fontUrl:            'https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap',
-}
-
 export const TEMPLATE_CANVAS_TOKENS: Record<string, TemplateCanvasTokens> = {
-  lito:        LITO,
-  photography: PHOTOGRAPHY,
-  fashion:     FASHION,
-  beauty:      BEAUTY,
-  travel:      TRAVEL,
+  lito:    LITO,
+  fashion: FASHION,
+  beauty:  BEAUTY,
 }
 
 /** Get tokens for a slug, falling back to lito defaults */

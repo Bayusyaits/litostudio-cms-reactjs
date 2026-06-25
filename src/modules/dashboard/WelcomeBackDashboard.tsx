@@ -85,7 +85,7 @@ function QuickAction({
         <Icon size={16} style={{ color: iconColor }} />
       </div>
       <div>
-        <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">{label}</div>
+        <div className="font-body text-[13px] font-medium text-[var(--text-muted)]">{label}</div>
         <div className="font-body text-[11px] text-[var(--text-muted)] mt-0.5">{desc}</div>
       </div>
     </button>
@@ -132,7 +132,7 @@ export function WelcomeBackDashboard() {
               <div className="w-[30px] h-[30px] rounded-[7px] bg-[rgba(212,168,83,0.12)] flex items-center justify-center">
                 <Building2 size={15} className="text-[var(--lito-gold)]" />
               </div>
-              <span className="font-body text-[13px] font-medium text-[var(--text-primary)]">
+              <span className="font-body text-[13px] font-medium text-[var(--text-muted)]">
                 Current Organization
               </span>
             </div>
@@ -194,7 +194,7 @@ export function WelcomeBackDashboard() {
               <div className="w-[30px] h-[30px] rounded-[7px] bg-[rgba(26,74,90,0.10)] flex items-center justify-center">
                 <Globe size={15} className="text-[var(--lito-teal)]" />
               </div>
-              <span className="font-body text-[13px] font-medium text-[var(--text-primary)]">
+              <span className="font-body text-[13px] font-medium text-[var(--text-muted)]">
                 Current Website
               </span>
             </div>

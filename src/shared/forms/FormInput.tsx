@@ -1,15 +1,13 @@
 /**
  * FormInput — text/email/number/password input wired to react-hook-form Controller.
  *
+ * Pass `maxLength` to enable:
+ *   • Hard character cap on the HTML element
+ *   • Live "x / max" counter shown beside the label
+ *   • Counter turns amber at ≥90% usage, red when at limit
+ *
  * @example
- *   <FormInput
- *     name="email"
- *     control={form.control}
- *     label="Email address"
- *     type="email"
- *     required
- *     placeholder="you@example.com"
- *   />
+ *   <FormInput name="title" control={form.control} label="Title" maxLength={255} />
  */
 
 import type { Control, FieldValues, Path } from 'react-hook-form'
@@ -27,6 +25,8 @@ interface FormInputProps<T extends FieldValues> {
   hint?: string
   disabled?: boolean
   loading?: boolean
+  /** Hard character cap — also shows live x/max counter next to the label */
+  maxLength?: number
   className?: string
   inputClassName?: string
   id?: string
@@ -49,6 +49,7 @@ export function FormInput<T extends FieldValues>({
   hint,
   disabled,
   loading,
+  maxLength,
   className,
   inputClassName,
   id,
@@ -65,6 +66,9 @@ export function FormInput<T extends FieldValues>({
       control={control}
       render={({ field, fieldState: { error } }) => {
         const fieldId = id ?? name
+        const currentLen = String(field.value ?? '').length
+        const showCounter = maxLength !== undefined && !!label
+
         return (
           <FormFieldWrapper
             fieldId={fieldId}
@@ -73,6 +77,7 @@ export function FormInput<T extends FieldValues>({
             error={error?.message}
             hint={hint}
             className={className}
+            counter={showCounter ? { current: currentLen, max: maxLength! } : undefined}
           >
             <input
               {...field}
@@ -82,6 +87,7 @@ export function FormInput<T extends FieldValues>({
               disabled={disabled || loading}
               autoComplete={autoComplete}
               autoFocus={autoFocus}
+              maxLength={maxLength}
               min={min}
               max={max}
               step={step}

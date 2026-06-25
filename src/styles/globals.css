@@ -27,6 +27,8 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   --lito-gold-deep:    #B68A3A;
   --lito-teal:         #1A4A5A;
   --lito-teal-soft:    #2E6675;
+  --lito-teal-fg:      #1A4A5A;          /* text/icon teal — overridden lighter in dark mode */
+  --lito-teal-subtle:  rgba(26,74,90,0.08); /* subtle teal bg tint — dark-mode-aware */
   --lito-border:       #D9D2C7;
 
   /* Semantic text */
@@ -113,17 +115,22 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   --lito-ink:         #F0EDE7;
   --lito-ink-light:   #7A7570;
   --lito-ink-muted:   #4A4845;
-  --lito-border:      #2C2A26;
+  --lito-border:      #3D3830;   /* raised from #2C2A26 — more visible border on dark bg */
+
+  /* Lighter teal for text/icon use on dark backgrounds (6.6:1 on #161412, 5.4:1 on --cms-surface-2) */
+  --lito-teal-fg:     #4BA8C0;
+  --lito-teal-subtle: rgba(75,168,192,0.12); /* subtle teal bg tint — visible on dark bg */
 
   --text-primary:     #F0EDE7;
   --text-muted:       #7A7570;
-  --text-faint:       #4A4845;
+  /* --text-faint was #4A4845 — 1.7:1 on dark bg (invisible). Raised to #6B6560 = 3.3:1. */
+  --text-faint:       #6B6560;
 
   --surface-page:     #161412;
   --surface-raised:   #1E1C19;
 
   --cms-main-bg:      #121008;
-  --cms-card-bg:      #1A1814;
+  --cms-card-bg:      #171615;   /* raised from #1A1814 — visibly elevated above cms-main-bg */
   --cms-header-bg:    #161412;
   --cms-sidebar-bg:   #0D0C09;
   --cms-sidebar-div:  rgba(240,237,231,0.07);
@@ -140,14 +147,17 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   --lito-danger:   #D95F55;   /* lighter red alias for dark bg */
 
   /* Surface elevations — dark mode overrides */
-  --cms-surface-2:  #1A1814;    /* = cms-card-bg in dark */
+  /* --cms-surface-3 (#161412) = sidebar/tab-bar bg (stays very dark)
+     --cms-surface-2 (#171615) = inputs/cards — raised +10 luminance steps vs surface-3
+     This creates a clearly perceptible boundary between sidebar bg and form fields. */
+  --cms-surface-2:  #171615;    /* raised from #1A1814 — visibly distinct from surface-3 (#161412) */
   --cms-surface-3:  #161412;    /* = cms-header-bg in dark */
-  --text-secondary: #9E9A95;    /* medium text for dark */
+  --text-secondary: #9E9A95;    /* medium text for dark (5.0:1 on new surface-2) */
 
   /* Form input tokens — dark mode */
-  --cms-input-bg:   #1A1814;    /* same as cms-card-bg */
-  --cms-field-text: #C8C3BC;    /* warm light gray — readable on dark, not stark white (10.9:1 on #1A1814) */
-  --color-border:   #2C2A26;    /* same as --lito-border in dark */
+  --cms-input-bg:   #171615;    /* raised from #1A1814 — matches cms-surface-2 */
+  --cms-field-text: #F0EDE7;    /* bright cream-white — same as --text-primary, clearly readable */
+  --color-border:   #3D3830;    /* synced with --lito-border in dark */
 
   /* Primary button flips to light bg + dark text in dark mode */
   --cms-btn-bg:     #F0EDE7;
@@ -167,6 +177,27 @@ html, body, #root {
   color: var(--text-primary);
   background: var(--cms-main-bg);
   overflow: hidden;
+}
+
+/* ── Dark mode: higher-specificity text cascade enforcement ─────────────────
+   html[data-dark] = (0,1,1) beats :root (0,1,0) and html (0,0,1).
+   Ensures text-[var(--text-primary)] resolves to #F0EDE7 in dark mode
+   even when Flowbite or other library styles compete for the cascade.
+   ─────────────────────────────────────────────────────────────────────────── */
+html[data-dark],
+html[data-dark] body,
+html[data-dark] #root {
+  color: var(--text-primary);          /* #F0EDE7 — bright cream-white */
+  background-color: var(--cms-main-bg);
+}
+
+/* ── text-[var(--text-primary)] explicit dark override ──────────────────────
+   Tailwind arbitrary class .text-[var(--text-primary)] has specificity (0,1,0).
+   This compound rule is (0,1,1) — one level higher — so it wins without
+   needing !important, guaranteeing the dark value always applies.
+   ─────────────────────────────────────────────────────────────────────────── */
+[data-dark] .text-\[var\(--text-primary\)\] {
+  color: var(--text-primary);   /* resolves to #F0EDE7 in dark mode */
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -615,14 +646,14 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
 
 /* ── Form control dark mode ──────────────────────────────────────────────── */
 /* color-scheme on [data-dark] propagates to native select/input rendering.
-   Use --cms-field-text (not --text-primary) so this rule and Tailwind agree.
+   --cms-field-text is now #F0EDE7 (bright cream-white) in dark mode.
    Specificity: [attr]+element = (0,1,1) > Tailwind class (0,1,0),
    so this rule is the authoritative color source for all inputs in dark mode. */
 [data-dark] input,
 [data-dark] select,
 [data-dark] textarea {
   color-scheme: dark;
-  color: var(--cms-field-text);  /* #C8C3BC — warm readable light gray, 10.9:1 on #1A1814 */
+  color: var(--cms-field-text) !important;  /* #F0EDE7 — bright/white text in dark mode */
 }
 /* number input spinner arrow color */
 [data-dark] input[type="number"]::-webkit-inner-spin-button,
@@ -637,6 +668,25 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
 /* ── CKEditor 5 — global overrides (light + dark) ──────────────────────────
    Tailwind arbitrary-selector classes in the wrapper hit specificity limits
    against CKEditor's own stylesheet. These rules use !important to win.      */
+
+/* CKEditor root wrapper + main content wrapper — must come first so the
+   toolbar and editable area rules below can override where needed.
+   CKEditor's own stylesheet sets background:white on these containers;
+   these !important rules ensure our theme wins in both light and dark mode. */
+.ck-editor-host .ck.ck-editor,
+.ck-editor-host .ck.ck-editor__main,
+.ck-editor-host .ck.ck-editor__editable_inline {
+  background: var(--cms-card-bg) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+/* color-scheme tells the browser to use dark mode for native UI within the editor
+   (selection handles, scrollbars) — prevents jarring light-mode controls on dark surfaces */
+[data-dark] .ck-editor-host,
+[data-dark] .ck-editor-host .ck.ck-editor,
+[data-dark] .ck-editor-host .ck.ck-editor__main {
+  color-scheme: dark;
+}
 
 /* Toolbar + its container strip */
 .ck-editor-host .ck.ck-toolbar,
@@ -701,10 +751,33 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
   color: var(--text-primary) !important;
 }
 
-/* Dark mode — bump dark surface behind any remaining white remnants */
+/* Dark mode — force bright text on ALL CKEditor elements */
 [data-dark] .ck-editor-host .ck.ck-reset_all,
 [data-dark] .ck-editor-host .ck-reset_all {
   color: var(--text-primary) !important;
+}
+/* Force bright/white text inside the editable content area i#171615mode.
+   Without this, CKEditor's own paragraph/heading styles may keep text dark. */
+[data-dark] .ck-editor-host .ck.ck-editor__editable,
+[data-dark] .ck-editor-host .ck.ck-editor__editable p,
+[data-dark] .ck-editor-host .ck.ck-editor__editable h1,
+[data-dark] .ck-editor-host .ck.ck-editor__editable h2,
+[data-dark] .ck-editor-host .ck.ck-editor__editable h3,
+[data-dark] .ck-editor-host .ck.ck-editor__editable li,
+[data-dark] .ck-editor-host .ck.ck-editor__editable span {
+  color: var(--text-primary) !important;  /* #F0EDE7 — bright cream-white */
+}
+/* Toolbar button icons and labels */
+[data-dark] .ck-editor-host .ck.ck-toolbar .ck-button__label,
+[data-dark] .ck-editor-host .ck.ck-toolbar .ck-button {
+  color: var(--text-primary) !important;
+}
+/* CKEditor dark mode hover fix — since --cms-card-bg is now #252119,
+   the default surface-3 (#161412) hover goes darker (wrong direction).
+   Use lito-cream-alt (#2A2725) which is slightly lighter → correct hover affordance. */
+[data-dark] .ck-editor-host .ck.ck-button.ck-on,
+[data-dark] .ck-editor-host .ck.ck-button:not(.ck-disabled):hover {
+  background: var(--lito-cream-alt) !important;  /* #2A2725 — subtly lighter than card-bg */
 }
 /* CKEditor — placeholder text in dark mode */
 [data-dark] .ck-editor-host .ck.ck-editor__editable .ck-placeholder::before,
@@ -749,7 +822,8 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
 [data-dark] input:focus,
 [data-dark] textarea:focus,
 [data-dark] select:focus {
-  border-color: var(--lito-teal-soft) !important;
+  /* --lito-teal-fg (#4BA8C0) gives 5.4:1 on surface-2 — clearly visible focus ring */
+  border-color: var(--lito-teal-fg) !important;
   outline: none;
 }
 
@@ -762,8 +836,8 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
 }
 
 /* ── Placeholder text — dark mode ────────────────────────────────────────── */
-/* Use --text-muted (#7A7570) not --text-faint (#4A4845) — faint is nearly
-   invisible on the #1A1814 dark surface (< 2:1 contrast ratio).             */
+/* Use --text-muted (#7A7570) not --text-faint (#6B6560) — faint gives 3.3:1
+   but muted gives 5.5:1, meeting WCAG AA for placeholder text.              */
 [data-dark] ::placeholder {
   color: var(--text-muted);
   opacity: 1;

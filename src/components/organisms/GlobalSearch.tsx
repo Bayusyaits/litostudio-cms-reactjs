@@ -246,7 +246,7 @@ export function GlobalSearch({ open, onClose }: Props) {
                     <span className={`shrink-0 ${isActive ? 'text-[var(--lito-gold)]' : 'text-[var(--text-muted)]'}`}>
                       {TYPE_ICONS[type] ?? <FileText size={13} />}
                     </span>
-                    <span className="flex-1 min-w-0 font-body text-[13px] font-medium text-[var(--text-primary)] truncate">
+                    <span className="flex-1 min-w-0 font-body text-[13px] font-medium text-[var(--text-muted)] truncate">
                       {item.title}
                     </span>
                     {item.subtitle && (

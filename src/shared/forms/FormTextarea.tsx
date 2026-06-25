@@ -1,5 +1,7 @@
 /**
  * FormTextarea — multi-line text area wired to react-hook-form Controller.
+ *
+ * Pass `maxLength` to enable hard character cap + live "x / max" counter.
  */
 
 import type { Control, FieldValues, Path } from 'react-hook-form'
@@ -16,6 +18,8 @@ interface FormTextareaProps<T extends FieldValues> {
   hint?: string
   disabled?: boolean
   rows?: number
+  /** Hard character cap — also shows live x/max counter next to the label */
+  maxLength?: number
   className?: string
   textareaClassName?: string
   id?: string
@@ -32,6 +36,7 @@ export function FormTextarea<T extends FieldValues>({
   hint,
   disabled,
   rows = 4,
+  maxLength,
   className,
   textareaClassName,
   id,
@@ -50,6 +55,9 @@ export function FormTextarea<T extends FieldValues>({
           resize === 'both'       ? 'resize' :
           'resize-y'
 
+        const currentLen = String(field.value ?? '').length
+        const showCounter = maxLength !== undefined && !!label
+
         return (
           <FormFieldWrapper
             fieldId={fieldId}
@@ -58,6 +66,7 @@ export function FormTextarea<T extends FieldValues>({
             error={error?.message}
             hint={hint}
             className={className}
+            counter={showCounter ? { current: currentLen, max: maxLength! } : undefined}
           >
             <textarea
               {...field}
@@ -65,6 +74,7 @@ export function FormTextarea<T extends FieldValues>({
               rows={rows}
               placeholder={placeholder}
               disabled={disabled}
+              maxLength={maxLength}
               value={field.value ?? ''}
               onChange={(e) => {
                 field.onChange(e)

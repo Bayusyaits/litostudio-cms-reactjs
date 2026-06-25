@@ -3,11 +3,15 @@
  *
  * Controlled: pass metaTitle / metaDescription strings + onChange handlers.
  * Shows a Google SERP preview at the bottom.
+ *
+ * Limits are hard-capped (not soft) via maxLength — aligned with FIELD_LIMITS.
+ * Counter turns amber at ≥90% usage, red at limit.
  */
 
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FIELD_LIMITS } from '@/lib/fieldLimits'
 
 interface SeoCardProps {
   metaTitle: string
@@ -20,8 +24,11 @@ interface SeoCardProps {
   className?: string
 }
 
-const TITLE_MAX = 70
-const DESC_MAX  = 160
+function counterColor(len: number, max: number): string {
+  if (len >= max)                     return 'text-[var(--s-danger)]'
+  if (len >= Math.floor(max * 0.9))   return 'text-[var(--lito-gold-deep)]'
+  return 'text-[var(--text-faint)]'
+}
 
 export function SeoCard({
   metaTitle,
@@ -34,6 +41,9 @@ export function SeoCard({
   className,
 }: SeoCardProps) {
   const [open, setOpen] = useState(false)
+
+  const TITLE_MAX = FIELD_LIMITS.META_TITLE
+  const DESC_MAX  = FIELD_LIMITS.META_DESCRIPTION
 
   const previewUrl   = slug ? `${siteDomain}/${slug}` : siteDomain
   const titleDisplay = metaTitle.trim() || 'Page title'
@@ -67,10 +77,7 @@ export function SeoCard({
           <div className="space-y-1.5 pt-4">
             <div className="flex items-center justify-between">
               <label className="cms-label">Meta Title</label>
-              <span className={cn(
-                'font-body text-[11px]',
-                metaTitle.length > TITLE_MAX ? 'text-[var(--s-danger)]' : 'text-[var(--text-faint)]',
-              )}>
+              <span className={cn('font-body text-[11px] tabular-nums', counterColor(metaTitle.length, TITLE_MAX))}>
                 {metaTitle.length}/{TITLE_MAX}
               </span>
             </div>
@@ -79,11 +86,11 @@ export function SeoCard({
               value={metaTitle}
               onChange={(e) => onMetaTitleChange(e.target.value)}
               placeholder="Leave blank to use page title"
-              maxLength={TITLE_MAX + 10}
+              maxLength={TITLE_MAX}
               disabled={disabled}
               className={cn(
                 'cms-input w-full',
-                metaTitle.length > TITLE_MAX && 'border-[var(--s-danger)]',
+                metaTitle.length >= TITLE_MAX && 'border-[var(--s-danger)]',
               )}
             />
           </div>
@@ -92,10 +99,7 @@ export function SeoCard({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="cms-label">Meta Description</label>
-              <span className={cn(
-                'font-body text-[11px]',
-                metaDescription.length > DESC_MAX ? 'text-[var(--s-danger)]' : 'text-[var(--text-faint)]',
-              )}>
+              <span className={cn('font-body text-[11px] tabular-nums', counterColor(metaDescription.length, DESC_MAX))}>
                 {metaDescription.length}/{DESC_MAX}
               </span>
             </div>
@@ -103,12 +107,12 @@ export function SeoCard({
               value={metaDescription}
               onChange={(e) => onMetaDescriptionChange(e.target.value)}
               placeholder="Leave blank to use page excerpt"
-              maxLength={DESC_MAX + 20}
+              maxLength={DESC_MAX}
               rows={3}
               disabled={disabled}
               className={cn(
                 'cms-input w-full resize-none',
-                metaDescription.length > DESC_MAX && 'border-[var(--s-danger)]',
+                metaDescription.length >= DESC_MAX && 'border-[var(--s-danger)]',
               )}
             />
           </div>

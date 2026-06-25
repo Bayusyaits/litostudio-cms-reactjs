@@ -55,8 +55,8 @@ export function AboutSection({ block }: { block: Block }) {
   const showStats = stats.length > 0
 
   const titleLines = title.split('\n')
-  // Use 2-col layout only when there is an image; otherwise single-col
-  const gridCols = image ? '1fr 1fr' : '1fr'
+  // Use 2-col layout when there is an image OR when since/cities is provided (card needs left column)
+  const gridCols = (image || showSinceCard) ? '1fr 1fr' : '1fr'
 
   return (
     <section style={{ padding: '120px 0', background: 'var(--cms-card-bg, var(--lito-cream, #F7F4EE))', overflow: 'hidden' }}>
@@ -64,17 +64,32 @@ export function AboutSection({ block }: { block: Block }) {
       <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 80px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: 80, alignItems: 'center' }}>
 
-          {/* Left: image + floating card — only when image is set */}
-          {image && (
-            <div style={{ position: 'relative' }}>
-              <div style={{ aspectRatio: '3/4', overflow: 'hidden', borderRadius: 2, maxWidth: 460 }}>
-                <img src={image} alt="About" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
+          {/* Left: image placeholder + floating "since" card.
+               Always rendered when gridCols is 2-col (image set), OR when since/cities
+               is provided without an image (shows the card inline in a minimal left column). */}
+          {(image || showSinceCard) && (
+            <div style={{ position: 'relative', minHeight: image ? undefined : 120 }}>
+              {image ? (
+                <div style={{ aspectRatio: '3/4', overflow: 'hidden', borderRadius: 2, maxWidth: 460 }}>
+                  <img src={image} alt="About" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ) : (
+                /* No image but since/cities is set — show a placeholder column */
+                <div style={{
+                  aspectRatio: '3/4', maxWidth: 460,
+                  background: 'var(--cms-surface-3, #EDEDED)',
+                  borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted, #999)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Upload image →
+                  </span>
+                </div>
+              )}
 
-              {/* Floating "since" card — only when since or cities is set */}
+              {/* Floating "since / cities" card — shown whenever either value is set */}
               {showSinceCard && (
                 <div style={{
-                  position: 'absolute', bottom: -24, right: -32,
+                  position: 'absolute', bottom: -24, right: image ? -32 : 0,
                   background: 'var(--cms-card-bg, #F7F4EE)',
                   border: '1px solid var(--lito-border, #D9D2C7)',
                   padding: 20, width: 176, borderRadius: 2,
@@ -82,12 +97,12 @@ export function AboutSection({ block }: { block: Block }) {
                 }}>
                   {since && (
                     <>
-                      <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted, #9E9E9E)', marginBottom: 4 }}>Since</p>
-                      <p style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 300, lineHeight: 1, color: 'var(--text-primary, #111)', marginBottom: cities ? 8 : 0 }}>{since}</p>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted, #9E9E9E)', margin: 0, marginBottom: 4 }}>Since</p>
+                      <p style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 300, lineHeight: 1, color: 'var(--text-primary, #111)', margin: 0, marginBottom: cities ? 8 : 0 }}>{since}</p>
                     </>
                   )}
                   {cities && (
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted, #9E9E9E)', lineHeight: 1.5 }}>{cities}</p>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-muted, #9E9E9E)', lineHeight: 1.5, margin: 0 }}>{cities}</p>
                   )}
                 </div>
               )}

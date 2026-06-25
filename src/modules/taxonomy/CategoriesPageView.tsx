@@ -5,11 +5,12 @@ import { Tag, Trash2, Plus, FolderOpen } from 'lucide-react'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { SearchInput } from '@/components/molecules/SearchInput'
 import { EmptyState } from '@/components/molecules/EmptyState'
+import { FIELD_LIMITS } from '@/lib/fieldLimits'
 import type { Category, CategoryCreateRequest } from '@/services/taxonomy.service'
 
 const categorySchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200),
-  slug: z.string().min(1, 'Slug is required').max(200).regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers and hyphens only'),
+  name: z.string().min(1, 'Name is required').max(FIELD_LIMITS.CATEGORY_NAME, `Max ${FIELD_LIMITS.CATEGORY_NAME} characters`),
+  slug: z.string().min(1, 'Slug is required').max(FIELD_LIMITS.CATEGORY_SLUG, `Max ${FIELD_LIMITS.CATEGORY_SLUG} characters`).regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers and hyphens only'),
 })
 type CategoryForm = z.infer<typeof categorySchema>
 
@@ -68,10 +69,13 @@ function AddCategoryForm({ onCreate, creating, error }: {
   creating: boolean
   error: string | null
 }) {
-  const { register, handleSubmit, reset, setValue, formState: { errors, isValid } } = useForm<CategoryForm>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors, isValid } } = useForm<CategoryForm>({
     resolver: zodResolver(categorySchema),
     mode: 'onChange',
   })
+
+  const nameVal = watch('name') ?? ''
+  const slugVal = watch('slug') ?? ''
 
   function onSubmit(values: CategoryForm) {
     onCreate({ translation: { locale: 'id', name: values.name }, slug: values.slug })
@@ -81,7 +85,12 @@ function AddCategoryForm({ onCreate, creating, error }: {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex gap-2 flex-wrap items-start">
       <div className="flex-1 min-w-[160px]">
-        <label className="cms-label">Name</label>
+        <div className="flex items-center justify-between">
+          <label className="cms-label">Name</label>
+          <span className={`font-body text-[11px] tabular-nums ${nameVal.length >= FIELD_LIMITS.CATEGORY_NAME ? 'text-[var(--s-danger)]' : nameVal.length >= Math.floor(FIELD_LIMITS.CATEGORY_NAME * 0.9) ? 'text-[var(--lito-gold-deep)]' : 'text-[var(--text-faint)]'}`}>
+            {nameVal.length}/{FIELD_LIMITS.CATEGORY_NAME}
+          </span>
+        </div>
         <input
           {...register('name', {
             onChange: (e) => {
@@ -89,6 +98,7 @@ function AddCategoryForm({ onCreate, creating, error }: {
               setValue('slug', slug, { shouldValidate: true })
             },
           })}
+          maxLength={FIELD_LIMITS.CATEGORY_NAME}
           className="cms-input h-[34px]"
           placeholder="Category name"
           aria-invalid={!!errors.name}
@@ -96,9 +106,15 @@ function AddCategoryForm({ onCreate, creating, error }: {
         {errors.name && <p className="mt-1 text-[11px] text-[var(--s-danger)]" role="alert">{errors.name.message}</p>}
       </div>
       <div className="flex-1 min-w-[160px]">
-        <label className="cms-label">Slug</label>
+        <div className="flex items-center justify-between">
+          <label className="cms-label">Slug</label>
+          <span className={`font-body text-[11px] tabular-nums ${slugVal.length >= FIELD_LIMITS.CATEGORY_SLUG ? 'text-[var(--s-danger)]' : slugVal.length >= Math.floor(FIELD_LIMITS.CATEGORY_SLUG * 0.9) ? 'text-[var(--lito-gold-deep)]' : 'text-[var(--text-faint)]'}`}>
+            {slugVal.length}/{FIELD_LIMITS.CATEGORY_SLUG}
+          </span>
+        </div>
         <input
           {...register('slug')}
+          maxLength={FIELD_LIMITS.CATEGORY_SLUG}
           className="cms-input h-[34px]"
           placeholder="category-slug"
           aria-invalid={!!errors.slug}

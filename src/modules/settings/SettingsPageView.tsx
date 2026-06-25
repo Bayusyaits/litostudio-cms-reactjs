@@ -78,7 +78,7 @@ function FormRow({ label, hint, children }: { label: string; hint?: string; chil
   return (
     <div className="grid gap-6 items-start mb-[18px] [grid-template-columns:200px_1fr]">
       <div>
-        <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">{label}</div>
+        <div className="font-body text-[13px] font-medium text-[var(--text-muted)]">{label}</div>
         {hint && (
           <div className="font-body text-[11px] text-[var(--text-muted)] mt-0.5">{hint}</div>
         )}
@@ -489,7 +489,7 @@ export function SettingsPageView({
         </div>
         <div className="px-6 py-4 flex items-center justify-between gap-4">
           <div>
-            <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">
+            <div className="font-body text-[13px] font-medium text-[var(--text-muted)]">
               Delete this website
             </div>
             <div className="font-body text-[11px] text-[var(--text-muted)]">

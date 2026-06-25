@@ -185,7 +185,7 @@ export function TeamPageView({
       </div>
 
       <div className="cms-card px-6 py-5 mb-6">
-        <h2 className="font-body text-[13px] font-medium text-[var(--text-primary)] mb-3">
+        <h2 className="font-body text-[13px] font-medium text-[var(--text-muted)] mb-3">
           Invite a team member
         </h2>
         <InviteForm onInvite={onInvite} inviting={inviting} error={inviteError} />
@@ -238,7 +238,7 @@ export function TeamPageView({
                     <div className="flex items-center gap-[10px]">
                       <MemberAvatar member={member} />
                       <div>
-                        <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">
+                        <div className="font-body text-[13px] font-medium text-[var(--text-muted)]">
                           {member.full_name ?? '—'}
                         </div>
                         <div className="font-body text-[11px] text-[var(--text-muted)]">

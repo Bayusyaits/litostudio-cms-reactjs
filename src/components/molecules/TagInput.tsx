@@ -2,6 +2,10 @@
  * TagInput — comma or Enter-separated tag input.
  *
  * Controlled: value = string[] tags, onChange called on add/remove.
+ *
+ * Limits (Shopify-aligned):
+ *   maxTags        — max number of tags (default 20)
+ *   maxTagLength   — max characters per tag (default 50)
  */
 
 import { useRef, useState, KeyboardEvent } from 'react'
@@ -14,6 +18,8 @@ interface TagInputProps {
   placeholder?: string
   disabled?: boolean
   maxTags?: number
+  /** Max characters per individual tag (default 50) */
+  maxTagLength?: number
   className?: string
 }
 
@@ -23,6 +29,7 @@ export function TagInput({
   placeholder = 'Add tag…',
   disabled,
   maxTags = 20,
+  maxTagLength = 50,
   className,
 }: TagInputProps) {
   const [input, setInput] = useState('')
@@ -31,7 +38,9 @@ export function TagInput({
   const addTag = (raw: string) => {
     const tag = raw.trim().toLowerCase().replace(/\s+/g, '-')
     if (!tag || value.includes(tag) || value.length >= maxTags) return
-    onChange([...value, tag])
+    // Enforce per-tag character limit (silently truncate to be non-disruptive)
+    const safeTag = tag.slice(0, maxTagLength)
+    onChange([...value, safeTag])
     setInput('')
   }
 
@@ -75,6 +84,7 @@ export function TagInput({
           onBlur={onBlur}
           placeholder={value.length === 0 ? placeholder : ''}
           disabled={disabled}
+          maxLength={maxTagLength}
           className="flex-1 min-w-[120px] bg-transparent outline-none font-body text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)]"
         />
       )}

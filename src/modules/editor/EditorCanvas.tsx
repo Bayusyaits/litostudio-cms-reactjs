@@ -428,12 +428,52 @@ interface MockSiteHeaderProps {
   fontBody:     string
   previewMode:  PreviewMode
   navLinks:     string[]
+  /** Active template slug — drives template-specific CTA text and footer tagline */
+  templateSlug: string
 }
 
-/** Fallback nav links shown when no pages have been created yet */
+/** Fallback nav links shown when no pages have been created yet — per template */
 const FALLBACK_NAV_LINKS = ['Home', 'About', 'Portfolio', 'Stories', 'Journal', 'Contact']
 
-function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode, navLinks }: MockSiteHeaderProps) {
+/**
+ * Template-specific chrome config for MockSiteHeader / MockSiteFooter.
+ * Controls CTA button text and footer tagline so the canvas looks like the
+ * correct brand instead of always showing the Lito photography brand.
+ */
+const TEMPLATE_CHROME: Record<string, {
+  ctaText:    string
+  tagline:    string
+  fallbackNav: string[]
+}> = {
+  lito: {
+    ctaText:     'Book Now',
+    tagline:     'Visual storytelling for travel, culture & community.',
+    fallbackNav: ['Home', 'About', 'Portfolio', 'Stories', 'Journal', 'Contact'],
+  },
+  fashion: {
+    ctaText:     'Shop Now',
+    tagline:     'Curated fashion for the modern wardrobe.',
+    fallbackNav: ['Home', 'Collections', 'New Arrivals', 'About', 'Journal', 'Contact'],
+  },
+  beauty: {
+    ctaText:     'Book Treatment',
+    tagline:     'Expert beauty & wellness treatments.',
+    fallbackNav: ['Home', 'Services', 'Campaigns', 'About', 'Journal', 'Contact'],
+  },
+  photography: {
+    ctaText:     'Book Session',
+    tagline:     'Capturing moments that last a lifetime.',
+    fallbackNav: ['Home', 'Portfolio', 'About', 'Stories', 'Journal', 'Contact'],
+  },
+  travel: {
+    ctaText:     'Explore Now',
+    tagline:     'Discover remarkable destinations.',
+    fallbackNav: ['Home', 'Destinations', 'Stories', 'About', 'Journal', 'Contact'],
+  },
+}
+
+function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode, navLinks, templateSlug }: MockSiteHeaderProps) {
+  const chrome = TEMPLATE_CHROME[templateSlug] ?? TEMPLATE_CHROME.lito
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = previewMode === 'mobile'
   const isTablet = previewMode === 'tablet'
@@ -508,7 +548,7 @@ function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisp
               fontFamily: fontBody, fontSize: 12, fontWeight: 500,
               cursor: 'default', userSelect: 'none',
             }}>
-              Book Now
+              {chrome.ctaText}
             </div>
           </div>
         )}
@@ -575,7 +615,7 @@ function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisp
               fontFamily: fontBody, fontSize: 13, fontWeight: 500,
               textAlign: 'center', userSelect: 'none', cursor: 'default',
             }}>
-              Book Now
+              {chrome.ctaText}
             </div>
           </div>
         </div>
@@ -586,7 +626,8 @@ function MockSiteHeader({ headerBg, headerText, headerAccent, siteName, fontDisp
 
 // ── Mock site footer ──────────────────────────────────────────────────────────
 
-function MockSiteFooter({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode, navLinks }: MockSiteHeaderProps) {
+function MockSiteFooter({ headerBg, headerText, headerAccent, siteName, fontDisplay, fontBody, previewMode, navLinks, templateSlug }: MockSiteHeaderProps) {
+  const chrome = TEMPLATE_CHROME[templateSlug] ?? TEMPLATE_CHROME.lito
   const isMobile = previewMode === 'mobile'
   return (
     <div
@@ -616,7 +657,7 @@ function MockSiteFooter({ headerBg, headerText, headerAccent, siteName, fontDisp
             {siteName}
           </div>
           <div style={{ fontFamily: fontBody, fontSize: 11, color: `${headerText}66`, userSelect: 'none', maxWidth: 200, lineHeight: 1.6 }}>
-            Visual storytelling for travel, culture & community.
+            {chrome.tagline}
           </div>
         </div>
         {/* Footer nav */}
@@ -671,10 +712,11 @@ export function EditorCanvas() {
   // Uses getQueryData (no refetch) — PagesPageContainer already populates this cache.
   const qc = useQueryClient()
   const navLinks = useMemo(() => {
-    if (!activeSite?.id) return FALLBACK_NAV_LINKS
+    const templateFallback = (TEMPLATE_CHROME[templateSlug] ?? TEMPLATE_CHROME.lito).fallbackNav
+    if (!activeSite?.id) return templateFallback
     type CachedPage = { slug: string; status?: string; page_translations?: { title?: string; locale?: string }[] }
     const cached = qc.getQueryData<CachedPage[]>(['pages-all', activeSite.id])
-    if (!cached || cached.length === 0) return FALLBACK_NAV_LINKS
+    if (!cached || cached.length === 0) return templateFallback
     // Only show active/published pages; derive display label from translation or slug
     return cached
       .filter((p) => !p.status || p.status === 'active')
@@ -767,6 +809,7 @@ export function EditorCanvas() {
           fontBody={fontBody}
           previewMode={previewMode}
           navLinks={navLinks}
+          templateSlug={templateSlug}
         />
         {/* Page body — template background */}
         <div className="flex-1" style={{ background: cssVars['--cms-card-bg'] as string }}>
@@ -926,6 +969,7 @@ export function EditorCanvas() {
           fontBody={fontBody}
           previewMode={previewMode}
           navLinks={navLinks}
+          templateSlug={templateSlug}
         />
         </div>{/* end page column */}
     </div>

@@ -85,8 +85,20 @@ function sectionToBlock(s: PageSection): Block {
 
   // Helper: cast legacy props to a typed Block — legacy data may be partial/mismatched,
   // each block renderer is already defensive about missing fields.
+  // Restores styles from s.settings so previously saved padding/color/etc. are preserved.
+  const STYLE_KEYS = new Set([
+    'backgroundColor', 'textColor', 'textAlign',
+    'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight',
+    'marginTop', 'marginBottom',
+    'borderRadius', 'borderWidth', 'borderColor',
+    'maxWidth', 'minHeight',
+  ])
+  const restoredStyles: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(s.settings ?? {})) {
+    if (STYLE_KEYS.has(k)) restoredStyles[k] = v
+  }
   function make<T extends Block['type']>(type: T, data: Record<string, unknown>): Block {
-    return { id: s.id, type, data: data as Block['data'], visibility: vis, styles: {} }
+    return { id: s.id, type, data: data as Block['data'], visibility: vis, styles: restoredStyles }
   }
 
   switch (s.section_type) {
@@ -106,7 +118,7 @@ function sectionToBlock(s: PageSection): Block {
       return make('testimonials', { heading: (p.heading as string) ?? 'Testimonials', layout: 'grid', items: (p.items as unknown[]) ?? [], ...p })
 
     case 'contact':
-      return make('contact_form', { heading: (p.heading as string) ?? 'Get In Touch', submitText: 'Send Message', fields: (p.fields as unknown[]) ?? [], ...p })
+      return make('contact', { heading: (p.heading as string) ?? 'Get In Touch', submitText: 'Send Message', fields: (p.fields as unknown[]) ?? [], ...p })
 
     case 'journal':
     case 'latest_journal':
@@ -211,6 +223,107 @@ function sectionToBlock(s: PageSection): Block {
         limit:         (p.limit         as number) ?? 6,
         ...p,
       })
+
+    case 'page_hero':
+      return make('page_hero', {
+        eyebrow:  (p.eyebrow  as string) ?? '',
+        title:    (p.title    as string) ?? '',
+        desc:     (p.desc     as string) ?? (p.description as string) ?? '',
+        imgSrc:   (p.imgSrc   as string) ?? (p.image as string) ?? '',
+        imgAlt:   (p.imgAlt   as string) ?? '',
+        ctaLabel: (p.ctaLabel as string) ?? (p.ctaText as string) ?? '',
+        ctaHref:  (p.ctaHref  as string) ?? (p.ctaUrl  as string) ?? '',
+        ...p,
+      })
+
+    case 'contact_cta':
+      return make('contact_cta', {
+        eyebrow:  (p.eyebrow  as string) ?? '',
+        title:    (p.title    as string) ?? '',
+        desc:     (p.desc     as string) ?? (p.description as string) ?? '',
+        email:    (p.email    as string) ?? '',
+        ctaText:  (p.ctaText  as string) ?? '',
+        ctaLink:  (p.ctaLink  as string) ?? (p.ctaUrl as string) ?? '',
+        homeText: (p.homeText as string) ?? '',
+        homeLink: (p.homeLink as string) ?? '/',
+        ...p,
+      })
+
+    case 'contact_cards':
+      return make('contact_cards', {
+        heading: (p.heading as string) ?? '',
+        items:   (p.items   as unknown[]) ?? [],
+        ...p,
+      })
+
+    // ── Fashion-specific sections ─────────────────────────────────────────
+    case 'timeline':
+      return make('timeline', { heading: (p.heading as string) ?? '', items: (p.items as unknown[]) ?? [], ...p })
+
+    case 'new_arrival':
+      return make('new_arrival', {
+        title:         (p.title         as string) ?? (p.heading as string) ?? '',
+        catalogueText: (p.catalogueText as string) ?? (p.catalogueLabel as string) ?? '',
+        catalogueLink: (p.catalogueLink as string) ?? '',
+        items:         (p.items         as unknown[]) ?? [],
+        ...p,
+      })
+
+    case 'promo_banners':
+      return make('promo_banners', { items: (p.items as unknown[]) ?? [], ...p })
+
+    case 'product_carousel':
+      return make('product_carousel', { heading: (p.heading as string) ?? '', items: (p.items as unknown[]) ?? [], ...p })
+
+    case 'marquee':
+      return make('marquee', { items: (p.items as string[]) ?? [], ...p })
+
+    case 'lookbook':
+      return make('lookbook', { heading: (p.heading as string) ?? '', items: (p.items as unknown[]) ?? [], ...p })
+
+    case 'collaborations':
+      return make('collaborations', { heading: (p.heading as string) ?? '', items: (p.items as unknown[]) ?? [], ...p })
+
+    case 'social_grid':
+      return make('social_grid', { heading: (p.heading as string) ?? '', ...p })
+
+    case 'philosophy':
+      return make('philosophy', { heading: (p.heading as string) ?? '', items: (p.items as unknown[]) ?? [], ...p })
+
+    case 'rich_text':
+      return make('rich_text', { html: (p.html as string) ?? '', ...p })
+
+    // ── Beauty-specific sections ──────────────────────────────────────────
+    case 'collection_banner':
+      return make('collection_banner', {
+        heading:         (p.heading         as string) ?? '',
+        description:     (p.description     as string) ?? '',
+        backgroundImage: (p.backgroundImage as string) ?? (p.image as string) ?? '',
+        ctaText:         (p.ctaText         as string) ?? '',
+        ctaUrl:          (p.ctaUrl          as string) ?? '',
+        ...p,
+      })
+
+    case 'product_benefits':
+      return make('product_benefits', { heading: (p.heading as string) ?? '', items: (p.items as unknown[]) ?? [], ...p })
+
+    case 'product_categories':
+      return make('product_categories', { heading: (p.heading as string) ?? '', items: (p.items as unknown[]) ?? [], ...p })
+
+    case 'founder_quote':
+      return make('founder_quote', {
+        quote:  (p.quote  as string) ?? '',
+        author: (p.author as string) ?? '',
+        role:   (p.role   as string) ?? '',
+        image:  (p.image  as string) ?? '',
+        ...p,
+      })
+
+    case 'blog_highlight':
+      return make('blog_highlight', { heading: (p.heading as string) ?? '', count: (p.count as number) ?? 3, ...p })
+
+    case 'featured_products':
+      return make('featured_products', { heading: (p.heading as string) ?? '', items: (p.items as unknown[]) ?? [], ...p })
 
     default:
       // Unknown section type: render as a labelled heading so it's visible
@@ -447,6 +560,8 @@ export default function BlockEditorPage() {
         id:         b.id,
         type:       b.type,
         data:       b.data as Record<string, unknown>,
+        styles:     b.styles as Record<string, unknown> | undefined,
+        animation:  b.animation as Record<string, unknown> | undefined,
         visibility: b.visibility,
         name:       b.name,
       }))

@@ -212,18 +212,35 @@ export const pagesService = {
       id: string
       type: string
       data?: Record<string, unknown>
-      visibility?: { desktop?: boolean; mobile?: boolean }
+      styles?: Record<string, unknown>
+      animation?: Record<string, unknown>
+      visibility?: { desktop?: boolean; mobile?: boolean; tablet?: boolean }
       name?: string
     }>,
   ): Promise<{ synced: number }> {
-    const sections = blocks.map((block, idx) => ({
-      section_type: block.type,
-      sort_order:   idx,
-      props:        block.data    ?? {},
-      is_visible:   block.visibility?.desktop !== false,
-      name:         block.name    ?? null,
-      anchor_id:    null,
-    }))
+    const sections = blocks.map((block, idx) => {
+      // Flatten block.styles into settings top-level so DynamicSectionRenderer.sectionStyle()
+      // can read them directly (backgroundColor, textColor, padding*, margin*, etc.).
+      // Also store animation + customId/visibility for future use.
+      const settings: Record<string, unknown> = {
+        ...(block.styles ?? {}),
+      }
+      if (block.animation && Object.keys(block.animation).length > 0) {
+        settings['animation'] = block.animation
+      }
+      if (block.visibility) {
+        settings['visibility'] = block.visibility
+      }
+      return {
+        section_type: block.type,
+        sort_order:   idx,
+        props:        block.data ?? {},
+        settings,
+        is_visible:   block.visibility?.desktop !== false,
+        name:         block.name    ?? null,
+        anchor_id:    null,
+      }
+    })
     const data = await http.post<{ success: boolean; synced: number }>(
       `${BASE}/${pageId}/sections/sync`,
       { sections },

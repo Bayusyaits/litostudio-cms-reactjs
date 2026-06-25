@@ -18,6 +18,7 @@ import { X, Save } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { ImageUploader } from '@/components/molecules/ImageUploader'
 import { FormField, TextAreaField } from '@/components/molecules/FormField'
+import { FIELD_LIMITS }            from '@/lib/fieldLimits'
 import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroStatus } from '@/types/content.types'
 import { heroService } from '@/services/content.service'
 import { draftMediaStore } from '@/stores/draftMedia.store'
@@ -256,6 +257,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Bali, Indonesia"
+              maxLength={FIELD_LIMITS.LOCATION}
             />
             <FormField
               label="Region"
@@ -263,6 +265,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
               value={region}
               onChange={(e) => setRegion(e.target.value)}
               placeholder="e.g. Southeast Asia"
+              maxLength={FIELD_LIMITS.LOCATION}
             />
           </div>
 
@@ -310,6 +313,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                 value={t.title}
                 onChange={(e) => updateTranslation(activeLocale, 'title', e.target.value)}
                 placeholder="Slide headline"
+                maxLength={FIELD_LIMITS.HERO_TITLE}
               />
               <FormField
                 label="Subtitle"
@@ -317,6 +321,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                 value={t.subtitle}
                 onChange={(e) => updateTranslation(activeLocale, 'subtitle', e.target.value)}
                 placeholder="Supporting text"
+                maxLength={FIELD_LIMITS.HERO_SUBTITLE}
               />
               <TextAreaField
                 label="Description"
@@ -324,6 +329,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                 onChange={(e) => updateTranslation(activeLocale, 'description', e.target.value)}
                 placeholder="Optional longer description"
                 rows={3}
+                maxLength={FIELD_LIMITS.HERO_DESCRIPTION}
               />
               <div className="grid grid-cols-2 gap-3">
                 <FormField
@@ -332,6 +338,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                   value={t.cta_label}
                   onChange={(e) => updateTranslation(activeLocale, 'cta_label', e.target.value)}
                   placeholder="e.g. Explore Now"
+                  maxLength={FIELD_LIMITS.CTA_LABEL}
                 />
                 <FormField
                   label="Category"
@@ -339,6 +346,7 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
                   value={t.category}
                   onChange={(e) => updateTranslation(activeLocale, 'category', e.target.value)}
                   placeholder="e.g. Adventure"
+                  maxLength={FIELD_LIMITS.CONTENT_CATEGORY}
                 />
               </div>
             </div>

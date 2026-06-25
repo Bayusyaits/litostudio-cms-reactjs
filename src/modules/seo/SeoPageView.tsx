@@ -7,13 +7,14 @@ import { Button }       from '@/components/atoms/Button'
 import { FormField, TextAreaField } from '@/components/molecules/FormField'
 import { FormSkeleton } from '@/components/atoms/Skeleton'
 import { cn } from '@/lib/utils'
+import { FIELD_LIMITS } from '@/lib/fieldLimits'
 import type { SeoMetadata, SeoSaveRequest } from '@/types/content.types'
 import type { PAGE_TYPES, SeoPageType } from './SeoPageContainer'
 
 const schema = z.object({
-  title:               z.string().max(70).optional(),
-  description:         z.string().max(160).optional(),
-  keywords:            z.string().max(500).optional(),
+  title:               z.string().max(FIELD_LIMITS.META_TITLE).optional(),
+  description:         z.string().max(FIELD_LIMITS.META_DESCRIPTION).optional(),
+  keywords:            z.string().max(FIELD_LIMITS.META_KEYWORDS).optional(),
   canonical:           z.string().url().optional().or(z.literal('')),
   robots:              z.string().max(100).optional(),
   noindex:             z.boolean().optional(),
@@ -160,29 +161,24 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
                   <Search className="w-4 h-4 text-[var(--text-muted)]" />
                   <h2 className="font-body text-sm font-semibold text-[var(--text-primary)]">Search Engine</h2>
                 </div>
-                <div className="space-y-1.5">
-                  <FormField
-                    label="Meta Title" placeholder="Page title (50-60 chars ideal)"
-                    error={errors.title?.message}
-                    {...register('title')}
-                  />
-                  <p className={cn('font-body text-xs', titleLen > 60 ? 'text-amber-600' : 'text-[var(--text-muted)]')}>
-                    {titleLen}/60 characters
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <TextAreaField
-                    label="Meta Description" rows={3} placeholder="Page description (120-160 chars ideal)"
-                    error={errors.description?.message}
-                    {...register('description')}
-                  />
-                  <p className={cn('font-body text-xs', descLen > 160 ? 'text-amber-600' : 'text-[var(--text-muted)]')}>
-                    {descLen}/160 characters
-                  </p>
-                </div>
+                <FormField
+                  label="Meta Title" placeholder="Page title (50-60 chars ideal)"
+                  error={errors.title?.message}
+                  maxLength={FIELD_LIMITS.META_TITLE}
+                  value={title ?? ''}
+                  {...register('title')}
+                />
+                <TextAreaField
+                  label="Meta Description" rows={3} placeholder="Page description (120-160 chars ideal)"
+                  error={errors.description?.message}
+                  maxLength={FIELD_LIMITS.META_DESCRIPTION}
+                  value={description ?? ''}
+                  {...register('description')}
+                />
                 <FormField
                   label="Keywords" placeholder="photography, bali, wedding (comma-separated)"
                   error={errors.keywords?.message}
+                  maxLength={FIELD_LIMITS.META_KEYWORDS}
                   {...register('keywords')}
                 />
                 <FormField

@@ -244,17 +244,17 @@ export function ImageUploader({
               'flex flex-col items-center justify-center gap-2 w-full h-36',
               'border-2 border-dashed rounded-[var(--radius-md)] transition-colors cursor-pointer',
               dragging
-                ? 'border-[var(--lito-teal)] bg-[rgba(26,74,90,0.06)]'
-                : 'border-[var(--lito-border)] hover:border-[var(--lito-teal)] hover:bg-[rgba(26,74,90,0.03)]',
+                ? 'border-[var(--lito-teal-fg)] bg-[var(--lito-teal-subtle)]'
+                : 'border-[var(--lito-border)] hover:border-[var(--lito-teal-fg)] hover:bg-[var(--lito-teal-subtle)]',
               disabled && 'opacity-60 cursor-not-allowed',
             )}
           >
-            <div className="w-10 h-10 rounded-full bg-[rgba(26,74,90,0.08)] flex items-center justify-center">
-              <UploadCloud className="w-5 h-5 text-[var(--lito-teal)]" />
+            <div className="w-10 h-10 rounded-full bg-[var(--lito-teal-subtle)] flex items-center justify-center">
+              <UploadCloud className="w-5 h-5 text-[var(--lito-teal-fg)]" />
             </div>
             <div className="text-center">
               <p className="font-body text-sm text-[var(--text-primary)]">
-                <span className="font-medium text-[var(--lito-teal)]">Click to upload</span> or drag & drop
+                <span className="font-medium text-[var(--text-muted)]">Click to upload</span> or drag & drop
               </p>
               <p className="font-body text-xs text-[var(--text-muted)] mt-0.5">
                 JPEG, PNG, WebP, GIF up to {Math.round(maxBytes / 1024 / 1024)} MB
@@ -275,7 +275,7 @@ export function ImageUploader({
               onKeyDown={(e) => e.key === 'Enter' && applyUrl()}
               placeholder="https://example.com/image.jpg"
               disabled={disabled}
-              className="flex-1 px-3 py-[7px] rounded-[6px] border border-[var(--lito-border)] bg-[var(--cms-input-bg)] font-body text-xs text-[var(--text-primary)] outline-none focus:border-[var(--lito-teal)] placeholder:text-[var(--text-faint)] transition-colors"
+              className="flex-1 px-3 py-[7px] rounded-[6px] border border-[var(--lito-border)] bg-[var(--cms-input-bg)] font-body text-xs text-[var(--text-primary)] outline-none focus:border-[var(--lito-teal-fg)] placeholder:text-[var(--text-muted)] transition-colors"
             />
             <button
               type="button"
@@ -286,7 +286,7 @@ export function ImageUploader({
               Use
             </button>
           </div>
-          <p className="font-body text-[10px] text-[var(--text-faint)]">
+          <p className="font-body text-[10px] text-[var(--text-muted)]">
             Paste a publicly accessible image URL (https://…)
           </p>
         </div>
@@ -295,8 +295,8 @@ export function ImageUploader({
       {/* ── Empty URL hint (upload mode, no value) ─────────────────────────── */}
       {mode === 'upload' && !value && (
         <div className="flex items-center gap-1.5">
-          <ImageIcon className="w-3.5 h-3.5 text-[var(--text-faint)]" />
-          <span className="font-body text-xs text-[var(--text-faint)]">
+          <ImageIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+          <span className="font-body text-xs text-[var(--text-muted)]">
             Switch to URL tab to paste an external image link
           </span>
         </div>

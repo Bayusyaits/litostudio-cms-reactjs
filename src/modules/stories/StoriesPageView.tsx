@@ -211,7 +211,7 @@ export function StoriesPageView({
                           <div className="w-[54px] h-[38px] rounded-[3px] bg-[var(--lito-cream-alt)] shrink-0" />
                         )}
                         <div>
-                          <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">{getTitle(story)}</div>
+                          <div className="font-body text-[13px] font-medium text-[var(--text-muted)]">{getTitle(story)}</div>
                           <div className="font-body text-[11px] text-[var(--text-muted)]">{story.slug}</div>
                         </div>
                       </div>

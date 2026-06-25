@@ -181,7 +181,7 @@ export function PagesPageView({
                                 <span className="text-[var(--text-muted)] font-mono text-[11px]">└ </span>
                               </span>
                             )}
-                            <span className="font-body text-[13px] font-medium text-[var(--text-primary)]">
+                            <span className="font-body text-[13px] font-medium text-[var(--text-muted)]">
                               {page.title ?? page.slug}
                             </span>
                             {page.parent_id == null && (

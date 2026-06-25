@@ -17,6 +17,8 @@ export type PatternCategory =
   | 'contact'
   | 'commerce'
   | 'photography'
+  | 'fashion'
+  | 'beauty'
 
 export interface BlockPattern {
   id:          string
@@ -282,6 +284,188 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     ],
   },
 
+  // ── Fashion patterns ──────────────────────────────────────────────────────
+  {
+    id:          'fashion-home-hero',
+    name:        'Fashion Home Hero',
+    description: 'Full-bleed editorial hero with campaign banner and marquee strip.',
+    category:    'fashion',
+    preview:     '🖤',
+    blocks: [
+      {
+        type: 'page_hero',
+        data: {
+          eyebrow:  'New Season',
+          title:    'Crafted for the Modern Wardrobe',
+          desc:     'Discover the collection.',
+          imgSrc:   '',
+          imgAlt:   'Campaign hero image',
+          ctaLabel: 'Shop Now',
+          ctaHref:  '/collections',
+        },
+        styles: { paddingTop: 0, paddingBottom: 0 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+      {
+        type: 'marquee',
+        data: {
+          items: ['New Arrivals', 'Free Shipping on Orders Above 500k', 'Exclusive Members', 'Sustainable Fashion'],
+        },
+        styles: { paddingTop: 0, paddingBottom: 0 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+      {
+        type: 'new_arrival',
+        data: {
+          title:         'New Arrivals',
+          catalogueText: 'View All',
+          catalogueLink: '/collections',
+          items: [],
+        },
+        styles: { paddingTop: 80, paddingBottom: 80 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+    ],
+  },
+  {
+    id:          'fashion-about',
+    name:        'Fashion About Page',
+    description: 'Brand story, philosophy pillars, and contact CTA for an about page.',
+    category:    'fashion',
+    preview:     '✦',
+    blocks: [
+      {
+        type: 'page_hero',
+        data: {
+          eyebrow:  'Our Story',
+          title:    'Crafted with Purpose',
+          desc:     '',
+          imgSrc:   '',
+          imgAlt:   'Brand story image',
+          ctaLabel: '',
+          ctaHref:  '',
+        },
+        styles: { paddingTop: 0, paddingBottom: 0 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+      {
+        type: 'brand_story',
+        data: {
+          eyebrow:     'Who We Are',
+          heading:     'Style rooted in intention.',
+          description: 'Founded on the belief that fashion should be both beautiful and responsible, we curate pieces that stand the test of time.',
+          image:       '',
+          imgAlt:      'Brand image',
+          ctaText:     'Shop Collection',
+          ctaUrl:      '/collections',
+        },
+        styles: { paddingTop: 80, paddingBottom: 80 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+      {
+        type: 'philosophy',
+        data: {
+          heading: 'Our Values',
+          items: [
+            { number: '01', title: 'Quality', desc: 'Every piece is made to last, not just to trend.' },
+            { number: '02', title: 'Sustainability', desc: 'We source responsibly and reduce waste at every step.' },
+            { number: '03', title: 'Inclusivity', desc: 'Style has no size — our range is made for everyone.' },
+          ],
+        },
+        styles: { paddingTop: 60, paddingBottom: 80 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+      {
+        type: 'contact_cta',
+        data: {
+          eyebrow:  'Get In Touch',
+          title:    "Let's Work Together",
+          desc:     'For wholesale, press, or collaborations — reach out anytime.',
+          email:    '',
+          ctaText:  'Send an Email',
+          ctaLink:  'mailto:hello@example.com',
+          homeText: 'Back to Home',
+          homeLink: '/',
+        },
+        styles: { paddingTop: 0, paddingBottom: 0 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+    ],
+  },
+
+  // ── Beauty patterns ────────────────────────────────────────────────────────
+  {
+    id:          'beauty-home',
+    name:        'Beauty Home Page',
+    description: 'Founder quote, featured products, newsletter, and a booking CTA for beauty brands.',
+    category:    'beauty',
+    preview:     '🌸',
+    blocks: [
+      {
+        type: 'hero',
+        data: {
+          title:    'Expert Beauty & Wellness Treatments',
+          subtitle: 'Experience the art of self-care with our curated beauty rituals.',
+          ctaText:  'Book Treatment',
+          ctaUrl:   '/contact',
+          align:    'center',
+          backgroundOverlay: 45,
+        },
+        styles: { paddingTop: 0, paddingBottom: 0 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+      {
+        type: 'marquee',
+        data: {
+          items: ['Facial Treatments', 'Body Sculpting', 'Skin Care', 'Wellness Rituals', 'Luxury Spa'],
+        },
+        styles: { paddingTop: 0, paddingBottom: 0 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+      {
+        type: 'services',
+        data: {
+          items: [
+            { title: 'Signature Facial',  description: 'Deep cleansing + hydration ritual for radiant skin.',          icon: '✨' },
+            { title: 'Body Sculpting',    description: 'Non-invasive contouring treatment for a defined silhouette.',  icon: '💆' },
+            { title: 'Brow & Lash',       description: 'Precision shaping and tinting for defined, expressive eyes.',  icon: '👁️' },
+          ],
+          columns: 3,
+        },
+        styles: { paddingTop: 60, paddingBottom: 60 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+      {
+        type: 'testimonials',
+        data: {
+          heading: 'What Our Clients Say',
+          layout:  'grid',
+          items: [
+            { quote: 'My skin has never felt this good. The signature facial is an absolute must.', name: 'Anisa K.',   rating: 5 },
+            { quote: 'The team is incredibly skilled. I walk out feeling like a new person every time.', name: 'Rina M.', rating: 5 },
+          ],
+        },
+        styles: { paddingTop: 60, paddingBottom: 60 },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+      {
+        type: 'contact_form',
+        data: {
+          heading:    'Book a Treatment',
+          submitText: 'Book Now',
+          fields: [
+            { name: 'name',    label: 'Full Name', type: 'text',     required: true },
+            { name: 'email',   label: 'Email',     type: 'email',    required: true },
+            { name: 'service', label: 'Treatment', type: 'text',     required: false },
+            { name: 'message', label: 'Message',   type: 'textarea', required: false },
+          ],
+        },
+        styles: { paddingTop: 60, paddingBottom: 80, maxWidth: 'md' },
+        visibility: { desktop: true, tablet: true, mobile: true },
+      },
+    ],
+  },
+
   // ── Photography packages ───────────────────────────────────────────────────
   {
     id:          'photography-packages',
@@ -336,4 +520,6 @@ export const PATTERN_CATEGORIES: Array<{ id: PatternCategory; label: string; emo
   { id: 'contact',      label: 'Contact',      emoji: '✉️' },
   { id: 'commerce',     label: 'Commerce',     emoji: '🛍️' },
   { id: 'photography',  label: 'Photography',  emoji: '📷' },
+  { id: 'fashion',      label: 'Fashion',      emoji: '🖤' },
+  { id: 'beauty',       label: 'Beauty',       emoji: '🌸' },
 ]

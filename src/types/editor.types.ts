@@ -54,8 +54,21 @@ export type BlockType =
   | 'promo_banners'        // Fashion: dual promo banner blocks
   | 'about_cta'            // Fashion: about page CTA section
   | 'product_carousel'     // Fashion: product carousel / swiper
+  | 'promo_banners'        // Fashion: dual promo banner blocks (DB section type)
   // ── Beauty template-specific blocks ──────────────────────────────────────
   | 'campaigns_grid'       // Beauty: campaign promotions grid
+  | 'collection_banner'    // Beauty: collection banner hero
+  | 'product_benefits'     // Beauty: product benefits grid
+  | 'product_categories'   // Beauty: product categories grid
+  | 'founder_quote'        // Beauty: founder/brand quote
+  | 'blog_highlight'       // Beauty: highlighted blog posts
+  | 'featured_products'    // Beauty: featured products grid
+  // ── Cross-template CMS section types ──────────────────────────────────────
+  | 'page_hero'            // Fashion/generic: full-width inner-page hero
+  | 'contact_cards'        // Fashion: address/phone/email cards strip
+  | 'contact_cta'          // Fashion: closing CTA strip on contact/about
+  | 'contact'              // All templates: contact form + info section
+  | 'rich_text'            // All templates: standalone rich text block
 
 // ── Rich text metadata ────────────────────────────────────────────────────────
 //
@@ -474,6 +487,52 @@ export interface ProductCarouselBlockData {
   categorySlug?: string
 }
 
+// ── Cross-template CMS section data ──────────────────────────────────────────
+
+export interface PageHeroBlockData {
+  eyebrow?:    string
+  title?:      string
+  desc?:       string
+  description?: string
+  imgSrc?:     string
+  imgAlt?:     string
+  alt?:        string
+  backgroundImage?: string
+  ctaLabel?:   string
+  ctaHref?:    string
+  ctaText?:    string
+  ctaUrl?:     string
+}
+
+export interface ContactCardsBlockData {
+  heading?: string
+  items?: Array<{ icon?: string; label: string; value: string }>
+}
+
+export interface ContactCTABlockData {
+  eyebrow?:    string
+  title?:      string
+  desc?:       string
+  description?: string
+  email?:      string
+  ctaText?:    string
+  ctaLink?:    string
+  ctaUrl?:     string
+  homeText?:   string
+  homeLink?:   string
+}
+
+export interface ContactSectionBlockData {
+  heading?:     string
+  description?: string
+  submitText?:  string
+  buttonText?:  string
+}
+
+export interface RichTextSectionBlockData {
+  html?: string
+}
+
 // ── Union ─────────────────────────────────────────────────────────────────────
 
 export type BlockData =
@@ -493,6 +552,9 @@ export type BlockData =
   | CampaignBannerBlockData | PhilosophyBlockData | TimelineBlockData
   | CollaborationsBlockData | SocialGridBlockData | MarqueeBlockData
   | PromoBannersBlockData | AboutCTABlockData | ProductCarouselBlockData
+  // Cross-template CMS section types
+  | PageHeroBlockData | ContactCardsBlockData | ContactCTABlockData
+  | ContactSectionBlockData | RichTextSectionBlockData
 
 // ── Block styles ──────────────────────────────────────────────────────────────
 

@@ -95,7 +95,7 @@ export function AppHeader() {
               <span className="text-xs text-[var(--lito-border)]">/</span>
             </>
           )}
-          <span className="font-body text-[13px] font-medium text-[var(--text-primary)] truncate">
+          <span className="font-body text-[13px] font-medium text-[var(--text-muted)] truncate">
             {pageLabel}
           </span>
         </div>

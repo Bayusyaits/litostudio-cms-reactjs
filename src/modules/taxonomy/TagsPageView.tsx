@@ -5,10 +5,11 @@ import { Hash, Trash2, Plus } from 'lucide-react'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { SearchInput } from '@/components/molecules/SearchInput'
 import { EmptyState } from '@/components/molecules/EmptyState'
+import { FIELD_LIMITS } from '@/lib/fieldLimits'
 import type { Tag } from '@/services/taxonomy.service'
 
 const tagSchema = z.object({
-  name: z.string().min(1, 'Tag name is required').max(100),
+  name: z.string().min(1, 'Tag name is required').max(FIELD_LIMITS.TAG_NAME, `Max ${FIELD_LIMITS.TAG_NAME} characters`),
 })
 type TagForm = z.infer<typeof tagSchema>
 
@@ -25,10 +26,12 @@ interface Props {
 }
 
 export function TagsPageView({ tags, total, isLoading, search, onSearch, onCreate, creating, createError, onDelete }: Props) {
-  const { register, handleSubmit, reset, formState: { errors, isValid } } = useForm<TagForm>({
+  const { register, handleSubmit, reset, watch, formState: { errors, isValid } } = useForm<TagForm>({
     resolver: zodResolver(tagSchema),
     mode: 'onChange',
   })
+
+  const nameVal = watch('name') ?? ''
 
   function handleAdd(values: TagForm) {
     onCreate(values.name)
@@ -47,14 +50,23 @@ export function TagsPageView({ tags, total, isLoading, search, onSearch, onCreat
       {/* Add tag */}
       <div className="cms-card px-6 py-5 mb-6">
         <h2 className="font-body text-[13px] font-medium mb-3 text-[var(--text-primary)]">Add tag</h2>
-        <form onSubmit={handleSubmit(handleAdd)} noValidate className="flex gap-2">
-          <input
-            {...register('name')}
-            className="cms-input h-[34px] flex-1 max-w-[320px]"
-            placeholder="Tag name"
-            aria-invalid={!!errors.name}
-          />
-          <button type="submit" disabled={creating || !isValid} className="cms-btn cms-btn-primary cms-btn-sm">
+        <form onSubmit={handleSubmit(handleAdd)} noValidate className="flex gap-2 items-start">
+          <div className="flex-1 max-w-[320px]">
+            <div className="flex items-center justify-between mb-1">
+              <span />
+              <span className={`font-body text-[11px] tabular-nums ${nameVal.length >= FIELD_LIMITS.TAG_NAME ? 'text-[var(--s-danger)]' : nameVal.length >= Math.floor(FIELD_LIMITS.TAG_NAME * 0.9) ? 'text-[var(--lito-gold-deep)]' : 'text-[var(--text-faint)]'}`}>
+                {nameVal.length}/{FIELD_LIMITS.TAG_NAME}
+              </span>
+            </div>
+            <input
+              {...register('name')}
+              maxLength={FIELD_LIMITS.TAG_NAME}
+              className="cms-input h-[34px] w-full"
+              placeholder="Tag name"
+              aria-invalid={!!errors.name}
+            />
+          </div>
+          <button type="submit" disabled={creating || !isValid} className="cms-btn cms-btn-primary cms-btn-sm mt-[22px]">
             <Plus size={13} /> {creating ? 'Adding…' : 'Add'}
           </button>
         </form>

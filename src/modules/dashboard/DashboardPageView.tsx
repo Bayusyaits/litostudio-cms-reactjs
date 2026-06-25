@@ -88,7 +88,7 @@ function QuickActionCard({ icon: Icon, iconBg, iconColor, title, desc, to }: {
         >
           <Icon size={16} style={{ color: iconColor }} />
         </div>
-        <div className="font-body text-[13px] font-medium text-[var(--text-primary)]">{title}</div>
+        <div className="font-body text-[13px] font-medium text-[var(--text-muted)]">{title}</div>
         <div className="font-body text-[11px] text-[var(--text-muted)] mt-0.5">{desc}</div>
       </div>
     </Link>
@@ -162,7 +162,7 @@ export function DashboardPageView({ stats, recent, loading, org: _org, site: _si
         {/* Recent stories */}
         <div className="cms-card overflow-hidden">
           <div className="flex items-center justify-between px-[18px] py-3.5 border-b border-[var(--lito-border)]">
-            <h3 className="font-body text-[13px] font-medium text-[var(--text-primary)]">Recent Stories</h3>
+            <h3 className="font-body text-[13px] font-medium text-[var(--text-muted)]">Recent Stories</h3>
             <Link to="/stories" className="flex items-center gap-1 text-[11px] text-[var(--text-muted)] no-underline">
               View all <ArrowRight size={11} />
             </Link>
@@ -200,7 +200,7 @@ export function DashboardPageView({ stats, recent, loading, org: _org, site: _si
         {/* Activity feed */}
         <div className="cms-card overflow-hidden">
           <div className="px-[18px] py-3.5 border-b border-[var(--lito-border)]">
-            <h3 className="font-body text-[13px] font-medium text-[var(--text-primary)]">Recent Activity</h3>
+            <h3 className="font-body text-[13px] font-medium text-[var(--text-muted)]">Recent Activity</h3>
           </div>
           <div className="py-2">
             {loading ? (

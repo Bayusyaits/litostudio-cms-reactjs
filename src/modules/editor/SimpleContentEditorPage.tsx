@@ -37,6 +37,7 @@ import { SeoCard }                                from '@/components/molecules/S
 import { PublishCard }                            from '@/components/molecules/PublishCard'
 import { TagInput }                               from '@/components/molecules/TagInput'
 import { FormField, TextAreaField }               from '@/components/molecules/FormField'
+import { FIELD_LIMITS }                           from '@/lib/fieldLimits'
 import { DashboardSkeleton }                      from '@/components/atoms/Skeleton'
 import { Switch }                                 from '@/components/atoms/Switch'
 
@@ -269,9 +270,9 @@ function renderModuleExtras(
       return (
         <div className="cms-card p-4 space-y-3">
           <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Story Details</h3>
-          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Wedding" />
-          <FormField label="Location" value={extras.location as string ?? ''} onChange={(e) => setExtra('location', e.target.value)} placeholder="e.g. Bali" />
-          <FormField label="Region"   value={extras.region   as string ?? ''} onChange={(e) => setExtra('region',   e.target.value)} placeholder="e.g. Ubud" />
+          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Wedding"          maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
+          <FormField label="Location" value={extras.location as string ?? ''} onChange={(e) => setExtra('location', e.target.value)} placeholder="e.g. Bali"             maxLength={FIELD_LIMITS.LOCATION} />
+          <FormField label="Region"   value={extras.region   as string ?? ''} onChange={(e) => setExtra('region',   e.target.value)} placeholder="e.g. Ubud"             maxLength={FIELD_LIMITS.LOCATION} />
           <div className="flex items-center justify-between">
             <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
             <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
@@ -282,7 +283,7 @@ function renderModuleExtras(
       return (
         <div className="cms-card p-4 space-y-3">
           <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Post Details</h3>
-          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Behind the scenes" />
+          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Behind the scenes" maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
           <div className="flex items-center justify-between">
             <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
             <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
@@ -293,12 +294,12 @@ function renderModuleExtras(
       return (
         <div className="cms-card p-4 space-y-3">
           <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Service Details</h3>
-          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Wedding" />
+          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Wedding"          maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
           <div className="grid grid-cols-2 gap-2">
             <FormField label="Price"    type="number" value={String(extras.price    ?? '')} onChange={(e) => setExtra('price',    e.target.value)} placeholder="0" />
-            <FormField label="Currency" value={String(extras.currency ?? 'IDR')}            onChange={(e) => setExtra('currency', e.target.value)} placeholder="IDR" />
+            <FormField label="Currency" value={String(extras.currency ?? 'IDR')}            onChange={(e) => setExtra('currency', e.target.value)} placeholder="IDR"       maxLength={FIELD_LIMITS.CURRENCY} />
           </div>
-          <FormField label="Duration" value={extras.duration as string ?? ''} onChange={(e) => setExtra('duration', e.target.value)} placeholder="e.g. 2 hours" />
+          <FormField label="Duration" value={extras.duration as string ?? ''} onChange={(e) => setExtra('duration', e.target.value)} placeholder="e.g. 2 hours"            maxLength={FIELD_LIMITS.DURATION} />
           <div className="flex items-center justify-between">
             <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
             <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
@@ -309,10 +310,10 @@ function renderModuleExtras(
       return (
         <div className="cms-card p-4 space-y-3">
           <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Location Details</h3>
-          <FormField label="Island"   value={extras.island   as string ?? ''} onChange={(e) => setExtra('island',   e.target.value)} placeholder="e.g. Bali" />
-          <FormField label="Region"   value={extras.region   as string ?? ''} onChange={(e) => setExtra('region',   e.target.value)} placeholder="e.g. Ubud" />
-          <FormField label="Province" value={extras.province as string ?? ''} onChange={(e) => setExtra('province', e.target.value)} placeholder="e.g. Bali" />
-          <FormField label="Country"  value={extras.country  as string ?? ''} onChange={(e) => setExtra('country',  e.target.value)} placeholder="Indonesia" />
+          <FormField label="Island"   value={extras.island   as string ?? ''} onChange={(e) => setExtra('island',   e.target.value)} placeholder="e.g. Bali"      maxLength={FIELD_LIMITS.LOCATION} />
+          <FormField label="Region"   value={extras.region   as string ?? ''} onChange={(e) => setExtra('region',   e.target.value)} placeholder="e.g. Ubud"      maxLength={FIELD_LIMITS.LOCATION} />
+          <FormField label="Province" value={extras.province as string ?? ''} onChange={(e) => setExtra('province', e.target.value)} placeholder="e.g. Bali"      maxLength={FIELD_LIMITS.LOCATION} />
+          <FormField label="Country"  value={extras.country  as string ?? ''} onChange={(e) => setExtra('country',  e.target.value)} placeholder="Indonesia"      maxLength={FIELD_LIMITS.LOCATION} />
           <div className="grid grid-cols-2 gap-2">
             <FormField label="Lat" type="number" value={String(extras.lat ?? '')} onChange={(e) => setExtra('lat', e.target.value)} placeholder="-8.409" />
             <FormField label="Lng" type="number" value={String(extras.lng ?? '')} onChange={(e) => setExtra('lng', e.target.value)} placeholder="115.188" />
@@ -515,7 +516,7 @@ function renderModuleExtras(
       return (
         <div className="cms-card p-4 space-y-3">
           <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Campaign Details</h3>
-          <FormField label="CTA Label"  value={extras.ctaLabel  as string ?? ''} onChange={(e) => setExtra('ctaLabel',  e.target.value)} placeholder="Book Now" />
+          <FormField label="CTA Label"  value={extras.ctaLabel  as string ?? ''} onChange={(e) => setExtra('ctaLabel',  e.target.value)} placeholder="Book Now" maxLength={FIELD_LIMITS.CTA_LABEL} />
           <FormField label="CTA URL"    value={extras.ctaUrl    as string ?? ''} onChange={(e) => setExtra('ctaUrl',    e.target.value)} placeholder="https://…" />
           <FormField label="Start Date" type="date" value={extras.startDate as string ?? ''} onChange={(e) => setExtra('startDate', e.target.value)} />
           <FormField label="End Date"   type="date" value={extras.endDate   as string ?? ''} onChange={(e) => setExtra('endDate',   e.target.value)} />
@@ -767,17 +768,24 @@ export default function SimpleContentEditorPage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={`${config.label} title…`}
+          maxLength={FIELD_LIMITS.TITLE}
         />
 
         {isNew && (
           <div className="space-y-1.5">
-            <label className="cms-label">Slug</label>
+            <div className="flex items-center justify-between">
+              <label className="cms-label">Slug</label>
+              <span className="font-body text-[11px] text-[var(--text-faint)]">
+                {slug.length}/{FIELD_LIMITS.SLUG}
+              </span>
+            </div>
             <div className="flex gap-2 items-center">
               <input
                 type="text"
                 value={slug}
                 onChange={(e) => { setSlug(e.target.value); setSlugLocked(true) }}
                 placeholder="url-friendly-slug"
+                maxLength={FIELD_LIMITS.SLUG}
                 className="cms-input flex-1 font-mono text-sm"
               />
               {slugLocked && (
@@ -800,6 +808,7 @@ export default function SimpleContentEditorPage() {
           onChange={(e) => setExcerpt(e.target.value)}
           placeholder="Short description shown in listings…"
           hint="Used in list views and as meta description fallback."
+          maxLength={FIELD_LIMITS.EXCERPT}
         />
       </div>
 
