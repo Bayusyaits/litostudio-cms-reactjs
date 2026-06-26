@@ -410,7 +410,11 @@ function ContentPanel({ block }: { block: Block }) {
   // ── faq ──────────────────────────────────────────────────────────────────
   if (block.type === 'faq') return (
     <div className="px-[14px] py-1">
-      <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Frequently Asked Questions" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+      <FieldInput label="Section heading" value={(d['heading'] ?? d['title']) as string ?? ''} placeholder="Frequently Asked Questions" onChange={v => update({ heading: v, title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+      <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="FAQ" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mt-1">
+        FAQ items are managed via Site Settings → FAQs (shared across pages).
+      </p>
     </div>
   )
 
@@ -480,19 +484,25 @@ function ContentPanel({ block }: { block: Block }) {
   // ── contact_form ─────────────────────────────────────────────────────────
   if (block.type === 'contact_form') return (
     <div className="px-[14px] py-1">
-      <FieldInput label="Heading" value={d['heading'] as string} placeholder="Get in Touch" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <FieldTextarea label="Description" value={d['description'] as string} placeholder="Optional description" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
-      <FieldInput label="Submit button text" value={d['submitText'] as string} placeholder="Send Message" onChange={v => update({ submitText: v })} maxLength={FIELD_LIMITS.BUTTON_TEXT} />
+      <FieldInput label="Heading" value={d['heading'] as string ?? ''} placeholder="Get in Touch" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+      <FieldTextarea label="Description" value={d['description'] as string ?? ''} placeholder="Optional description" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
+      <FieldInput label="Submit button text" value={d['submitText'] as string ?? ''} placeholder="Send Message" onChange={v => update({ submitText: v })} maxLength={FIELD_LIMITS.BUTTON_TEXT} />
+      <div className="my-2 border-t border-[var(--lito-border)]" />
+      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">Contact info override (optional)</p>
+      <FieldInput label="Email" value={d['email'] as string ?? ''} placeholder="hello@example.com" onChange={v => update({ email: v })} maxLength={120} />
+      <FieldInput label="Phone" value={d['phone'] as string ?? ''} placeholder="+62 21 1234 5678" onChange={v => update({ phone: v })} maxLength={40} />
+      <FieldInput label="Address" value={d['address'] as string ?? ''} placeholder="Jl. Sudirman No. 88, Jakarta" onChange={v => update({ address: v })} maxLength={FIELD_LIMITS.LOCATION} />
     </div>
   )
 
   // ── newsletter ───────────────────────────────────────────────────────────
   if (block.type === 'newsletter') return (
     <div className="px-[14px] py-1">
-      <FieldInput label="Heading" value={d['heading'] as string} placeholder="Stay in the Loop" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <FieldTextarea label="Description" value={d['description'] as string} placeholder="Subscribe for updates" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
-      <FieldInput label="Input placeholder" value={d['placeholder'] as string} placeholder="Enter your email" onChange={v => update({ placeholder: v })} maxLength={80} />
-      <FieldInput label="Button text" value={d['buttonText'] as string} placeholder="Subscribe" onChange={v => update({ buttonText: v })} maxLength={FIELD_LIMITS.BUTTON_TEXT} />
+      <FieldInput label="Eyebrow label" value={d['eyebrow'] as string ?? ''} placeholder="The Letter" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+      <FieldInput label="Heading" value={d['heading'] as string ?? ''} placeholder="Stay in the Loop" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+      <FieldTextarea label="Description" value={d['description'] as string ?? ''} placeholder="Subscribe for updates" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
+      <FieldInput label="Input placeholder" value={d['placeholder'] as string ?? ''} placeholder="Enter your email" onChange={v => update({ placeholder: v })} maxLength={80} />
+      <FieldInput label="Button text" value={d['buttonText'] as string ?? ''} placeholder="Subscribe" onChange={v => update({ buttonText: v })} maxLength={FIELD_LIMITS.BUTTON_TEXT} />
     </div>
   )
 
@@ -584,6 +594,8 @@ function ContentPanel({ block }: { block: Block }) {
         />
       </div>
       <FieldInput label="Image alt text" value={(d['imgAlt'] ?? d['alt']) as string ?? ''} placeholder="Hero image" onChange={v => update({ imgAlt: v, alt: v })} maxLength={FIELD_LIMITS.IMAGE_ALT} />
+      <FieldInput label="CTA label" value={(d['ctaLabel'] ?? d['ctaText']) as string ?? ''} placeholder="Explore" onChange={v => update({ ctaLabel: v, ctaText: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+      <FieldInput label="CTA URL" value={(d['ctaHref'] ?? d['ctaUrl']) as string ?? ''} placeholder="/collections" onChange={v => update({ ctaHref: v, ctaUrl: v })} />
     </div>
   )
 
@@ -603,25 +615,162 @@ function ContentPanel({ block }: { block: Block }) {
       <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="Stay Connected" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
       <FieldInput label="Title" value={d['title'] as string ?? ''} placeholder="Follow Our Journey" onChange={v => update({ title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
       <FieldTextarea label="Description" value={(d['desc'] ?? d['description']) as string ?? ''} placeholder="Supporting text" onChange={v => update({ desc: v, description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
-      <FieldInput label="Primary CTA text" value={d['ctaText'] as string ?? ''} placeholder="Shop Now" onChange={v => update({ ctaText: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
-      <FieldInput label="Primary CTA URL" value={(d['ctaLink'] ?? d['ctaUrl']) as string ?? ''} placeholder="/catalogue" onChange={v => update({ ctaLink: v, ctaUrl: v })} />
+      <FieldInput label="Contact email" value={d['email'] as string ?? ''} placeholder="hello@example.com" onChange={v => update({ email: v })} />
+      <FieldInput label="Primary CTA text" value={d['ctaText'] as string ?? ''} placeholder="Send an Email" onChange={v => update({ ctaText: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+      <FieldInput label="Primary CTA URL" value={(d['ctaLink'] ?? d['ctaUrl']) as string ?? ''} placeholder="mailto:hello@example.com" onChange={v => update({ ctaLink: v, ctaUrl: v })} />
+      <div className="my-2 border-t border-[var(--lito-border)]" />
+      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">WhatsApp (shown as primary button when set)</p>
+      <FieldInput label="WhatsApp URL" value={d['whatsappUrl'] as string ?? ''} placeholder="https://wa.me/628123456789" onChange={v => update({ whatsappUrl: v })} />
+      <FieldInput label="WhatsApp button text" value={d['whatsappText'] as string ?? ''} placeholder="Chat on WhatsApp" onChange={v => update({ whatsappText: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+      <div className="my-2 border-t border-[var(--lito-border)]" />
       <FieldInput label="Secondary CTA text" value={d['homeText'] as string ?? ''} placeholder="Back to Home" onChange={v => update({ homeText: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
       <FieldInput label="Secondary CTA URL" value={d['homeLink'] as string ?? ''} placeholder="/" onChange={v => update({ homeLink: v })} />
     </div>
   )
 
-  // ── contact (generic contact form + info section, all templates) ──────────
-  if (block.type === 'contact') return (
+  // ── stores (fashion: multi-location store cards) ──────────────────────────
+  if (block.type === 'stores') {
+    const storeItems: Array<Record<string, string>> = Array.isArray(d['items']) ? (d['items'] as Array<Record<string, string>>) : []
+    const updateStore = (idx: number, field: string, val: string) => {
+      const next = storeItems.map((item, i) => i === idx ? { ...item, [field]: val } : item)
+      update({ items: next })
+    }
+    const addStore = () => update({ items: [...storeItems, { name: 'New Store', address: '', phone: '', hours: '', mapImage: '', mapUrl: '' }] })
+    const removeStore = (idx: number) => update({ items: storeItems.filter((_, i) => i !== idx) })
+    return (
+      <div className="px-[14px] py-1">
+        <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="Our stores" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+        <FieldInput label="Heading" value={d['heading'] as string ?? ''} placeholder="Find us near you" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+        <div className="my-2 border-t border-[var(--lito-border)]" />
+        <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">Store locations ({storeItems.length})</p>
+        {storeItems.map((store, idx) => (
+          <div key={idx} className="mb-3 p-2 border border-[var(--lito-border)] rounded">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-body text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide">Store {idx + 1}</span>
+              <button
+                type="button"
+                onClick={() => removeStore(idx)}
+                className="font-body text-[10px] text-red-400 hover:text-red-600 bg-transparent border-none cursor-pointer p-0"
+              >Remove</button>
+            </div>
+            <FieldInput label="Store name" value={store['name'] ?? ''} placeholder="Flagship — Jakarta" onChange={v => updateStore(idx, 'name', v)} maxLength={80} />
+            <FieldInput label="Address" value={store['address'] ?? ''} placeholder="Jl. Sudirman Kav. 1, Jakarta" onChange={v => updateStore(idx, 'address', v)} maxLength={200} />
+            <FieldInput label="Phone" value={store['phone'] ?? ''} placeholder="+62 21 1234 5678" onChange={v => updateStore(idx, 'phone', v)} maxLength={40} />
+            <FieldInput label="Hours" value={store['hours'] ?? ''} placeholder="Mon–Sat 10:00–21:00" onChange={v => updateStore(idx, 'hours', v)} maxLength={120} />
+            <FieldInput label="Map image URL" value={store['mapImage'] ?? ''} placeholder="https://..." onChange={v => updateStore(idx, 'mapImage', v)} />
+            <FieldInput label="Google Maps URL" value={store['mapUrl'] ?? ''} placeholder="https://maps.google.com/..." onChange={v => updateStore(idx, 'mapUrl', v)} />
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addStore}
+          className="w-full font-body text-[11px] font-semibold text-[var(--text-muted)] border border-dashed border-[var(--lito-border)] rounded py-2 mt-1 bg-transparent cursor-pointer hover:text-[var(--lito-ink)] hover:border-[var(--lito-ink)] transition-colors"
+        >+ Add store</button>
+      </div>
+    )
+  }
+
+  // ── contact / contact_form (generic contact form + info section, all templates) ──
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (block.type === 'contact' || (block.type as any) === 'contact_form') return (
     <div className="px-[14px] py-1">
       <FieldInput label="Heading" value={d['heading'] as string ?? ''} placeholder="Get in Touch" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
       <FieldTextarea label="Description" value={d['description'] as string ?? ''} placeholder="Optional description" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
       <FieldInput label="Submit button text" value={(d['submitText'] ?? d['buttonText']) as string ?? ''} placeholder="Send Message" onChange={v => update({ submitText: v, buttonText: v })} maxLength={FIELD_LIMITS.BUTTON_TEXT} />
+      <div className="my-2 border-t border-[var(--lito-border)]" />
+      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">Contact info (overrides Site Settings)</p>
+      <FieldInput label="Email" value={d['email'] as string ?? ''} placeholder="hello@example.com" onChange={v => update({ email: v })} maxLength={120} />
+      <FieldInput label="Phone" value={d['phone'] as string ?? ''} placeholder="+62 21 1234 5678" onChange={v => update({ phone: v })} maxLength={40} />
+      <FieldInput label="Studio address" value={d['address'] as string ?? ''} placeholder="Jl. Braga No. 42, Bandung" onChange={v => update({ address: v })} maxLength={FIELD_LIMITS.LOCATION} />
+      <FieldTextarea label="Opening hours" value={d['businessHours'] as string ?? ''} placeholder={"Mon–Fri  09:00–18:00\nSat  10:00–16:00\nSun  Closed"} onChange={v => update({ businessHours: v })} rows={3} maxLength={200} />
+      <div className="mb-3">
+        <Label>Map / location image</Label>
+        <ImageUploader
+          value={d['mapImage'] as string | undefined}
+          folder="blocks/contact"
+          onChange={url => update({ mapImage: url ?? '' })}
+        />
+      </div>
     </div>
   )
 
-  // ── about / brand_story (generic about section, all templates) ───────────
-  if (block.type === 'about' || block.type === 'brand_story') return (
+  // ── brand_story (Fashion: About Us — image, copy, value tags, since year) ──
+  if (block.type === 'brand_story') return (
     <div className="px-[14px] py-1">
+      {/* Copy */}
+      <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="Who We Are" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+      <FieldInput label="Heading" value={(d['heading'] ?? d['title']) as string ?? ''} placeholder="Crafted for the modern wardrobe." onChange={v => update({ heading: v, title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+      <div className="mb-3">
+        <Label>Body / Description</Label>
+        <RichTextEditor
+          value={(d['description'] ?? d['subtitle']) as string ?? ''}
+          placeholder="Your brand story paragraphs (use new lines to split into multiple paragraphs)"
+          minHeight={140}
+          ariaLabel="Brand story description"
+          onChange={html => update({ description: html, subtitle: html })}
+        />
+      </div>
+      <FieldInput label="Mission label" value={d['missionLabel'] as string ?? ''} placeholder="Our Mission" onChange={v => update({ missionLabel: v })} maxLength={40} />
+
+      {/* Since year badge */}
+      <div className="my-2 border-t border-[var(--lito-border)]" />
+      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2 px-0">Since badge (shown over image)</p>
+      <FieldInput label="Year (since)" value={d['since'] as string ?? ''} placeholder="2019" onChange={v => update({ since: v })} maxLength={4} />
+      <FieldInput label="Badge label" value={d['yearsStrongLabel'] as string ?? ''} placeholder="Years Strong" onChange={v => update({ yearsStrongLabel: v })} maxLength={32} />
+
+      {/* Brand value tags */}
+      <div className="my-2 border-t border-[var(--lito-border)]" />
+      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2 px-0">Brand values (shown as tags below text)</p>
+      {((d['values'] as string[] | undefined) ?? []).map((val: string, i: number) => (
+        <div key={i} className="flex items-center gap-1 mb-1">
+          <input
+            className="flex-1 rounded border border-[var(--lito-border)] bg-transparent px-2 py-1 text-xs text-[var(--text-main)] focus:outline-none"
+            value={val}
+            placeholder={`Value ${i + 1}`}
+            maxLength={40}
+            onChange={e => {
+              const next = [...((d['values'] as string[]) ?? [])]
+              next[i] = e.target.value
+              update({ values: next })
+            }}
+          />
+          <button
+            type="button"
+            className="text-[var(--text-muted)] hover:text-red-400 text-xs px-1"
+            onClick={() => {
+              const next = ((d['values'] as string[]) ?? []).filter((_: string, j: number) => j !== i)
+              update({ values: next })
+            }}
+          >✕</button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="mt-1 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-main)] border border-dashed border-[var(--lito-border)] rounded px-2 py-1 w-full"
+        onClick={() => update({ values: [...((d['values'] as string[]) ?? []), ''] })}
+      >+ Add value</button>
+
+      {/* Image */}
+      <div className="my-2 border-t border-[var(--lito-border)]" />
+      <div className="mb-3">
+        <Label>Image</Label>
+        <ImageUploader
+          value={d['image'] as string | undefined}
+          folder="blocks/about"
+          onChange={url => update({ image: url ?? '' })}
+        />
+      </div>
+
+      {/* CTA */}
+      <FieldInput label="CTA text" value={d['ctaText'] as string ?? ''} placeholder="Learn More" onChange={v => update({ ctaText: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+      <FieldInput label="CTA URL"  value={d['ctaUrl']  as string ?? ''} placeholder="/about"      onChange={v => update({ ctaUrl: v })} />
+    </div>
+  )
+
+  // ── about (Lito: studio intro — description, stats, cities) ─────────────
+  if (block.type === 'about') return (
+    <div className="px-[14px] py-1">
+      <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="About Us" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
       <FieldInput label="Heading" value={(d['heading'] ?? d['title']) as string ?? ''} placeholder="Our Story" onChange={v => update({ heading: v, title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
       <div className="mb-3">
         <Label>Description</Label>
@@ -635,6 +784,14 @@ function ContentPanel({ block }: { block: Block }) {
       </div>
       <FieldInput label="Since (year)" value={d['since'] as string ?? ''} placeholder="2019" onChange={v => update({ since: v })} maxLength={4} />
       <FieldInput label="Cities" value={d['cities'] as string ?? ''} placeholder="Jakarta, Bali, Surabaya" onChange={v => update({ cities: v })} maxLength={FIELD_LIMITS.LOCATION} />
+      <div className="my-2 border-t border-[var(--lito-border)]" />
+      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2 px-0">Stats (optional — shown as numbered tiles)</p>
+      <FieldInput label="Stat 1 value" value={d['sessionsValue'] as string ?? ''} placeholder="500+" onChange={v => update({ sessionsValue: v })} maxLength={12} />
+      <FieldInput label="Stat 1 label" value={d['sessionsLabel'] as string ?? ''} placeholder="Sessions" onChange={v => update({ sessionsLabel: v })} maxLength={32} />
+      <FieldInput label="Stat 2 value" value={d['yearsValue'] as string ?? ''} placeholder="15+" onChange={v => update({ yearsValue: v })} maxLength={12} />
+      <FieldInput label="Stat 2 label" value={d['yearsLabel'] as string ?? ''} placeholder="Years" onChange={v => update({ yearsLabel: v })} maxLength={32} />
+      <FieldInput label="Stat 3 value" value={d['citiesCount'] as string ?? ''} placeholder="3" onChange={v => update({ citiesCount: v })} maxLength={12} />
+      <FieldInput label="Stat 3 label" value={d['citiesLabel'] as string ?? ''} placeholder="Cities" onChange={v => update({ citiesLabel: v })} maxLength={32} />
       <div className="mb-3">
         <Label>Image</Label>
         <ImageUploader
@@ -644,16 +801,18 @@ function ContentPanel({ block }: { block: Block }) {
         />
       </div>
       <FieldInput label="CTA text" value={d['ctaText'] as string ?? ''} placeholder="Learn More" onChange={v => update({ ctaText: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
-      <FieldInput label="CTA URL" value={d['ctaUrl'] as string ?? ''} placeholder="/about" onChange={v => update({ ctaUrl: v })} />
+      <FieldInput label="CTA URL"  value={d['ctaUrl']  as string ?? ''} placeholder="/about"      onChange={v => update({ ctaUrl: v })} />
     </div>
   )
 
   // ── social_grid (social feed / Instagram grid) ────────────────────────────
   if (block.type === 'social_grid') return (
     <div className="px-[14px] py-1">
-      <FieldInput label="Heading" value={d['heading'] as string ?? ''} placeholder="Follow Us" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">
-        Social links are loaded from Site Settings → Footer.
+      <FieldInput label="Heading" value={(d['heading'] ?? d['title']) as string ?? ''} placeholder="Find Us Online" onChange={v => update({ heading: v, title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+      <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="Follow the Journey" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+      <FieldInput label="Description" value={d['description'] as string ?? ''} placeholder="Stay connected with us" onChange={v => update({ description: v })} maxLength={120} />
+      <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mt-1">
+        Social platform links are loaded from Site Settings → Footer.
       </p>
     </div>
   )
@@ -689,6 +848,145 @@ function ContentPanel({ block }: { block: Block }) {
       </div>
     </div>
   )
+
+  // ── philosophy (value/belief cards — fashion template) ───────────────────
+  // items: Array<{ icon?: string; title: string; desc: string }> (up to 4 cards)
+  if (block.type === 'philosophy') {
+    type PhilItem = { icon?: string; title: string; desc: string }
+    const items: PhilItem[] = (d['items'] as PhilItem[] | undefined) ?? []
+    const updateItem = (idx: number, patch: Partial<PhilItem>) => {
+      const next = [...items]
+      next[idx] = { ...next[idx], ...patch }
+      update({ items: next })
+    }
+    const addItem    = () => update({ items: [...items, { title: '', desc: '' }] })
+    const removeItem = (idx: number) => update({ items: items.filter((_, i) => i !== idx) })
+    return (
+      <div className="px-[14px] py-1">
+        <FieldInput label="Heading" value={(d['heading'] ?? d['title']) as string ?? ''} placeholder="Our Philosophy" onChange={v => update({ heading: v, title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+        <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="What we stand for" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+        <div className="my-2 border-t border-[var(--lito-border)]" />
+        <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">Cards (max 4)</p>
+        {items.map((item, idx) => (
+          <div key={idx} className="mb-3 p-2 rounded-md border border-[var(--lito-border)] bg-[var(--cms-surface-2)]">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-body text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide">Card {idx + 1}</span>
+              <button type="button" onClick={() => removeItem(idx)} className="font-body text-[10px] text-[var(--text-muted)] hover:text-red-500 transition-colors">Remove</button>
+            </div>
+            <FieldInput label="Title" value={item.title ?? ''} placeholder="Innovation" onChange={v => updateItem(idx, { title: v })} maxLength={48} />
+            <FieldTextarea label="Description" value={item.desc ?? ''} placeholder="We push boundaries..." onChange={v => updateItem(idx, { desc: v })} rows={2} maxLength={240} />
+            <FieldInput label="Icon (emoji or name)" value={item.icon ?? ''} placeholder="⚡ or lightning" onChange={v => updateItem(idx, { icon: v })} maxLength={32} />
+          </div>
+        ))}
+        {items.length < 4 && (
+          <button type="button" onClick={addItem} className="w-full py-[6px] font-body text-[11px] text-[var(--text-muted)] border border-dashed border-[var(--lito-border)] rounded-md hover:border-[var(--lito-gold)] hover:text-[var(--text-primary)] transition-colors">
+            + Add card
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  // ── timeline (brand history entries — fashion template) ───────────────────
+  // entries: Array<{ year: string; title: string; description: string }> (up to 6)
+  if (block.type === 'timeline') {
+    type TLEntry = { year: string; title: string; description: string }
+    const entries: TLEntry[] = (d['entries'] as TLEntry[] | undefined) ?? []
+    const updateEntry = (idx: number, patch: Partial<TLEntry>) => {
+      const next = [...entries]
+      next[idx] = { ...next[idx], ...patch }
+      update({ entries: next })
+    }
+    const addEntry    = () => update({ entries: [...entries, { year: '', title: '', description: '' }] })
+    const removeEntry = (idx: number) => update({ entries: entries.filter((_, i) => i !== idx) })
+    return (
+      <div className="px-[14px] py-1">
+        <FieldInput label="Heading" value={(d['heading'] ?? d['title']) as string ?? ''} placeholder="Our Journey" onChange={v => update({ heading: v, title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+        <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="Since the beginning" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+        <div className="my-2 border-t border-[var(--lito-border)]" />
+        <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">Timeline entries (max 6)</p>
+        {entries.map((entry, idx) => (
+          <div key={idx} className="mb-3 p-2 rounded-md border border-[var(--lito-border)] bg-[var(--cms-surface-2)]">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-body text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide">Entry {idx + 1}</span>
+              <button type="button" onClick={() => removeEntry(idx)} className="font-body text-[10px] text-[var(--text-muted)] hover:text-red-500 transition-colors">Remove</button>
+            </div>
+            <FieldInput label="Year" value={entry.year ?? ''} placeholder="2019" onChange={v => updateEntry(idx, { year: v })} maxLength={8} />
+            <FieldInput label="Title" value={entry.title ?? ''} placeholder="First collection launched" onChange={v => updateEntry(idx, { title: v })} maxLength={72} />
+            <FieldTextarea label="Description" value={entry.description ?? ''} placeholder="Brief story about this milestone..." onChange={v => updateEntry(idx, { description: v })} rows={2} maxLength={240} />
+          </div>
+        ))}
+        {entries.length < 6 && (
+          <button type="button" onClick={addEntry} className="w-full py-[6px] font-body text-[11px] text-[var(--text-muted)] border border-dashed border-[var(--lito-border)] rounded-md hover:border-[var(--lito-gold)] hover:text-[var(--text-primary)] transition-colors">
+            + Add entry
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  // ── founder_quote (beauty template) ──────────────────────────────────────
+  if (block.type === 'founder_quote') return (
+    <div className="px-[14px] py-1">
+      <div className="mb-3">
+        <Label>Quote</Label>
+        <RichTextEditor
+          value={d['quote'] as string ?? ''}
+          placeholder="Good skin is built quietly — through consistency..."
+          minHeight={120}
+          ariaLabel="Founder quote"
+          onChange={html => update({ quote: html })}
+        />
+      </div>
+      <FieldInput label="Founder name" value={d['founderName'] as string ?? ''} placeholder="Sari Dewi" onChange={v => update({ founderName: v })} maxLength={72} />
+      <FieldInput label="Founder role" value={d['founderRole'] as string ?? ''} placeholder="Founder & CEO" onChange={v => update({ founderRole: v })} maxLength={72} />
+      <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="From the founder" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+      <div className="mb-3">
+        <Label>Portrait image</Label>
+        <ImageUploader
+          value={d['image'] as string | undefined}
+          folder="blocks/founder"
+          onChange={url => update({ image: url ?? '' })}
+        />
+      </div>
+    </div>
+  )
+
+  // ── product_benefits (beauty template — heading + per-card CMS items, FIX-06) ──
+  if (block.type === 'product_benefits') {
+    const benefitItems: Array<Record<string, string>> = Array.isArray(d['items']) ? (d['items'] as Array<Record<string, string>>) : []
+    const updateBenefit = (idx: number, field: string, val: string) => {
+      const next = benefitItems.map((item, i) => i === idx ? { ...item, [field]: val } : item)
+      update({ items: next })
+    }
+    const addBenefit = () => update({ items: [...benefitItems, { eyebrow: '', title: '', description: '', image: '', statValue: '', statLabel: '', ctaLabel: 'Learn more', ctaHref: '#' }] })
+    const removeBenefit = (idx: number) => update({ items: benefitItems.filter((_, i) => i !== idx) })
+    return (
+      <div className="px-[14px] py-1">
+        <FieldInput label="Section heading" value={(d['heading'] ?? d['title']) as string ?? ''} placeholder="Why it works" onChange={v => update({ heading: v, title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
+        <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="The science" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
+        <div className="my-2 border-t border-[var(--lito-border)]" />
+        <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">Benefit cards ({benefitItems.length} — leave empty to use site defaults)</p>
+        {benefitItems.map((item, idx) => (
+          <div key={idx} className="mb-3 p-2 border border-[var(--lito-border)] rounded">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-body text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide">Card {idx + 1}</span>
+              <button type="button" onClick={() => removeBenefit(idx)} className="font-body text-[10px] text-red-400 hover:text-red-600 bg-transparent border-none cursor-pointer p-0">Remove</button>
+            </div>
+            <FieldInput label="Eyebrow" value={item['eyebrow'] ?? ''} placeholder="Key ingredient" onChange={v => updateBenefit(idx, 'eyebrow', v)} maxLength={FIELD_LIMITS.CTA_LABEL} />
+            <FieldInput label="Title" value={item['title'] ?? ''} placeholder="Deep hydration" onChange={v => updateBenefit(idx, 'title', v)} maxLength={FIELD_LIMITS.HERO_TITLE} />
+            <FieldInput label="Description" value={item['description'] ?? ''} placeholder="Card body text" onChange={v => updateBenefit(idx, 'description', v)} maxLength={FIELD_LIMITS.DESCRIPTION} />
+            <FieldInput label="Stat value" value={item['statValue'] ?? ''} placeholder="98%" onChange={v => updateBenefit(idx, 'statValue', v)} maxLength={20} />
+            <FieldInput label="Stat label" value={item['statLabel'] ?? ''} placeholder="of users saw results" onChange={v => updateBenefit(idx, 'statLabel', v)} maxLength={60} />
+            <FieldInput label="CTA label" value={item['ctaLabel'] ?? ''} placeholder="Learn more" onChange={v => updateBenefit(idx, 'ctaLabel', v)} maxLength={FIELD_LIMITS.CTA_LABEL} />
+            <FieldInput label="CTA URL" value={item['ctaHref'] ?? ''} placeholder="/ingredients" onChange={v => updateBenefit(idx, 'ctaHref', v)} />
+            <FieldInput label="Card image URL" value={item['image'] ?? ''} placeholder="https://..." onChange={v => updateBenefit(idx, 'image', v)} />
+          </div>
+        ))}
+        <button type="button" onClick={addBenefit} className="w-full font-body text-[11px] font-semibold text-[var(--text-muted)] border border-dashed border-[var(--lito-border)] rounded py-2 mt-1 bg-transparent cursor-pointer hover:text-[var(--lito-ink)] hover:border-[var(--lito-ink)] transition-colors">+ Add benefit card</button>
+      </div>
+    )
+  }
 
   // ── fallback ─────────────────────────────────────────────────────────────
   return (

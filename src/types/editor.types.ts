@@ -55,6 +55,7 @@ export type BlockType =
   | 'about_cta'            // Fashion: about page CTA section
   | 'product_carousel'     // Fashion: product carousel / swiper
   | 'promo_banners'        // Fashion: dual promo banner blocks (DB section type)
+  | 'stores'               // Fashion: multi-store location cards grid (FIX-08)
   // ── Beauty template-specific blocks ──────────────────────────────────────
   | 'campaigns_grid'       // Beauty: campaign promotions grid
   | 'collection_banner'    // Beauty: collection banner hero
@@ -373,13 +374,26 @@ export interface PackagesBlockData {
 // ── Lito-specific section data ────────────────────────────────────────────────
 
 export interface AboutBlockData {
-  heading?:     string
-  description?: string
-  image?:       string
-  ctaText?:     string
-  ctaUrl?:      string
-  since?:       string
-  cities?:      string
+  heading?:          string
+  title?:            string   // alias for heading (brand_story uses both)
+  eyebrow?:          string
+  description?:      string
+  image?:            string
+  ctaText?:          string
+  ctaUrl?:           string
+  ctaVariant?:       string
+  since?:            string
+  yearsStrongLabel?: string   // label next to since year (default "Years Strong")
+  missionLabel?:     string   // bold prefix on mission paragraph (default "Our Mission")
+  values?:           string[] // brand value tags — CMS-editable list
+  cities?:           string
+  // Stats grid (lito template — 3 editable stat tiles)
+  sessionsValue?: string
+  sessionsLabel?: string
+  yearsValue?:    string
+  yearsLabel?:    string
+  citiesCount?:   string
+  citiesLabel?:   string
 }
 
 export interface CampaignBlockData {
@@ -443,7 +457,9 @@ export interface CampaignBannerBlockData {
 
 export interface PhilosophyBlockData {
   title?:   string
+  heading?: string
   eyebrow?: string
+  items?: Array<{ icon?: string; title: string; desc: string }>
 }
 
 export interface TimelineBlockData {
@@ -485,6 +501,19 @@ export interface ProductCarouselBlockData {
   title?:        string
   limit?:        number
   categorySlug?: string
+}
+
+export interface StoresBlockData {
+  eyebrow?: string
+  heading?: string
+  items?: Array<{
+    name?:     string
+    address?:  string
+    phone?:    string
+    hours?:    string
+    mapImage?: string
+    mapUrl?:   string
+  }>
 }
 
 // ── Cross-template CMS section data ──────────────────────────────────────────
@@ -552,6 +581,7 @@ export type BlockData =
   | CampaignBannerBlockData | PhilosophyBlockData | TimelineBlockData
   | CollaborationsBlockData | SocialGridBlockData | MarqueeBlockData
   | PromoBannersBlockData | AboutCTABlockData | ProductCarouselBlockData
+  | StoresBlockData
   // Cross-template CMS section types
   | PageHeroBlockData | ContactCardsBlockData | ContactCTABlockData
   | ContactSectionBlockData | RichTextSectionBlockData

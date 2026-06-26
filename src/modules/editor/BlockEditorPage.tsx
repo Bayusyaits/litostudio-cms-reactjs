@@ -120,6 +120,19 @@ function sectionToBlock(s: PageSection): Block {
     case 'contact':
       return make('contact', { heading: (p.heading as string) ?? 'Get In Touch', submitText: 'Send Message', fields: (p.fields as unknown[]) ?? [], ...p })
 
+    case 'contact_form':
+      return make('contact_form', {
+        heading:       (p.heading       as string) ?? 'Get In Touch',
+        description:   (p.description   as string) ?? '',
+        submitText:    (p.submitText     as string) ?? 'Send Message',
+        email:         (p.email         as string) ?? '',
+        phone:         (p.phone         as string) ?? '',
+        address:       (p.address       as string) ?? '',
+        businessHours: (p.businessHours as string) ?? '',
+        mapImage:      (p.mapImage      as string) ?? '',
+        ...p,
+      })
+
     case 'journal':
     case 'latest_journal':
       return make('journal', { heading: (p.heading as string) ?? 'Latest Stories', count: (p.count as number) ?? 3, ...p })
@@ -168,12 +181,18 @@ function sectionToBlock(s: PageSection): Block {
 
     case 'brand_story':
       return make('brand_story', {
-        heading:     (p.heading     as string) ?? (p.title as string) ?? '',
-        description: (p.description as string) ?? '',
-        image:       (p.image       as string) ?? '',
-        ctaText:     (p.ctaText     as string) ?? '',
-        ctaUrl:      (p.ctaUrl      as string) ?? '',
-        since:       (p.since       as string) ?? '',
+        eyebrow:          (p.eyebrow          as string)   ?? '',
+        heading:          (p.heading          as string)   ?? (p.title as string) ?? '',
+        title:            (p.title            as string)   ?? (p.heading as string) ?? '',
+        description:      (p.description      as string)   ?? '',
+        image:            (p.image            as string)   ?? '',
+        ctaText:          (p.ctaText          as string)   ?? '',
+        ctaUrl:           (p.ctaUrl           as string)   ?? '',
+        ctaVariant:       (p.ctaVariant       as string)   ?? '',
+        since:            (p.since            as string)   ?? '',
+        yearsStrongLabel: (p.yearsStrongLabel as string)   ?? '',
+        missionLabel:     (p.missionLabel     as string)   ?? '',
+        values:           (p.values           as string[]) ?? [],
         ...p,
       })
 
@@ -312,10 +331,11 @@ function sectionToBlock(s: PageSection): Block {
 
     case 'founder_quote':
       return make('founder_quote', {
-        quote:  (p.quote  as string) ?? '',
-        author: (p.author as string) ?? '',
-        role:   (p.role   as string) ?? '',
-        image:  (p.image  as string) ?? '',
+        quote:       (p.quote       as string) ?? '',
+        // canonical: founderName; accept legacy 'author' alias from older DB rows
+        founderName: (p.founderName as string) ?? (p.author as string) ?? '',
+        founderRole: (p.founderRole as string) ?? (p.role   as string) ?? '',
+        image:       (p.image       as string) ?? '',
         ...p,
       })
 
@@ -324,6 +344,15 @@ function sectionToBlock(s: PageSection): Block {
 
     case 'featured_products':
       return make('featured_products', { heading: (p.heading as string) ?? '', items: (p.items as unknown[]) ?? [], ...p })
+
+    // ── Fashion-new: Stores section (FIX-08) ─────────────────────────────
+    case 'stores':
+      return make('stores', {
+        eyebrow: (p.eyebrow as string) ?? '',
+        heading: (p.heading as string) ?? 'Find us near you',
+        items:   (p.items   as unknown[]) ?? [],
+        ...p,
+      })
 
     default:
       // Unknown section type: render as a labelled heading so it's visible
