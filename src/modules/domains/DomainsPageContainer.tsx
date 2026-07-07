@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useOrgStore } from '@/stores/org.store'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { domainsService } from '@/services/domains.service'
 import type { DomainRecord } from '@/services/domains.service'
 import { useForm } from 'react-hook-form'

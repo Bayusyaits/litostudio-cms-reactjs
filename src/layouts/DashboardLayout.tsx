@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth.store'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { useOrgStore } from '@/stores/org.store'
 import { useThemeStore } from '@/stores/theme.store'
 import { AppSidebar } from '@/components/organisms/AppSidebar'

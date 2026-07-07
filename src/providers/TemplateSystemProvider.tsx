@@ -18,7 +18,7 @@ import {
   type ReactNode,
 } from 'react'
 
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import {
   getTemplateDefinition,
   getBlockVariant,

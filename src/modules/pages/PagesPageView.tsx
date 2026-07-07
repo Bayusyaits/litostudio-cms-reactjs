@@ -5,7 +5,7 @@ import { Skeleton, StatusBadge } from '@litostudio/ui-cms'
 import type { Page, PageStatus } from '@/services/pages.service'
 import type { PageListMeta } from '@/services/pages.service'
 import { PageSectionsManager } from './PageSectionsManager'
-import { useTemplateManifest } from '@/hooks/useTemplateManifest'
+import { useTemplateManifest } from '@litostudio/ui-cms'
 
 interface Filter {
   status: PageStatus | ''

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { heroService } from '@/services/content.service'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { HeroPageView } from './HeroPageView'
 import { HeroFormModal } from './HeroFormModal'
 import type { HeroSlide, HeroStatus } from '@/types/content.types'

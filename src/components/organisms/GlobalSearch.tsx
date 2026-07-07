@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, X, Loader2, FileText, Package, FolderOpen, BookOpen, Tag, Image, Layers } from 'lucide-react'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { searchService } from '@/services/search.service'
 import type { SearchResult } from '@/services/search.service'
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { tagService, type TagCreateRequest } from '@/services/taxonomy.service'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { getErrorMessage } from '@/lib/axios'
 import { TagsPageView } from './TagsPageView'
 

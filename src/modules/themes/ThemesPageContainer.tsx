@@ -15,7 +15,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { themeService }   from '@/services/theme.service'
 import { orgService }     from '@/services/org.service'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { getErrorMessage } from '@/lib/axios'
 import { useState, useCallback } from 'react'
 import { ThemesPageView } from './ThemesPageView'

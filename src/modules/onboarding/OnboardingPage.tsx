@@ -25,7 +25,7 @@ import {
 import { orgService } from '@/services/org.service'
 import { authService } from '@/services/auth.service'
 import { useOrgStore } from '@/stores/org.store'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
 import { Button, FormInput, BlockIcon } from '@litostudio/ui-cms'
 import type { Organization, Site } from '@/types/auth.types'

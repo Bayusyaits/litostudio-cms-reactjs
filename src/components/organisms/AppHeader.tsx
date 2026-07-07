@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { Search, Bell, Moon, Sun, Menu, Plus } from 'lucide-react'
 import { useThemeStore } from '@/stores/theme.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { GlobalSearch } from './GlobalSearch'
 import { NotificationsPanel, useUnreadCount } from './NotificationsPanel'
 

@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import { useAnalytics } from '@/providers/AnalyticsProvider'
 import { useAuthStore }    from '@/stores/auth.store'
 import { useOrgStore }     from '@/stores/org.store'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 
 export function useAnalyticsIdentify() {
   const { identify, groupSite, reset } = useAnalytics()

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { newsletterService } from '@/services/content.service'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { NewsletterPageView } from './NewsletterPageView'
 import type { NewsletterStatus } from '@/types/commerce.types'
 

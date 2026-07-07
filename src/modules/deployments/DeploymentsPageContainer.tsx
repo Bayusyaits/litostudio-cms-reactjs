@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { http } from '@/lib/request'
 import type { ApiResponse } from '@/types/api.types'
 import { useOrgStore } from '@/stores/org.store'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { RepublishPagesModal } from '@/modules/themes/RepublishPagesModal'
 import { RefreshCw } from 'lucide-react'
 

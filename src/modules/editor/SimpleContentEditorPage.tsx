@@ -27,7 +27,7 @@ import {
   collectionsService,
   campaignsService,
 } from '@/services/content.service'
-import { useWebsiteStore }                   from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { formatRelative }                    from '@/lib/utils'
 
 import { ContentEditorLayout }                   from '@/components/organisms/ContentEditorLayout'

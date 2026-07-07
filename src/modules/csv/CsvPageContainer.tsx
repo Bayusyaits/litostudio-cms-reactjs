@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { useOrgStore } from '@/stores/org.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { http } from '@/lib/request'

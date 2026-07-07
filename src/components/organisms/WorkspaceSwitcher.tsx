@@ -3,7 +3,7 @@ import { ChevronDown, ChevronLeft, Search, Building2, Globe, Plus } from 'lucide
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useOrgStore } from '@/stores/org.store'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { orgService } from '@/services/org.service'
 import type { Organization } from '@/types/auth.types'
 import type { Site } from '@/types/auth.types'

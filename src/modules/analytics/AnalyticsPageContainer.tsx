@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useWebsiteStore } from '@/stores/website.store'
+import { useWebsiteStore } from '@litostudio/ui-cms'
 import { analyticsService, trackingService } from '@/services/analytics.service'
 import type { AnalyticsSettings, TrackingScript } from '@/services/analytics.service'
 import { useForm, useWatch } from 'react-hook-form'
