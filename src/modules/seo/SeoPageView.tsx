@@ -3,12 +3,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Save, Search, Share2, Twitter, Globe, CheckCircle, AlertCircle } from 'lucide-react'
-import { AppImage } from '@litostudio/ui-cms'
-import { Button }       from '@/components/atoms/Button'
+import { AppImage, Button, FormSkeleton, FIELD_LIMITS } from '@litostudio/ui-cms'
 import { FormField, TextAreaField } from '@/components/molecules/FormField'
-import { FormSkeleton } from '@litostudio/ui-cms'
 import { cn } from '@/lib/utils'
-import { FIELD_LIMITS } from '@litostudio/ui-cms'
 import type { SeoMetadata, SeoSaveRequest } from '@/types/content.types'
 import type { PAGE_TYPES, SeoPageType } from './SeoPageContainer'
 
@@ -271,7 +268,7 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
               )}
 
               <div className="flex justify-end">
-                <Button type="submit" leftIcon={<Save className="w-4 h-4" />} loading={saveStatus === 'saving'}>
+                <Button skin="cms" type="submit" leftIcon={<Save className="w-4 h-4" />} loading={saveStatus === 'saving'}>
                   Save SEO
                 </Button>
               </div>

@@ -1,8 +1,5 @@
-import { HelpCircle, Trash2, Plus, PenLine } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { HelpCircle, Trash2, Plus, PenLine, Search, X } from 'lucide-react'
+import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Faq } from '@/types/content.types'
 
@@ -95,10 +92,10 @@ export function FaqsPageView({
       width: '80px',
       render: (faq) => (
         <div className="flex items-center justify-end gap-1">
-          <Button size="icon" variant="ghost" onClick={() => onEdit(faq.id)} aria-label="Edit">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onEdit(faq.id)} aria-label="Edit">
             <PenLine className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => onDelete(faq.id)} aria-label="Delete">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(faq.id)} aria-label="Delete">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
           </Button>
         </div>
@@ -115,13 +112,16 @@ export function FaqsPageView({
             {meta ? `${meta.total} FAQ${meta.total !== 1 ? 's' : ''}` : 'Manage frequently asked questions'}
           </p>
         </div>
-        <Button leftIcon={<Plus className="w-4 h-4" />} onClick={onNew}>
+        <Button skin="cms" leftIcon={<Plus className="w-4 h-4" />} onClick={onNew}>
           New FAQ
         </Button>
       </div>
 
       <div className="flex items-center gap-3">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search FAQs…"

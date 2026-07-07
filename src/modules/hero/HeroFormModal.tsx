@@ -15,10 +15,8 @@
  */
 import { useState, useEffect, useRef } from 'react'
 import { X, Save } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { ImageUploader } from '@litostudio/ui-cms'
+import { Button, ImageUploader, FIELD_LIMITS } from '@litostudio/ui-cms'
 import { FormField, TextAreaField } from '@/components/molecules/FormField'
-import { FIELD_LIMITS }            from '@litostudio/ui-cms'
 import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroStatus } from '@/types/content.types'
 import { heroService } from '@/services/content.service'
 import { draftMediaStore } from '@/stores/draftMedia.store'
@@ -362,10 +360,10 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--lito-border)]">
-          <Button variant="ghost" onClick={onClose} disabled={saving}>
+          <Button skin="cms" variant="ghost" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving || !coverImage.trim()}>
+          <Button skin="cms" onClick={handleSave} disabled={saving || !coverImage.trim()}>
             <Save className="w-4 h-4 mr-1.5" />
             {saveButtonLabel}
           </Button>

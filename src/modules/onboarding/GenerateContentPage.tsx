@@ -22,8 +22,7 @@ import {
   CheckCircle2, Globe, ChevronDown, ChevronUp, Loader2,
 } from 'lucide-react'
 import { http } from '@/lib/http'
-import { Button } from '@/components/atoms/Button'
-import { FormInput } from '@litostudio/ui-cms'
+import { Button, FormInput } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -203,7 +202,7 @@ function PreviewPanel({
       </div>
 
       <div className="flex flex-col gap-2 pt-2">
-        <Button
+        <Button skin="cms"
           className="w-full"
           rightIcon={<ArrowRight className="w-4 h-4" />}
           onClick={onApply}
@@ -212,7 +211,7 @@ function PreviewPanel({
         >
           Looks good — apply content
         </Button>
-        <Button
+        <Button skin="cms"
           variant="secondary"
           className="w-full"
           leftIcon={<RefreshCw className="w-4 h-4" />}
@@ -221,7 +220,7 @@ function PreviewPanel({
         >
           Regenerate
         </Button>
-        <Button
+        <Button skin="cms"
           variant="ghost"
           className="w-full"
           onClick={onSkip}
@@ -471,7 +470,7 @@ export default function GenerateContentPage() {
               )}
 
               <div className="flex gap-3 pt-1">
-                <Button
+                <Button skin="cms"
                   type="button"
                   variant="ghost"
                   className="flex-1"
@@ -480,7 +479,7 @@ export default function GenerateContentPage() {
                 >
                   Skip
                 </Button>
-                <Button
+                <Button skin="cms"
                   type="submit"
                   className="flex-2"
                   leftIcon={<Sparkles className="w-4 h-4" />}

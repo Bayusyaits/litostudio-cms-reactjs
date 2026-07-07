@@ -14,7 +14,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { X, Terminal, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
-import { Button } from '@/components/atoms/Button'
+import { Button } from '@litostudio/ui-cms'
 import { themeService } from '@/services/theme.service'
 import { useNavigate } from 'react-router-dom'
 
@@ -206,21 +206,21 @@ export function RepublishPagesModal({ siteId, templateName, onClose }: Props) {
           <div className="flex gap-2 ml-auto">
             {phase === 'idle' && (
               <>
-                <Button variant="ghost" size="sm" onClick={onClose}>
+                <Button skin="cms" variant="ghost" size="sm" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button variant="primary" size="sm" onClick={handleRepublish}>
+                <Button skin="cms" variant="primary" size="sm" onClick={handleRepublish}>
                   Republish All Pages
                 </Button>
               </>
             )}
             {phase === 'running' && (
-              <Button variant="ghost" size="sm" disabled>
+              <Button skin="cms" variant="ghost" size="sm" disabled>
                 Publishing…
               </Button>
             )}
             {(phase === 'done' || phase === 'error') && (
-              <Button variant="secondary" size="sm" onClick={onClose}>
+              <Button skin="cms" variant="secondary" size="sm" onClick={onClose}>
                 Close
               </Button>
             )}

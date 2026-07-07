@@ -10,7 +10,7 @@
 import type { ReactNode } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/atoms/Button'
+import { Button } from '@litostudio/ui-cms'
 
 interface ContentEditorLayoutProps {
   /** Page title (e.g. "Edit Service") */
@@ -41,7 +41,7 @@ export function ContentEditorLayout({
       {/* Sticky top bar */}
       <header className="flex items-center gap-3 px-6 py-3 border-b border-[var(--lito-border)] bg-[var(--cms-card-bg)] sticky top-0 z-10">
         {onBack && (
-          <Button variant="ghost" size="icon" onClick={onBack} aria-label="Back">
+          <Button skin="cms" variant="ghost" size="icon" onClick={onBack} aria-label="Back">
             <ArrowLeft className="w-4 h-4" />
           </Button>
         )}
@@ -54,7 +54,7 @@ export function ContentEditorLayout({
         </div>
 
         {onEditorBClick && (
-          <Button variant="ghost" size="sm" onClick={onEditorBClick}>
+          <Button skin="cms" variant="ghost" size="sm" onClick={onEditorBClick}>
             {editorBLabel ?? 'Block Editor'}
           </Button>
         )}

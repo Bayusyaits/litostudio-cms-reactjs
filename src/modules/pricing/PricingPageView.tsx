@@ -1,8 +1,5 @@
-import { Tag, Trash2, Star } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Tag, Trash2, Star, Search, X } from 'lucide-react'
+import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { PricingPackage } from '@/types/content.types'
 import type { ContentStatus } from '@/types/api.types'
@@ -116,7 +113,7 @@ export function PricingPageView({
       width: '60px',
       render: (p) => (
         <div className="flex items-center justify-end gap-1">
-          <Button size="icon" variant="ghost" onClick={() => onDelete(p.id)} aria-label="Delete">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(p.id)} aria-label="Delete">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
           </Button>
         </div>
@@ -137,6 +134,9 @@ export function PricingPageView({
 
       <div className="flex items-center gap-3">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search packages…"

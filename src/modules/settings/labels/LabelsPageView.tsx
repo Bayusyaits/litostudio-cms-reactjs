@@ -1,8 +1,7 @@
 // modules/settings/labels/LabelsPageView.tsx
 import { useState } from 'react'
-import { Languages, Plus, Upload, Download, Pencil, Trash2, Check, X, Lock } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { SearchInput } from '@/components/molecules/SearchInput'
+import { Languages, Plus, Upload, Download, Pencil, Trash2, Check, X, Lock, Search } from 'lucide-react'
+import { Button, SearchInput } from '@litostudio/ui-cms'
 import type { Label, LabelUpsertPayload } from '@/services/labels.service'
 
 // ── GROUP_LABELS ──────────────────────────────────────────────────────────────
@@ -108,8 +107,8 @@ function CreateModal({
           </div>
 
           <div className="flex gap-2 pt-2 justify-end">
-            <Button type="button" variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-            <Button type="submit" size="sm" disabled={creating || !form.key || !form.value}>
+            <Button skin="cms" type="button" variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+            <Button skin="cms" type="submit" size="sm" disabled={creating || !form.key || !form.value}>
               {creating ? 'Saving…' : 'Create Label'}
             </Button>
           </div>
@@ -171,8 +170,8 @@ function BulkModal({
         )}
 
         <div className="flex gap-2 justify-end">
-          <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" disabled={bulkImporting || !bulkJson.trim()} onClick={onBulkImport}>
+          <Button skin="cms" variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+          <Button skin="cms" size="sm" disabled={bulkImporting || !bulkJson.trim()} onClick={onBulkImport}>
             {bulkImporting ? 'Importing…' : 'Import'}
           </Button>
         </div>
@@ -259,13 +258,13 @@ export function LabelsPageView({
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="secondary" size="sm" onClick={onExport}>
+          <Button skin="cms" variant="secondary" size="sm" onClick={onExport}>
             <Download className="w-3.5 h-3.5 mr-1.5" />Export
           </Button>
-          <Button variant="secondary" size="sm" onClick={onOpenBulk}>
+          <Button skin="cms" variant="secondary" size="sm" onClick={onOpenBulk}>
             <Upload className="w-3.5 h-3.5 mr-1.5" />Bulk Import
           </Button>
-          <Button size="sm" onClick={onOpenCreate}>
+          <Button skin="cms" size="sm" onClick={onOpenCreate}>
             <Plus className="w-3.5 h-3.5 mr-1.5" />New Label
           </Button>
         </div>
@@ -274,6 +273,9 @@ export function LabelsPageView({
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search })}
           placeholder="Search by key or value…"

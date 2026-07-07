@@ -1,7 +1,5 @@
-import { Map, Trash2, LayoutTemplate, Pencil, Plus } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Map, Trash2, LayoutTemplate, Pencil, Plus, Search, X } from 'lucide-react'
+import { Button, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { getDestName } from '@/types/content.types'
 import type { Destination } from '@/types/content.types'
 
@@ -35,13 +33,13 @@ export function DestinationsPageView({ destinations, isLoading, search, onSearch
       width: '60px',
       render: (d) => (
         <div className="flex items-center gap-1 justify-end">
-          <Button size="icon" variant="ghost" onClick={() => onEdit(d.id)} aria-label="Edit fields" title="Edit fields">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onEdit(d.id)} aria-label="Edit fields" title="Edit fields">
             <Pencil className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => onOpenEditor(d.id)} aria-label="Open in editor" title="Open in editor">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onOpenEditor(d.id)} aria-label="Open in editor" title="Open in editor">
             <LayoutTemplate className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => onDelete(d.id)} aria-label="Delete destination">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(d.id)} aria-label="Delete destination">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
           </Button>
         </div>
@@ -53,11 +51,11 @@ export function DestinationsPageView({ destinations, isLoading, search, onSearch
     <div className="p-6 space-y-5 overflow-y-auto">
       <div className="flex items-center justify-between gap-4">
         <h1 className="font-display text-2xl font-bold text-[var(--text-primary)]">Destinations</h1>
-        <Button onClick={onNew} leftIcon={<Plus className="w-4 h-4" />}>
+        <Button skin="cms" onClick={onNew} leftIcon={<Plus className="w-4 h-4" />}>
           New Destination
         </Button>
       </div>
-      <SearchInput value={search} onChange={onSearch} placeholder="Search destinations…" className="w-64" />
+      <SearchInput skin="cms" icon={<Search className="w-3.5 h-3.5" />} clearIcon={<X className="w-3.5 h-3.5" />} value={search} onChange={onSearch} placeholder="Search destinations…" className="w-64" />
       <div className="cms-card overflow-hidden">
         <DataTable
           data={destinations}

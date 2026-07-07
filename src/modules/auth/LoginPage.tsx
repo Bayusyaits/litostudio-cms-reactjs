@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { LogIn, Chrome } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
+import { Button } from '@litostudio/ui-cms'
 import { FormField } from '@/components/molecules/FormField'
 import { authService } from '@/services/auth.service'
 import { useAuthStore } from '@/stores/auth.store'
@@ -100,7 +100,7 @@ export default function LoginPage() {
       )}
 
       {/* Google OAuth — primary */}
-      <Button
+      <Button skin="cms"
         variant="secondary"
         className="w-full"
         leftIcon={<Chrome className="w-4 h-4" />}
@@ -153,7 +153,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <Button
+        <Button skin="cms"
           type="submit"
           className="w-full"
           leftIcon={<LogIn className="w-4 h-4" />}

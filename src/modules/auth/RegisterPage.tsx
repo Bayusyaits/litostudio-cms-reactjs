@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { UserPlus, Chrome, CheckCircle } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
+import { Button } from '@litostudio/ui-cms'
 import { FormField } from '@/components/molecules/FormField'
 import { authService } from '@/services/auth.service'
 import { getErrorMessage } from '@/lib/axios'
@@ -92,7 +92,7 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <Button
+      <Button skin="cms"
         variant="secondary"
         className="w-full"
         leftIcon={<Chrome className="w-4 h-4" />}
@@ -153,7 +153,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <Button
+        <Button skin="cms"
           type="submit"
           className="w-full"
           leftIcon={<UserPlus className="w-4 h-4" />}

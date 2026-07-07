@@ -1,8 +1,5 @@
-import { Tv2, Trash2, Pencil, Plus, ExternalLink } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Tv2, Trash2, Pencil, Plus, ExternalLink, Search, X } from 'lucide-react'
+import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { HeroSlide, HeroStatus } from '@/types/content.types'
 
@@ -119,10 +116,10 @@ export function HeroPageView({
       width: '80px',
       render: (s) => (
         <div className="flex items-center justify-end gap-1">
-          <Button size="icon" variant="ghost" onClick={() => onEdit(s)} aria-label="Edit slide">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onEdit(s)} aria-label="Edit slide">
             <Pencil className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => onDelete(s.id)} aria-label="Delete slide">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(s.id)} aria-label="Delete slide">
             <Trash2 className="w-3.5 h-3.5 text-[var(--cms-danger)]" />
           </Button>
         </div>
@@ -140,7 +137,7 @@ export function HeroPageView({
             {meta ? `${meta.total} slide${meta.total !== 1 ? 's' : ''}` : 'Manage homepage hero slides'}
           </p>
         </div>
-        <Button onClick={onCreate}>
+        <Button skin="cms" onClick={onCreate}>
           <Plus className="w-4 h-4 mr-1.5" />
           New Slide
         </Button>
@@ -149,6 +146,9 @@ export function HeroPageView({
       {/* Filters */}
       <div className="flex items-center gap-3">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search slides…"

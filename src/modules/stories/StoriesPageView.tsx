@@ -1,14 +1,11 @@
 import { useState } from 'react'
-import { Plus, MoreHorizontal, Pencil, FileText, LayoutTemplate } from 'lucide-react'
-import { Skeleton } from '@litostudio/ui-cms'
+import { Plus, MoreHorizontal, Pencil, FileText, LayoutTemplate, Search, X } from 'lucide-react'
+import { Skeleton, SearchInput, EmptyState, AppImage, AppImageThumb } from '@litostudio/ui-cms'
 import { Link } from 'react-router-dom'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { EmptyState } from '@/components/molecules/EmptyState'
 import { formatDate } from '@/lib/utils'
 import { getTitle } from '@/types/content.types'
 import type { Story } from '@/types/content.types'
 import type { ContentStatus } from '@/types/api.types'
-import { AppImage, AppImageThumb } from '@litostudio/ui-cms'
 
 type TabStatus = 'all' | ContentStatus
 
@@ -129,7 +126,7 @@ export function StoriesPageView({
 
         {/* Filters row */}
         <div className="flex items-center gap-3 mb-3">
-          <SearchInput value={search} onChange={onSearch} placeholder="Search stories…" className="w-64" />
+          <SearchInput skin="cms" icon={<Search className="w-3.5 h-3.5" />} clearIcon={<X className="w-3.5 h-3.5" />} value={search} onChange={onSearch} placeholder="Search stories…" className="w-64" />
         </div>
 
         {/* Status tabs */}
@@ -195,7 +192,7 @@ export function StoriesPageView({
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={8}>
-                    <EmptyState icon={FileText} title="No stories found" description="Create your first story to get started" />
+                    <EmptyState skin="cms" icon={<FileText className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No stories found" description="Create your first story to get started" />
                   </td>
                 </tr>
               ) : (

@@ -1,7 +1,5 @@
-import { MessageCircle, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { MessageCircle, Trash2, CheckCircle, XCircle, AlertTriangle, Search, X } from 'lucide-react'
+import { Button, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Comment, CommentStatus } from '@/types/content.types'
 
@@ -138,7 +136,7 @@ export function CommentsPageView({
         <div className="flex items-center justify-end gap-1">
           {c.status === 'pending' && (
             <>
-              <Button
+              <Button skin="cms"
                 size="icon"
                 variant="ghost"
                 onClick={() => onApprove(c.id)}
@@ -147,7 +145,7 @@ export function CommentsPageView({
               >
                 <CheckCircle className="w-3.5 h-3.5 text-[var(--s-pub-fg)]" />
               </Button>
-              <Button
+              <Button skin="cms"
                 size="icon"
                 variant="ghost"
                 onClick={() => onReject(c.id)}
@@ -156,7 +154,7 @@ export function CommentsPageView({
               >
                 <XCircle className="w-3.5 h-3.5 text-[var(--s-danger)]" />
               </Button>
-              <Button
+              <Button skin="cms"
                 size="icon"
                 variant="ghost"
                 onClick={() => onSpam(c.id)}
@@ -167,7 +165,7 @@ export function CommentsPageView({
               </Button>
             </>
           )}
-          <Button size="icon" variant="ghost" onClick={() => onDelete(c.id)} aria-label="Delete">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(c.id)} aria-label="Delete">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
           </Button>
         </div>
@@ -188,6 +186,9 @@ export function CommentsPageView({
 
       <div className="flex items-center gap-3">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search comments…"

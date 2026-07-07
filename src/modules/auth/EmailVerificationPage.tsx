@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { CheckCircle, AlertCircle, Loader, RefreshCw } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
+import { Button } from '@litostudio/ui-cms'
 import { FormField } from '@/components/molecules/FormField'
 import { authService } from '@/services/auth.service'
 import { getErrorMessage } from '@/lib/axios'
@@ -148,7 +148,7 @@ export default function EmailVerificationPage() {
           </div>
         )}
 
-        <Button
+        <Button skin="cms"
           type="submit"
           className="w-full"
           leftIcon={<RefreshCw className="w-4 h-4" />}

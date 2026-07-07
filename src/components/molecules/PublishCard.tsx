@@ -7,7 +7,7 @@
 
 import { Globe, FileText, Archive, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/atoms/Button'
+import { Button } from '@litostudio/ui-cms'
 import type { ContentStatus } from '@/types/api.types'
 
 const STATUS_OPTIONS: { value: ContentStatus; label: string; icon: React.ReactNode }[] = [
@@ -81,7 +81,7 @@ export function PublishCard({
 
         {/* Actions */}
         <div className="flex flex-col gap-2">
-          <Button
+          <Button skin="cms"
             type="button"
             variant="secondary"
             size="sm"
@@ -93,7 +93,7 @@ export function PublishCard({
           </Button>
 
           {status !== 'published' && onPublish && (
-            <Button
+            <Button skin="cms"
               type="button"
               variant="primary"
               size="sm"
@@ -106,7 +106,7 @@ export function PublishCard({
           )}
 
           {status === 'published' && onPublish && (
-            <Button
+            <Button skin="cms"
               type="button"
               variant="ghost"
               size="sm"

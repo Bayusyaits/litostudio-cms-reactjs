@@ -27,9 +27,7 @@ import { authService } from '@/services/auth.service'
 import { useOrgStore } from '@/stores/org.store'
 import { useWebsiteStore } from '@/stores/website.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { Button } from '@/components/atoms/Button'
-import { FormInput } from '@litostudio/ui-cms'
-import { BlockIcon } from '@litostudio/ui-cms'
+import { Button, FormInput, BlockIcon } from '@litostudio/ui-cms'
 import type { Organization, Site } from '@/types/auth.types'
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -203,7 +201,7 @@ function CreateOrgStep({ onComplete }: { onComplete: (org: Organization) => void
         </div>
       )}
 
-      <Button
+      <Button skin="cms"
         type="submit"
         className="w-full"
         rightIcon={<ArrowRight className="w-4 h-4" />}
@@ -329,10 +327,10 @@ function CreateSiteStep({
       )}
 
       <div className="flex gap-3">
-        <Button type="button" variant="ghost" className="flex-1" onClick={onSkip}>
+        <Button skin="cms" type="button" variant="ghost" className="flex-1" onClick={onSkip}>
           Skip for now
         </Button>
-        <Button
+        <Button skin="cms"
           type="submit"
           className="flex-1"
           rightIcon={<ArrowRight className="w-4 h-4" />}
@@ -448,7 +446,7 @@ function SetupChecklistStep({ onDone }: { onDone: () => void }) {
         <p className="font-body text-xs text-[var(--text-muted)]">
           {checked.size} of {CHECKLIST_ITEMS.length} completed
         </p>
-        <Button rightIcon={<Rocket className="w-4 h-4" />} onClick={onDone}>
+        <Button skin="cms" rightIcon={<Rocket className="w-4 h-4" />} onClick={onDone}>
           Go to Dashboard
         </Button>
       </div>

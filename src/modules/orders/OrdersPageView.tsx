@@ -1,6 +1,5 @@
-import { ShoppingBag } from 'lucide-react'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { ShoppingBag, Search, X } from 'lucide-react'
+import { SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Order, OrderStatus } from '@/types/commerce.types'
 
@@ -99,6 +98,9 @@ export function OrdersPageView({ orders, meta, isLoading, filter, setFilter, onS
 
       <div className="flex items-center gap-3 flex-wrap">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search by name or email…"

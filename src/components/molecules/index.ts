@@ -1,6 +1,4 @@
 export { FormField, TextAreaField } from './FormField'
-export { EmptyState }               from './EmptyState'
-export { SearchInput }              from './SearchInput'
 export { RequiresOrg }              from './RequiresOrg'
 export { TagInput }                 from './TagInput'
 export { SeoCard }                  from './SeoCard'

@@ -1,12 +1,8 @@
-import { Plus, FileText, Trash2, LayoutTemplate, PenLine } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Plus, FileText, Trash2, LayoutTemplate, PenLine, Search, X } from 'lucide-react'
+import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column, AppImageThumb } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import { getTitle } from '@/types/content.types'
 import type { JournalPost } from '@/types/content.types'
-import { AppImageThumb } from '@litostudio/ui-cms'
 
 interface Props {
   posts: JournalPost[]
@@ -68,11 +64,11 @@ export function JournalPageView({
       width: '80px',
       render: (post) => (
         <div className="flex items-center justify-end gap-1">
-          <Button size="icon" variant="ghost" onClick={() => onEdit(post.id)} aria-label="Edit" title="Edit fields"><PenLine className="w-3.5 h-3.5" /></Button>
-          <Button size="icon" variant="ghost" onClick={() => onOpenEditor(post.id)} aria-label="Open in editor" title="Open in editor">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onEdit(post.id)} aria-label="Edit" title="Edit fields"><PenLine className="w-3.5 h-3.5" /></Button>
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onOpenEditor(post.id)} aria-label="Open in editor" title="Open in editor">
             <LayoutTemplate className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => onDelete(post.id)} aria-label="Delete">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(post.id)} aria-label="Delete">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
           </Button>
         </div>
@@ -89,11 +85,14 @@ export function JournalPageView({
             {meta ? `${meta.total} posts` : 'Manage journal posts'}
           </p>
         </div>
-        <Button leftIcon={<Plus className="w-4 h-4" />} onClick={onNew}>New Post</Button>
+        <Button skin="cms" leftIcon={<Plus className="w-4 h-4" />} onClick={onNew}>New Post</Button>
       </div>
 
       <div className="flex items-center gap-3">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search journal…"

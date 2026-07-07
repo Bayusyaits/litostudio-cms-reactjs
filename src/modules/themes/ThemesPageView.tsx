@@ -1,7 +1,5 @@
 import { Palette, Check, RefreshCw } from 'lucide-react'
-import { AppImage } from '@litostudio/ui-cms'
-import { Skeleton } from '@litostudio/ui-cms'
-import { EmptyState } from '@/components/molecules/EmptyState'
+import { AppImage, Skeleton, EmptyState } from '@litostudio/ui-cms'
 import { ThemePreview } from '@/components/molecules/ThemePreview'
 import type { Theme } from '@/services/theme.service'
 
@@ -116,7 +114,7 @@ export function ThemesPageView({ themes, activeThemeId, isLoading, onApplyTheme,
           ))}
         </div>
       ) : themes.length === 0 ? (
-        <EmptyState icon={Palette} title="No themes available" description="Themes will appear here once they are configured" />
+        <EmptyState skin="cms" icon={<Palette className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No themes available" description="Themes will appear here once they are configured" />
       ) : (
         <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
           {themes.map(theme => (

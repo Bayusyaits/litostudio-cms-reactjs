@@ -1,11 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Hash, Trash2, Plus } from 'lucide-react'
-import { Skeleton } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { EmptyState } from '@/components/molecules/EmptyState'
-import { FIELD_LIMITS } from '@litostudio/ui-cms'
+import { Hash, Trash2, Plus, Search, X } from 'lucide-react'
+import { Skeleton, SearchInput, EmptyState, FIELD_LIMITS } from '@litostudio/ui-cms'
 import type { Tag } from '@/services/taxonomy.service'
 
 const tagSchema = z.object({
@@ -75,7 +72,7 @@ export function TagsPageView({ tags, total, isLoading, search, onSearch, onCreat
       </div>
 
       <div className="flex justify-between mb-[14px]">
-        <SearchInput value={search} onChange={onSearch} placeholder="Search tags…" className="w-64" />
+        <SearchInput skin="cms" icon={<Search className="w-3.5 h-3.5" />} clearIcon={<X className="w-3.5 h-3.5" />} value={search} onChange={onSearch} placeholder="Search tags…" className="w-64" />
       </div>
 
       {/* Tag cloud */}
@@ -84,7 +81,7 @@ export function TagsPageView({ tags, total, isLoading, search, onSearch, onCreat
           {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-8 rounded-full" style={{ width: `${60 + (i % 4) * 20}px` }} />)}
         </div>
       ) : tags.length === 0 ? (
-        <EmptyState icon={Hash} title="No tags" description="Add your first tag above" />
+        <EmptyState skin="cms" icon={<Hash className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No tags" description="Add your first tag above" />
       ) : (
         <div className="flex flex-wrap gap-2">
           {tags.map(tag => (

@@ -1,8 +1,5 @@
-import { Briefcase, Trash2, LayoutTemplate, Pencil, Plus } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Briefcase, Trash2, LayoutTemplate, Pencil, Plus, Search, X } from 'lucide-react'
+import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Service } from '@/types/content.types'
 import type { ContentStatus } from '@/types/api.types'
@@ -123,13 +120,13 @@ export function ServicesPageView({
       width: '60px',
       render: (s) => (
         <div className="flex items-center justify-end gap-1">
-          <Button size="icon" variant="ghost" onClick={() => onEdit(s.id)} aria-label="Edit fields" title="Edit fields">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onEdit(s.id)} aria-label="Edit fields" title="Edit fields">
             <Pencil className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => onOpenEditor(s.id)} aria-label="Open in editor" title="Open in editor">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onOpenEditor(s.id)} aria-label="Open in editor" title="Open in editor">
             <LayoutTemplate className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => onDelete(s.id)} aria-label="Delete">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(s.id)} aria-label="Delete">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
           </Button>
         </div>
@@ -146,13 +143,16 @@ export function ServicesPageView({
             {meta ? `${meta.total} service${meta.total !== 1 ? 's' : ''}` : 'Manage your service offerings'}
           </p>
         </div>
-        <Button onClick={onNew} leftIcon={<Plus className="w-4 h-4" />}>
+        <Button skin="cms" onClick={onNew} leftIcon={<Plus className="w-4 h-4" />}>
           New Service
         </Button>
       </div>
 
       <div className="flex items-center gap-3">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search services…"

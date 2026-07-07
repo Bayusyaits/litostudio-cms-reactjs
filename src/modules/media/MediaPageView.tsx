@@ -1,9 +1,6 @@
 import { useRef, useCallback, useState } from 'react'
-import { AppImage } from '@litostudio/ui-cms'
-import { FolderOpen, Upload, Trash2, FileVideo, FileText, File, Grid, List, Check } from 'lucide-react'
-import { Skeleton } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { EmptyState } from '@/components/molecules/EmptyState'
+import { AppImage, Skeleton, SearchInput, EmptyState } from '@litostudio/ui-cms'
+import { FolderOpen, Upload, Trash2, FileVideo, FileText, File, Grid, List, Check, Search, X } from 'lucide-react'
 import { formatBytes, isImageMime, isVideoMime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { Media } from '@/types/media.types'
@@ -191,6 +188,9 @@ export function MediaPageView({
         {/* Toolbar */}
         <div className="flex items-center gap-[10px]">
           <SearchInput
+            skin="cms"
+            icon={<Search className="w-3.5 h-3.5" />}
+            clearIcon={<X className="w-3.5 h-3.5" />}
             value={filter.q}
             onChange={(q) => setFilter({ q, page: 1 })}
             placeholder="Search media…"
@@ -244,7 +244,7 @@ export function MediaPageView({
             </div>
           )
         ) : items.length === 0 ? (
-          <EmptyState icon={FolderOpen} title="No media files" description="Upload images and videos to get started" />
+          <EmptyState skin="cms" icon={<FolderOpen className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No media files" description="Upload images and videos to get started" />
         ) : viewMode === 'grid' ? (
           <div className="grid gap-[10px] [grid-template-columns:repeat(auto-fill,minmax(140px,1fr))]">
             {items.map(item => (

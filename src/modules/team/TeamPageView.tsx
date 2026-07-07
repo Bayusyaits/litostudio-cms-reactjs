@@ -2,11 +2,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Users, UserPlus, MoreHorizontal, Trash2 } from 'lucide-react'
-import { AppImageThumb } from '@litostudio/ui-cms'
-import { Skeleton } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { EmptyState } from '@/components/molecules/EmptyState'
+import { Users, UserPlus, MoreHorizontal, Trash2, Search, X } from 'lucide-react'
+import { AppImageThumb, Skeleton, SearchInput, EmptyState } from '@litostudio/ui-cms'
 import type { TeamMember, InvitePayload } from '@/services/team.service'
 import type { OrgRole } from '@/types/api.types'
 
@@ -193,7 +190,7 @@ export function TeamPageView({
       </div>
 
       <div className="flex items-center justify-between mb-[14px]">
-        <SearchInput value={search} onChange={onSearch} placeholder="Search members…" className="w-64" />
+        <SearchInput skin="cms" icon={<Search className="w-3.5 h-3.5" />} clearIcon={<X className="w-3.5 h-3.5" />} value={search} onChange={onSearch} placeholder="Search members…" className="w-64" />
         <span className="text-xs text-[var(--text-muted)]">
           {meta?.total ?? 0} member{(meta?.total ?? 0) !== 1 ? 's' : ''}
         </span>
@@ -229,7 +226,7 @@ export function TeamPageView({
             ) : members.length === 0 ? (
               <tr>
                 <td colSpan={5}>
-                  <EmptyState icon={Users} title="No team members" description="Invite colleagues to collaborate on this workspace" />
+                  <EmptyState skin="cms" icon={<Users className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No team members" description="Invite colleagues to collaborate on this workspace" />
                 </td>
               </tr>
             ) : (

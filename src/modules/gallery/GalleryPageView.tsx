@@ -1,8 +1,5 @@
-import { Image, Trash2, Check } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { MediaSkeleton } from '@litostudio/ui-cms'
-import { EmptyState } from '@/components/molecules/EmptyState'
+import { Image, Trash2, Check, Search, X } from 'lucide-react'
+import { Button, SearchInput, MediaSkeleton, EmptyState } from '@litostudio/ui-cms'
 import { cn } from '@/lib/utils'
 import { getTitle } from '@/types/content.types'
 import type { GalleryItem } from '@/types/content.types'
@@ -33,7 +30,7 @@ export function GalleryPageView({
           </p>
         </div>
         {selectedIds.length > 0 && (
-          <Button
+          <Button skin="cms"
             variant="danger"
             size="sm"
             leftIcon={<Trash2 className="w-3.5 h-3.5" />}
@@ -45,6 +42,9 @@ export function GalleryPageView({
       </div>
 
       <SearchInput
+        skin="cms"
+        icon={<Search className="w-3.5 h-3.5" />}
+        clearIcon={<X className="w-3.5 h-3.5" />}
         value={filter.search}
         onChange={(search) => setFilter({ search, page: 1 })}
         placeholder="Search gallery…"
@@ -58,7 +58,7 @@ export function GalleryPageView({
           ))}
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={Image} title="No gallery items" description="Upload images to build your gallery" />
+        <EmptyState skin="cms" icon={<Image className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No gallery items" description="Upload images to build your gallery" />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {items.map((item) => {

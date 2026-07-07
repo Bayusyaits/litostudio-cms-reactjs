@@ -1,8 +1,5 @@
-import { Trash2, Inbox, MailOpen, Reply } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Trash2, Inbox, MailOpen, Reply, Search, X } from 'lucide-react'
+import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { ContactMessage } from '@/types/commerce.types'
 
@@ -72,7 +69,7 @@ export function MessagesPageView({ messages, meta, isLoading, filter, setFilter,
       render: (msg) => (
         <div className="flex items-center justify-end gap-1">
           {msg.status === 'new' && (
-            <Button
+            <Button skin="cms"
               size="icon"
               variant="ghost"
               onClick={() => onMarkRead(msg.id)}
@@ -83,7 +80,7 @@ export function MessagesPageView({ messages, meta, isLoading, filter, setFilter,
             </Button>
           )}
           {onReply && msg.status !== 'replied' && (
-            <Button
+            <Button skin="cms"
               size="icon"
               variant="ghost"
               onClick={() => onReply(msg)}
@@ -93,7 +90,7 @@ export function MessagesPageView({ messages, meta, isLoading, filter, setFilter,
               <Reply className="w-3.5 h-3.5 text-[var(--lito-teal)]" />
             </Button>
           )}
-          <Button size="icon" variant="ghost" onClick={() => onDelete(msg.id)} aria-label="Delete">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(msg.id)} aria-label="Delete">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
           </Button>
         </div>
@@ -114,6 +111,9 @@ export function MessagesPageView({ messages, meta, isLoading, filter, setFilter,
 
       <div className="flex items-center gap-3 flex-wrap">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search by name or email…"

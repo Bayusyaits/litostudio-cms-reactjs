@@ -1,11 +1,8 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Tag, Trash2, Plus, FolderOpen } from 'lucide-react'
-import { Skeleton } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { EmptyState } from '@/components/molecules/EmptyState'
-import { FIELD_LIMITS } from '@litostudio/ui-cms'
+import { Tag, Trash2, Plus, FolderOpen, Search, X } from 'lucide-react'
+import { Skeleton, SearchInput, EmptyState, FIELD_LIMITS } from '@litostudio/ui-cms'
 import type { Category, CategoryCreateRequest } from '@/services/taxonomy.service'
 
 const categorySchema = z.object({
@@ -147,7 +144,7 @@ export function CategoriesPageView({ categories, total, isLoading, search, onSea
       </div>
 
       <div className="flex items-center justify-between mb-[14px]">
-        <SearchInput value={search} onChange={onSearch} placeholder="Search categories…" className="w-64" />
+        <SearchInput skin="cms" icon={<Search className="w-3.5 h-3.5" />} clearIcon={<X className="w-3.5 h-3.5" />} value={search} onChange={onSearch} placeholder="Search categories…" className="w-64" />
       </div>
 
       <div className="cms-card overflow-hidden">
@@ -157,7 +154,7 @@ export function CategoriesPageView({ categories, total, isLoading, search, onSea
             {isLoading ? Array.from({ length: 5 }).map((_, i) => (
               <tr key={i}><td><Skeleton className="h-4 w-40" /></td><td><Skeleton className="h-4 w-24" /></td><td><Skeleton className="h-4 w-20" /></td><td><Skeleton className="h-4 w-24" /></td><td /></tr>
             )) : categories.length === 0 ? (
-              <tr><td colSpan={5}><EmptyState icon={Tag} title="No categories" description="Add your first category above" /></td></tr>
+              <tr><td colSpan={5}><EmptyState skin="cms" icon={<Tag className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No categories" description="Add your first category above" /></td></tr>
             ) : categories.map(cat => <CategoryRow key={cat.id} cat={cat} onDelete={onDelete} />)}
           </tbody>
         </table>

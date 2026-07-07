@@ -1,8 +1,5 @@
-import { Layers, Trash2, Plus, Pencil, LayoutTemplate } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Layers, Trash2, Plus, Pencil, LayoutTemplate, Search, X } from 'lucide-react'
+import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Collection } from '@/types/content.types'
 
@@ -86,13 +83,13 @@ export function CollectionsPageView({
       width: '96px',
       render: (col) => (
         <div className="flex items-center justify-end gap-1">
-          <Button size="icon" variant="ghost" onClick={() => onEdit(col.id)} aria-label="Edit" title="Edit">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onEdit(col.id)} aria-label="Edit" title="Edit">
             <Pencil className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => onOpenEditor(col.id)} aria-label="Open editor" title="Open block editor">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onOpenEditor(col.id)} aria-label="Open editor" title="Open block editor">
             <LayoutTemplate className="w-3.5 h-3.5 text-[var(--lito-teal)]" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={() => onDelete(col.id)} aria-label="Delete">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(col.id)} aria-label="Delete">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
           </Button>
         </div>
@@ -109,13 +106,16 @@ export function CollectionsPageView({
             {meta ? `${meta.total} collection${meta.total !== 1 ? 's' : ''}` : 'Manage product collections'}
           </p>
         </div>
-        <Button leftIcon={<Plus className="w-4 h-4" />} onClick={onNew}>
+        <Button skin="cms" leftIcon={<Plus className="w-4 h-4" />} onClick={onNew}>
           New Collection
         </Button>
       </div>
 
       <div className="flex items-center gap-3">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search collections…"

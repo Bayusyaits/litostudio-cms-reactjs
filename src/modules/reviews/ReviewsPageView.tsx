@@ -1,8 +1,5 @@
-import { MessageSquare, Trash2, CheckCircle, XCircle } from 'lucide-react'
-import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@litostudio/ui-cms'
-import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { MessageSquare, Trash2, CheckCircle, XCircle, Search, X } from 'lucide-react'
+import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Review, ReviewStatus } from '@/types/content.types'
 
@@ -130,7 +127,7 @@ export function ReviewsPageView({
         <div className="flex items-center justify-end gap-1">
           {review.status === 'pending' && (
             <>
-              <Button
+              <Button skin="cms"
                 size="icon"
                 variant="ghost"
                 onClick={() => onApprove(review.id)}
@@ -139,7 +136,7 @@ export function ReviewsPageView({
               >
                 <CheckCircle className="w-3.5 h-3.5 text-[var(--s-pub-fg)]" />
               </Button>
-              <Button
+              <Button skin="cms"
                 size="icon"
                 variant="ghost"
                 onClick={() => onReject(review.id)}
@@ -150,7 +147,7 @@ export function ReviewsPageView({
               </Button>
             </>
           )}
-          <Button size="icon" variant="ghost" onClick={() => onDelete(review.id)} aria-label="Delete">
+          <Button skin="cms" size="icon" variant="ghost" onClick={() => onDelete(review.id)} aria-label="Delete">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />
           </Button>
         </div>
@@ -171,6 +168,9 @@ export function ReviewsPageView({
 
       <div className="flex items-center gap-3">
         <SearchInput
+          skin="cms"
+          icon={<Search className="w-3.5 h-3.5" />}
+          clearIcon={<X className="w-3.5 h-3.5" />}
           value={filter.search}
           onChange={(search) => setFilter({ search, page: 1 })}
           placeholder="Search reviews…"
