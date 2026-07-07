@@ -19,7 +19,7 @@ import { Button, ImageUploader, FIELD_LIMITS } from '@litostudio/ui-cms'
 import { FormField, TextAreaField } from '@/components/molecules/FormField'
 import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroStatus } from '@/types/content.types'
 import { heroService } from '@/services/content.service'
-import { draftMediaStore } from '@/stores/draftMedia.store'
+import { draftMediaStore } from '@litostudio/ui-cms'
 import { useFocusTrap } from '@litostudio/ui-cms'
 
 // ── Types ────────────────────────────────────────────────────────────────────

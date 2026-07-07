@@ -10,7 +10,7 @@ import { useState, useCallback } from 'react'
 import { TemplateSwitchModal } from '@litostudio/ui-cms'
 import type { TemplateSwitchResult } from '@litostudio/ui-cms'
 import { useEditorStore } from '@litostudio/ui-cms'
-import { draftMediaStore } from '@/stores/draftMedia.store'
+import { draftMediaStore } from '@litostudio/ui-cms'
 
 export default function SettingsPageContainer() {
   const qc = useQueryClient()
