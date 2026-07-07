@@ -8,7 +8,7 @@ import { Button } from '@litostudio/ui-cms'
 import { FormField } from '@/components/molecules/FormField'
 import { authService } from '@/services/auth.service'
 import { useAuthStore } from '@/stores/auth.store'
-import { getErrorMessage } from '@/lib/axios'
+import { getErrorMessage } from '@litostudio/ui-cms'
 
 const loginSchema = z.object({
   email:    z.string().email('Enter a valid email'),

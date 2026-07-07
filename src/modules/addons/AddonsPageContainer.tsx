@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { addonService, type OrgAddon, type Addon } from '@/services/addon.service'
-import { getErrorMessage } from '@/lib/request'
+import { getErrorMessage } from '@litostudio/ui-cms'
 import { AddonsPageView } from './AddonsPageView'
 
 export default function AddonsPageContainer() {

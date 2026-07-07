@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useWebsiteStore } from '@litostudio/ui-cms'
-import { useOrgStore } from '@/stores/org.store'
+import { useOrgStore } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
-import { http } from '@/lib/request'
+import { http } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 
 const MODULES = [

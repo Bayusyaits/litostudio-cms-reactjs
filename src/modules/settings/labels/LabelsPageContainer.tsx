@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { labelsService } from '@/services/labels.service'
-import { useOrgStore } from '@/stores/org.store'
+import { useOrgStore } from '@litostudio/ui-cms'
 import { LabelsPageView } from './LabelsPageView'
 import type { LabelUpdatePayload, LabelUpsertPayload } from '@/services/labels.service'
 

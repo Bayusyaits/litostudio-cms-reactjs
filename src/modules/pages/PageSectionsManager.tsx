@@ -7,7 +7,7 @@ import {
 import {
   pageSectionsService,
   type PageSection, type SectionType,
-} from '@/services/pageSectionsService'
+} from '@litostudio/ui-cms'
 import { getTemplate, getPageManifest } from '@litostudio/template-registry'
 import { getSectionLabel } from '@litostudio/section-schema'
 

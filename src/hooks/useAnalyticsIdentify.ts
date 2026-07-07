@@ -5,7 +5,7 @@
 import { useEffect } from 'react'
 import { useAnalytics } from '@/providers/AnalyticsProvider'
 import { useAuthStore }    from '@/stores/auth.store'
-import { useOrgStore }     from '@/stores/org.store'
+import { useOrgStore } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 
 export function useAnalyticsIdentify() {

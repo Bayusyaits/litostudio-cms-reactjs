@@ -1,4 +1,4 @@
-import { http } from '@/lib/request'
+import { http } from '@litostudio/ui-cms'
 import { withIdempotencyKey } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 import type { Organization, Site } from '@/types/auth.types'

@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, FileText, Trash2, Pencil, Globe } from 'lucide-react'
-import { Skeleton, StatusBadge } from '@litostudio/ui-cms'
-import type { Page, PageStatus } from '@/services/pages.service'
-import type { PageListMeta } from '@/services/pages.service'
+import { Skeleton, StatusBadge, useTemplateManifest } from '@litostudio/ui-cms'
+import type { Page, PageStatus, PageListMeta } from '@litostudio/ui-cms'
 import { PageSectionsManager } from './PageSectionsManager'
-import { useTemplateManifest } from '@litostudio/ui-cms'
 
 interface Filter {
   status: PageStatus | ''

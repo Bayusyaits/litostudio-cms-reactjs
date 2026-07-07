@@ -19,7 +19,7 @@ import {
   FileText, Image, Package, BookOpen, ExternalLink,
   ChevronRight, RefreshCw,
 } from 'lucide-react'
-import { useOrgStore } from '@/stores/org.store'
+import { useOrgStore } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
 import { formatDate } from '@/lib/utils'

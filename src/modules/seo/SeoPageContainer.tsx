@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { seoService } from '@/services/content.service'
-import { pagesService } from '@/services/pages.service'
+import { pagesService } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
-import { getErrorMessage } from '@/lib/axios'
+import { getErrorMessage } from '@litostudio/ui-cms'
 import { SeoPageView } from './SeoPageView'
 import type { SeoSaveRequest } from '@/types/content.types'
 

@@ -7,7 +7,7 @@ import { Mail, CheckCircle } from 'lucide-react'
 import { Button } from '@litostudio/ui-cms'
 import { FormField } from '@/components/molecules/FormField'
 import { authService } from '@/services/auth.service'
-import { getErrorMessage } from '@/lib/axios'
+import { getErrorMessage } from '@litostudio/ui-cms'
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),

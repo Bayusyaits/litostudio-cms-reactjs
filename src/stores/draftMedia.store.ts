@@ -18,7 +18,7 @@
  */
 
 import { create } from 'zustand'
-import { mediaService } from '@/services/media.service'
+import { mediaService } from '@litostudio/ui-cms'
 
 // ── Internal types ─────────────────────────────────────────────────────────────
 

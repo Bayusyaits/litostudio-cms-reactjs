@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { mediaService } from '@/services/media.service'
+import { mediaService } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { MediaPageView } from './MediaPageView'
-import { getErrorMessage } from '@/lib/axios'
+import { getErrorMessage } from '@litostudio/ui-cms'
 import type { MediaConfirmRequest } from '@/types/media.types'
 
 type MediaTypeFilter = '' | 'image' | 'video' | 'document' | 'audio'

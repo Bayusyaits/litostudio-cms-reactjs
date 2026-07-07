@@ -7,7 +7,7 @@ import { UserPlus, Chrome, CheckCircle } from 'lucide-react'
 import { Button } from '@litostudio/ui-cms'
 import { FormField } from '@/components/molecules/FormField'
 import { authService } from '@/services/auth.service'
-import { getErrorMessage } from '@/lib/axios'
+import { getErrorMessage } from '@litostudio/ui-cms'
 
 const registerSchema = z.object({
   full_name: z.string().min(2, 'Full name must be at least 2 characters'),

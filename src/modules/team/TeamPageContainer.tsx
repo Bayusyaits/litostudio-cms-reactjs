@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { teamService, type InvitePayload } from '@/services/team.service'
 import { TeamPageView } from './TeamPageView'
-import { getErrorMessage } from '@/lib/axios'
+import { getErrorMessage } from '@litostudio/ui-cms'
 
 export default function TeamPageContainer() {
   const qc = useQueryClient()

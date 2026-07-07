@@ -3,9 +3,9 @@
 // and useSiteFooter() on the website. No DB migration needed — JSONB is open.
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { themeService } from '@/services/theme.service'
+import { themeService } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
-import { getErrorMessage } from '@/lib/axios'
+import { getErrorMessage } from '@litostudio/ui-cms'
 import { useState } from 'react'
 import { SiteContentPageView } from './SiteContentPageView'
 

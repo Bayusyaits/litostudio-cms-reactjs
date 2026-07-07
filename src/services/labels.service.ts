@@ -1,6 +1,6 @@
 // services/labels.service.ts
 // CMS service for settings_labels CRUD + bulk import.
-import { http } from '@/lib/request'
+import { http } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 
 export interface Label {

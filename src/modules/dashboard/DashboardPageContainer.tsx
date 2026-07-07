@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useWebsiteStore } from '@litostudio/ui-cms'
-import { useOrgStore } from '@/stores/org.store'
+import { useOrgStore } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
 import { orgService } from '@/services/org.service'
 import { DashboardPageView } from './DashboardPageView'

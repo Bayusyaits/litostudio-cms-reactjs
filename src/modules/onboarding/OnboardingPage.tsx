@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 import { orgService } from '@/services/org.service'
 import { authService } from '@/services/auth.service'
-import { useOrgStore } from '@/stores/org.store'
+import { useOrgStore } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
 import { Button, FormInput, BlockIcon } from '@litostudio/ui-cms'

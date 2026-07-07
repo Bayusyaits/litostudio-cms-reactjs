@@ -21,7 +21,7 @@ import {
   Sparkles, ArrowRight, SkipForward, RefreshCw,
   CheckCircle2, Globe, ChevronDown, ChevronUp, Loader2,
 } from 'lucide-react'
-import { http } from '@/lib/http'
+import { http } from '@litostudio/ui-cms'
 import { Button, FormInput } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 

@@ -15,7 +15,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { X, Terminal, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react'
 import { useFocusTrap } from '@litostudio/ui-cms'
 import { Button } from '@litostudio/ui-cms'
-import { themeService } from '@/services/theme.service'
+import { themeService } from '@litostudio/ui-cms'
 import { useNavigate } from 'react-router-dom'
 
 type Phase = 'idle' | 'running' | 'done' | 'error'

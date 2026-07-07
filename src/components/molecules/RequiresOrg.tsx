@@ -13,7 +13,7 @@
 
 import { Link } from 'react-router-dom'
 import { Building2, ArrowRight } from 'lucide-react'
-import { useOrgStore } from '@/stores/org.store'
+import { useOrgStore } from '@litostudio/ui-cms'
 
 interface RequiresOrgProps {
   /** Displayed in the CTA: "Products requires an organization." */

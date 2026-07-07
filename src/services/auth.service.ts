@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import { http } from '@/lib/request'
+import { http } from '@litostudio/ui-cms'
 import { withIdempotencyKey } from '@litostudio/ui-cms'
 import type { LoginResponse, SessionResponse } from '@/types/auth.types'
 import type { ApiResponse } from '@/types/api.types'

@@ -1,4 +1,4 @@
-import { http } from '@/lib/request'
+import { http } from '@litostudio/ui-cms'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

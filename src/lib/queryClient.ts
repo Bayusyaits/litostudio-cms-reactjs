@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query'
-import { getErrorMessage } from './axios'
+import { getErrorMessage } from '@litostudio/ui-cms'
 
 export const queryClient = new QueryClient({
   defaultOptions: {

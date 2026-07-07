@@ -6,7 +6,7 @@ import {
   Building2, Globe, Moon, Sun, Monitor, Check, AlertCircle, Layout, Palette, Phone, ImageIcon,
 } from 'lucide-react'
 import type { Organization, Site } from '@/types/auth.types'
-import type { Theme } from '@/services/theme.service'
+import type { Theme } from '@litostudio/ui-cms'
 import { PhoneNumberManager } from './PhoneNumberManager'
 import { ThemePreview } from '@/components/molecules/ThemePreview'
 import { ImageUploader } from '@litostudio/ui-cms'

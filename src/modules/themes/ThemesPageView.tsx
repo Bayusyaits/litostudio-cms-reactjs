@@ -1,7 +1,7 @@
 import { Palette, Check, RefreshCw } from 'lucide-react'
 import { AppImage, Skeleton, EmptyState } from '@litostudio/ui-cms'
 import { ThemePreview } from '@/components/molecules/ThemePreview'
-import type { Theme } from '@/services/theme.service'
+import type { Theme } from '@litostudio/ui-cms'
 
 interface Props {
   themes: Theme[]

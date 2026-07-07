@@ -1,5 +1,5 @@
 // apps/cms/src/services/notifications.service.ts
-import { http } from '@/lib/request'
+import { http } from '@litostudio/ui-cms'
 
 export interface Notification {
   id: string
