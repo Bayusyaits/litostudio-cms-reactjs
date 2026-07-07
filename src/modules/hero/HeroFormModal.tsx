@@ -20,7 +20,7 @@ import { FormField, TextAreaField } from '@/components/molecules/FormField'
 import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroStatus } from '@/types/content.types'
 import { heroService } from '@/services/content.service'
 import { draftMediaStore } from '@/stores/draftMedia.store'
-import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useFocusTrap } from '@litostudio/ui-cms'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

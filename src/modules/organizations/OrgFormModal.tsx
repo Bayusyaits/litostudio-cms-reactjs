@@ -1,6 +1,6 @@
 // apps/cms/src/modules/organizations/OrgFormModal.tsx
 import { useEffect, useRef } from 'react'
-import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useFocusTrap } from '@litostudio/ui-cms'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'

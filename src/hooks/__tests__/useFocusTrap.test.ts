@@ -9,7 +9,7 @@ import { renderHook } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useRef } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useFocusTrap } from '../useFocusTrap'
+import { useFocusTrap } from '@litostudio/ui-cms'
 
 // All tests use fake timers so we can advance past the 50ms auto-focus delay
 beforeEach(() => { vi.useFakeTimers() })
