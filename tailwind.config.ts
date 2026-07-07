@@ -6,6 +6,7 @@ const config: Config = {
   content: [
     './index.html',
     './src/**/*.{ts,tsx}',
+    '../../packages/ui-cms/src/**/*.{ts,tsx}',
     './node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
