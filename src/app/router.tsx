@@ -37,8 +37,11 @@ const ReviewsPage      = lazy(() => import('@/modules/reviews/ReviewsPageContain
 const FaqsPage         = lazy(() => import('@/modules/faqs/FaqsPageContainer'))
 const OnboardingPage          = lazy(() => import('@/modules/onboarding/OnboardingPage'))
 const GenerateContentPage     = lazy(() => import('@/modules/onboarding/GenerateContentPage'))
-const BlockEditorPage          = lazy(() => import('@/modules/editor/BlockEditorPage'))
-const PagePreviewPage          = lazy(() => import('@/modules/editor/PagePreviewPage'))
+// Both resolve from the same @litostudio/ui-cms barrel dynamic import, so
+// they share one lazy-loaded chunk (the package has no per-component
+// subpath exports — see packages/ui-cms/package.json's "exports" field).
+const BlockEditorPage          = lazy(() => import('@litostudio/ui-cms').then((m) => ({ default: m.BlockEditorPage })))
+const PagePreviewPage          = lazy(() => import('@litostudio/ui-cms').then((m) => ({ default: m.PagePreviewPage })))
 const SimpleContentEditorPage  = lazy(() => import('@/modules/editor/SimpleContentEditorPage'))
 const OrganizationsPage  = lazy(() => import('@/modules/organizations/OrganizationsPageContainer'))
 const AddonsPage         = lazy(() => import('@/modules/addons/AddonsPageContainer'))

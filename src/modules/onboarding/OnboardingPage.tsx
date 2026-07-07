@@ -28,8 +28,8 @@ import { useOrgStore } from '@/stores/org.store'
 import { useWebsiteStore } from '@/stores/website.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { Button } from '@/components/atoms/Button'
-import { FormInput } from '@/shared/forms/FormInput'
-import { BlockIcon } from '@/modules/editor/blocks/blockIcons'
+import { FormInput } from '@litostudio/ui-cms'
+import { BlockIcon } from '@litostudio/ui-cms'
 import type { Organization, Site } from '@/types/auth.types'
 
 // ── Constants ────────────────────────────────────────────────────────────────

@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import { http } from '@/lib/http'
 import { Button } from '@/components/atoms/Button'
-import { FormInput } from '@/shared/forms/FormInput'
+import { FormInput } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
