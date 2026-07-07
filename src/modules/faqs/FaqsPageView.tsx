@@ -1,10 +1,9 @@
 import { HelpCircle, Trash2, Plus, PenLine } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { Faq } from '@/types/content.types'
 
 function getFaqQuestion(faq: Faq): string {
@@ -77,7 +76,7 @@ export function FaqsPageView({
       key: 'status',
       header: 'Status',
       width: '120px',
-      render: (faq) => <StatusBadge status={faq.status} />,
+      render: (faq) => <StatusBadge skin="cms" status={faq.status} />,
     },
     {
       key: 'updated_at',
@@ -151,7 +150,7 @@ export function FaqsPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No FAQs yet"
           emptyDescription="Add frequently asked questions to help your visitors"
-          emptyIcon={HelpCircle}
+          emptyIcon={<HelpCircle />}
           bulkActions={[
             {
               key: 'delete',

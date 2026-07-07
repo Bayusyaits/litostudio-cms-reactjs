@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, MoreHorizontal, Pencil, FileText, LayoutTemplate } from 'lucide-react'
-import { Skeleton } from '@/components/atoms/Skeleton'
+import { Skeleton } from '@litostudio/ui-cms'
 import { Link } from 'react-router-dom'
 import { SearchInput } from '@/components/molecules/SearchInput'
 import { EmptyState } from '@/components/molecules/EmptyState'
@@ -8,7 +8,7 @@ import { formatDate } from '@/lib/utils'
 import { getTitle } from '@/types/content.types'
 import type { Story } from '@/types/content.types'
 import type { ContentStatus } from '@/types/api.types'
-import { AppImage, AppImageThumb } from '@/components/atoms/AppImage'
+import { AppImage, AppImageThumb } from '@litostudio/ui-cms'
 
 type TabStatus = 'all' | ContentStatus
 

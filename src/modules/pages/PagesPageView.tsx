@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, FileText, Trash2, Pencil, Globe } from 'lucide-react'
-import { Skeleton } from '@/components/atoms/Skeleton'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { Skeleton } from '@litostudio/ui-cms'
+import { StatusBadge } from '@litostudio/ui-cms'
 import type { Page, PageStatus } from '@/services/pages.service'
 import type { PageListMeta } from '@/services/pages.service'
 import { PageSectionsManager } from './PageSectionsManager'
@@ -242,7 +242,7 @@ export function PagesPageView({
 
                     {/* Status */}
                     <td className="px-[14px] py-3">
-                      <StatusBadge status={page.status} />
+                      <StatusBadge skin="cms" status={page.status} />
                     </td>
 
                     {/* Toggles */}

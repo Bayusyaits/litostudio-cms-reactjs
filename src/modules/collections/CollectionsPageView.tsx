@@ -1,10 +1,9 @@
 import { Layers, Trash2, Plus, Pencil, LayoutTemplate } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { Collection } from '@/types/content.types'
 
 interface Filter {
@@ -68,7 +67,7 @@ export function CollectionsPageView({
       key: 'status',
       header: 'Status',
       width: '120px',
-      render: (col) => <StatusBadge status={col.status} />,
+      render: (col) => <StatusBadge skin="cms" status={col.status} />,
     },
     {
       key: 'updated_at',
@@ -145,7 +144,7 @@ export function CollectionsPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No collections yet"
           emptyDescription="Group your products into collections"
-          emptyIcon={Layers}
+          emptyIcon={<Layers />}
           bulkActions={[
             {
               key: 'delete',

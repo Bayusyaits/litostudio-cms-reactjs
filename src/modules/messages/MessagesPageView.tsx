@@ -1,10 +1,9 @@
 import { Trash2, Inbox, MailOpen, Reply } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { ContactMessage } from '@/types/commerce.types'
 
 const MESSAGE_STATUSES = ['new', 'read', 'replied', 'archived'] as const
@@ -53,7 +52,7 @@ export function MessagesPageView({ messages, meta, isLoading, filter, setFilter,
       key: 'status',
       header: 'Status',
       width: '110px',
-      render: (msg) => <StatusBadge status={msg.status} />,
+      render: (msg) => <StatusBadge skin="cms" status={msg.status} />,
     },
     {
       key: 'created_at',
@@ -140,7 +139,7 @@ export function MessagesPageView({ messages, meta, isLoading, filter, setFilter,
           loading={isLoading}
           emptyTitle="No messages yet"
           emptyDescription="Contact form submissions will appear here"
-          emptyIcon={Inbox}
+          emptyIcon={<Inbox />}
         />
       </div>
     </div>

@@ -11,7 +11,7 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { FIELD_LIMITS } from '@/lib/fieldLimits'
+import { FIELD_LIMITS } from '@litostudio/ui-cms'
 
 interface SeoCardProps {
   metaTitle: string

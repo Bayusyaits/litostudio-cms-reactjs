@@ -1,10 +1,9 @@
 import { MessageSquare, Trash2, CheckCircle, XCircle } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { Review, ReviewStatus } from '@/types/content.types'
 
 function StarRating({ rating }: { rating: number }) {
@@ -110,7 +109,7 @@ export function ReviewsPageView({
       key: 'status',
       header: 'Status',
       width: '120px',
-      render: (review) => <StatusBadge status={review.status} />,
+      render: (review) => <StatusBadge skin="cms" status={review.status} />,
     },
     {
       key: 'created_at',
@@ -200,7 +199,7 @@ export function ReviewsPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No reviews yet"
           emptyDescription="Customer reviews will appear here once submitted"
-          emptyIcon={MessageSquare}
+          emptyIcon={<MessageSquare />}
           bulkActions={[
             {
               key: 'delete',

@@ -1,10 +1,9 @@
 import { Quote, Trash2, Star } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { Testimonial } from '@/types/content.types'
 import type { ContentStatus } from '@/types/api.types'
 
@@ -111,7 +110,7 @@ export function TestimonialsPageView({
       key: 'status',
       header: 'Status',
       width: '120px',
-      render: (t) => <StatusBadge status={t.status} />,
+      render: (t) => <StatusBadge skin="cms" status={t.status} />,
     },
     {
       key: 'created_at',
@@ -179,7 +178,7 @@ export function TestimonialsPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No testimonials yet"
           emptyDescription="Client testimonials will appear here once added"
-          emptyIcon={Quote}
+          emptyIcon={<Quote />}
           bulkActions={[
             {
               key: 'delete',

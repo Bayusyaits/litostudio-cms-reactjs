@@ -1,6 +1,6 @@
 import { Palette, Check, RefreshCw } from 'lucide-react'
-import { AppImage } from '@/components/atoms/AppImage'
-import { Skeleton } from '@/components/atoms/Skeleton'
+import { AppImage } from '@litostudio/ui-cms'
+import { Skeleton } from '@litostudio/ui-cms'
 import { EmptyState } from '@/components/molecules/EmptyState'
 import { ThemePreview } from '@/components/molecules/ThemePreview'
 import type { Theme } from '@/services/theme.service'

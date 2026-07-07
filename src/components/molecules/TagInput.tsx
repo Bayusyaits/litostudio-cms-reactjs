@@ -10,7 +10,7 @@
 
 import { useRef, useState, KeyboardEvent } from 'react'
 import { cn } from '@/lib/utils'
-import { Tag } from '@/components/atoms/Tag'
+import { Tag } from '@litostudio/ui-cms'
 
 interface TagInputProps {
   value: string[]

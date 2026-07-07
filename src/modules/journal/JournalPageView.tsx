@@ -1,13 +1,12 @@
 import { Plus, FileText, Trash2, LayoutTemplate, PenLine } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import { getTitle } from '@/types/content.types'
 import type { JournalPost } from '@/types/content.types'
-import { AppImageThumb } from '@/components/atoms/AppImage'
+import { AppImageThumb } from '@litostudio/ui-cms'
 
 interface Props {
   posts: JournalPost[]
@@ -54,7 +53,7 @@ export function JournalPageView({
       key: 'status',
       header: 'Status',
       width: '120px',
-      render: (post) => <StatusBadge status={post.status} />,
+      render: (post) => <StatusBadge skin="cms" status={post.status} />,
     },
     {
       key: 'updated_at',
@@ -123,7 +122,7 @@ export function JournalPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No journal posts yet"
           emptyDescription="Start writing to build your journal"
-          emptyIcon={FileText}
+          emptyIcon={<FileText />}
           bulkActions={[
             { key: 'delete', label: 'Delete', icon: <Trash2 className="w-3.5 h-3.5" />, variant: 'danger', onClick: onBulkDelete },
           ]}

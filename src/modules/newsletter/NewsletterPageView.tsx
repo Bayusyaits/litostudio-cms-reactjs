@@ -1,9 +1,8 @@
 import { Trash2, Mail } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { NewsletterSubscriber, NewsletterStatus } from '@/types/commerce.types'
 
 const STATUSES: NewsletterStatus[] = ['pending', 'subscribed', 'unsubscribed', 'bounced']
@@ -126,7 +125,7 @@ export function NewsletterPageView({ subscribers, meta, isLoading, filter, setFi
           loading={isLoading}
           emptyTitle="No subscribers yet"
           emptyDescription="Newsletter subscribers will appear here once they sign up"
-          emptyIcon={Mail}
+          emptyIcon={<Mail />}
         />
       </div>
     </div>

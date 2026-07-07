@@ -1,9 +1,8 @@
 import { MessageCircle, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { Comment, CommentStatus } from '@/types/content.types'
 
 const STATUS_STYLES: Record<CommentStatus, { bg: string; color: string; label: string }> = {
@@ -218,7 +217,7 @@ export function CommentsPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No comments yet"
           emptyDescription="User comments will appear here once submitted"
-          emptyIcon={MessageCircle}
+          emptyIcon={<MessageCircle />}
           bulkActions={[
             {
               key: 'delete',

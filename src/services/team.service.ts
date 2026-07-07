@@ -1,5 +1,5 @@
 import { http } from '@/lib/request'
-import { withIdempotencyKey } from '@/lib/idempotency'
+import { withIdempotencyKey } from '@litostudio/ui-cms'
 import type { ApiResponse, OrgRole } from '@/types/api.types'
 
 export interface TeamMember {

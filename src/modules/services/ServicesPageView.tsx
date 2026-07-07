@@ -1,10 +1,9 @@
 import { Briefcase, Trash2, LayoutTemplate, Pencil, Plus } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { Service } from '@/types/content.types'
 import type { ContentStatus } from '@/types/api.types'
 
@@ -105,7 +104,7 @@ export function ServicesPageView({
       key: 'status',
       header: 'Status',
       width: '120px',
-      render: (s) => <StatusBadge status={s.status} />,
+      render: (s) => <StatusBadge skin="cms" status={s.status} />,
     },
     {
       key: 'updated_at',
@@ -182,7 +181,7 @@ export function ServicesPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No services yet"
           emptyDescription="Add your photography services and packages"
-          emptyIcon={Briefcase}
+          emptyIcon={<Briefcase />}
           bulkActions={[
             {
               key: 'delete',

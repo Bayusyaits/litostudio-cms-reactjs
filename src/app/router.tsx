@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
-import { DashboardSkeleton } from '@/components/atoms/Skeleton'
+import { DashboardSkeleton } from '@litostudio/ui-cms'
 
 // Error / utility pages
 const NotFoundPage      = lazy(() => import('@/modules/not-found/NotFoundPage'))

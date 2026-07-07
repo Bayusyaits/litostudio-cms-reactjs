@@ -1,8 +1,7 @@
 import { Map, Trash2, LayoutTemplate, Pencil, Plus } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
-import type { Column } from '@/components/molecules/DataTable/types'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { getDestName } from '@/types/content.types'
 import type { Destination } from '@/types/content.types'
 
@@ -66,7 +65,7 @@ export function DestinationsPageView({ destinations, isLoading, search, onSearch
           keyField="id"
           loading={isLoading}
           emptyTitle="No destinations"
-          emptyIcon={Map}
+          emptyIcon={<Map />}
         />
       </div>
     </div>

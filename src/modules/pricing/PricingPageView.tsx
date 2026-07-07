@@ -1,10 +1,9 @@
 import { Tag, Trash2, Star } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { PricingPackage } from '@/types/content.types'
 import type { ContentStatus } from '@/types/api.types'
 
@@ -98,7 +97,7 @@ export function PricingPageView({
       key: 'status',
       header: 'Status',
       width: '120px',
-      render: (p) => <StatusBadge status={p.status} />,
+      render: (p) => <StatusBadge skin="cms" status={p.status} />,
     },
     {
       key: 'updated_at',
@@ -166,7 +165,7 @@ export function PricingPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No pricing packages yet"
           emptyDescription="Create packages to display on your pricing page"
-          emptyIcon={Tag}
+          emptyIcon={<Tag />}
           bulkActions={[
             {
               key: 'delete',

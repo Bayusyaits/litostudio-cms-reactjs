@@ -1,5 +1,5 @@
 import { http } from '@/lib/request'
-import { getOrCreateIdempotencyKey, clearIdempotencyKey } from '@/lib/idempotency'
+import { getOrCreateIdempotencyKey, clearIdempotencyKey } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 import type {
   Media,

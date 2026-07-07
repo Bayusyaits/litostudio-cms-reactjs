@@ -1,7 +1,7 @@
 import { Image, Trash2, Check } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { MediaSkeleton } from '@/components/atoms/Skeleton'
+import { MediaSkeleton } from '@litostudio/ui-cms'
 import { EmptyState } from '@/components/molecules/EmptyState'
 import { cn } from '@/lib/utils'
 import { getTitle } from '@/types/content.types'

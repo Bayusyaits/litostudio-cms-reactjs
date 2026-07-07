@@ -2,10 +2,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Tag, Trash2, Plus, FolderOpen } from 'lucide-react'
-import { Skeleton } from '@/components/atoms/Skeleton'
+import { Skeleton } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
 import { EmptyState } from '@/components/molecules/EmptyState'
-import { FIELD_LIMITS } from '@/lib/fieldLimits'
+import { FIELD_LIMITS } from '@litostudio/ui-cms'
 import type { Category, CategoryCreateRequest } from '@/services/taxonomy.service'
 
 const categorySchema = z.object({

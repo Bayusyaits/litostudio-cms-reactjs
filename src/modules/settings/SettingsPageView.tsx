@@ -9,7 +9,7 @@ import type { Organization, Site } from '@/types/auth.types'
 import type { Theme } from '@/services/theme.service'
 import { PhoneNumberManager } from './PhoneNumberManager'
 import { ThemePreview } from '@/components/molecules/ThemePreview'
-import { ImageUploader } from '@/components/molecules/ImageUploader'
+import { ImageUploader } from '@litostudio/ui-cms'
 
 type ColorMode = 'light' | 'dark' | 'system'
 

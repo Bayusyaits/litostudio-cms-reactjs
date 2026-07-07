@@ -1,8 +1,7 @@
 import { ShoppingBag } from 'lucide-react'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { Order, OrderStatus } from '@/types/commerce.types'
 
 const ORDER_STATUSES: OrderStatus[] = [
@@ -125,7 +124,7 @@ export function OrdersPageView({ orders, meta, isLoading, filter, setFilter, onS
           loading={isLoading}
           emptyTitle="No orders yet"
           emptyDescription="Customer orders will appear here once placed"
-          emptyIcon={ShoppingBag}
+          emptyIcon={<ShoppingBag />}
         />
       </div>
     </div>

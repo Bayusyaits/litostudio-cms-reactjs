@@ -1,10 +1,9 @@
 import { Tv2, Trash2, Pencil, Plus, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable } from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { HeroSlide, HeroStatus } from '@/types/content.types'
 
 function getSlideTitle(s: HeroSlide): string {
@@ -101,7 +100,7 @@ export function HeroPageView({
       key: 'status',
       header: 'Status',
       width: '120px',
-      render: (s) => <StatusBadge status={s.status} />,
+      render: (s) => <StatusBadge skin="cms" status={s.status} />,
     },
     {
       key: 'updated_at',
@@ -180,7 +179,7 @@ export function HeroPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No hero slides yet"
           emptyDescription="Create your first slide to power the homepage hero section"
-          emptyIcon={Tv2}
+          emptyIcon={<Tv2 />}
           bulkActions={[
             {
               key: 'delete',

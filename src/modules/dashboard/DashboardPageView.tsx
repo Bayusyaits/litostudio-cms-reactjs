@@ -1,5 +1,5 @@
 import { FileText, Globe, Image, Link2, BookOpen, ArrowRight, Clock } from 'lucide-react'
-import { Skeleton } from '@/components/atoms/Skeleton'
+import { Skeleton } from '@litostudio/ui-cms'
 import { Link } from 'react-router-dom'
 import type { DashboardStats, DashboardRecentItem } from '@/services/org.service'
 import type { Organization, Site } from '@/types/auth.types'

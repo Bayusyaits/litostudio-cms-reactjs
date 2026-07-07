@@ -1,10 +1,9 @@
 import { Megaphone, Trash2, Pencil, Plus, LayoutTemplate } from 'lucide-react'
 import { Button }     from '@/components/atoms/Button'
-import { StatusBadge } from '@/components/atoms/StatusBadge'
+import { StatusBadge } from '@litostudio/ui-cms'
 import { SearchInput } from '@/components/molecules/SearchInput'
-import { DataTable }  from '@/components/molecules/DataTable'
+import { DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Column } from '@/components/molecules/DataTable/types'
 import type { Campaign } from '@/types/content.types'
 import type { ContentStatus } from '@/types/api.types'
 
@@ -95,7 +94,7 @@ export function CampaignsPageView({
       key: 'status',
       header: 'Status',
       width: '110px',
-      render: (c) => <StatusBadge status={c.status} />,
+      render: (c) => <StatusBadge skin="cms" status={c.status} />,
     },
     {
       key: 'updated_at',
@@ -173,7 +172,7 @@ export function CampaignsPageView({
           onSelectAll={onSelectAll}
           emptyTitle="No campaigns yet"
           emptyDescription="Create promotions, landing pages and marketing campaigns"
-          emptyIcon={Megaphone}
+          emptyIcon={<Megaphone />}
           bulkActions={[
             {
               key: 'delete',
