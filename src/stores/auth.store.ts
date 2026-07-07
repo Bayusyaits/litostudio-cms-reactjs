@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import Cookies from 'js-cookie'
-import type { User, LoginResponse } from '@/types/auth.types'
+import type { User, LoginResponse } from '@litostudio/ui-cms'
 import { SESSION_COOKIE } from '@/lib/http/auth'
 
 type LoginUser = LoginResponse['user']

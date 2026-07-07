@@ -2,7 +2,7 @@ import { Tag, Trash2, Star, Search, X } from 'lucide-react'
 import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { PricingPackage } from '@/types/content.types'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 function getPkgTitle(p: PricingPackage): string {
   return p.translations?.[0]?.title ?? p.slug ?? '—'

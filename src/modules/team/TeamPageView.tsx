@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Users, UserPlus, MoreHorizontal, Trash2, Search, X } from 'lucide-react'
 import { AppImageThumb, Skeleton, SearchInput, EmptyState } from '@litostudio/ui-cms'
 import type { TeamMember, InvitePayload } from '@/services/team.service'
-import type { OrgRole } from '@/types/api.types'
+import type { OrgRole } from '@litostudio/ui-cms'
 
 const ROLES: OrgRole[] = ['owner', 'admin', 'editor', 'viewer']
 

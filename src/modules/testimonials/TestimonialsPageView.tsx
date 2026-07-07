@@ -2,7 +2,7 @@ import { Quote, Trash2, Star, Search, X } from 'lucide-react'
 import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Testimonial } from '@/types/content.types'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 function getBody(t: Testimonial): string | undefined {
   const body = t.translations?.[0]?.body

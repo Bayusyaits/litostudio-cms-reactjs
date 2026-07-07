@@ -4,7 +4,7 @@ import { mediaService } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { MediaPageView } from './MediaPageView'
 import { getErrorMessage } from '@litostudio/ui-cms'
-import type { MediaConfirmRequest } from '@/types/media.types'
+import type { MediaConfirmRequest } from '@litostudio/ui-cms'
 
 type MediaTypeFilter = '' | 'image' | 'video' | 'document' | 'audio'
 

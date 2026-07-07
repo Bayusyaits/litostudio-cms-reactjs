@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { pricingService } from '@/services/content.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { PricingPageView } from './PricingPageView'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 export default function PricingPageContainer() {
   const { activeSite } = useWebsiteStore()

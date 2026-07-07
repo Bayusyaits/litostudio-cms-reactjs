@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { campaignsService } from '@/services/content.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { CampaignsPageView } from './CampaignsPageView'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 export default function CampaignsPageContainer() {
   const navigate = useNavigate()

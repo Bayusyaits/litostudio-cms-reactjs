@@ -5,7 +5,7 @@ import { z } from 'zod'
 import {
   Building2, Globe, Moon, Sun, Monitor, Check, AlertCircle, Layout, Palette, Phone, ImageIcon,
 } from 'lucide-react'
-import type { Organization, Site } from '@/types/auth.types'
+import type { Organization, Site } from '@litostudio/ui-cms'
 import type { Theme } from '@litostudio/ui-cms'
 import { PhoneNumberManager } from './PhoneNumberManager'
 import { ThemePreview } from '@/components/molecules/ThemePreview'

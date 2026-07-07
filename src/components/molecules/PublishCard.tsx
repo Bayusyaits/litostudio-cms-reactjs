@@ -8,7 +8,7 @@
 import { Globe, FileText, Archive, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@litostudio/ui-cms'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 const STATUS_OPTIONS: { value: ContentStatus; label: string; icon: React.ReactNode }[] = [
   { value: 'draft',     label: 'Draft',     icon: <FileText className="w-3.5 h-3.5" /> },

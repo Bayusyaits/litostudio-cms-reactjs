@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { formatDate } from '@/lib/utils'
 import { getTitle } from '@/types/content.types'
 import type { Story } from '@/types/content.types'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 type TabStatus = 'all' | ContentStatus
 

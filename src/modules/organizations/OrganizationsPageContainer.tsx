@@ -6,7 +6,7 @@ import { orgService } from '@/services/org.service'
 import { useOrgStore } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
-import type { Organization } from '@/types/auth.types'
+import type { Organization } from '@litostudio/ui-cms'
 import { OrganizationsPageView } from './OrganizationsPageView'
 import { OrgFormModal } from './OrgFormModal'
 

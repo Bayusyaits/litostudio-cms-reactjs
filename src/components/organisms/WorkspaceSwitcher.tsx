@@ -2,11 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, ChevronLeft, Search, Building2, Globe, Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { useOrgStore } from '@litostudio/ui-cms'
-import { useWebsiteStore } from '@litostudio/ui-cms'
+import { useOrgStore, useWebsiteStore } from '@litostudio/ui-cms'
 import { orgService } from '@/services/org.service'
-import type { Organization } from '@/types/auth.types'
-import type { Site } from '@/types/auth.types'
+import type { Organization, Site } from '@litostudio/ui-cms'
 
 type Step = 'org' | 'site'
 

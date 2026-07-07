@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { http } from '@litostudio/ui-cms'
 import { withIdempotencyKey } from '@litostudio/ui-cms'
-import type { LoginResponse, SessionResponse } from '@/types/auth.types'
+import type { LoginResponse, SessionResponse } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 
 const BASE = '/api/v1/auth'

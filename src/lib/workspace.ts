@@ -8,7 +8,7 @@
  *   WAIT  → org_id known but org object not yet loaded (hydrating)
  */
 
-import type { User, Organization, Site } from '@/types/auth.types'
+import type { User, Organization, Site } from '@litostudio/ui-cms'
 
 export type WorkspaceState =
   | 'loading'      // org_id known but org not yet fetched

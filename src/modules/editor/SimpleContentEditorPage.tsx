@@ -38,7 +38,7 @@ import { TagInput }                               from '@/components/molecules/T
 import { FormField, TextAreaField }               from '@/components/molecules/FormField'
 import { Switch }                                 from '@/components/atoms/Switch'
 
-import type { ContentStatus }  from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 import type {
   Story, JournalPost, Service, Destination, Product, Collection, Campaign,
   ProductType, ProductCategory, ProductExtra,

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { storiesService } from '@/services/content.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 export interface StoriesFilter {
   search: string

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X, Building2 } from 'lucide-react'
-import type { Organization } from '@/types/auth.types'
+import type { Organization } from '@litostudio/ui-cms'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { testimonialsService } from '@/services/content.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { TestimonialsPageView } from './TestimonialsPageView'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 export default function TestimonialsPageContainer() {
   const { activeSite } = useWebsiteStore()

@@ -28,7 +28,7 @@ import { useOrgStore } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
 import { Button, FormInput, BlockIcon } from '@litostudio/ui-cms'
-import type { Organization, Site } from '@/types/auth.types'
+import type { Organization, Site } from '@litostudio/ui-cms'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 // icon/preview = Lucide icon name (see blockIcons.tsx ICON_MAP) — were raw

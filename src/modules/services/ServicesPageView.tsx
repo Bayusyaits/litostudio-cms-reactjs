@@ -2,7 +2,7 @@ import { Briefcase, Trash2, LayoutTemplate, Pencil, Plus, Search, X } from 'luci
 import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Service } from '@/types/content.types'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 function getServiceTitle(s: Service): string {
   return s.translations?.[0]?.title ?? s.slug ?? '—'

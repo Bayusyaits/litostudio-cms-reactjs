@@ -2,7 +2,7 @@ import { FileText, Globe, Image, Link2, BookOpen, ArrowRight, Clock } from 'luci
 import { Skeleton } from '@litostudio/ui-cms'
 import { Link } from 'react-router-dom'
 import type { DashboardStats, DashboardRecentItem } from '@/services/org.service'
-import type { Organization, Site } from '@/types/auth.types'
+import type { Organization, Site } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
 import { formatDate } from '@/lib/utils'
 

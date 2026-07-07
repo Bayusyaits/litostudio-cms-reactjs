@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { servicesService } from '@/services/content.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { ServicesPageView } from './ServicesPageView'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 export default function ServicesPageContainer() {
   const navigate = useNavigate()

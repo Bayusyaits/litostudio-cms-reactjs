@@ -2,7 +2,7 @@ import { Megaphone, Trash2, Pencil, Plus, LayoutTemplate, Search, X } from 'luci
 import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Campaign } from '@/types/content.types'
-import type { ContentStatus } from '@/types/api.types'
+import type { ContentStatus } from '@litostudio/ui-cms'
 
 function getCampaignTitle(c: Campaign): string {
   return c.translations?.[0]?.title ?? c.slug ?? '—'

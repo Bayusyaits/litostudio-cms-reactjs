@@ -3,7 +3,7 @@ import { AppImage, Skeleton, SearchInput, EmptyState } from '@litostudio/ui-cms'
 import { FolderOpen, Upload, Trash2, FileVideo, FileText, File, Grid, List, Check, Search, X } from 'lucide-react'
 import { formatBytes, isImageMime, isVideoMime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import type { Media } from '@/types/media.types'
+import type { Media } from '@litostudio/ui-cms'
 
 type ViewMode = 'grid' | 'list'
 

@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Plus, Building2, Pencil, Trash2, Globe, CheckCircle2, ChevronRight } from 'lucide-react'
 import { Skeleton } from '@litostudio/ui-cms'
-import type { Organization } from '@/types/auth.types'
+import type { Organization } from '@litostudio/ui-cms'
 
 interface Props {
   orgs: Organization[]
