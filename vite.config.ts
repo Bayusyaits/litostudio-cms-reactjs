@@ -15,6 +15,10 @@ export default defineConfig({
       // straight to source as it already did before that change, with no
       // dependency on dist/ being built.
       '@litostudio/section-schema': path.resolve(__dirname, '../../packages/section-schema/src/index.ts'),
+      // Shared CMS UI package (design tokens, components, Gutenberg editor,
+      // services/stores/hooks) — consumed as raw TS source, same convention
+      // as the aliases above. Mirrors apps/cms-superadmin's existing alias.
+      '@litostudio/ui-cms': path.resolve(__dirname, '../../packages/ui-cms/src/index.ts'),
     },
   },
   server: {

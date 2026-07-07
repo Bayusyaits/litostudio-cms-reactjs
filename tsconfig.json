@@ -21,7 +21,8 @@
       "@/*": ["./src/*"],
       "@litostudio/templates": ["../../packages/templates/src/index.ts"],
       "@litostudio/template-system": ["../../packages/template-system/src/index.ts"],
-      "@litostudio/section-schema": ["../../packages/section-schema/src/index.ts"]
+      "@litostudio/section-schema": ["../../packages/section-schema/src/index.ts"],
+      "@litostudio/ui-cms": ["../../packages/ui-cms/src/index.ts"]
     }
   },
   "include": ["src"],
