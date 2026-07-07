@@ -22,6 +22,7 @@ import {
 import { useEditorStore, makeBlock } from '@/stores/editor.store'
 import { useOrgStore }               from '@/stores/org.store'
 import { aiAssistantService }        from '@/services/ai-assistant.service'
+import { BlockIcon }                 from './blocks/blockIcons'
 import {
   generateLocalBlocks,
   CONTENT_TYPE_OPTIONS,
@@ -30,13 +31,15 @@ import {
 import type { Block } from '@/types/editor.types'
 
 // ── Tone options ──────────────────────────────────────────────────────────────
+// icon = Lucide icon name (see blockIcons.tsx ICON_MAP) — was a raw emoji
+// until the 2026-07 icon cleanup.
 
-const TONES: Array<{ value: AiTone; label: string; emoji: string }> = [
-  { value: 'professional', label: 'Professional', emoji: '💼' },
-  { value: 'friendly',     label: 'Friendly',     emoji: '😊' },
-  { value: 'casual',       label: 'Casual',        emoji: '✌️' },
-  { value: 'luxury',       label: 'Luxury',        emoji: '✨' },
-  { value: 'modern',       label: 'Modern',        emoji: '🚀' },
+const TONES: Array<{ value: AiTone; label: string; icon: string }> = [
+  { value: 'professional', label: 'Professional', icon: 'Briefcase' },
+  { value: 'friendly',     label: 'Friendly',     icon: 'Smile' },
+  { value: 'casual',       label: 'Casual',        icon: 'Feather' },
+  { value: 'luxury',       label: 'Luxury',        icon: 'Sparkles' },
+  { value: 'modern',       label: 'Modern',        icon: 'Rocket' },
 ]
 
 // ── Block type display labels ─────────────────────────────────────────────────
@@ -256,7 +259,7 @@ export function EditorAiPanel() {
                       : 'bg-[var(--cms-surface-2)] text-[var(--text-secondary)] border-[var(--lito-border)] hover:border-[var(--lito-teal)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <span>{t.emoji}</span>
+                  <BlockIcon name={t.icon} size={11} />
                   <span>{t.label}</span>
                 </button>
               ))}

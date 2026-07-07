@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Save, Search, Share2, Twitter, Globe, CheckCircle, AlertCircle } from 'lucide-react'
+import { AppImage } from '@/components/atoms/AppImage'
 import { Button }       from '@/components/atoms/Button'
 import { FormField, TextAreaField } from '@/components/molecules/FormField'
 import { FormSkeleton } from '@/components/atoms/Skeleton'
@@ -294,7 +295,7 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
               <div className="cms-card overflow-hidden">
                 <p className="font-body text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide px-4 pt-4 pb-2">Facebook Preview</p>
                 {ogImage ? (
-                  <img src={ogImage} alt="OG preview" className="w-full h-36 object-cover" />
+                  <AppImage src={ogImage} alt="OG preview" objectFit="cover" priority wrapperStyle={{ width: '100%', height: 144 }} style={{ width: '100%', height: '100%' }} />
                 ) : (
                   <div className="w-full h-36 bg-[var(--lito-cream-alt)] flex items-center justify-center">
                     <Share2 className="w-8 h-8 text-[var(--text-faint)]" />

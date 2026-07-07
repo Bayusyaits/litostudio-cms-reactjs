@@ -1,4 +1,5 @@
 import { http } from '@/lib/request'
+import { withIdempotencyKey } from '@/lib/idempotency'
 import type { ApiResponse } from '@/types/api.types'
 import type { Organization, Site } from '@/types/auth.types'
 
@@ -31,10 +32,19 @@ export const orgService = {
     return { ...data, data: org ? [org] : [] } as ApiResponse<Organization[]>
   },
 
-  /** Create a new organization */
+  /**
+   * Create a new organization.
+   * Idempotency-keyed by 'create-organization' — this is a one-time
+   * onboarding action per user (you don't have an org yet when you can
+   * call this), so a single actionId per browser is the right scope: a
+   * double-click or lost-response retry reuses the same key; once it
+   * resolves, the key clears and a genuinely later attempt gets a fresh one.
+   */
   async createOrg(payload: { name: string; slug?: string; plan?: string }) {
-    const data = await http.post<ApiResponse<Organization>>('/api/v1/cms/organizations', payload)
-    return data.data
+    return withIdempotencyKey('create-organization', async (headers) => {
+      const data = await http.post<ApiResponse<Organization>>('/api/v1/cms/organizations', payload, { headers })
+      return data.data
+    })
   },
 
   async updateOrg(payload: { name?: string; settings?: Record<string, unknown> }) {
@@ -66,8 +76,10 @@ export const orgService = {
   },
 
   async createSite(payload: { name: string; slug?: string; domain?: string; template_slug?: string }) {
-    const data = await http.post<ApiResponse<Site>>('/api/v1/cms/organizations/sites', payload)
-    return data.data
+    return withIdempotencyKey('create-site', async (headers) => {
+      const data = await http.post<ApiResponse<Site>>('/api/v1/cms/organizations/sites', payload, { headers })
+      return data.data
+    })
   },
 
   async updateSite(siteId: string, payload: { name?: string; domain?: string; settings?: Record<string, unknown>; template_slug?: string }) {

@@ -6,53 +6,27 @@
  */
 
 import { useRef, useState } from 'react'
-import { GripVertical, Eye, EyeOff, Lock, Unlock, Trash2 } from 'lucide-react'
+import { GripVertical, Eye, EyeOff, Lock, Unlock, Trash2, Square } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
+import { getBlockDef } from './blocks/blockLibrary'
+import { BlockIcon } from './blocks/blockIcons'
 import type { Block } from '@/types/editor.types'
 
-// ── Block type → human label + icon emoji ─────────────────────────────────────
-
-const BLOCK_META: Record<string, { label: string; emoji: string }> = {
-  text:             { label: 'Text',            emoji: '¶'  },
-  heading:          { label: 'Heading',          emoji: 'H'  },
-  image:            { label: 'Image',            emoji: '🖼' },
-  gallery:          { label: 'Gallery',          emoji: '📷' },
-  video:            { label: 'Video',            emoji: '▶'  },
-  button:           { label: 'Button',           emoji: '◉'  },
-  spacer:           { label: 'Spacer',           emoji: '↕'  },
-  divider:          { label: 'Divider',          emoji: '—'  },
-  hero:             { label: 'Hero',             emoji: '★'  },
-  cta:              { label: 'CTA',              emoji: '📣' },
-  services:         { label: 'Services',         emoji: '⚙'  },
-  pricing:          { label: 'Pricing',          emoji: '$'  },
-  testimonials:     { label: 'Testimonials',     emoji: '💬' },
-  faq:              { label: 'FAQ',              emoji: '?'  },
-  team:             { label: 'Team',             emoji: '👥' },
-  statistics:       { label: 'Statistics',       emoji: '📊' },
-  products:         { label: 'Products',         emoji: '📦' },
-  collections:      { label: 'Collections',      emoji: '🗂' },
-  journal:          { label: 'Journal',          emoji: '📝' },
-  story:            { label: 'Story',            emoji: '📖' },
-  contact_form:     { label: 'Contact Form',     emoji: '✉'  },
-  newsletter:       { label: 'Newsletter',       emoji: '📨' },
-  map:              { label: 'Map',              emoji: '🗺' },
-  social_links:     { label: 'Social Links',     emoji: '🔗' },
-  html:             { label: 'HTML',             emoji: '</>' },
-  portfolio:        { label: 'Portfolio',        emoji: '🎨' },
-  booking:          { label: 'Booking',          emoji: '📅' },
-  packages:         { label: 'Packages',         emoji: '🎁' },
-  campaigns_grid:   { label: 'Campaigns',        emoji: '📢' },
-  destinations_grid:{ label: 'Destinations',     emoji: '📍' },
-}
+// ── Block type → human label + icon ───────────────────────────────────────────
+// 2026-07 icon cleanup: this used to hand-maintain its own emoji per block
+// type in a separate BLOCK_META map, independent from (and inconsistent
+// with) the icon each block type already declares in blockLibrary.ts. Now
+// resolves the same single source of truth via getBlockDef() + BlockIcon,
+// so there's exactly one icon assignment per block type, not two.
 
 function blockLabel(block: Block): string {
   if (block.name) return block.name
-  const meta = BLOCK_META[block.type]
-  return meta ? meta.label : block.type
+  const def = getBlockDef(block.type)
+  return def ? def.label : block.type
 }
 
-function blockEmoji(block: Block): string {
-  return BLOCK_META[block.type]?.emoji ?? '□'
+function blockIconName(block: Block): string | undefined {
+  return getBlockDef(block.type)?.icon
 }
 
 // ── Row ───────────────────────────────────────────────────────────────────────
@@ -105,8 +79,8 @@ function BlockRow({ block, index, dragIndex, overIndex, onDragStart, onDragOver,
       </span>
 
       {/* Icon */}
-      <span className={`font-mono text-[11px] shrink-0 min-w-[18px] text-center ${isSelected ? 'text-[var(--lito-teal)]' : 'text-[var(--text-muted)]'}`}>
-        {blockEmoji(block)}
+      <span className={`shrink-0 min-w-[18px] flex items-center justify-center ${isSelected ? 'text-[var(--lito-teal)]' : 'text-[var(--text-muted)]'}`}>
+        {blockIconName(block) ? <BlockIcon name={blockIconName(block)!} size={13} /> : <Square size={13} />}
       </span>
 
       {/* Label */}

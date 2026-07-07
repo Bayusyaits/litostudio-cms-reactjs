@@ -119,4 +119,22 @@ export const themeService = {
     })
     return data
   },
+
+  /**
+   * Republish all active pages for a site:
+   *   1. Wipes each page's page_sections
+   *   2. Re-seeds from the current template's DEFAULTS
+   *   3. Records a 'staging' deployment row
+   *
+   * Returns a log array that can be streamed into a deployment-log UI.
+   */
+  async republishPages(siteId: string): Promise<{
+    success:        boolean
+    deployment_id:  string | null
+    pages_updated:  number
+    template_slug:  string
+    log:            string[]
+  }> {
+    return http.post(`/api/v1/cms/themes/sites/${siteId}/republish-pages`, {})
+  },
 }

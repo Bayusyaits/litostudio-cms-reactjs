@@ -9,10 +9,12 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  Search, Globe, Compass, Aperture, Camera, CalendarDays, Layers2,
+  Search, Layers2,
   List, AlignLeft as OutlineIcon, LayoutGrid as BlocksIcon, Puzzle,
+  type LucideIcon,
 } from 'lucide-react'
 import { BLOCK_LIBRARY } from './blocks/blockLibrary'
+import { BlockIcon } from './blocks/blockIcons'
 import { hydrateBlockDefaults } from './blocks/blockDefaults'
 import { useEditorStore, makeBlock } from '@/stores/editor.store'
 import { useWebsiteStore } from '@/stores/website.store'
@@ -21,31 +23,6 @@ import { EditorOutlinePanel }  from './EditorOutlinePanel'
 import { EditorListView }      from './EditorListView'
 import { EditorPatternsPanel } from './patterns/EditorPatternsPanel'
 import type { SiteThemeSettings } from '@/services/theme.service'
-
-// ── Lucide icon map (must match icon names in blockLibrary.ts) ────────────────
-import {
-  Heading, AlignLeft, MousePointerClick, Minus, ArrowUpDown, Code2,
-  Image, LayoutGrid, Play, Star, Megaphone, Layers, DollarSign, Quote,
-  HelpCircle, Users, BarChart3, MapPin, Package, Archive, BookOpen,
-  Mail, Send, Share2, FileText, Sparkles,
-  type LucideIcon,
-} from 'lucide-react'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  Heading, AlignLeft, MousePointerClick, Minus, ArrowUpDown, Code2,
-  Image, LayoutGrid, Play, Star, Megaphone, Layers, DollarSign, Quote,
-  HelpCircle, Users, BarChart3, MapPin, Package, Archive, BookOpen,
-  Mail, Send, Share2, FileText, Sparkles,
-  // Template-specific block icons
-  Globe, Compass, Aperture, Camera, CalendarDays,
-  Layers2,
-}
-
-function BlockIcon({ name }: { name: string }) {
-  const Icon = ICON_MAP[name]
-  if (!Icon) return <span className="text-[10px]">{name[0]}</span>
-  return <Icon size={16} />
-}
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
@@ -361,11 +338,26 @@ export function EditorLeftSidebar() {
           {/* All view: grouped by section */}
           {!search.trim() && activeTab === 'All' && (
             <div className="flex flex-col">
+              {/*
+                Two-group split (2026-07 architecture standardization):
+                "Standard sections" — canonical block types with no templateScope,
+                identical everywhere. "{Template}-only sections" — exclusive to the
+                active template (blockLibrary.ts templateScope), kept under their
+                real names/fields rather than genericized (see write-spec doc:
+                section-architecture-standardization-spec.md, Non-Goals).
+                Group 1 was previously the only thing shown here; template blocks
+                were reachable only via the separate "Template" tab, which made
+                them easy to miss entirely in the default view.
+              */}
+              <p className="font-body text-[9px] font-bold tracking-[0.08em] text-[var(--text-muted)]/70 m-0 pt-1 pb-0.5 uppercase">
+                Standard sections
+              </p>
+
               {/* FAVORITES */}
               {sectionHeader('FAVORITES')}
               {blockGrid(BLOCK_LIBRARY.filter(b => FAVORITES.includes(b.type as typeof FAVORITES[number])))}
 
-              {/* Remaining sections */}
+              {/* Remaining canonical sections */}
               {ALL_SECTIONS.filter(s => s.key !== 'favorites').map(({ key, label, category }) => {
                 const items = BLOCK_LIBRARY.filter(b => b.category === category)
                 if (items.length === 0) return null
@@ -376,6 +368,17 @@ export function EditorLeftSidebar() {
                   </div>
                 )
               })}
+
+              {/* Group 2: template-exclusive sections — always visible here now, */}
+              {/* not just behind the separate "Template" tab. */}
+              {templateBlocks.length > 0 && (
+                <div key="template-only">
+                  <p className="font-body text-[9px] font-bold tracking-[0.08em] text-[var(--lito-teal)]/80 m-0 pt-3 pb-0.5 uppercase border-t border-[var(--lito-border)] mt-2">
+                    {manifest ? `${manifest.name} only` : 'Template-only sections'}
+                  </p>
+                  {blockGrid(templateBlocks)}
+                </div>
+              )}
             </div>
           )}
         </div>

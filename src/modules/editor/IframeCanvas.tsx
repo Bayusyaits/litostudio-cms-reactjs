@@ -9,6 +9,7 @@
  */
 
 import { useRef, useState, useCallback, useEffect } from 'react'
+import { PenLine } from 'lucide-react'
 import { useEditorStore }   from '@/stores/editor.store'
 import { usePreviewBridge } from '@/hooks/usePreviewBridge'
 import type { SectionBound }from '@/hooks/usePreviewBridge'
@@ -93,8 +94,9 @@ function SectionBadge({ label, isSelected, isHovered, rect, zoomLevel, onClick, 
             padding: '4px 8px',
             fontFamily: 'var(--font-body, Inter, system-ui, sans-serif)',
             fontSize: 10, color: 'rgba(255,255,255,0.55)',
+            display: 'inline-flex', alignItems: 'center', gap: 4,
           }}>
-            ✎ Edit
+            <PenLine size={10} /> Edit
           </span>
           <span style={{ width: 1, alignSelf: 'stretch', background: 'rgba(201,162,90,0.15)' }} />
           <span style={{

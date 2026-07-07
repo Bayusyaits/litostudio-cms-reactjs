@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Users, UserPlus, MoreHorizontal, Trash2 } from 'lucide-react'
+import { AppImageThumb } from '@/components/atoms/AppImage'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { SearchInput } from '@/components/molecules/SearchInput'
 import { EmptyState } from '@/components/molecules/EmptyState'
@@ -162,7 +163,7 @@ function InviteForm({ onInvite, inviting, error }: { onInvite: (p: InvitePayload
 function MemberAvatar({ member }: { member: TeamMember }) {
   const initials = (member.full_name ?? member.email).split(/[\s@]/)[0]?.slice(0, 2).toUpperCase() ?? '?'
   return member.avatar_url ? (
-    <img src={member.avatar_url} alt={member.full_name ?? ''} className="w-8 h-8 rounded-full object-cover" />
+    <AppImageThumb src={member.avatar_url} alt={member.full_name ?? ''} size={32} radius="50%" skeleton={false} />
   ) : (
     <div className="w-8 h-8 rounded-full bg-[rgba(212,168,83,0.12)] flex items-center justify-center text-[11px] font-semibold text-[var(--lito-gold-deep)] shrink-0">
       {initials}

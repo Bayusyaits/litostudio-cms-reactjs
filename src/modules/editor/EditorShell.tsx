@@ -59,6 +59,18 @@ export function EditorShell({
     editorMode, setEditorMode,
   } = useEditorStore()
 
+  // 2026-07 idempotency audit fix: Save/Publish/Unpublish previously had no
+  // guard against re-entrancy at all — five rapid clicks fired five network
+  // requests. Each handler below now checks useEditorStore.getState().saveStatus
+  // fresh (not a closure value, to avoid a staleness race on rapid clicks)
+  // before starting. EditorToolbar.tsx separately reads saveStatus from the
+  // store itself to disable the Save/Publish buttons while a request is in
+  // flight (belt and suspenders). The backend's Idempotency-Key layer is the
+  // real protection against a lost-response retry actually executing twice;
+  // these are the cheap, purely client-side fixes for "the button did
+  // nothing to stop a rapid double-click," which the audit found had zero
+  // protection either way.
+
   // ── In-app navigation guard (SPA routes) ─────────────────────────────────
   // Blocks React Router navigation when there are unsaved changes.
   // beforeunload (below) covers browser tab close / refresh.
@@ -79,6 +91,7 @@ export function EditorShell({
 
   const handleSave = useCallback(async () => {
     if (!isDirty) return
+    if (useEditorStore.getState().saveStatus === 'saving') return // re-entrancy guard
     setSaveStatus('saving')
     try {
       await saveFn()
@@ -96,6 +109,7 @@ export function EditorShell({
   // ── Publish ───────────────────────────────────────────────────────────────
 
   const handlePublish = useCallback(async () => {
+    if (useEditorStore.getState().saveStatus === 'saving') return // re-entrancy guard
     setSaveStatus('saving')
     try {
       if (publishFn) {
@@ -113,6 +127,7 @@ export function EditorShell({
 
   const handleUnpublish = useCallback(async () => {
     if (!unpublishFn) return
+    if (useEditorStore.getState().saveStatus === 'saving') return // re-entrancy guard
     setSaveStatus('saving')
     try {
       await unpublishFn()

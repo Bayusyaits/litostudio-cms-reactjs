@@ -7,6 +7,7 @@
 
 import type { Block } from '@/types/editor.types'
 import type { PortfolioBlockData } from '@/types/editor.types'
+import { AppImage } from '@/components/atoms/AppImage'
 
 const MOCK_ITEMS = [
   {
@@ -72,10 +73,13 @@ export function PortfolioSection({ block }: { block: Block }) {
           {primary && (
             <div className="relative overflow-hidden rounded-sm group cursor-pointer min-h-[560px]">
               {primary.image ? (
-                <img
+                <AppImage
                   src={primary.image}
                   alt={primary.title}
-                  className="w-full h-full object-cover block transition-transform duration-500 group-hover:scale-[1.03]"
+                  objectFit="cover"
+                  wrapperStyle={{ position: 'absolute', inset: 0 }}
+                  style={{ width: '100%', height: '100%', transition: 'transform 0.5s ease' }}
+                  className="group-hover:scale-[1.03]"
                 />
               ) : (
                 <div className="w-full h-full min-h-[560px] bg-[#1e1e1e] flex items-center justify-center">
@@ -97,10 +101,13 @@ export function PortfolioSection({ block }: { block: Block }) {
             {rest.slice(0, 2).map(item => (
               <div key={item.id} className="relative overflow-hidden rounded-sm group cursor-pointer">
                 {item.image ? (
-                  <img
+                  <AppImage
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-full object-cover block transition-transform duration-500 group-hover:scale-[1.03]"
+                    objectFit="cover"
+                    wrapperStyle={{ position: 'absolute', inset: 0 }}
+                    style={{ width: '100%', height: '100%', transition: 'transform 0.5s ease' }}
+                    className="group-hover:scale-[1.03]"
                   />
                 ) : (
                   <div className="w-full h-[220px] bg-[#1e1e1e] flex items-center justify-center">
@@ -122,7 +129,7 @@ export function PortfolioSection({ block }: { block: Block }) {
             {items.slice(3).map(item => (
               <div key={item.id} className="relative overflow-hidden rounded-sm group cursor-pointer aspect-[3/4]">
                 {item.image ? (
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover block" />
+                  <AppImage src={item.image} alt={item.title} objectFit="cover" wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
                 ) : (
                   <div className="w-full h-full bg-[#1e1e1e]" />
                 )}

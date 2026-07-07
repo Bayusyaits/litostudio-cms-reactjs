@@ -57,6 +57,11 @@ export function EditorToolbar({
   } = useEditorStore()
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const isCodeMode = editorMode === 'code'
+  // 2026-07 idempotency audit fix: previously nothing disabled these
+  // buttons while a save/publish/unpublish request was in flight — a rapid
+  // double/triple click fired that many network requests. See
+  // EditorShell.tsx for the matching handler-level re-entrancy guard.
+  const isSaving = saveStatus === 'saving'
 
   // ── Last-saved timestamp ─────────────────────────────────────────────────
   const lastSavedRef = useRef<Date | null>(null)
@@ -149,12 +154,13 @@ export function EditorToolbar({
 
           {/* Save status — click to save manually */}
           <div
-            className="cursor-pointer"
-            onClick={onSave}
-            title="Save (⌘S)"
+            className={isSaving ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}
+            onClick={() => { if (!isSaving) onSave() }}
+            title={isSaving ? 'Saving…' : 'Save (⌘S)'}
             role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSave() }}
+            aria-disabled={isSaving}
+            tabIndex={isSaving ? -1 : 0}
+            onKeyDown={(e) => { if (!isSaving && (e.key === 'Enter' || e.key === ' ')) onSave() }}
           >
             <SaveStatus />
           </div>
@@ -321,8 +327,9 @@ export function EditorToolbar({
             <button
               type="button"
               onClick={onUnpublish}
-              title="Unpublish — revert to draft"
-              className="tb-action-btn"
+              disabled={isSaving}
+              title={isSaving ? 'Working…' : 'Unpublish — revert to draft'}
+              className="tb-action-btn disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CloudOff size={13} />
               Unpublish
@@ -333,10 +340,12 @@ export function EditorToolbar({
           <button
             type="button"
             onClick={onPublish}
-            className="tb-publish-btn"
+            disabled={isSaving}
+            title={isSaving ? 'Working…' : undefined}
+            className="tb-publish-btn disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Rocket size={13} />
-            {pageStatus === 'active' ? 'Re-publish' : 'Publish'}
+            {isSaving ? 'Working…' : pageStatus === 'active' ? 'Re-publish' : 'Publish'}
           </button>
         </div>
       </div>

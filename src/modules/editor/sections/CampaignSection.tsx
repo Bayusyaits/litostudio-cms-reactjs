@@ -5,6 +5,7 @@
 
 import type { Block } from '@/types/editor.types'
 import type { CTABlockData } from '@/types/editor.types'
+import { AppImage } from '@/components/atoms/AppImage'
 
 export function CampaignSection({ block }: { block: Block }) {
   const d = block.data as CTABlockData & Record<string, unknown>
@@ -20,7 +21,7 @@ export function CampaignSection({ block }: { block: Block }) {
   return (
     <section style={{ position: 'relative', minHeight: 480, overflow: 'hidden' }}>
       {/* BG image */}
-      <img src={bg} alt="" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      <AppImage src={bg} alt="" priority objectFit="cover" wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
       {/* Gradient overlay — darker at bottom */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.2) 100%)' }} />
 

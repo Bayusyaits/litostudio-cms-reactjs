@@ -26,7 +26,7 @@ import { createPortal } from 'react-dom'
 import {
   Bold, Italic, Underline, Link,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  ChevronDown,
+  ChevronDown, X,
 } from 'lucide-react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -221,7 +221,7 @@ function LinkDialog({ onInsert, onClose }: LinkDialogProps) {
         onMouseDown={e => { e.preventDefault(); onClose() }}
         className="flex items-center justify-center min-w-7 h-7 px-[6px] border-0 rounded-[5px] cursor-pointer bg-transparent text-[rgba(255,255,255,0.4)] transition-[background] duration-[80ms]"
       >
-        ✕
+        <X size={13} />
       </button>
     </div>
   )

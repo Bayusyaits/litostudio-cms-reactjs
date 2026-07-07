@@ -35,7 +35,8 @@ const ProductsPage     = lazy(() => import('@/modules/products/ProductsPageConta
 const CollectionsPage  = lazy(() => import('@/modules/collections/CollectionsPageContainer'))
 const ReviewsPage      = lazy(() => import('@/modules/reviews/ReviewsPageContainer'))
 const FaqsPage         = lazy(() => import('@/modules/faqs/FaqsPageContainer'))
-const OnboardingPage   = lazy(() => import('@/modules/onboarding/OnboardingPage'))
+const OnboardingPage          = lazy(() => import('@/modules/onboarding/OnboardingPage'))
+const GenerateContentPage     = lazy(() => import('@/modules/onboarding/GenerateContentPage'))
 const BlockEditorPage          = lazy(() => import('@/modules/editor/BlockEditorPage'))
 const PagePreviewPage          = lazy(() => import('@/modules/editor/PagePreviewPage'))
 const SimpleContentEditorPage  = lazy(() => import('@/modules/editor/SimpleContentEditorPage'))
@@ -145,7 +146,8 @@ export const router = createBrowserRouter([
 
       { path: 'reviews',           element: <S><ReviewsPage /></S> },
       { path: 'faqs',              element: <S><FaqsPage /></S> },
-      { path: 'onboarding',        element: <S><OnboardingPage /></S> },
+      { path: 'onboarding',          element: <S><OnboardingPage /></S> },
+      { path: 'onboarding/generate', element: <S><GenerateContentPage /></S> },
       { path: 'organizations',     element: <S><OrganizationsPage /></S> },
       { path: 'addons',            element: <S><AddonsPage /></S> },
 

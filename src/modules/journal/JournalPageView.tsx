@@ -1,4 +1,4 @@
-import { Plus, FileText, Trash2, LayoutTemplate } from 'lucide-react'
+import { Plus, FileText, Trash2, LayoutTemplate, PenLine } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
 import { SearchInput } from '@/components/molecules/SearchInput'
@@ -7,6 +7,7 @@ import { formatRelative } from '@/lib/utils'
 import type { Column } from '@/components/molecules/DataTable/types'
 import { getTitle } from '@/types/content.types'
 import type { JournalPost } from '@/types/content.types'
+import { AppImageThumb } from '@/components/atoms/AppImage'
 
 interface Props {
   posts: JournalPost[]
@@ -37,7 +38,7 @@ export function JournalPageView({
       render: (post) => (
         <div className="flex items-center gap-3">
           {post.cover_image ? (
-            <img src={post.cover_image} alt={getTitle(post)} className="w-9 h-9 rounded object-cover flex-shrink-0" />
+            <AppImageThumb src={post.cover_image} alt={getTitle(post)} size={36} radius={4} />
           ) : (
             <div className="w-9 h-9 rounded bg-[var(--lito-gold-soft)] flex items-center justify-center flex-shrink-0">
               <FileText className="w-4 h-4 text-[var(--lito-gold)]" aria-hidden />
@@ -68,7 +69,7 @@ export function JournalPageView({
       width: '80px',
       render: (post) => (
         <div className="flex items-center justify-end gap-1">
-          <Button size="icon" variant="ghost" onClick={() => onEdit(post.id)} aria-label="Edit" title="Edit fields">✏️</Button>
+          <Button size="icon" variant="ghost" onClick={() => onEdit(post.id)} aria-label="Edit" title="Edit fields"><PenLine className="w-3.5 h-3.5" /></Button>
           <Button size="icon" variant="ghost" onClick={() => onOpenEditor(post.id)} aria-label="Open in editor" title="Open in editor">
             <LayoutTemplate className="w-3.5 h-3.5" />
           </Button>

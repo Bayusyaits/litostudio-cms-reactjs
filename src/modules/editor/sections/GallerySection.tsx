@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react'
+import { MapPin } from 'lucide-react'
 import type { Block } from '@/types/editor.types'
 import type { GalleryBlockData } from '@/types/editor.types'
 
@@ -101,7 +102,9 @@ export function GallerySection({ block }: { block: Block }) {
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--lito-gold, #D4A853)', marginBottom: 4 }}>{item.category}</p>
                 <p style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: '#FFFFFF', margin: 0 }}>{item.title}</p>
                 {item.location && (
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>📍 {item.location}</p>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <MapPin size={11} /> {item.location}
+                  </p>
                 )}
               </div>
             </div>

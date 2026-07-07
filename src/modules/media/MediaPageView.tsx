@@ -1,4 +1,5 @@
 import { useRef, useCallback, useState } from 'react'
+import { AppImage } from '@/components/atoms/AppImage'
 import { FolderOpen, Upload, Trash2, FileVideo, FileText, File, Grid, List, Check } from 'lucide-react'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { SearchInput } from '@/components/molecules/SearchInput'
@@ -63,7 +64,7 @@ function GridCard({ item, selected, onSelect, onDelete }: { item: Media; selecte
       onClick={onSelect}
     >
       {isImageMime(item.mime_type) ? (
-        <img src={item.cdn_url ?? item.original_url ?? ''} alt={item.alt_text ?? item.filename} className="w-full h-full object-cover" loading="lazy" />
+        <AppImage src={item.cdn_url ?? item.original_url ?? ''} alt={item.alt_text ?? item.filename} objectFit="cover" skeleton wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
       ) : (
         <div className="w-full h-full flex flex-col items-center justify-center gap-[6px]">
           <MediaTypeIcon mimeType={item.mime_type} className="w-8 h-8" />
@@ -276,7 +277,7 @@ export function MediaPageView({
                     <td>
                       <div className="flex items-center gap-[10px]">
                         {isImageMime(item.mime_type) ? (
-                          <img src={item.cdn_url ?? item.original_url ?? ''} alt="" className="w-12 h-[34px] object-cover rounded-[3px] shrink-0" loading="lazy" />
+                          <AppImage src={item.cdn_url ?? item.original_url ?? ''} alt="" objectFit="cover" skeleton={false} wrapperStyle={{ width: 48, height: 34, flexShrink: 0, borderRadius: 3 }} style={{ width: '100%', height: '100%' }} />
                         ) : (
                           <div className="w-12 h-[34px] rounded-[3px] bg-[var(--lito-cream-alt)] flex items-center justify-center shrink-0">
                             <MediaTypeIcon mimeType={item.mime_type} className="w-4 h-4" />

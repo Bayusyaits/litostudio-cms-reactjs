@@ -19,6 +19,7 @@ import { getPageDefaults }         from '@litostudio/templates'
 import { getCanvasTokens }         from './templateCanvasTokens'
 import { normalizeTemplateSlug }   from '@/hooks/useTemplateManifest'
 import { getPageLayout }           from '@/services/pageLayouts.service'
+import { getBlockDef, BLOCKS_NOT_PUBLISHED_AS_SECTIONS } from './blocks/blockLibrary'
 import { EditorShell }             from './EditorShell'
 import type { SupportedLocale }    from './EditorToolbar'
 import { DashboardSkeleton }       from '@/components/atoms/Skeleton'
@@ -405,45 +406,72 @@ export default function BlockEditorPage() {
       metaDescription: translation?.meta_description ?? '',
     })
 
+    // ── Template & page identification (shared by migration + seeding) ─────────
+    const settings        = activeSite?.settings as Record<string, unknown> | null | undefined
+    const rawTemplateSlug = (settings?.template_slug as string | undefined)
+                         ?? (activeSite?.template_slug ?? '')
+    const templateSlug    = rawTemplateSlug ? normalizeTemplateSlug(rawTemplateSlug) : ''
+    const orgId           = activeSite?.organization_id ?? ''
+    const pageSlug        = page.slug ?? ''
+
+    /** Convert slug variants: 'home-page' → 'home', 'about-us' → 'about' */
+    function normaliseSlug(s: string): string {
+      return s.split('-')[0] ?? s
+    }
+
+    /** Seed blocks from a PageDefaultBlock[] array — fresh IDs each time */
+    const seedFromDefaults = (defaults: Array<{ id: string; type: string; data: Record<string, unknown>; styles?: Record<string, unknown>; locked?: boolean; name?: string; visibility?: { desktop?: boolean; tablet?: boolean; mobile?: boolean } }>) => {
+      if (!mounted) return
+      const seededBlocks: Block[] = defaults.map((d) => ({
+        ...d,
+        id:   uid(),
+        type: d.type as Block['type'],
+        data: d.data  as Block['data'],
+      }))
+      if (seededBlocks.length > 0) {
+        init({ version: '1.0', locale: locale, blocks: seededBlocks }, pageId, locale)
+      }
+    }
+
+    /** Try static package defaults — also tries normalised slug as fallback */
+    const tryStaticDefaults = (tplSlug: string, pgSlug: string): boolean => {
+      const d = getPageDefaults(tplSlug, pgSlug, locale) ?? getPageDefaults(tplSlug, normaliseSlug(pgSlug), locale)
+      if (d && d.length > 0) { seedFromDefaults(d); return true }
+      return false
+    }
+
+    // ── Lito listing page migration ──────────────────────────────────────────
+    // Pages saved before the lito_*_listing refactor still contain the OLD
+    // multi-block structure (hero + destinations_grid + map, etc.).
+    // Because doc.blocks.length > 0 the blank-canvas seeding below is skipped,
+    // so old blocks persist indefinitely.  This migration detects that condition
+    // and transparently replaces the old blocks with the new single listing block
+    // on every page load — before the user ever has to touch anything.
+    // Once the user saves the page the new block is persisted and this migration
+    // becomes a no-op (LITO_NEW_BLOCK_TYPES.has() returns true).
+    const LITO_LISTING_SLUGS   = new Set(['destinations', 'stories', 'journal', 'gallery'])
+    const LITO_NEW_BLOCK_TYPES = new Set([
+      'lito_destinations_listing', 'lito_stories_listing',
+      'lito_journal_listing',      'lito_gallery_listing',
+    ])
+    const effectiveSlugForMigration = templateSlug || 'lito'
+    if (
+      doc.blocks.length > 0 &&
+      effectiveSlugForMigration === 'lito' &&
+      pageSlug &&
+      (LITO_LISTING_SLUGS.has(pageSlug) || LITO_LISTING_SLUGS.has(normaliseSlug(pageSlug))) &&
+      !doc.blocks.some(b => (LITO_NEW_BLOCK_TYPES as Set<string>).has(b.type))
+    ) {
+      // Also clear any stale localStorage draft that might contain old blocks
+      try { localStorage.removeItem(`editor_draft_${pageId}`) } catch { /* ignore */ }
+      tryStaticDefaults(effectiveSlugForMigration, pageSlug)
+    }
+
     // Seeding priority (only when canvas is empty — no existing saved blocks):
     //   1. Legacy page_sections migration
     //   2. page_layouts DB override (per-org customised defaults)
     //   3. PAGE_DEFAULTS_REGISTRY (static in-package defaults keyed by template + pageSlug)
     if (doc.blocks.length === 0) {
-      // Read template_slug safely — settings is Record<string,unknown>
-      const settings        = activeSite?.settings as Record<string, unknown> | null | undefined
-      const rawTemplateSlug = (settings?.template_slug as string | undefined)
-                           ?? (activeSite?.template_slug ?? '')
-      const templateSlug    = rawTemplateSlug ? normalizeTemplateSlug(rawTemplateSlug) : ''
-      const orgId        = activeSite?.organization_id ?? ''
-      const pageSlug     = page.slug ?? ''
-
-      /** Convert slug variants: 'home-page' → 'home', 'about-us' → 'about' */
-      function normaliseSlug(s: string): string {
-        return s.split('-')[0] ?? s
-      }
-
-      /** Seed blocks from a PageDefaultBlock[] array — fresh IDs each time */
-      const seedFromDefaults = (defaults: Array<{ id: string; type: string; data: Record<string, unknown>; styles?: Record<string, unknown>; locked?: boolean; name?: string; visibility?: { desktop?: boolean; tablet?: boolean; mobile?: boolean } }>) => {
-        if (!mounted) return
-        const seededBlocks: Block[] = defaults.map((d) => ({
-          ...d,
-          id:   uid(),
-          type: d.type as Block['type'],
-          data: d.data  as Block['data'],
-        }))
-        if (seededBlocks.length > 0) {
-          init({ version: '1.0', locale: locale, blocks: seededBlocks }, pageId, locale)
-        }
-      }
-
-      /** Try static package defaults — also tries normalised slug as fallback */
-      const tryStaticDefaults = (tplSlug: string, pgSlug: string): boolean => {
-        const d = getPageDefaults(tplSlug, pgSlug, locale) ?? getPageDefaults(tplSlug, normaliseSlug(pgSlug), locale)
-        if (d && d.length > 0) { seedFromDefaults(d); return true }
-        return false
-      }
-
       const doSeed = async () => {
         // 1. Legacy sections
         let sections: Awaited<ReturnType<typeof pageSectionsService.list>> = []
@@ -578,6 +606,28 @@ export default function BlockEditorPage() {
   // ── Publish function ──────────────────────────────────────────────────────
 
   const publishFn = useCallback(async () => {
+    // 0. Warn the editor if any block on the page will not appear on the live
+    //    site. image/video/button/spacer/divider blocks render fine here in
+    //    the canvas but are intentionally NOT written to page_sections by the
+    //    backend sync bridge (they're meant to live inside a composite block,
+    //    not stand alone) — see BLOCKS_NOT_PUBLISHED_AS_SECTIONS. Previously
+    //    this failed silently; the editor had no way to know (2026-07-05 audit fix).
+    const droppedBlocks = blockDoc.blocks.filter((b) =>
+      (BLOCKS_NOT_PUBLISHED_AS_SECTIONS as readonly string[]).includes(b.type),
+    )
+    if (droppedBlocks.length > 0) {
+      const summary = droppedBlocks
+        .map((b) => getBlockDef(b.type)?.label ?? b.type)
+        .join(', ')
+      const proceed = window.confirm(
+        `${droppedBlocks.length} block${droppedBlocks.length > 1 ? 's' : ''} on this page ` +
+        `(${summary}) will NOT appear on the published website — standalone ` +
+        `${summary} blocks aren't rendered as page sections.\n\n` +
+        `Publish anyway?`,
+      )
+      if (!proceed) return
+    }
+
     // 1. Persist the current blockDoc to page_translations.body
     await saveFn()
 

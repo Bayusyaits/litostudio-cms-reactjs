@@ -25,7 +25,7 @@ export interface BlockPattern {
   name:        string
   description: string
   category:    PatternCategory
-  /** Preview emoji/icon */
+  /** Lucide icon name for the pattern-picker preview (see blockIcons.tsx ICON_MAP) */
   preview:     string
   /** Blocks to insert (ids will be regenerated on insert) */
   blocks:      Omit<Block, 'id'>[]
@@ -49,7 +49,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Simple Hero',
     description: 'Full-width hero with title, subtitle, and CTA button.',
     category:    'hero',
-    preview:     '🌟',
+    preview:     'Star',
     blocks: [
       {
         type: 'hero',
@@ -71,7 +71,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Hero + CTA Strip',
     description: 'Hero section followed by a call-to-action strip.',
     category:    'hero',
-    preview:     '🎯',
+    preview:     'Target',
     blocks: [
       {
         type: 'hero',
@@ -108,7 +108,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Intro Text Section',
     description: 'Heading + body paragraph. Good for About or intro copy.',
     category:    'content',
-    preview:     '✍️',
+    preview:     'PenLine',
     blocks: [
       {
         type: 'heading',
@@ -129,7 +129,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Services Grid',
     description: '3-column services grid with icons.',
     category:    'content',
-    preview:     '⚙️',
+    preview:     'Settings',
     blocks: [
       {
         type: 'heading',
@@ -159,7 +159,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Portfolio Grid',
     description: 'Heading + 3-column portfolio gallery.',
     category:    'portfolio',
-    preview:     '🎨',
+    preview:     'Palette',
     blocks: [
       {
         type: 'heading',
@@ -189,7 +189,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Centered CTA',
     description: 'Bold call-to-action with heading and button.',
     category:    'cta',
-    preview:     '📣',
+    preview:     'Megaphone',
     blocks: [
       {
         type: 'cta',
@@ -211,7 +211,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Testimonials + CTA',
     description: 'Social proof carousel followed by a booking CTA.',
     category:    'cta',
-    preview:     '💬',
+    preview:     'MessageCircle',
     blocks: [
       {
         type: 'testimonials',
@@ -247,7 +247,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Contact Section',
     description: 'Heading + contact form + social links.',
     category:    'contact',
-    preview:     '✉️',
+    preview:     'Mail',
     blocks: [
       {
         type: 'heading',
@@ -290,7 +290,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Fashion Home Hero',
     description: 'Full-bleed editorial hero with campaign banner and marquee strip.',
     category:    'fashion',
-    preview:     '🖤',
+    preview:     'Shirt',
     blocks: [
       {
         type: 'page_hero',
@@ -332,7 +332,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Fashion About Page',
     description: 'Brand story, philosophy pillars, and contact CTA for an about page.',
     category:    'fashion',
-    preview:     '✦',
+    preview:     'Sparkle',
     blocks: [
       {
         type: 'page_hero',
@@ -399,7 +399,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Beauty Home Page',
     description: 'Founder quote, featured products, newsletter, and a booking CTA for beauty brands.',
     category:    'beauty',
-    preview:     '🌸',
+    preview:     'Flower',
     blocks: [
       {
         type: 'hero',
@@ -472,7 +472,7 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
     name:        'Photography Packages',
     description: 'Heading + packages pricing cards.',
     category:    'photography',
-    preview:     '📷',
+    preview:     'Camera',
     blocks: [
       {
         type: 'heading',
@@ -512,14 +512,15 @@ export const PATTERN_LIBRARY: BlockPattern[] = [
 
 // ── Category metadata ─────────────────────────────────────────────────────────
 
-export const PATTERN_CATEGORIES: Array<{ id: PatternCategory; label: string; emoji: string }> = [
-  { id: 'hero',         label: 'Hero',         emoji: '🌟' },
-  { id: 'content',      label: 'Content',      emoji: '✍️' },
-  { id: 'portfolio',    label: 'Portfolio',    emoji: '🎨' },
-  { id: 'cta',          label: 'CTA',          emoji: '📣' },
-  { id: 'contact',      label: 'Contact',      emoji: '✉️' },
-  { id: 'commerce',     label: 'Commerce',     emoji: '🛍️' },
-  { id: 'photography',  label: 'Photography',  emoji: '📷' },
-  { id: 'fashion',      label: 'Fashion',      emoji: '🖤' },
-  { id: 'beauty',       label: 'Beauty',       emoji: '🌸' },
+// icon = Lucide icon name (see blockIcons.tsx ICON_MAP) — was a raw emoji until the 2026-07 icon cleanup
+export const PATTERN_CATEGORIES: Array<{ id: PatternCategory; label: string; icon: string }> = [
+  { id: 'hero',         label: 'Hero',         icon: 'Star' },
+  { id: 'content',      label: 'Content',      icon: 'PenLine' },
+  { id: 'portfolio',    label: 'Portfolio',    icon: 'Palette' },
+  { id: 'cta',          label: 'CTA',          icon: 'Megaphone' },
+  { id: 'contact',      label: 'Contact',      icon: 'Mail' },
+  { id: 'commerce',     label: 'Commerce',     icon: 'ShoppingBag' },
+  { id: 'photography',  label: 'Photography',  icon: 'Camera' },
+  { id: 'fashion',      label: 'Fashion',      icon: 'Shirt' },
+  { id: 'beauty',       label: 'Beauty',       icon: 'Flower' },
 ]

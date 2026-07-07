@@ -7,6 +7,7 @@
 import type { Block } from '@/types/editor.types'
 import type { JournalBlockData } from '@/types/editor.types'
 import { sanitizeHtml } from '@/utils/sanitizeHtml'
+import { AppImage } from '@/components/atoms/AppImage'
 
 const MOCK_POSTS = [
   {
@@ -69,8 +70,8 @@ export function JournalSection({ block }: { block: Block }) {
           {/* Featured large post */}
           {featured && (
             <a href="#" onClick={e => e.preventDefault()} style={{ textDecoration: 'none', display: 'block' }}>
-              <div style={{ aspectRatio: '16/10', overflow: 'hidden', borderRadius: 2, marginBottom: 20 }}>
-                <img src={featured.cover} alt={featured.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ aspectRatio: '16/10', overflow: 'hidden', borderRadius: 2, marginBottom: 20, position: 'relative' }}>
+                <AppImage src={featured.cover} alt={featured.title} objectFit="cover" wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
               </div>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--lito-gold, #D4A853)', marginBottom: 8 }}>
                 {featured.category}
@@ -91,8 +92,8 @@ export function JournalSection({ block }: { block: Block }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             {sidePosts.map(post => (
               <a key={post.id} href="#" onClick={e => e.preventDefault()} style={{ textDecoration: 'none', display: 'flex', gap: 20 }}>
-                <div style={{ width: 112, height: 112, flexShrink: 0, overflow: 'hidden', borderRadius: 2 }}>
-                  <img src={post.cover} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ width: 112, height: 112, flexShrink: 0, overflow: 'hidden', borderRadius: 2, position: 'relative' }}>
+                  <AppImage src={post.cover} alt={post.title} ratio="1/1" objectFit="cover" wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
                 </div>
                 <div style={{ flex: 1, padding: '4px 0' }}>
                   <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--lito-gold, #D4A853)', marginBottom: 8 }}>

@@ -7,6 +7,7 @@
 
 import { useState } from 'react'
 import { useEditorStore } from '@/stores/editor.store'
+import { BlockIcon } from '../blocks/blockIcons'
 import {
   PATTERN_LIBRARY, PATTERN_CATEGORIES,
   instantiatePattern,
@@ -36,7 +37,7 @@ export function EditorPatternsPanel() {
     }
   }
 
-  const tabBtn = (id: PatternCategory | 'all', label: string, emoji: string) => {
+  const tabBtn = (id: PatternCategory | 'all', label: string, iconName: string) => {
     const active = activeCategory === id
     return (
       <button
@@ -49,7 +50,7 @@ export function EditorPatternsPanel() {
             : 'font-normal bg-transparent text-[var(--text-muted)]'
         }`}
       >
-        <span>{emoji}</span>
+        <BlockIcon name={iconName} size={12} />
         {label}
       </button>
     )
@@ -70,8 +71,8 @@ export function EditorPatternsPanel() {
 
       {/* Category tabs */}
       <div className="flex gap-0.5 px-[10px] py-2 overflow-x-auto shrink-0 border-b border-[var(--lito-border)]">
-        {tabBtn('all', 'All', '✨')}
-        {PATTERN_CATEGORIES.map((c) => tabBtn(c.id, c.label, c.emoji))}
+        {tabBtn('all', 'All', 'Sparkles')}
+        {PATTERN_CATEGORIES.map((c) => tabBtn(c.id, c.label, c.icon))}
       </div>
 
       {/* Pattern list */}
@@ -90,9 +91,9 @@ export function EditorPatternsPanel() {
                 title={`Insert: ${pattern.name}`}
                 className="flex items-start gap-3 p-3 rounded-[10px] border border-[var(--lito-border)] bg-[var(--cms-card-bg)] cursor-pointer text-left transition-[border-color,box-shadow] duration-100 hover:border-[var(--lito-teal)] hover:shadow-[0_0_0_1px_var(--lito-teal)]"
               >
-                {/* Preview emoji */}
-                <span className="text-2xl leading-none shrink-0 w-10 h-10 flex items-center justify-center bg-[var(--cms-surface-3)] rounded-lg">
-                  {pattern.preview}
+                {/* Preview icon */}
+                <span className="shrink-0 w-10 h-10 flex items-center justify-center bg-[var(--cms-surface-3)] rounded-lg text-[var(--text-secondary)]">
+                  <BlockIcon name={pattern.preview} size={18} />
                 </span>
 
                 <div className="flex-1 min-w-0">

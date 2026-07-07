@@ -1,4 +1,5 @@
 import { http } from '@/lib/request'
+import { withIdempotencyKey } from '@/lib/idempotency'
 import type { ApiResponse, OrgRole } from '@/types/api.types'
 
 export interface TeamMember {
@@ -26,9 +27,13 @@ export const teamService = {
     return data
   },
 
+  /** Idempotency-keyed per invited email — dedupes a double-click/retry for
+   *  the same invite without blocking legitimately inviting someone else. */
   async invite(payload: InvitePayload) {
-    const data = await http.post<ApiResponse<{ message: string }>>(`${BASE}/invites`, payload)
-    return data.data
+    return withIdempotencyKey(`invite-member:${payload.email.toLowerCase()}`, async (headers) => {
+      const data = await http.post<ApiResponse<{ message: string }>>(`${BASE}/invites`, payload, { headers })
+      return data.data
+    })
   },
 
   async updateRole(userId: string, role: OrgRole) {

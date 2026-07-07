@@ -70,6 +70,21 @@ export type BlockType =
   | 'contact_cta'          // Fashion: closing CTA strip on contact/about
   | 'contact'              // All templates: contact form + info section
   | 'rich_text'            // All templates: standalone rich text block
+  // ── Listing page section types (CMS listing pages rendered as full sections) ─
+  | 'journal_listing'      // Fashion/beauty: paginated journal post grid
+  | 'stories_listing'      // Fashion/beauty: featured + paginated story grid
+  | 'gallery_listing'      // Fashion/beauty: masonry gallery with filter pills
+  | 'blogs_listing'        // All templates: blog post listing grid (alias)
+  | 'destinations_listing' // Lito: destinations listing page (fashion-styled)
+  // ── Lito-specific listing section types ──────────────────────────────────────
+  | 'lito_journal_listing'      // Lito: editorial journal listing (light serif hero)
+  | 'lito_stories_listing'      // Lito: editorial stories listing (light serif hero)
+  | 'lito_gallery_listing'      // Lito: visual archive gallery listing (light serif hero)
+  | 'lito_destinations_listing' // Lito: destinations listing (light serif hero)
+  // ── Alias block types (normalised by backend before publish) ─────────────
+  | 'destinations'         // → destinations_grid (alias used in registry)
+  | 'offerings'            // → services (alias used in fashion registry)
+  | 'stories'              // → story (alias used in lito registry)
 
 // ── Rich text metadata ────────────────────────────────────────────────────────
 //
@@ -248,6 +263,7 @@ export interface StatisticsBlockData {
     label: string
     prefix?: string
     suffix?: string
+    number?: string   // alias for value used in some patterns
   }>
   columns: 2 | 3 | 4
 }
@@ -459,7 +475,7 @@ export interface PhilosophyBlockData {
   title?:   string
   heading?: string
   eyebrow?: string
-  items?: Array<{ icon?: string; title: string; desc: string }>
+  items?: Array<{ icon?: string; number?: string; title: string; desc: string }>
 }
 
 export interface TimelineBlockData {
@@ -486,15 +502,44 @@ export interface PromoBannersBlockData {
   items?: Array<{ image: string; title: string; link: string; buttonText?: string; sub?: string }>
 }
 
+export interface FounderQuoteBlockData {
+  eyebrow?:     string
+  quote?:       string
+  founderName?: string
+  founderRole?: string
+  image?:       string
+}
+
+export interface ProductBenefitsBlockData {
+  eyebrow?: string
+  heading?: string
+  items?: Array<{
+    eyebrow?:     string
+    title?:       string
+    description?: string
+    image?:       string
+    ctaLabel?:    string
+    ctaUrl?:      string
+    statValue?:   string
+    statLabel?:   string
+  }>
+}
+
 export interface AboutCTABlockData {
-  eyebrow?:  string
-  title?:    string
-  desc?:     string
-  email?:    string
-  ctaText?:  string
-  ctaLink?:  string
-  homeText?: string
-  homeLink?: string
+  eyebrow?:      string
+  title?:        string
+  desc?:         string
+  description?:  string
+  email?:        string
+  ctaText?:      string
+  ctaLink?:      string
+  homeText?:     string
+  homeLink?:     string
+  // Fashion: about_cta section fields
+  shopText?:     string
+  shopLink?:     string
+  contactText?:  string
+  contactLink?:  string
 }
 
 export interface ProductCarouselBlockData {
@@ -508,6 +553,7 @@ export interface StoresBlockData {
   heading?: string
   items?: Array<{
     name?:     string
+    title?:    string   // alias for name used in some block defaults
     address?:  string
     phone?:    string
     hours?:    string
@@ -531,6 +577,7 @@ export interface PageHeroBlockData {
   ctaHref?:    string
   ctaText?:    string
   ctaUrl?:     string
+  height?:     string   // viewport height e.g. '55vh', '70vh'
 }
 
 export interface ContactCardsBlockData {
@@ -539,16 +586,18 @@ export interface ContactCardsBlockData {
 }
 
 export interface ContactCTABlockData {
-  eyebrow?:    string
-  title?:      string
-  desc?:       string
-  description?: string
-  email?:      string
-  ctaText?:    string
-  ctaLink?:    string
-  ctaUrl?:     string
-  homeText?:   string
-  homeLink?:   string
+  eyebrow?:      string
+  title?:        string
+  desc?:         string
+  description?:  string
+  email?:        string
+  ctaText?:      string
+  ctaLink?:      string
+  ctaUrl?:       string
+  homeText?:     string
+  homeLink?:     string
+  whatsappUrl?:  string
+  whatsappText?: string
 }
 
 export interface ContactSectionBlockData {
@@ -560,6 +609,31 @@ export interface ContactSectionBlockData {
 
 export interface RichTextSectionBlockData {
   html?: string
+}
+
+// ── Listing page block data interfaces ───────────────────────────────────────
+
+export interface JournalListingBlockData {
+  eyebrow?:     string
+  title?:       string
+  heading?:     string
+  description?: string
+  heroImage?:   string
+}
+
+export interface StoriesListingBlockData {
+  eyebrow?:     string
+  title?:       string
+  heading?:     string
+  description?: string
+  heroImage?:   string
+}
+
+export interface GalleryListingBlockData {
+  eyebrow?:     string
+  title?:       string
+  heading?:     string
+  description?: string
 }
 
 // ── Union ─────────────────────────────────────────────────────────────────────
@@ -576,6 +650,7 @@ export type BlockData =
   | DestinationsGridBlockData | PortfolioBlockData
   | BookingBlockData | PackagesBlockData | CampaignsGridBlockData
   | AboutBlockData | CampaignBlockData | StoryCategoriesBlockData
+  | FounderQuoteBlockData | ProductBenefitsBlockData
   // Template-specific (Fashion)
   | NewArrivalBlockData | BrandStoryBlockData | LookbookBlockData
   | CampaignBannerBlockData | PhilosophyBlockData | TimelineBlockData
@@ -585,6 +660,8 @@ export type BlockData =
   // Cross-template CMS section types
   | PageHeroBlockData | ContactCardsBlockData | ContactCTABlockData
   | ContactSectionBlockData | RichTextSectionBlockData
+  // Listing page sections
+  | JournalListingBlockData | StoriesListingBlockData | GalleryListingBlockData
 
 // ── Block styles ──────────────────────────────────────────────────────────────
 

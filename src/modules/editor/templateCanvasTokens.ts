@@ -66,13 +66,13 @@ const FASHION: TemplateCanvasTokens = {
   '--lito-gold':      '#0A0A0A',
   '--lito-gold-deep': '#333333',
   '--lito-border':    'rgba(0,0,0,0.10)',
-  '--font-display':   "'Inter', system-ui, -apple-system, sans-serif",
-  '--font-body':      "'Inter', system-ui, -apple-system, sans-serif",
+  '--font-display':   "'Barlow Condensed', 'Inter', system-ui, sans-serif",
+  '--font-body':      "'Barlow', 'Inter', system-ui, sans-serif",
   headerBg:           '#0A0A0A',
   headerText:         '#FAFAF9',
   headerAccent:       '#FAFAF9',
   siteName:           'FASHION',
-  fontUrl:            'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
+  fontUrl:            'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap',
 }
 
 const BEAUTY: TemplateCanvasTokens = {

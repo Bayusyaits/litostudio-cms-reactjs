@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import { http } from '@/lib/request'
+import { withIdempotencyKey } from '@/lib/idempotency'
 import type { LoginResponse, SessionResponse } from '@/types/auth.types'
 import type { ApiResponse } from '@/types/api.types'
 
@@ -11,23 +12,34 @@ export const authService = {
     return http.post<LoginResponse>(`${BASE}/sign-in`, { email, password })
   },
 
-  /** Register new account — POST /api/v1/auth/sign-up */
+  /**
+   * Register new account — POST /api/v1/auth/sign-up
+   * Idempotency-keyed per email — a double-submitted signup form (or a
+   * lost-response retry) reuses the same key instead of risking a confusing
+   * second attempt.
+   */
   async register(params: {
     email: string
     password: string
     full_name: string
   }): Promise<{ id: string; email: string; email_confirmed: boolean }> {
-    const res = await http.post<ApiResponse<{ id: string; email: string; email_confirmed: boolean }>>(
-      `${BASE}/sign-up`,
-      params,
-    )
-    return res.data
+    return withIdempotencyKey(`sign-up:${params.email.toLowerCase()}`, async (headers) => {
+      const res = await http.post<ApiResponse<{ id: string; email: string; email_confirmed: boolean }>>(
+        `${BASE}/sign-up`,
+        params,
+        { headers },
+      )
+      return res.data
+    })
   },
 
-  /** Send forgot-password email */
+  /** Send forgot-password email. Idempotency-keyed per email — prevents a
+   *  double-click on "Forgot password" sending two reset emails. */
   async forgotPassword(email: string): Promise<{ message: string }> {
-    const res = await http.post<{ success: boolean; message: string }>(`${BASE}/forgot-password`, { email })
-    return { message: res.message }
+    return withIdempotencyKey(`forgot-password:${email.toLowerCase()}`, async (headers) => {
+      const res = await http.post<{ success: boolean; message: string }>(`${BASE}/forgot-password`, { email }, { headers })
+      return { message: res.message }
+    })
   },
 
   /**
@@ -36,12 +48,14 @@ export const authService = {
    * It is sent as the Authorization Bearer header; only { password } goes in the body.
    */
   async resetPassword(token: string, password: string): Promise<{ message: string }> {
-    const res = await http.post<{ success: boolean; message: string }>(
-      `${BASE}/reset-password`,
-      { password },
-      { headers: { Authorization: `Bearer ${token}` } },
-    )
-    return { message: res.message }
+    return withIdempotencyKey(`reset-password:${token}`, async (idempotencyHeaders) => {
+      const res = await http.post<{ success: boolean; message: string }>(
+        `${BASE}/reset-password`,
+        { password },
+        { headers: { Authorization: `Bearer ${token}`, ...idempotencyHeaders } },
+      )
+      return { message: res.message }
+    })
   },
 
   /** Resend email verification — POST /api/v1/auth/verify-email */

@@ -1,4 +1,5 @@
-import { Palette, Check } from 'lucide-react'
+import { Palette, Check, RefreshCw } from 'lucide-react'
+import { AppImage } from '@/components/atoms/AppImage'
 import { Skeleton } from '@/components/atoms/Skeleton'
 import { EmptyState } from '@/components/molecules/EmptyState'
 import { ThemePreview } from '@/components/molecules/ThemePreview'
@@ -12,6 +13,8 @@ interface Props {
   applying: boolean
   applyError: string | null
   applySuccess: boolean
+  /** When provided, shows "Republish All Pages" button in the header */
+  onRepublishPages?: () => void
 }
 
 function ThemeCard({ theme, isActive, onApply, applying }: {
@@ -27,7 +30,7 @@ function ThemeCard({ theme, isActive, onApply, applying }: {
     >
       <div className="h-[140px] bg-[var(--lito-cream-alt)] relative overflow-hidden">
         {theme.preview_image ? (
-          <img src={theme.preview_image} alt={theme.name} className="w-full h-full object-cover" />
+          <AppImage src={theme.preview_image} alt={theme.name} objectFit="cover" skeleton wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
         ) : (
           <ThemePreview templateSlug={theme.template_slug} />
         )}
@@ -66,14 +69,26 @@ function ThemeCard({ theme, isActive, onApply, applying }: {
   )
 }
 
-export function ThemesPageView({ themes, activeThemeId, isLoading, onApplyTheme, applying, applyError, applySuccess }: Props) {
+export function ThemesPageView({ themes, activeThemeId, isLoading, onApplyTheme, applying, applyError, applySuccess, onRepublishPages }: Props) {
   return (
     <div className="cms-page p-8 overflow-y-auto h-full">
-      <div className="mb-6">
-        <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Themes</h1>
-        <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
-          Choose a visual theme for your website
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Themes</h1>
+          <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
+            Choose a visual theme for your website
+          </p>
+        </div>
+        {onRepublishPages && (
+          <button
+            type="button"
+            onClick={onRepublishPages}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--lito-border)] bg-transparent font-body text-[12px] text-[var(--text-muted)] cursor-pointer hover:border-[var(--lito-gold)] hover:text-[var(--text-primary)] transition-colors duration-150 shrink-0 mt-1"
+          >
+            <RefreshCw size={13} />
+            Republish All Pages
+          </button>
+        )}
       </div>
 
       {applySuccess && (

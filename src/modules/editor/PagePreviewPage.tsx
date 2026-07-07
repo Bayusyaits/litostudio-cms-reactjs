@@ -21,6 +21,7 @@
 import { useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { X } from 'lucide-react'
 import { pagesService }    from '@/services/pages.service'
 import { useWebsiteStore } from '@/stores/website.store'
 import { getCanvasTokens } from './templateCanvasTokens'
@@ -212,9 +213,10 @@ function PreviewBanner({ title, templateSlug, blockCount }: BannerProps) {
           border: '1px solid rgba(255,255,255,0.2)',
           background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)',
           cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
+          display: 'inline-flex', alignItems: 'center', gap: 4,
         }}
       >
-        Close ✕
+        Close <X size={11} />
       </button>
     </div>
   )

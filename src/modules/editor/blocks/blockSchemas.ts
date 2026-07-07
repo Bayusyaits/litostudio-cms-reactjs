@@ -364,6 +364,210 @@ export const CampaignsGridBlockDataSchema = z.object({
   columns: zCols23,
 })
 
+// ── Fashion template section schemas ─────────────────────────────────────────
+
+export const PageHeroBlockDataSchema = z.object({
+  eyebrow:  z.string().optional(),
+  title:    z.string().optional(),
+  desc:     z.string().optional(),
+  imgSrc:   z.string().optional(),
+  imgAlt:   z.string().optional(),
+  ctaLabel: z.string().optional(),
+  ctaHref:  z.string().optional(),
+  height:   z.enum(['sm', 'md', 'lg', 'full']).optional(),
+})
+
+export const ContactCtaBlockDataSchema = z.object({
+  eyebrow:      z.string().optional(),
+  title:        z.string().optional(),
+  desc:         z.string().optional(),
+  email:        z.string().optional(),
+  ctaText:      z.string().optional(),
+  ctaLink:      z.string().optional(),
+  whatsappUrl:  z.string().optional(),
+  whatsappText: z.string().optional(),
+  homeText:     z.string().optional(),
+  homeLink:     z.string().optional(),
+})
+
+export const ContactCardsBlockDataSchema = z.object({
+  heading: z.string().optional(),
+  items:   z.array(z.object({
+    type:    z.string(),
+    label:   z.string().optional(),
+    value:   z.string(),
+    href:    z.string().optional(),
+  })).optional(),
+})
+
+export const NewArrivalBlockDataSchema = z.object({
+  title:        z.string().optional(),
+  catalogueText: z.string().optional(),
+  catalogueLink: z.string().optional(),
+  productCount:  z.number().optional(),
+})
+
+export const LookbookBlockDataSchema = z.object({
+  title:   z.string().optional(),
+  eyebrow: z.string().optional(),
+})
+
+export const CampaignBannerBlockDataSchema = z.object({
+  backgroundImage:    z.string().optional(),
+  eyebrow:            z.string().optional(),
+  title:              z.string().optional(),
+  description:        z.string().optional(),
+  buttonText:         z.string().optional(),
+  primaryLink:        z.string().optional(),
+  ctaSecondaryText:   z.string().optional(),
+  ctaSecondaryLink:   z.string().optional(),
+})
+
+export const PhilosophyBlockDataSchema = z.object({
+  heading: z.string().optional(),
+  items:   z.array(z.object({
+    title:       z.string(),
+    description: z.string().optional(),
+    icon:        z.string().optional(),
+  })).optional(),
+})
+
+export const TimelineBlockDataSchema = z.object({
+  heading: z.string().optional(),
+  eyebrow: z.string().optional(),
+  entries: z.array(z.object({
+    year:        z.string(),
+    title:       z.string(),
+    description: z.string().optional(),
+  })).optional(),
+})
+
+export const CollaborationsBlockDataSchema = z.object({
+  heading: z.string().optional(),
+  eyebrow: z.string().optional(),
+  items:   z.array(z.object({
+    image: z.string(),
+    year:  z.string().optional(),
+  })).optional(),
+})
+
+export const SocialGridBlockDataSchema = z.object({
+  title:   z.string().optional(),
+  eyebrow: z.string().optional(),
+  handle:  z.string().optional(),
+})
+
+export const MarqueeBlockDataSchema = z.object({
+  items: z.array(z.object({ text: z.string() })).optional(),
+})
+
+export const PromoBannersBlockDataSchema = z.object({
+  items: z.array(z.object({
+    image:       z.string().optional(),
+    title:       z.string().optional(),
+    description: z.string().optional(),
+    ctaText:     z.string().optional(),
+    ctaLink:     z.string().optional(),
+  })).optional(),
+})
+
+export const AboutCtaBlockDataSchema = z.object({
+  title:       z.string().optional(),
+  eyebrow:     z.string().optional(),
+  description: z.string().optional(),
+  shopText:    z.string().optional(),
+  shopLink:    z.string().optional(),
+  contactText: z.string().optional(),
+  contactLink: z.string().optional(),
+})
+
+export const ProductCarouselBlockDataSchema = z.object({
+  title:        z.string().optional(),
+  categorySlug: z.string().optional(),
+  limit:        z.number().optional(),
+})
+
+export const StoresBlockDataSchema = z.object({
+  eyebrow: z.string().optional(),
+  heading: z.string().optional(),
+  items:   z.array(z.object({
+    name:     z.string(),
+    address:  z.string().optional(),
+    phone:    z.string().optional(),
+    hours:    z.string().optional(),
+    mapImage: z.string().optional(),
+    mapUrl:   z.string().optional(),
+  })).optional(),
+})
+
+// ── Lito additional section schemas ──────────────────────────────────────────
+
+export const DestinationsBlockDataSchema = z.object({
+  heading: z.string().optional(),
+  items:   z.array(z.object({
+    title:    z.string(),
+    image:    z.string().optional(),
+    location: z.string().optional(),
+    link:     z.string().optional(),
+  })).optional(),
+  columns: zCols234.optional(),
+})
+
+export const OfferingsBlockDataSchema = z.object({
+  heading: z.string().optional(),
+  items:   z.array(z.object({
+    title:       z.string(),
+    description: z.string().optional(),
+    icon:        z.string().optional(),
+    link:        z.string().optional(),
+  })).optional(),
+})
+
+export const StoriesBlockDataSchema = z.object({
+  heading: z.string().optional(),
+  limit:   z.number().optional(),
+})
+
+// ── Beauty additional section schemas ────────────────────────────────────────
+
+export const FounderQuoteBlockDataSchema = z.object({
+  eyebrow:     z.string().optional(),
+  quote:       z.string().optional(),
+  founderName: z.string().optional(),
+  founderRole: z.string().optional(),
+  image:       z.string().optional(),
+})
+
+export const ProductBenefitsBlockDataSchema = z.object({
+  eyebrow: z.string().optional(),
+  heading: z.string().optional(),
+  items:   z.array(z.object({
+    eyebrow:     z.string().optional(),
+    title:       z.string(),
+    description: z.string().optional(),
+    image:       z.string().optional(),
+    statValue:   z.string().optional(),
+    statLabel:   z.string().optional(),
+    ctaLabel:    z.string().optional(),
+    ctaHref:     z.string().optional(),
+  })).optional(),
+})
+
+// ── Null-mapped form field schemas (editor-only, not rendered on website) ─────
+
+export const EmailFieldDataSchema = z.object({
+  label:       z.string().optional(),
+  placeholder: z.string().optional(),
+  required:    z.boolean().optional(),
+})
+
+export const TextareaFieldDataSchema = z.object({
+  label:       z.string().optional(),
+  placeholder: z.string().optional(),
+  rows:        z.number().optional(),
+  required:    z.boolean().optional(),
+})
+
 // ── Block styles schema ───────────────────────────────────────────────────────
 
 export const BlockStylesSchema = z.object({
@@ -422,8 +626,32 @@ export const BLOCK_DATA_SCHEMAS = {
   packages:          PackagesBlockDataSchema,
   // Fashion template-specific
   brand_story:       BrandStoryBlockDataSchema,
+  page_hero:         PageHeroBlockDataSchema,
+  contact_cta:       ContactCtaBlockDataSchema,
+  contact_cards:     ContactCardsBlockDataSchema,
+  new_arrival:       NewArrivalBlockDataSchema,
+  lookbook:          LookbookBlockDataSchema,
+  campaign_banner:   CampaignBannerBlockDataSchema,
+  philosophy:        PhilosophyBlockDataSchema,
+  timeline:          TimelineBlockDataSchema,
+  collaborations:    CollaborationsBlockDataSchema,
+  social_grid:       SocialGridBlockDataSchema,
+  marquee:           MarqueeBlockDataSchema,
+  promo_banners:     PromoBannersBlockDataSchema,
+  about_cta:         AboutCtaBlockDataSchema,
+  product_carousel:  ProductCarouselBlockDataSchema,
+  stores:            StoresBlockDataSchema,
+  // Lito additional
+  destinations:      DestinationsBlockDataSchema,
+  offerings:         OfferingsBlockDataSchema,
+  stories:           StoriesBlockDataSchema,
   // Beauty template-specific
   campaigns_grid:    CampaignsGridBlockDataSchema,
+  founder_quote:     FounderQuoteBlockDataSchema,
+  product_benefits:  ProductBenefitsBlockDataSchema,
+  // Null-mapped form field types
+  email:             EmailFieldDataSchema,
+  textarea:          TextareaFieldDataSchema,
 } as const
 
 // ── Validate a block's data at runtime ───────────────────────────────────────

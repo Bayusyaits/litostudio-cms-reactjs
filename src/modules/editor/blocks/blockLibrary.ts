@@ -349,7 +349,7 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = [
       homeLink:      '/',
     },
     defaultStyles: { paddingTop: 0, paddingBottom: 0 },
-    templateScope: ['fashion'],
+    templateScope: ['fashion', 'lito', 'beauty'],
   },
   {
     type: 'contact_cards',
@@ -453,7 +453,7 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = [
       ],
     },
     defaultStyles: { paddingTop: 80, paddingBottom: 80 },
-    templateScope: ['fashion'],
+    templateScope: ['fashion', 'lito'],
   },
   {
     type: 'timeline',
@@ -619,7 +619,7 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = [
       cities: 'Jakarta, Yogyakarta, Jawa Tengah',
     },
     defaultStyles: { paddingTop: 80, paddingBottom: 80 },
-    templateScope: ['lito'],
+    templateScope: ['lito', 'beauty'],
   },
   {
     type: 'campaign',
@@ -731,6 +731,174 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = [
     defaultStyles: { paddingTop: 80, paddingBottom: 80 },
     templateScope: ['lito'],
   },
+
+  // ── Lito additional sections ──────────────────────────────────────────────
+  {
+    type: 'stories',
+    label: 'Stories',
+    icon: 'BookOpen',
+    category: 'template',
+    description: 'Featured stories grid',
+    defaultData: {
+      heading: 'Cerita Kami',
+      limit: 6,
+    },
+    defaultStyles: { paddingTop: 80, paddingBottom: 80 },
+    templateScope: ['lito'],
+  },
+  {
+    type: 'offerings',
+    label: 'Offerings',
+    icon: 'Star',
+    category: 'template',
+    description: 'Service offerings showcase',
+    defaultData: {
+      heading: 'Layanan Kami',
+      items: [
+        { title: 'Wedding', description: 'Dokumentasi pernikahan profesional.', icon: '' },
+        { title: 'Portrait', description: 'Sesi foto portrait personal.', icon: '' },
+      ],
+    },
+    defaultStyles: { paddingTop: 80, paddingBottom: 80 },
+    templateScope: ['lito'],
+  },
+
+  // ── Beauty additional sections ────────────────────────────────────────────
+  {
+    type: 'founder_quote',
+    label: 'Founder Quote',
+    icon: 'Quote',
+    category: 'template',
+    description: 'Founder or brand quote highlight',
+    defaultData: {
+      eyebrow:     'Our Story',
+      quote:       'Beauty is confidence.',
+      founderName: 'Founder Name',
+      founderRole: 'Founder & CEO',
+      image:       '',
+    },
+    defaultStyles: { paddingTop: 80, paddingBottom: 80 },
+    templateScope: ['beauty'],
+  },
+  {
+    type: 'product_benefits',
+    label: 'Product Benefits',
+    icon: 'Sparkles',
+    category: 'template',
+    description: 'Product benefit cards with stats',
+    defaultData: {
+      eyebrow: 'Why Choose Us',
+      heading: 'The Difference',
+      items: [
+        { title: 'Natural Ingredients', description: 'Sourced from nature.', statValue: '100%', statLabel: 'Natural' },
+        { title: 'Dermatologist Tested', description: 'Safe for all skin types.', statValue: '98%', statLabel: 'Satisfaction' },
+      ],
+    },
+    defaultStyles: { paddingTop: 80, paddingBottom: 80 },
+    templateScope: ['beauty'],
+  },
+  // ── Listing page sections ────────────────────────────────────────────────────
+  {
+    type: 'journal_listing',
+    label: 'Journal Listing',
+    icon: 'BookOpen',
+    category: 'template',
+    description: 'Paginated journal post grid with hero and category filters',
+    defaultData: {
+      eyebrow: 'Field Notes',
+      title: 'Journal',
+      description: 'Behind-the-scenes dispatches, style observations, and atelier notes.',
+      heroImage: '',
+    },
+    defaultStyles: { paddingTop: 0, paddingBottom: 0 },
+    templateScope: ['fashion', 'beauty'],
+  },
+  {
+    type: 'stories_listing',
+    label: 'Stories Listing',
+    icon: 'Newspaper',
+    category: 'template',
+    description: 'Featured story + paginated story grid with hero and category filters',
+    defaultData: {
+      eyebrow: 'Behind the Work',
+      title: 'Stories',
+      description: 'The people, places, and moments that inspire every collection.',
+      heroImage: '',
+    },
+    defaultStyles: { paddingTop: 0, paddingBottom: 0 },
+    templateScope: ['fashion', 'beauty'],
+  },
+  {
+    type: 'gallery_listing',
+    label: 'Gallery Listing',
+    icon: 'Images',
+    category: 'template',
+    description: 'Masonry portfolio gallery with category filter pills',
+    defaultData: {
+      eyebrow: 'Portfolio',
+      title: 'Gallery',
+      description: '',
+    },
+    defaultStyles: { paddingTop: 0, paddingBottom: 0 },
+    templateScope: ['fashion', 'beauty'],
+  },
+  // ── Lito listing sections ────────────────────────────────────────────────────
+  {
+    type: 'lito_journal_listing',
+    label: 'Journal Listing',
+    icon: 'BookOpen',
+    category: 'template',
+    description: 'Editorial hero (03 · Jurnal), rounded-full filter pills, 3-col 4:3 landscape grid',
+    defaultData: {
+      sectionNumber: '03',
+      sectionLabel: 'Jurnal',
+      title: 'Journal',
+    },
+    defaultStyles: { paddingTop: 0, paddingBottom: 0 },
+    templateScope: ['lito'],
+  },
+  {
+    type: 'lito_stories_listing',
+    label: 'Stories Listing',
+    icon: 'Newspaper',
+    category: 'template',
+    description: 'Editorial hero (01 · Cerita), rounded-full filter pills, 3-col 3:4 portrait grid',
+    defaultData: {
+      sectionNumber: '01',
+      sectionLabel: 'Cerita',
+      title: 'Stories',
+    },
+    defaultStyles: { paddingTop: 0, paddingBottom: 0 },
+    templateScope: ['lito'],
+  },
+  {
+    type: 'lito_gallery_listing',
+    label: 'Gallery Listing',
+    icon: 'Images',
+    category: 'template',
+    description: 'Editorial hero (02 · Arsip Visual), sticky filter bar, 4-col masonry grid',
+    defaultData: {
+      sectionNumber: '02',
+      sectionLabel: 'Arsip Visual',
+      title: 'Gallery',
+    },
+    defaultStyles: { paddingTop: 0, paddingBottom: 0 },
+    templateScope: ['lito'],
+  },
+  {
+    type: 'lito_destinations_listing',
+    label: 'Destinations Listing',
+    icon: 'MapPin',
+    category: 'template',
+    description: 'Editorial hero (03 · Destinasi), 3-col 3:4 portrait card grid with gradient overlay',
+    defaultData: {
+      sectionNumber: '03',
+      sectionLabel: 'Destinasi',
+      title: 'Places We Explored',
+    },
+    defaultStyles: { paddingTop: 0, paddingBottom: 0 },
+    templateScope: ['lito'],
+  },
 ]
 
 export const BLOCK_CATEGORIES = [
@@ -747,3 +915,21 @@ export const BLOCK_CATEGORIES = [
 export function getBlockDef(type: BlockLibraryItem['type']): BlockLibraryItem | undefined {
   return BLOCK_LIBRARY.find((b) => b.type === type)
 }
+
+// ── Publish-time warning list ─────────────────────────────────────────────────
+//
+// 2026-07-05 audit fix: these block types are insertable as standalone canvas
+// blocks (they render fine here in BlockRenderer.tsx), but the backend
+// publish-sync bridge intentionally does NOT write them to page_sections —
+// they're layout/content primitives meant to live inside a composite block,
+// not stand alone as a full website section. Until now that meant an editor
+// could build one, publish, and have it silently vanish with zero feedback.
+//
+// This list MUST stay in sync with the block types mapped to `null` in
+// apps/backend/src/modules/pages/interface/blockToSectionMapper.ts
+// (BLOCK_TO_SECTION_TYPE / UNPUBLISHED_BLOCK_TYPES). The two apps don't share
+// a module boundary for this concern, so it's duplicated here deliberately —
+// if you change one, change the other.
+export const BLOCKS_NOT_PUBLISHED_AS_SECTIONS: readonly BlockLibraryItem['type'][] = [
+  'image', 'video', 'button', 'spacer', 'divider',
+]

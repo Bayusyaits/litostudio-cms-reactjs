@@ -9,6 +9,12 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@litostudio/templates': path.resolve(__dirname, '../../packages/templates/src/index.ts'),
       '@litostudio/template-system': path.resolve(__dirname, '../../packages/template-system/src/index.ts'),
+      // section-schema's package.json now points main/exports at ./dist (so
+      // apps/backend can consume it via NodeNext resolution — 2026-07
+      // architecture standardization). This alias keeps the CMS resolving
+      // straight to source as it already did before that change, with no
+      // dependency on dist/ being built.
+      '@litostudio/section-schema': path.resolve(__dirname, '../../packages/section-schema/src/index.ts'),
     },
   },
   server: {

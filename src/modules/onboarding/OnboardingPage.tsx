@@ -29,26 +29,29 @@ import { useWebsiteStore } from '@/stores/website.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { Button } from '@/components/atoms/Button'
 import { FormInput } from '@/shared/forms/FormInput'
+import { BlockIcon } from '@/modules/editor/blocks/blockIcons'
 import type { Organization, Site } from '@/types/auth.types'
 
 // ── Constants ────────────────────────────────────────────────────────────────
+// icon/preview = Lucide icon name (see blockIcons.tsx ICON_MAP) — were raw
+// emoji until the 2026-07 icon cleanup.
 
 const ORG_TYPES = [
-  { value: 'fashion',      label: 'Fashion & Apparel',    icon: '👗' },
-  { value: 'beauty',       label: 'Beauty & Wellness',    icon: '✨' },
-  { value: 'photography',  label: 'Photography',           icon: '📷' },
-  { value: 'videography',  label: 'Videography',           icon: '🎬' },
-  { value: 'travel',       label: 'Travel & Tourism',     icon: '✈️' },
-  { value: 'agency',       label: 'Creative Agency',      icon: '🎨' },
-  { value: 'services',     label: 'Professional Services', icon: '💼' },
-  { value: 'other',        label: 'Other',                icon: '🌐' },
+  { value: 'fashion',      label: 'Fashion & Apparel',    icon: 'Shirt' },
+  { value: 'beauty',       label: 'Beauty & Wellness',    icon: 'Sparkles' },
+  { value: 'photography',  label: 'Photography',           icon: 'Camera' },
+  { value: 'videography',  label: 'Videography',           icon: 'Clapperboard' },
+  { value: 'travel',       label: 'Travel & Tourism',     icon: 'Plane' },
+  { value: 'agency',       label: 'Creative Agency',      icon: 'Palette' },
+  { value: 'services',     label: 'Professional Services', icon: 'Briefcase' },
+  { value: 'other',        label: 'Other',                icon: 'Globe' },
 ]
 
 const TEMPLATES = [
-  { value: 'lito',     label: 'Photography', preview: '📷', description: 'Visual storytelling, stories, and services' },
-  { value: 'fashion',  label: 'Fashion',     preview: '🧣', description: 'Bold, editorial, seasonal collections' },
-  { value: 'beauty',   label: 'Beauty',      preview: '💆', description: 'Clean, product-forward, aspirational' },
-  { value: 'blank',    label: 'Blank',       preview: '📄', description: 'Start from scratch with empty canvas' },
+  { value: 'lito',     label: 'Photography', preview: 'Camera',  description: 'Visual storytelling, stories, and services' },
+  { value: 'fashion',  label: 'Fashion',     preview: 'Shirt',   description: 'Bold, editorial, seasonal collections' },
+  { value: 'beauty',   label: 'Beauty',      preview: 'Flower',  description: 'Clean, product-forward, aspirational' },
+  { value: 'blank',    label: 'Blank',       preview: 'FileText', description: 'Start from scratch with empty canvas' },
 ]
 
 const CHECKLIST_ITEMS = [
@@ -183,7 +186,7 @@ function CreateOrgStep({ onComplete }: { onComplete: (org: Organization) => void
                   : 'border-[var(--lito-border)] text-[var(--text-muted)] hover:border-[var(--lito-teal)]/40',
               ].join(' ')}
             >
-              <div className="text-xl mb-1">{t.icon}</div>
+              <div className="mb-1 flex items-center justify-center"><BlockIcon name={t.icon} size={20} /></div>
               <div className="text-xs leading-tight">{t.label}</div>
             </button>
           ))}
@@ -222,7 +225,7 @@ function CreateSiteStep({
 }: {
   org: Organization
   onComplete: (site: Site) => void
-  onSkip: () => void
+  onSkip:     () => void
 }) {
   const [selectedTemplate, setSelectedTemplate] = useState('blank')
   const { setActiveSite } = useWebsiteStore()
@@ -307,7 +310,7 @@ function CreateSiteStep({
                   : 'border-[var(--lito-border)] hover:border-[var(--lito-teal)]/40',
               ].join(' ')}
             >
-              <div className="text-2xl mb-2">{t.preview}</div>
+              <div className="mb-2 flex items-center justify-center text-[var(--text-secondary)]"><BlockIcon name={t.preview} size={24} /></div>
               <div className="font-body text-sm font-semibold text-[var(--text-primary)]">{t.label}</div>
               <div className="font-body text-xs text-[var(--text-muted)] mt-0.5 leading-tight">{t.description}</div>
             </button>
@@ -458,6 +461,7 @@ function SetupChecklistStep({ onDone }: { onDone: () => void }) {
 export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [createdOrg, setCreatedOrg] = useState<Organization | null>(null)
+  const [createdSite, setCreatedSite] = useState<Site | null>(null)
   const navigate = useNavigate()
 
   const handleOrgCreated = (org: Organization) => {
@@ -465,9 +469,22 @@ export default function OnboardingPage() {
     setStep(2)
   }
 
-  const handleSiteCreated = () => setStep(3)
-  const handleSkipSite    = () => setStep(3)
-  const handleDone        = () => navigate('/dashboard', { replace: true })
+  const handleSiteCreated = (site: Site) => {
+    setCreatedSite(site)
+    // Navigate to AI content generation page if a real template was selected
+    const templateSlug = (site as Site & { settings?: { template_slug?: string } }).settings?.template_slug
+    if (templateSlug && templateSlug !== 'blank') {
+      navigate(`/onboarding/generate?siteId=${site.id}&template=${templateSlug}`)
+    } else {
+      setStep(3)
+    }
+  }
+
+  const handleSkipSite = () => setStep(3)
+  const handleDone     = () => navigate('/dashboard', { replace: true })
+
+  // createdSite retained in state for potential re-use (e.g. going back to step 3)
+  void createdSite
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--cms-main-bg)] px-4 py-12">

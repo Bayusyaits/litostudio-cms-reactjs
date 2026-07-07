@@ -1,4 +1,5 @@
 import { http } from '@/lib/request'
+import { withIdempotencyKey } from '@/lib/idempotency'
 import type { ApiResponse } from '@/types/api.types'
 
 export type PageStatus = 'draft' | 'active' | 'inactive' | 'archived'
@@ -241,11 +242,20 @@ export const pagesService = {
         anchor_id:    null,
       }
     })
-    const data = await http.post<{ success: boolean; synced: number }>(
-      `${BASE}/${pageId}/sections/sync`,
-      { sections },
-    )
-    return { synced: data.synced ?? sections.length }
+    // 2026-07 idempotency: this IS the actual "Publish" action today (the
+    // EditorShell Publish button calls syncSections directly — see
+    // BlockEditorPage.tsx publishFn; createRevision below is not currently
+    // called from anywhere in the CMS, despite its doc comment, so it isn't
+    // wired here — the backend route protection stays in place regardless
+    // for whenever it is wired up).
+    return withIdempotencyKey(`publish:${pageId}`, async (headers) => {
+      const data = await http.post<{ success: boolean; synced: number }>(
+        `${BASE}/${pageId}/sections/sync`,
+        { sections },
+        { headers },
+      )
+      return { synced: data.synced ?? sections.length }
+    })
   },
 
   // ── Revisions ──────────────────────────────────────────────────────────────
@@ -261,9 +271,14 @@ export const pagesService = {
    * Snapshot the current draft body → new revision.
    * Call on Publish or explicit "Save version".
    */
+  /** Not currently called from any CMS UI (see syncSections comment above),
+   *  but idempotency-keyed regardless since the backend route already
+   *  enforces it — this keeps the client ready if/when it's wired up. */
   async createRevision(pageId: string, payload: CreateRevisionRequest = {}): Promise<PageRevision> {
-    const data = await http.post<ApiResponse<PageRevision>>(`${BASE}/${pageId}/revisions`, payload)
-    return data.data!
+    return withIdempotencyKey(`publish-revision:${pageId}`, async (headers) => {
+      const data = await http.post<ApiResponse<PageRevision>>(`${BASE}/${pageId}/revisions`, payload, { headers })
+      return data.data!
+    })
   },
 
   /**

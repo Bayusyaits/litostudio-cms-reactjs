@@ -3,8 +3,10 @@
  * 3-col card grid with tall image + overlay content (category, title, location).
  */
 
+import { MapPin } from 'lucide-react'
 import type { Block } from '@/types/editor.types'
 import type { StoryBlockData } from '@/types/editor.types'
+import { AppImage } from '@/components/atoms/AppImage'
 
 const MOCK_STORIES = [
   { id: '1', title: 'Pernikahan di Tepi Danau',   category: 'Wedding',    location: 'Yogyakarta', date: '12 Jan 2025', image: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&q=80' },
@@ -45,7 +47,7 @@ export function StoriesSection({ block }: { block: Block }) {
           {stories.map(s => (
             <a key={s.id} href="#" onClick={e => e.preventDefault()} className="no-underline block relative overflow-hidden rounded-[2px]">
               <div className="aspect-[3/4]">
-                <img src={s.image} alt={s.title} className="w-full h-full object-cover block" />
+                <AppImage src={s.image} alt={s.title} ratio="3/4" objectFit="cover" wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
               </div>
               {/* Gradient overlay — always visible at bottom */}
               <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.75)_0%,transparent_50%)]" />
@@ -53,7 +55,7 @@ export function StoriesSection({ block }: { block: Block }) {
               <div className="absolute bottom-0 left-0 right-0 py-6 px-5">
                 <p className="font-body text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--lito-gold,#D4A853)] mb-2">{s.category}</p>
                 <h3 className="font-display text-[20px] font-normal text-white leading-[1.2] mb-2">{s.title}</h3>
-                <p className="font-body text-[11px] text-[rgba(255,255,255,0.6)]">📍 {s.location} · {s.date}</p>
+                <p className="font-body text-[11px] text-[rgba(255,255,255,0.6)] flex items-center gap-1"><MapPin size={11} /> {s.location} · {s.date}</p>
               </div>
             </a>
           ))}

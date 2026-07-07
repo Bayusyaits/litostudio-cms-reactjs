@@ -8,6 +8,7 @@
 
 import type { Block } from '@/types/editor.types'
 import type { TextBlockData } from '@/types/editor.types'
+import { AppImage } from '@/components/atoms/AppImage'
 
 // Scoped styles for the richtext description area
 const richtextStyle = `
@@ -71,7 +72,7 @@ export function AboutSection({ block }: { block: Block }) {
             <div style={{ position: 'relative', minHeight: image ? undefined : 120 }}>
               {image ? (
                 <div style={{ aspectRatio: '3/4', overflow: 'hidden', borderRadius: 2, maxWidth: 460 }}>
-                  <img src={image} alt="About" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <AppImage src={image} alt="About" ratio="3/4" objectFit="cover" wrapperStyle={{ width: '100%', height: '100%' }} />
                 </div>
               ) : (
                 /* No image but since/cities is set — show a placeholder column */

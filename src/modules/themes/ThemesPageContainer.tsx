@@ -5,9 +5,11 @@
  * via orgService.updateSite and call setActiveSite so the editor canvas picks up the
  * new template tokens immediately (without a page reload).
  *
- * NOTE: No TemplateSwitchModal here — the Themes page is a visual "browse & apply"
- * surface that always preserves existing content. For "apply defaults" (wipe blocks),
- * the user should use Settings → Template tab instead.
+ * Template-switch confirmation: before applying any theme, TemplateSwitchModal is shown
+ * so the user can choose to keep existing content or reset to template defaults.
+ *
+ * Republish: after a successful template apply, RepublishPagesModal is offered so the
+ * user can re-seed all page_sections with the new template's defaults (staging deployment).
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -15,8 +17,11 @@ import { themeService }   from '@/services/theme.service'
 import { orgService }     from '@/services/org.service'
 import { useWebsiteStore } from '@/stores/website.store'
 import { getErrorMessage } from '@/lib/axios'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { ThemesPageView } from './ThemesPageView'
+import { TemplateSwitchModal } from '@/modules/editor/TemplateSwitchModal'
+import type { TemplateSwitchResult } from '@/modules/editor/TemplateSwitchModal'
+import { RepublishPagesModal } from './RepublishPagesModal'
 import { useTracking } from '@/tracking'
 import type { TemplateName } from '@/tracking/types'
 
@@ -25,6 +30,10 @@ export default function ThemesPageContainer() {
   const qc = useQueryClient()
   const [applyError,   setApplyError]   = useState<string | null>(null)
   const [applySuccess, setApplySuccess] = useState(false)
+  /** themeId pending confirmation in TemplateSwitchModal; null = closed */
+  const [pendingThemeId, setPendingThemeId] = useState<string | null>(null)
+  /** when set, show RepublishPagesModal for this template name */
+  const [republishTemplateName, setRepublishTemplateName] = useState<string | null>(null)
   const { trackTemplateSelected } = useTracking()
 
   const { data: themesData, isLoading: loadingThemes } = useQuery({
@@ -41,7 +50,7 @@ export default function ThemesPageContainer() {
   })
 
   const applyMutation = useMutation({
-    mutationFn: async (themeId: string) => {
+    mutationFn: async ({ themeId, overwrite }: { themeId: string; overwrite: boolean }) => {
       // 1. Set active theme in site_theme_settings
       await themeService.updateSiteTheme(activeSite!.id, { theme_id: themeId })
 
@@ -66,20 +75,19 @@ export default function ThemesPageContainer() {
         // re-derive their template context reactively.
         setActiveSite(updated)
 
-        // 3. Seed extra_settings with template default content (missing keys only).
-        //    This ensures the About page sections, philosophy items, timeline etc. all
-        //    have placeholder content when the user first switches to a new template.
-        //    Existing customised values are never overwritten (overwrite=false).
+        // 3. Seed extra_settings with template default content.
+        //    overwrite=false → only fill missing keys (keep existing customisations).
+        //    overwrite=true  → full reset to template defaults (user picked "apply defaults").
         const validSlug = ['fashion', 'beauty', 'lito'].includes(tplSlug)
           ? tplSlug as 'fashion' | 'beauty' | 'lito'
           : null
         if (validSlug) {
           // Fire-and-forget — seed failure is non-critical; user can still customise manually
-          themeService.seedTemplateDefaults(activeSite.id, validSlug).catch(() => { /* silent */ })
+          themeService.seedTemplateDefaults(activeSite.id, validSlug, 'en', overwrite).catch(() => { /* silent */ })
         }
       }
     },
-    onSuccess: (_, themeId) => {
+    onSuccess: (_, { themeId }) => {
       setApplyError(null)
       setApplySuccess(true)
       setTimeout(() => setApplySuccess(false), 3000)
@@ -95,19 +103,62 @@ export default function ThemesPageContainer() {
           previous_template_slug:  (activeSite.template_slug ?? undefined) as TemplateName | undefined,
         })
       }
+      // Offer to republish pages so section types match the new template
+      const displayName = theme?.name ?? tplSlug ?? 'New Template'
+      setRepublishTemplateName(displayName)
     },
     onError: (err) => setApplyError(getErrorMessage(err)),
   })
 
+  /** Open modal instead of applying immediately */
+  const handleApplyTheme = useCallback((id: string) => {
+    setPendingThemeId(id)
+  }, [])
+
+  /** Resolve modal — keep or apply-defaults or cancel */
+  const handleModalResolve = useCallback((result: TemplateSwitchResult) => {
+    setPendingThemeId(null)
+    if (result.action === 'cancel' || !pendingThemeId) return
+    applyMutation.mutate({
+      themeId:   pendingThemeId,
+      overwrite: result.action === 'apply-defaults',
+    })
+  }, [pendingThemeId, applyMutation])
+
+  const pendingTheme = pendingThemeId
+    ? (themesData?.data ?? []).find((t) => t.id === pendingThemeId)
+    : null
+
   return (
-    <ThemesPageView
-      themes={themesData?.data ?? []}
-      activeThemeId={siteThemeData?.theme_id ?? null}
-      isLoading={loadingThemes || loadingSiteTheme}
-      onApplyTheme={(id) => applyMutation.mutate(id)}
-      applying={applyMutation.isPending}
-      applyError={applyError}
-      applySuccess={applySuccess}
-    />
+    <>
+      <ThemesPageView
+        themes={themesData?.data ?? []}
+        activeThemeId={siteThemeData?.theme_id ?? null}
+        isLoading={loadingThemes || loadingSiteTheme}
+        onApplyTheme={handleApplyTheme}
+        applying={applyMutation.isPending}
+        applyError={applyError}
+        applySuccess={applySuccess}
+        onRepublishPages={activeSite ? () => {
+          const activeTheme = (themesData?.data ?? []).find((t) => t.id === siteThemeData?.theme_id)
+          setRepublishTemplateName(activeTheme?.name ?? activeTheme?.template_slug ?? 'Current Template')
+        } : undefined}
+      />
+
+      {pendingTheme && (
+        <TemplateSwitchModal
+          newTemplateName={pendingTheme.name ?? pendingTheme.template_slug ?? 'this template'}
+          onResolve={handleModalResolve}
+        />
+      )}
+
+      {republishTemplateName && activeSite && (
+        <RepublishPagesModal
+          siteId={activeSite.id}
+          templateName={republishTemplateName}
+          onClose={() => setRepublishTemplateName(null)}
+        />
+      )}
+    </>
   )
 }

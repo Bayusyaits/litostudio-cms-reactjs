@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/utils'
 import { getTitle } from '@/types/content.types'
 import type { Story } from '@/types/content.types'
 import type { ContentStatus } from '@/types/api.types'
+import { AppImage, AppImageThumb } from '@/components/atoms/AppImage'
 
 type TabStatus = 'all' | ContentStatus
 
@@ -57,7 +58,7 @@ function AuthorCell({ author }: { author?: { name?: string; avatar_url?: string 
   return (
     <div className="flex items-center gap-[7px]">
       {author.avatar_url ? (
-        <img src={author.avatar_url} alt="" className="w-[22px] h-[22px] rounded-full object-cover" />
+        <AppImageThumb src={author.avatar_url} alt="" size={22} radius="50%" skeleton={false} />
       ) : (
         <div className="w-[22px] h-[22px] rounded-full bg-[rgba(212,168,83,0.12)] flex items-center justify-center text-[9px] font-semibold text-[var(--lito-gold-deep)]">
           {initials}
@@ -206,7 +207,7 @@ export function StoriesPageView({
                     <td>
                       <div className="flex items-center gap-[10px]">
                         {story.cover_image ? (
-                          <img src={story.cover_image} alt="" className="w-[54px] h-[38px] object-cover rounded-[3px] shrink-0" />
+                          <AppImage src={story.cover_image} alt="" objectFit="cover" skeleton={false} wrapperStyle={{ width: 54, height: 38, flexShrink: 0, borderRadius: 3 }} style={{ width: '100%', height: '100%' }} />
                         ) : (
                           <div className="w-[54px] h-[38px] rounded-[3px] bg-[var(--lito-cream-alt)] shrink-0" />
                         )}

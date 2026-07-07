@@ -432,9 +432,6 @@ interface MockSiteHeaderProps {
   templateSlug: string
 }
 
-/** Fallback nav links shown when no pages have been created yet — per template */
-const FALLBACK_NAV_LINKS = ['Home', 'About', 'Portfolio', 'Stories', 'Journal', 'Contact']
-
 /**
  * Template-specific chrome config for MockSiteHeader / MockSiteFooter.
  * Controls CTA button text and footer tagline so the canvas looks like the
@@ -712,10 +709,10 @@ export function EditorCanvas() {
   // Uses getQueryData (no refetch) — PagesPageContainer already populates this cache.
   const qc = useQueryClient()
   const navLinks = useMemo(() => {
-    const templateFallback = (TEMPLATE_CHROME[templateSlug] ?? TEMPLATE_CHROME.lito).fallbackNav
+    const templateFallback = (TEMPLATE_CHROME[templateSlug ?? 'lito'] ?? TEMPLATE_CHROME.lito).fallbackNav
     if (!activeSite?.id) return templateFallback
     type CachedPage = { slug: string; status?: string; page_translations?: { title?: string; locale?: string }[] }
-    const cached = qc.getQueryData<CachedPage[]>(['pages-all', activeSite.id])
+    const cached = qc.getQueryData<CachedPage[]>(['pages-all', activeSite.id ?? ''])
     if (!cached || cached.length === 0) return templateFallback
     // Only show active/published pages; derive display label from translation or slug
     return cached
@@ -809,7 +806,7 @@ export function EditorCanvas() {
           fontBody={fontBody}
           previewMode={previewMode}
           navLinks={navLinks}
-          templateSlug={templateSlug}
+          templateSlug={templateSlug ?? 'lito'}
         />
         {/* Page body — template background */}
         <div className="flex-1" style={{ background: cssVars['--cms-card-bg'] as string }}>
@@ -920,7 +917,7 @@ export function EditorCanvas() {
                   )}
 
                   {/* Block content */}
-                  <BlockRenderer block={block} />
+                  <BlockRenderer block={block} template={templateSlug ?? 'lito'} />
 
                   {/* Insert button */}
                   {!isPreview && isSelected && !isLocked && (
@@ -969,7 +966,7 @@ export function EditorCanvas() {
           fontBody={fontBody}
           previewMode={previewMode}
           navLinks={navLinks}
-          templateSlug={templateSlug}
+          templateSlug={templateSlug ?? 'lito'}
         />
         </div>{/* end page column */}
     </div>

@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Lock, Monitor, Tablet, Smartphone, HelpCircle, ChevronDown, Crown, Plus, Trash2, History, RotateCcw, Loader2 } from 'lucide-react'
+import { Lock, Monitor, Tablet, Smartphone, HelpCircle, ChevronDown, Crown, Plus, Trash2, History, RotateCcw, Loader2, X } from 'lucide-react'
 import { useEditorStore } from '@/stores/editor.store'
 import { useWebsiteStore } from '@/stores/website.store'
 import { cn } from '@/lib/utils'
@@ -360,7 +360,10 @@ function ContentPanel({ block }: { block: Block }) {
   if (block.type === 'cta') return (
     <div className="px-[14px] py-1">
       <FieldInput label="Title" value={d['title'] as string} placeholder="Call to action title" onChange={v => update({ title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <FieldTextarea label="Description" value={d['description'] as string} placeholder="Supporting description" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
+      <div className="mb-3">
+        <Label>Description</Label>
+        <RichTextEditor value={d['description'] as string ?? ''} placeholder="Supporting description" minHeight={80} onChange={html => update({ description: html })} />
+      </div>
       <FieldInput label="Button text" value={d['buttonText'] as string} placeholder="Get Started" onChange={v => update({ buttonText: v })} maxLength={FIELD_LIMITS.BUTTON_TEXT} />
       <FieldInput label="Button URL" value={d['buttonUrl'] as string} placeholder="https://" onChange={v => update({ buttonUrl: v })} />
       <FieldSelect label="Variant" value={d['variant'] as string ?? 'dark'} options={[
@@ -485,7 +488,10 @@ function ContentPanel({ block }: { block: Block }) {
   if (block.type === 'contact_form') return (
     <div className="px-[14px] py-1">
       <FieldInput label="Heading" value={d['heading'] as string ?? ''} placeholder="Get in Touch" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <FieldTextarea label="Description" value={d['description'] as string ?? ''} placeholder="Optional description" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
+      <div className="mb-3">
+        <Label>Description</Label>
+        <RichTextEditor value={d['description'] as string ?? ''} placeholder="Optional description" minHeight={80} onChange={html => update({ description: html })} />
+      </div>
       <FieldInput label="Submit button text" value={d['submitText'] as string ?? ''} placeholder="Send Message" onChange={v => update({ submitText: v })} maxLength={FIELD_LIMITS.BUTTON_TEXT} />
       <div className="my-2 border-t border-[var(--lito-border)]" />
       <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">Contact info override (optional)</p>
@@ -500,7 +506,10 @@ function ContentPanel({ block }: { block: Block }) {
     <div className="px-[14px] py-1">
       <FieldInput label="Eyebrow label" value={d['eyebrow'] as string ?? ''} placeholder="The Letter" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
       <FieldInput label="Heading" value={d['heading'] as string ?? ''} placeholder="Stay in the Loop" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <FieldTextarea label="Description" value={d['description'] as string ?? ''} placeholder="Subscribe for updates" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
+      <div className="mb-3">
+        <Label>Description</Label>
+        <RichTextEditor value={d['description'] as string ?? ''} placeholder="Subscribe for updates" minHeight={80} onChange={html => update({ description: html })} />
+      </div>
       <FieldInput label="Input placeholder" value={d['placeholder'] as string ?? ''} placeholder="Enter your email" onChange={v => update({ placeholder: v })} maxLength={80} />
       <FieldInput label="Button text" value={d['buttonText'] as string ?? ''} placeholder="Subscribe" onChange={v => update({ buttonText: v })} maxLength={FIELD_LIMITS.BUTTON_TEXT} />
     </div>
@@ -572,7 +581,10 @@ function ContentPanel({ block }: { block: Block }) {
   if (['campaigns_grid', 'destinations_grid', 'portfolio', 'packages', 'booking'].includes(block.type)) return (
     <div className="px-[14px] py-1">
       <FieldInput label="Section heading" value={d['heading'] as string} placeholder="Section heading" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <FieldTextarea label="Description" value={d['description'] as string} placeholder="Optional description" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
+      <div className="mb-3">
+        <Label>Description</Label>
+        <RichTextEditor value={d['description'] as string ?? ''} placeholder="Optional description" minHeight={80} onChange={html => update({ description: html })} />
+      </div>
       {block.type === 'campaigns_grid' && (
         <FieldInput label="Items to show" value={String(d['limit'] ?? 6)} placeholder="6" onChange={v => update({ limit: parseInt(v) || 6 })} />
       )}
@@ -584,7 +596,10 @@ function ContentPanel({ block }: { block: Block }) {
     <div className="px-[14px] py-1">
       <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="Contact Us" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
       <FieldInput label="Title" value={d['title'] as string ?? ''} placeholder="Get in Touch" onChange={v => update({ title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <FieldTextarea label="Description" value={(d['desc'] ?? d['description']) as string ?? ''} placeholder="Supporting text" onChange={v => update({ desc: v, description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
+      <div className="mb-3">
+        <Label>Description</Label>
+        <RichTextEditor value={(d['desc'] ?? d['description']) as string ?? ''} placeholder="Supporting text" minHeight={80} onChange={html => update({ desc: html, description: html })} />
+      </div>
       <div className="mb-3">
         <Label>Background image</Label>
         <ImageUploader
@@ -614,7 +629,10 @@ function ContentPanel({ block }: { block: Block }) {
     <div className="px-[14px] py-1">
       <FieldInput label="Eyebrow" value={d['eyebrow'] as string ?? ''} placeholder="Stay Connected" onChange={v => update({ eyebrow: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
       <FieldInput label="Title" value={d['title'] as string ?? ''} placeholder="Follow Our Journey" onChange={v => update({ title: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <FieldTextarea label="Description" value={(d['desc'] ?? d['description']) as string ?? ''} placeholder="Supporting text" onChange={v => update({ desc: v, description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
+      <div className="mb-3">
+        <Label>Description</Label>
+        <RichTextEditor value={(d['desc'] ?? d['description']) as string ?? ''} placeholder="Supporting text" minHeight={80} onChange={html => update({ desc: html, description: html })} />
+      </div>
       <FieldInput label="Contact email" value={d['email'] as string ?? ''} placeholder="hello@example.com" onChange={v => update({ email: v })} />
       <FieldInput label="Primary CTA text" value={d['ctaText'] as string ?? ''} placeholder="Send an Email" onChange={v => update({ ctaText: v })} maxLength={FIELD_LIMITS.CTA_LABEL} />
       <FieldInput label="Primary CTA URL" value={(d['ctaLink'] ?? d['ctaUrl']) as string ?? ''} placeholder="mailto:hello@example.com" onChange={v => update({ ctaLink: v, ctaUrl: v })} />
@@ -675,7 +693,10 @@ function ContentPanel({ block }: { block: Block }) {
   if (block.type === 'contact' || (block.type as any) === 'contact_form') return (
     <div className="px-[14px] py-1">
       <FieldInput label="Heading" value={d['heading'] as string ?? ''} placeholder="Get in Touch" onChange={v => update({ heading: v })} maxLength={FIELD_LIMITS.HERO_TITLE} />
-      <FieldTextarea label="Description" value={d['description'] as string ?? ''} placeholder="Optional description" onChange={v => update({ description: v })} maxLength={FIELD_LIMITS.DESCRIPTION} rows={3} />
+      <div className="mb-3">
+        <Label>Description</Label>
+        <RichTextEditor value={d['description'] as string ?? ''} placeholder="Optional description" minHeight={80} onChange={html => update({ description: html })} />
+      </div>
       <FieldInput label="Submit button text" value={(d['submitText'] ?? d['buttonText']) as string ?? ''} placeholder="Send Message" onChange={v => update({ submitText: v, buttonText: v })} maxLength={FIELD_LIMITS.BUTTON_TEXT} />
       <div className="my-2 border-t border-[var(--lito-border)]" />
       <p className="font-body text-[10px] text-[var(--text-muted)] m-0 mb-2">Contact info (overrides Site Settings)</p>
@@ -741,7 +762,7 @@ function ContentPanel({ block }: { block: Block }) {
               const next = ((d['values'] as string[]) ?? []).filter((_: string, j: number) => j !== i)
               update({ values: next })
             }}
-          >✕</button>
+          ><X size={11} /></button>
         </div>
       ))}
       <button

@@ -1,4 +1,4 @@
-import { HelpCircle, Trash2, Plus } from 'lucide-react'
+import { HelpCircle, Trash2, Plus, PenLine } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
 import { SearchInput } from '@/components/molecules/SearchInput'
@@ -97,7 +97,7 @@ export function FaqsPageView({
       render: (faq) => (
         <div className="flex items-center justify-end gap-1">
           <Button size="icon" variant="ghost" onClick={() => onEdit(faq.id)} aria-label="Edit">
-            ✏️
+            <PenLine className="w-3.5 h-3.5" />
           </Button>
           <Button size="icon" variant="ghost" onClick={() => onDelete(faq.id)} aria-label="Delete">
             <Trash2 className="w-3.5 h-3.5 text-[var(--s-danger)]" />

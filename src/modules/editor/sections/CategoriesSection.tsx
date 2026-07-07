@@ -4,6 +4,7 @@
  */
 
 import type { Block } from '@/types/editor.types'
+import { AppImage } from '@/components/atoms/AppImage'
 
 const MOCK_CATS = [
   { id: '1', name: 'Wedding',       count: 48, image: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&q=80' },
@@ -35,7 +36,7 @@ export function CategoriesSection({ block }: { block: Block }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           {MOCK_CATS.map(cat => (
             <a key={cat.id} href="#" onClick={e => e.preventDefault()} style={{ textDecoration: 'none', display: 'block', position: 'relative', overflow: 'hidden', borderRadius: 2, aspectRatio: '3/4' }}>
-              <img src={cat.image} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <AppImage src={cat.image} alt={cat.name} ratio="3/4" objectFit="cover" wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%)' }} />
               <div style={{ position: 'absolute', bottom: 20, left: 20, right: 20 }}>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: 10, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>{cat.count} stories</p>

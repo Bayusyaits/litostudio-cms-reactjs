@@ -4,6 +4,8 @@ import { http } from '@/lib/request'
 import type { ApiResponse } from '@/types/api.types'
 import { useOrgStore } from '@/stores/org.store'
 import { useWebsiteStore } from '@/stores/website.store'
+import { RepublishPagesModal } from '@/modules/themes/RepublishPagesModal'
+import { RefreshCw } from 'lucide-react'
 
 interface Deployment {
   id: string
@@ -40,6 +42,7 @@ export default function DeploymentsPageContainer() {
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(0)
   const limit = 20
+  const [showRepublish, setShowRepublish] = useState(false)
 
   const query = useQuery({
     queryKey: ['deployments', org?.id, siteFilter, statusFilter, page],
@@ -58,10 +61,23 @@ export default function DeploymentsPageContainer() {
   const total = (query.data as { total?: number })?.total ?? 0
 
   return (
+    <>
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Deployments</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Deployment history for your sites.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Deployments</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Deployment history for your sites.</p>
+        </div>
+        {activeSite && (
+          <button
+            type="button"
+            onClick={() => setShowRepublish(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--lito-border)] bg-transparent font-body text-[12px] text-[var(--text-muted)] cursor-pointer hover:border-[var(--lito-gold)] hover:text-[var(--text-primary)] transition-colors duration-150 shrink-0 mt-1"
+          >
+            <RefreshCw size={13} />
+            Republish All Pages
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -149,5 +165,18 @@ export default function DeploymentsPageContainer() {
         </div>
       )}
     </div>
+
+    {showRepublish && activeSite && (
+      <RepublishPagesModal
+        siteId={activeSite.id}
+        templateName={
+          (activeSite.settings as Record<string, unknown> | null)?.['template_slug'] as string
+          ?? activeSite.template_slug
+          ?? 'Current Template'
+        }
+        onClose={() => { setShowRepublish(false); query.refetch() }}
+      />
+    )}
+    </>
   )
 }

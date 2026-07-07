@@ -58,8 +58,8 @@
   --lito-cream:     var(--nx-bg,     #FAFAF9);
   --lito-border:    var(--nx-border, rgba(0,0,0,0.10));
   --text-faint:     var(--nx-text-faint, #999999);
-  --font-display:   var(--nx-font,   'Inter', system-ui, sans-serif);
-  --font-body:      var(--nx-font,   'Inter', system-ui, sans-serif);
+  --font-display:   'Barlow Condensed', 'Inter', system-ui, sans-serif;
+  --font-body:      'Barlow', 'Inter', system-ui, sans-serif;
   /* Fashion hero uses a dark full-bleed image (same overlay structure as lito) */
   --canvas-hero-bg-fallback:    var(--nx-text, #0A0A0A);
   --canvas-hero-title:          #FAFAF9;

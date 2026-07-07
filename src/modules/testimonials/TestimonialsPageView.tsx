@@ -1,4 +1,4 @@
-import { Quote, Trash2 } from 'lucide-react'
+import { Quote, Trash2, Star } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
 import { SearchInput } from '@/components/molecules/SearchInput'
@@ -98,7 +98,11 @@ export function TestimonialsPageView({
       width: '80px',
       render: (t) =>
         t.rating != null ? (
-          <span className="font-body text-sm text-[var(--lito-gold)]">{'★'.repeat(Math.round(t.rating))}</span>
+          <span className="flex items-center gap-0.5 text-[var(--lito-gold)]">
+            {Array.from({ length: Math.round(t.rating) }).map((_, i) => (
+              <Star key={i} size={12} fill="currentColor" strokeWidth={0} />
+            ))}
+          </span>
         ) : (
           <span className="font-body text-xs text-[var(--text-muted)]">—</span>
         ),
