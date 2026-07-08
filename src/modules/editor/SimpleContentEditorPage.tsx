@@ -31,11 +31,10 @@ import { useWebsiteStore } from '@litostudio/ui-cms'
 import { formatRelative }                    from '@/lib/utils'
 
 import { ContentEditorLayout }                   from '@/components/organisms/ContentEditorLayout'
-import { RichTextEditor, encodeBody, decodeBody, ImageUploader, FIELD_LIMITS, DashboardSkeleton } from '@litostudio/ui-cms'
+import { RichTextEditor, encodeBody, decodeBody, ImageUploader, FIELD_LIMITS, DashboardSkeleton, FormField, TextAreaField } from '@litostudio/ui-cms'
 import { SeoCard }                                from '@/components/molecules/SeoCard'
 import { PublishCard }                            from '@/components/molecules/PublishCard'
 import { TagInput }                               from '@/components/molecules/TagInput'
-import { FormField, TextAreaField }               from '@/components/molecules/FormField'
 import { Switch }                                 from '@/components/atoms/Switch'
 
 import type { ContentStatus } from '@litostudio/ui-cms'

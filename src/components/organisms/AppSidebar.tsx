@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
-import { WorkspaceSwitcher } from './WorkspaceSwitcher'
+import { WorkspaceSwitcher } from '@litostudio/ui-cms'
 
 interface NavItem { label: string; icon: React.ElementType; to: string }
 interface NavSection { section: string; items: NavItem[] }

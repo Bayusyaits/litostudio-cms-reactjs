@@ -22,12 +22,9 @@ import {
   Camera, Star, Package, Navigation, LayoutGrid, Rocket,
   ChevronRight, Palette, FileText,
 } from 'lucide-react'
-import { orgService } from '@/services/org.service'
 import { authService } from '@/services/auth.service'
-import { useOrgStore } from '@litostudio/ui-cms'
-import { useWebsiteStore } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
-import { Button, FormInput, BlockIcon } from '@litostudio/ui-cms'
+import { orgService, useOrgStore, useWebsiteStore, Button, FormInput, BlockIcon } from '@litostudio/ui-cms'
 import type { Organization, Site } from '@litostudio/ui-cms'
 
 // ── Constants ────────────────────────────────────────────────────────────────

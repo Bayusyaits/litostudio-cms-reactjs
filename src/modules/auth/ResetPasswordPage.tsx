@@ -4,10 +4,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { KeyRound, CheckCircle, AlertCircle } from 'lucide-react'
-import { Button } from '@litostudio/ui-cms'
-import { FormField } from '@/components/molecules/FormField'
+import { Button, FormField, getErrorMessage } from '@litostudio/ui-cms'
 import { authService } from '@/services/auth.service'
-import { getErrorMessage } from '@litostudio/ui-cms'
 
 const schema = z.object({
   password: z

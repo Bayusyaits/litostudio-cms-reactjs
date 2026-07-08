@@ -200,9 +200,22 @@ export function ThemePreview({ templateSlug, className = '' }: ThemePreviewProps
     <div
       role="img"
       aria-label={label}
-      className={`w-full h-full overflow-hidden ${className}`}
+      className={`w-full h-full overflow-hidden relative ${className}`}
     >
       {inner}
+      {/*
+        2026-07-08 addition (cms-editor-design-parity-audit-2026-07-08.md, Priority
+        Action #5): these SVGs are hand-drawn mockups, not renders of the real
+        template — they're hardcoded light-mode-only and don't reflect a site's
+        actual theme_colors overrides or dark mode. Label them as illustrative so
+        nobody mistakes this for an accurate preview of the live site.
+      */}
+      <span
+        aria-hidden="true"
+        className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[9px] font-body leading-none tracking-wide uppercase bg-black/45 text-white/85 pointer-events-none"
+      >
+        Illustrative only
+      </span>
     </div>
   )
 }

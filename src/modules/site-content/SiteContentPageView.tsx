@@ -184,9 +184,21 @@ function FooterTab({ draft, set }: { draft: SiteExtraSettings; set: (k: keyof Si
   )
 }
 
+const COLOR_FIELDS: [string, string][] = [
+  ['accent',       'Accent (primary CTA, links, highlights)'],
+  ['accent_hover', 'Accent hover state'],
+  ['accent_text',  'Accent text on light backgrounds'],
+  ['bg',           'Page background'],
+  ['text',         'Primary text color'],
+]
+
 function ColorsTab({ draft, set }: { draft: SiteExtraSettings; set: (k: keyof SiteExtraSettings, v: unknown) => void }) {
+  const [mode, setMode] = useState<'light' | 'dark'>('light')
   const colors = draft.theme_colors ?? {}
-  const setColor = (k: string, v: string) => set('theme_colors', { ...colors, [k]: v })
+  const darkColors = colors.dark ?? {}
+
+  const setLightColor = (k: string, v: string) => set('theme_colors', { ...colors, [k]: v })
+  const setDarkColor  = (k: string, v: string) => set('theme_colors', { ...colors, dark: { ...darkColors, [k]: v } })
 
   return (
     <div>
@@ -195,16 +207,37 @@ function ColorsTab({ draft, set }: { draft: SiteExtraSettings; set: (k: keyof Si
         Leave blank to use template defaults. Hex values only (e.g. #C4956A). These override the CSS tokens at runtime via <code className="font-mono text-[11px]">useThemeColors()</code>.
       </p>
 
+      <div className="flex gap-2 mb-4">
+        <button
+          type="button"
+          onClick={() => setMode('light')}
+          className={`px-3 py-1.5 rounded-md border font-body text-xs cursor-pointer transition-colors duration-150 ${mode === 'light' ? 'border-[var(--color-border)] bg-[var(--cms-input-bg)] text-[var(--text-primary)]' : 'border-transparent text-[var(--text-muted)]'}`}
+        >
+          ☀ Light mode
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('dark')}
+          className={`px-3 py-1.5 rounded-md border font-body text-xs cursor-pointer transition-colors duration-150 ${mode === 'dark' ? 'border-[var(--color-border)] bg-[var(--cms-input-bg)] text-[var(--text-primary)]' : 'border-transparent text-[var(--text-muted)]'}`}
+        >
+          ☾ Dark mode
+        </button>
+      </div>
+
+      {mode === 'dark' && (
+        <p className="font-body text-xs text-[var(--text-muted)] mb-4 leading-[1.6] italic">
+          Optional. Any field left blank here falls back to its light-mode value above — not the template default — so you only need to override colors that actually need to change in dark mode.
+        </p>
+      )}
+
       <div className="flex flex-col gap-3">
-        {([
-          ['accent',       'Accent (primary CTA, links, highlights)'],
-          ['accent_hover', 'Accent hover state'],
-          ['accent_text',  'Accent text on light backgrounds'],
-          ['bg',           'Page background'],
-          ['text',         'Primary text color'],
-        ] as [string, string][]).map(([k, lbl]) => (
-          <ColorInput key={k} value={colors[k as keyof typeof colors] ?? ''} onChange={v => setColor(k, v)} label={lbl} />
-        ))}
+        {mode === 'light'
+          ? COLOR_FIELDS.map(([k, lbl]) => (
+              <ColorInput key={k} value={(colors as Record<string, string | undefined>)[k] ?? ''} onChange={v => setLightColor(k, v)} label={lbl} />
+            ))
+          : COLOR_FIELDS.map(([k, lbl]) => (
+              <ColorInput key={k} value={(darkColors as Record<string, string | undefined>)[k] ?? ''} onChange={v => setDarkColor(k, v)} label={lbl} />
+            ))}
       </div>
     </div>
   )

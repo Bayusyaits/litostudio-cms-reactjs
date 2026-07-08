@@ -50,6 +50,16 @@ export interface SiteExtraSettings {
     accent_text?: string
     bg?: string
     text?: string
+    // 2026-07-08: dark-mode-specific overrides (audit finding #6). Optional —
+    // when a field is omitted, the website falls back to the light-mode value
+    // for that same field rather than the stock template color.
+    dark?: {
+      accent?: string
+      accent_hover?: string
+      accent_text?: string
+      bg?: string
+      text?: string
+    }
   }
 }
 

@@ -1,8 +1,7 @@
 import { FileText, Globe, Image, Link2, BookOpen, ArrowRight, Clock } from 'lucide-react'
-import { Skeleton } from '@litostudio/ui-cms'
 import { Link } from 'react-router-dom'
-import type { DashboardStats, DashboardRecentItem } from '@/services/org.service'
-import type { Organization, Site } from '@litostudio/ui-cms'
+import { Skeleton } from '@litostudio/ui-cms'
+import type { DashboardStats, DashboardRecentItem, Organization, Site } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
 import { formatDate } from '@/lib/utils'
 

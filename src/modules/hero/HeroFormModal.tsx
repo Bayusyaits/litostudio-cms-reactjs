@@ -15,8 +15,7 @@
  */
 import { useState, useEffect, useRef } from 'react'
 import { X, Save } from 'lucide-react'
-import { Button, ImageUploader, FIELD_LIMITS } from '@litostudio/ui-cms'
-import { FormField, TextAreaField } from '@/components/molecules/FormField'
+import { Button, ImageUploader, FIELD_LIMITS, FormField, TextAreaField } from '@litostudio/ui-cms'
 import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroStatus } from '@/types/content.types'
 import { heroService } from '@/services/content.service'
 import { draftMediaStore } from '@litostudio/ui-cms'

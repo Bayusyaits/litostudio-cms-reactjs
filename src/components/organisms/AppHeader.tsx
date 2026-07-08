@@ -1,12 +1,41 @@
 // apps/cms/src/components/organisms/AppHeader.tsx
 import { useEffect, useCallback, useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { Search, Bell, Moon, Sun, Menu, Plus } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import {
+  Search, Bell, Moon, Sun, Menu, Plus, X, Loader2,
+  FileText, Package, FolderOpen, BookOpen, Tag, Image, Layers,
+} from 'lucide-react'
 import { useThemeStore } from '@/stores/theme.store'
 import { useAuthStore } from '@/stores/auth.store'
-import { useWebsiteStore } from '@litostudio/ui-cms'
-import { GlobalSearch } from './GlobalSearch'
-import { NotificationsPanel, useUnreadCount } from './NotificationsPanel'
+import { useWebsiteStore, SearchDialog, type SearchDialogResult, NotificationsPanel, useUnreadCount } from '@litostudio/ui-cms'
+import { searchService } from '@/services/search.service'
+
+// ── Global search: type icon/label maps + result mapping ───────────────────
+// Moved here from the now-deleted local GlobalSearch.tsx — SearchDialog
+// (ui-cms) takes generic caller-supplied icons/results, it doesn't know
+// about searchService or these CMS content types.
+const SEARCH_TYPE_ICONS: Record<string, React.ReactNode> = {
+  journal:    <BookOpen  size={13} />,
+  page:       <FileText  size={13} />,
+  product:    <Package   size={13} />,
+  collection: <Layers    size={13} />,
+  category:   <FolderOpen size={13} />,
+  tag:        <Tag       size={13} />,
+  story:      <Image     size={13} />,
+}
+
+const SEARCH_TYPE_LABELS: Record<string, string> = {
+  journal: 'Journal', page: 'Page', product: 'Product',
+  collection: 'Collection', category: 'Category', tag: 'Tag', story: 'Story',
+}
+
+function searchStatusColor(status?: string): string {
+  if (!status) return 'var(--text-muted)'
+  if (status === 'active' || status === 'published') return 'var(--lito-teal)'
+  if (status === 'draft') return 'var(--text-muted)'
+  if (status === 'archived') return 'var(--s-danger)'
+  return 'var(--text-muted)'
+}
 
 const ROUTE_LABELS: Record<string, string> = {
   '/dashboard':    'Dashboard',
@@ -38,6 +67,7 @@ function usePageLabel() {
 const iconBtnClass = 'flex items-center justify-center w-[34px] h-[34px] rounded-md border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] cursor-pointer transition-[border-color,color,background] duration-150 hover:border-[var(--lito-ink)] hover:text-[var(--text-primary)]'
 
 export function AppHeader() {
+  const navigate = useNavigate()
   const { isDark, setColorMode, toggleSidebar } = useThemeStore()
   const { user } = useAuthStore()
   const { activeSite } = useWebsiteStore()
@@ -63,6 +93,25 @@ export function AppHeader() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [openSearch])
+
+  const handleSearch = useCallback(async (query: string): Promise<SearchDialogResult[]> => {
+    const res = await searchService.search(query, { site_id: activeSite?.id, limit: 30 })
+    return (res.data ?? []).map((item) => ({
+      id: item.id,
+      type: item.type,
+      typeLabel: SEARCH_TYPE_LABELS[item.type] ?? item.type,
+      icon: SEARCH_TYPE_ICONS[item.type] ?? <FileText size={13} />,
+      title: item.title,
+      subtitle: item.subtitle,
+      statusLabel: item.status,
+      statusColor: searchStatusColor(item.status),
+      data: item.url,
+    }))
+  }, [activeSite?.id])
+
+  const handleSelectResult = useCallback((result: SearchDialogResult) => {
+    if (typeof result.data === 'string') navigate(result.data)
+  }, [navigate])
 
   const initials = user?.full_name
     ? user.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -181,9 +230,19 @@ export function AppHeader() {
       </header>
 
       {/* Global search modal — rendered at document root level */}
-      <GlobalSearch
+      <SearchDialog
+        skin="cms"
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
+        onSearch={handleSearch}
+        onSelect={handleSelectResult}
+        placeholder="Search everything… (products, pages, journal, stories)"
+        searchIcon={<Search size={16} className="text-[var(--text-muted)]" />}
+        loadingIcon={<Loader2 size={16} className="text-[var(--lito-gold)] animate-spin" />}
+        clearIcon={<X size={14} />}
+        emptyIcon={<Search size={28} />}
+        emptyTitle="Start typing to search across all modules"
+        emptyDescription="Products, pages, journal, stories, collections, categories, tags"
       />
     </>
   )

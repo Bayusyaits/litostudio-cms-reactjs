@@ -14,9 +14,7 @@
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
-import { useOrgStore } from '@litostudio/ui-cms'
-import { useWebsiteStore } from '@litostudio/ui-cms'
-import { orgService } from '@/services/org.service'
+import { useOrgStore, useWebsiteStore, orgService } from '@litostudio/ui-cms'
 
 export function useWorkspaceHydration(): { isHydrating: boolean } {
   const [isHydrating, setIsHydrating] = useState(false)

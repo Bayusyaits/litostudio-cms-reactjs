@@ -4,11 +4,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { LogIn, Chrome } from 'lucide-react'
-import { Button } from '@litostudio/ui-cms'
-import { FormField } from '@/components/molecules/FormField'
+import { Button, FormField, getErrorMessage } from '@litostudio/ui-cms'
 import { authService } from '@/services/auth.service'
 import { useAuthStore } from '@/stores/auth.store'
-import { getErrorMessage } from '@litostudio/ui-cms'
 
 const loginSchema = z.object({
   email:    z.string().email('Enter a valid email'),
