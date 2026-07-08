@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import path from 'node:path'
 
 export default defineConfig({
   plugins: [react()],
@@ -31,14 +31,27 @@ export default defineConfig({
     },
   },
   build: {
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'query-vendor': ['@tanstack/react-query'],
-          'ui-vendor': ['flowbite-react', 'lucide-react'],
-          'editor-vendor': ['@ckeditor/ckeditor5-react', '@ckeditor/ckeditor5-build-classic'],
-          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return
+          }
+
+          if (id.includes('@ckeditor/')) {
+            return 'editor-vendor'
+          }
+
+          if (
+            id.includes('react-hook-form') ||
+            id.includes('@hookform/') ||
+            id.includes('/zod/')
+          ) {
+            return 'form-vendor'
+          }
+
+          return 'vendor'
         },
       },
     },

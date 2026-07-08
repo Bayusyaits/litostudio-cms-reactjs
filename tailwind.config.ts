@@ -69,10 +69,7 @@ const config: Config = {
   },
   safelist: [
     // Dynamic grid-cols used in GallerySection and other block renderers
-    { pattern: /^grid-cols-(1|2|3|4|5|6)$/ },
-    { pattern: /^sm:grid-cols-(1|2|3|4|5|6)$/ },
-    { pattern: /^md:grid-cols-(1|2|3|4|5|6)$/ },
-    { pattern: /^lg:grid-cols-(1|2|3|4|5|6)$/ },
+    { pattern: /^grid-cols-(1|2|3|4|5|6)$/, variants: ['sm', 'md', 'lg'] },
   ],
   plugins: [flowbite],
 }

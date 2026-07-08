@@ -236,7 +236,7 @@ export function LabelsPageView({
 
   // Group by group_name for display
   const grouped = labels.reduce<Record<string, Label[]>>((acc, l) => {
-    ;(acc[l.group_name] ??= []).push(l)
+    (acc[l.group_name] ??= []).push(l)
     return acc
   }, {})
 
