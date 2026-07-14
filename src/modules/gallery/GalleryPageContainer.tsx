@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { galleryService } from '@/services/content.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { GalleryPageView } from './GalleryPageView'
 
 export default function GalleryPageContainer() {
+  const navigate = useNavigate()
   const { activeSite } = useWebsiteStore()
   const qc = useQueryClient()
   const [filter, setFilter] = useState({ search: '', page: 1, limit: 24 })
@@ -42,6 +44,8 @@ export default function GalleryPageContainer() {
       onSelect={handleSelect}
       onDelete={(id) => deleteMutation.mutate(id)}
       onBulkDelete={(ids) => bulkDeleteMutation.mutate({ ids })}
+      onNew={() => navigate('/gallery/new')}
+      onEdit={(id) => navigate(`/gallery/${id}/edit`)}
     />
   )
 }

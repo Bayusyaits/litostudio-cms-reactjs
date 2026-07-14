@@ -1,14 +1,17 @@
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { categoryService, type CategoryCreateRequest } from '@/services/taxonomy.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { getErrorMessage } from '@litostudio/ui-cms'
 import { CategoriesPageView } from './CategoriesPageView'
 
+// Search used to be filtered here client-side and passed down as an already-
+// filtered `categories` prop + a separate <SearchInput> above the table.
+// Since migrating to EnterpriseDataTable (skin="cms"), the table's own
+// built-in search box (searchKeys) owns that filtering instead — this
+// container now just passes the full, unfiltered list straight through.
 export default function CategoriesPageContainer() {
   const { activeSite } = useWebsiteStore()
   const qc = useQueryClient()
-  const [search, setSearch] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['categories', activeSite?.id],
@@ -27,17 +30,11 @@ export default function CategoriesPageContainer() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['categories', activeSite?.id] }),
   })
 
-  const categories = (data?.data ?? []).filter(c =>
-    search ? c.translations?.[0]?.name?.toLowerCase().includes(search.toLowerCase()) : true,
-  )
-
   return (
     <CategoriesPageView
-      categories={categories}
-      total={data?.total ?? 0}
+      categories={data?.data ?? []}
+      total={data?.meta?.total ?? 0}
       isLoading={isLoading}
-      search={search}
-      onSearch={setSearch}
       onCreate={(payload) => {
         if (!activeSite) return
         createMutation.mutate({ ...payload, site_id: activeSite.id })

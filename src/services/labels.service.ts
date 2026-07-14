@@ -14,6 +14,12 @@ export interface Label {
   is_system: boolean
   created_at: string
   updated_at: string
+  // Index signature — lets this satisfy EnterpriseDataTable's
+  // `T extends Record<string, unknown>` generic constraint (an `interface`
+  // without one isn't structurally assignable to a Record type, even though
+  // every declared property already is). Same convention as
+  // apps/cms-superadmin/src/types/api.types.ts's SAOrganization/SAUser.
+  [key: string]: unknown
 }
 
 export interface LabelUpsertPayload {

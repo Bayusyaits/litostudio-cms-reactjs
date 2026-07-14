@@ -1,18 +1,27 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { teamService, type InvitePayload } from '@/services/team.service'
 import { TeamPageView } from './TeamPageView'
 import { getErrorMessage } from '@litostudio/ui-cms'
 
+// `page`/`search` used to be tracked here and threaded through to
+// teamService.getMembers({ page, limit, search }) — but that call ignores
+// them (its `_params` argument is never actually forwarded to the HTTP
+// request; see team.service.ts), so the backend always returns every
+// member regardless, `meta` was always passed as `undefined` below, and the
+// pagination footer + search box were dead UI (typing in search filtered
+// nothing; the page-number footer never rendered since meta was always
+// undefined). Migrating to EnterpriseDataTable (skin="cms") replaces that
+// with its own client-side searchKeys filter over the full member list,
+// which actually works. Backend pagination is a separate, pre-existing gap
+// — not addressed here.
 export default function TeamPageContainer() {
   const qc = useQueryClient()
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
   const [inviteError, setInviteError] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['team', page, search],
-    queryFn: () => teamService.getMembers({ page, limit: 20, search: search || undefined }),
+    queryKey: ['team'],
+    queryFn: () => teamService.getMembers(),
     staleTime: 2 * 60 * 1000,
   })
 
@@ -39,12 +48,7 @@ export default function TeamPageContainer() {
   return (
     <TeamPageView
       members={data?.data ?? []}
-      meta={undefined}
       isLoading={isLoading}
-      search={search}
-      onSearch={useCallback((s: string) => { setSearch(s); setPage(1) }, [])}
-      page={page}
-      onPage={setPage}
       onInvite={(payload) => inviteMutation.mutate(payload)}
       inviting={inviteMutation.isPending}
       inviteError={inviteError}

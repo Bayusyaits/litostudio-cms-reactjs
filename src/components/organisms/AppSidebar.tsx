@@ -6,7 +6,7 @@ import {
   Package, Layers, MessageSquare, HelpCircle, Puzzle,
   Briefcase, Quote, DollarSign, Tv2, MessageCircle,
   ShoppingBag, Mail, Inbox, Bot, Link2, Rocket, FileSpreadsheet,
-  Building2, Languages,
+  Building2, Languages, Truck, Scale,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
@@ -31,6 +31,7 @@ const NAV: NavSection[] = [
       { label: 'Gallery',      icon: Image,    to: '/gallery' },
       { label: 'Media',        icon: Film,     to: '/media' },
       { label: 'Destinations', icon: MapPin,   to: '/destinations' },
+      { label: 'Brands',       icon: Building2, to: '/brands' },
       { label: 'Categories',   icon: Tag,      to: '/categories' },
       { label: 'Tags',         icon: Hash,     to: '/tags' },
     ],
@@ -41,6 +42,7 @@ const NAV: NavSection[] = [
       { label: 'Products',    icon: Package,       to: '/products' },
       { label: 'Collections', icon: Layers,        to: '/collections' },
       { label: 'Orders',      icon: ShoppingBag,   to: '/orders' },
+      { label: 'Shipping Origins', icon: Truck,    to: '/shipping-origins' },
       { label: 'Reviews',     icon: MessageSquare, to: '/reviews' },
     ],
   },
@@ -75,6 +77,7 @@ const NAV: NavSection[] = [
       { label: 'Pages',       icon: Globe,   to: '/pages' },
       { label: 'Themes',        icon: Palette,  to: '/themes' },
       { label: 'Site Content',  icon: Sliders,  to: '/site-content' },
+      { label: 'Legal Center',  icon: Scale,    to: '/legal' },
       { label: 'Add-Ons',       icon: Puzzle,   to: '/addons' },
     ],
   },

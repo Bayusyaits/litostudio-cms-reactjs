@@ -1,8 +1,8 @@
 /**
  * SimpleContentEditorPage — Editor A (Shopify-style simple content editor).
  *
- * Handles 7 content modules:
- *   stories, journal, services, destinations, products, collections, campaigns
+ * Handles 8 content modules:
+ *   stories, journal, gallery, services, destinations, products, collections, campaigns
  *
  * Routes:
  *   /:module/new        → CREATE mode  (POST entity → navigate to /:module/:id/edit)
@@ -12,21 +12,34 @@
  *   - destinations: upsertTranslation sends { name, description } not { title, excerpt }
  *   - products:     entity.name = title (required on entity); product_type required
  *   - collections:  entity.name = title (required on entity)
+ *   - gallery, destinations: island/province/country/lat/lng/photographer/
+ *     shoot_date/shots are NOT real content_items columns (only category/
+ *     location/region/tags/cover_image are first-class — see DB.sql). They
+ *     must be nested under a single `extra` JSONB field on create/update, or
+ *     Supabase/PostgREST rejects the request with a "column does not exist"
+ *     error. This was a real bug for destinations (island/lat/lng were being
+ *     sent top-level) — fixed here alongside adding gallery + shots support.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useParams, useLocation, useNavigate, Navigate } from 'react-router-dom'
+import { useParams, useLocation, useNavigate, Navigate, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   storiesService,
   journalService,
+  galleryService,
   servicesService,
   destinationsService,
+  brandsService,
   productsService,
   collectionsService,
   campaignsService,
 } from '@/services/content.service'
+// Category picker for products — reuses the (fixed) Categories CMS module's
+// own service rather than adding a second category client. See
+// taxonomy.service.ts's file-header comment for why this was broken before.
+import { categoryService, type Category } from '@/services/taxonomy.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { formatRelative }                    from '@/lib/utils'
 
@@ -39,17 +52,18 @@ import { Switch }                                 from '@/components/atoms/Switc
 
 import type { ContentStatus } from '@litostudio/ui-cms'
 import type {
-  Story, JournalPost, Service, Destination, Product, Collection, Campaign,
+  Story, JournalPost, GalleryItem, Service, Destination, Brand, Product, Collection, Campaign,
   ProductType, ProductCategory, ProductExtra,
 } from '@/types/content.types'
+import { getTitle } from '@/types/content.types'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 type SimpleModule =
-  | 'stories' | 'journal' | 'services' | 'destinations'
+  | 'stories' | 'journal' | 'gallery' | 'services' | 'destinations' | 'brands'
   | 'products' | 'collections' | 'campaigns'
 
-type AnyEntity = Story | JournalPost | Service | Destination | Product | Collection | Campaign
+type AnyEntity = Story | JournalPost | GalleryItem | Service | Destination | Brand | Product | Collection | Campaign
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyService = any
@@ -59,12 +73,17 @@ const LOCALE = 'id'
 const MODULE_CONFIG: Record<SimpleModule, { label: string; service: AnyService }> = {
   stories:      { label: 'Story',        service: storiesService      },
   journal:      { label: 'Journal Post', service: journalService      },
+  gallery:      { label: 'Gallery Item', service: galleryService      },
   services:     { label: 'Service',      service: servicesService     },
   destinations: { label: 'Destination',  service: destinationsService },
+  brands:       { label: 'Brand',        service: brandsService       },
   products:     { label: 'Product',      service: productsService     },
   collections:  { label: 'Collection',   service: collectionsService  },
   campaigns:    { label: 'Campaign',     service: campaignsService    },
 }
+
+/** A single frame in a gallery item's or destination's shot album. */
+interface ShotEntry { url: string; title?: string; sub?: string }
 
 // ── Pure helpers ───────────────────────────────────────────────────────────
 
@@ -85,16 +104,16 @@ function getEntityTranslation(e: AnyEntity, module: SimpleModule) {
   const translations = ((e as unknown as Record<string, unknown>).translations as Record<string, unknown>[] | undefined) ?? []
   const t = translations.find((tr) => tr.locale === LOCALE) ?? translations[0]
   if (!t) return null
-  const isDest      = module === 'destinations'
-  // products, collections, and services (stored in products table) use `name` in their translation tables
+  // products, collections, and services (stored in products table, via
+  // product_translations which has a real `name` column) use `name`.
+  // Everything else — including destinations — is stored in the unified
+  // content_translations table (title/excerpt columns only; that table has
+  // NO name/description columns, unlike the old dedicated
+  // destination_translations table this used to special-case for).
   const isNameBased = module === 'products' || module === 'collections' || module === 'services'
   return {
-    displayTitle: isDest
-      ? ((t.name as string) ?? (t.title as string) ?? '')
-      : isNameBased
-        ? ((t.name as string) ?? '')
-        : ((t.title as string) ?? ''),
-    displayExcerpt:   isDest ? ((t.description as string) ?? (t.excerpt as string) ?? '') : ((t.excerpt as string) ?? ''),
+    displayTitle:     isNameBased ? ((t.name as string) ?? '') : ((t.title as string) ?? ''),
+    displayExcerpt:   (t.excerpt as string) ?? '',
     body:             t.body,
     meta_title:       (t.meta_title       as string) ?? '',
     meta_description: (t.meta_description as string) ?? '',
@@ -111,6 +130,22 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
       const j = e as JournalPost
       return { category: j.category ?? '', isFeatured: j.is_featured ?? false }
     }
+    case 'gallery': {
+      const g = e as GalleryItem
+      // aspect_ratio/photographer/shoot_date/shots live in extra JSONB —
+      // location/region/tags are real content_items columns.
+      const ext = (g.extra ?? {}) as Record<string, unknown>
+      return {
+        category:     g.category ?? '',
+        location:     g.location ?? '',
+        region:       g.region ?? '',
+        aspectRatio:  (ext.aspect_ratio as string) ?? '',
+        photographer: (ext.photographer as string) ?? '',
+        shootDate:    (ext.shoot_date as string) ?? '',
+        shots:        (ext.shots as ShotEntry[]) ?? [],
+        isFeatured:   g.is_featured ?? false,
+      }
+    }
     case 'services': {
       const sv = e as Service
       // category + duration are stored in extra JSONB (products table has no dedicated columns)
@@ -125,7 +160,30 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
     }
     case 'destinations': {
       const d = e as Destination
-      return { island: d.island ?? '', region: d.region ?? '', province: d.province ?? '', country: d.country ?? '', lat: d.lat ?? '', lng: d.lng ?? '', isFeatured: d.is_featured ?? false }
+      // island/province/country/lat/lng/shots are NOT real content_items
+      // columns — they live in extra JSONB (see file header comment).
+      // `d.island` etc. are read defensively as a fallback only in case
+      // older data was ever written with them top-level; extra is authoritative.
+      const ext = (d.extra ?? {}) as Record<string, unknown>
+      return {
+        island:     (ext.island as string)   ?? d.island   ?? '',
+        region:     d.region ?? '',
+        province:   (ext.province as string) ?? d.province ?? '',
+        country:    (ext.country as string)  ?? d.country  ?? '',
+        lat:        (ext.lat as number)      ?? d.lat      ?? '',
+        lng:        (ext.lng as number)      ?? d.lng      ?? '',
+        shots:      (ext.shots as ShotEntry[]) ?? [],
+        isFeatured: d.is_featured ?? false,
+      }
+    }
+    case 'brands': {
+      const b = e as Brand
+      const ext = (b.extra ?? {}) as Record<string, unknown>
+      return {
+        category:   b.category ?? '',
+        linkUrl:    (ext.link_url as string) ?? '',
+        isFeatured: b.is_featured ?? false,
+      }
     }
     case 'products': {
       const p = e as Product
@@ -135,6 +193,11 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
         price:       p.price ?? '',
         isFeatured:  p.is_featured ?? false,
         category:    ext.category   ?? '',
+        // Legacy free-text brand name (pre-dates the brandId picker below).
+        // No longer editable in the UI, but still round-tripped so an
+        // existing product's extra.brand text isn't silently wiped the next
+        // time someone edits and saves it (buildUpdatePatch rebuilds `extra`
+        // from scratch from this `extras` bag on every save).
         brand:       ext.brand      ?? '',
         sizes:       ext.sizes      ?? [],
         gender:      ext.gender     ?? '',
@@ -143,6 +206,20 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
         shade:       ext.shade      ?? '',
         color:       ext.color      ?? '',
         material:    ext.material   ?? '',
+        // Real relational fields (products.category_id / products.brand_id,
+        // migration 085) — NOT part of the `extra` JSONB, unlike everything
+        // else in this case. Kept in the same `extras` state bag purely so
+        // the existing setExtra()/renderModuleExtras() plumbing can be
+        // reused; buildCreatePayload/buildUpdatePatch route these two keys
+        // to top-level product columns instead of into `extra`.
+        categoryId:  p.category_id  ?? null,
+        brandId:     p.brand_id     ?? null,
+        // Also real top-level columns (not `extra`), same reasoning as
+        // category_id/brand_id above — is_digital gates checkout's
+        // shipping-address step (Task #28), digital_file_url is what the
+        // "paid" email links to for a digital product.
+        isDigital:      p.is_digital ?? false,
+        digitalFileUrl: p.digital_file_url ?? '',
       }
     }
     case 'collections': {
@@ -165,14 +242,16 @@ function buildTranslationPayload(
     meta_title:       metaTitle || undefined,
     meta_description: metaDesc  || undefined,
   }
-  // destinations → name + description (destination_translations schema)
-  if (module === 'destinations') return { ...common, name: title, description: excerpt || undefined }
   // products, services, collections → translation tables use `name` not `title`
   // (product_translations, collection_translations both have `name` column, no `title`)
   if (module === 'products' || module === 'services' || module === 'collections') {
     return { ...common, name: title, excerpt: excerpt || undefined }
   }
-  // stories, journal, campaigns → translation tables use `title`
+  // stories, journal, gallery, destinations, campaigns → all share the
+  // unified content_translations table, which has `title`/`excerpt` only.
+  // (destinations used to send `name`/`description` here — a leftover from
+  // the old dedicated destination_translations table; content_translations
+  // has no such columns, so that write silently 400'd. Fixed.)
   return { ...common, title, excerpt: excerpt || undefined }
 }
 
@@ -188,10 +267,43 @@ function buildCreatePayload(
       return { ...base, category: extras.category || undefined, location: extras.location || undefined, region: extras.region || undefined, is_featured: extras.isFeatured ?? false, tags, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'journal':
       return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+    case 'gallery': {
+      const extra: Record<string, unknown> = {}
+      if (extras.aspectRatio)  extra.aspect_ratio = extras.aspectRatio
+      if (extras.photographer) extra.photographer = extras.photographer
+      if (extras.shootDate)    extra.shoot_date   = extras.shootDate
+      if (Array.isArray(extras.shots) && (extras.shots as ShotEntry[]).length > 0) extra.shots = extras.shots
+      return {
+        ...base,
+        category:    extras.category || undefined,
+        location:    extras.location || undefined,
+        region:      extras.region   || undefined,
+        is_featured: extras.isFeatured ?? false,
+        extra,
+        translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) },
+      }
+    }
     case 'services':
       return { ...base, product_type: 'service', price: extras.price ? Number(extras.price) : undefined, currency: extras.currency || undefined, is_featured: extras.isFeatured ?? false, extra: { category: extras.category || undefined, duration: extras.duration || undefined } }
-    case 'destinations':
-      return { ...base, island: extras.island || undefined, region: extras.region || undefined, province: extras.province || undefined, country: extras.country || undefined, lat: extras.lat ? Number(extras.lat) : undefined, lng: extras.lng ? Number(extras.lng) : undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, name: title, description: excerpt || undefined } }
+    case 'destinations': {
+      // island/province/country/lat/lng/shots are NOT real content_items
+      // columns — must be nested under `extra` (see file header comment),
+      // not sent top-level like the old dedicated `destinations` table.
+      const extra: Record<string, unknown> = {}
+      if (extras.island)   extra.island   = extras.island
+      if (extras.province) extra.province = extras.province
+      if (extras.country)  extra.country  = extras.country
+      if (extras.lat)       extra.lat      = Number(extras.lat)
+      if (extras.lng)       extra.lng      = Number(extras.lng)
+      if (Array.isArray(extras.shots) && (extras.shots as ShotEntry[]).length > 0) extra.shots = extras.shots
+      return {
+        ...base,
+        region:      extras.region || undefined,
+        is_featured: extras.isFeatured ?? false,
+        extra,
+        translation: { locale: LOCALE, title, excerpt: excerpt || undefined },
+      }
+    }
     case 'products': {
       const extra: ProductExtra = {}
       if (extras.category)  extra.category  = extras.category  as ProductCategory
@@ -208,9 +320,25 @@ function buildCreatePayload(
         product_type: (extras.productType as ProductType) || 'product',
         price:        extras.price ? Number(extras.price) : undefined,
         is_featured:  extras.isFeatured ?? false,
+        // Real FK columns (migration 085) — deliberately top-level, not
+        // nested in `extra`, unlike everything above.
+        category_id:  (extras.categoryId as string) || undefined,
+        brand_id:     (extras.brandId as string) || undefined,
+        is_digital:      extras.isDigital ?? false,
+        digital_file_url: extras.isDigital ? ((extras.digitalFileUrl as string) || undefined) : undefined,
         extra,
       }
     }
+    case 'brands':
+      // category is a plain content_items column (free text, e.g. 'payment'/
+      // 'courier') — link_url has no dedicated column, nests under extra.
+      return {
+        ...base,
+        category:    extras.category || undefined,
+        is_featured: extras.isFeatured ?? false,
+        extra:       extras.linkUrl ? { link_url: extras.linkUrl } : {},
+        translation: { locale: LOCALE, title },
+      }
     case 'collections':
       return { ...base }
     case 'campaigns':
@@ -229,8 +357,39 @@ function buildUpdatePatch(
   switch (module) {
     case 'stories':      return { ...base, tags, category: extras.category || null, location: extras.location || null, region: extras.region || null, is_featured: extras.isFeatured ?? false }
     case 'journal':      return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
+    case 'gallery': {
+      const extra: Record<string, unknown> = {}
+      if (extras.aspectRatio)  extra.aspect_ratio = extras.aspectRatio
+      if (extras.photographer) extra.photographer = extras.photographer
+      if (extras.shootDate)    extra.shoot_date   = extras.shootDate
+      if (Array.isArray(extras.shots) && (extras.shots as ShotEntry[]).length > 0) extra.shots = extras.shots
+      return {
+        ...base,
+        tags,
+        category:    extras.category || null,
+        location:    extras.location || null,
+        region:      extras.region   || null,
+        is_featured: extras.isFeatured ?? false,
+        extra,
+      }
+    }
     case 'services':     return { ...base, price: extras.price ? Number(extras.price) : null, currency: extras.currency || null, is_featured: extras.isFeatured ?? false, extra: { category: extras.category || null, duration: extras.duration || null } }
-    case 'destinations': return { ...base, island: extras.island || null, region: extras.region || null, province: extras.province || null, country: extras.country || null, lat: extras.lat ? Number(extras.lat) : null, lng: extras.lng ? Number(extras.lng) : null, is_featured: extras.isFeatured ?? false }
+    case 'destinations': {
+      // See buildCreatePayload's destinations case — same extra-routing fix.
+      const extra: Record<string, unknown> = {}
+      if (extras.island)   extra.island   = extras.island
+      if (extras.province) extra.province = extras.province
+      if (extras.country)  extra.country  = extras.country
+      if (extras.lat)       extra.lat      = Number(extras.lat)
+      if (extras.lng)       extra.lng      = Number(extras.lng)
+      if (Array.isArray(extras.shots) && (extras.shots as ShotEntry[]).length > 0) extra.shots = extras.shots
+      return {
+        ...base,
+        region:      extras.region || null,
+        is_featured: extras.isFeatured ?? false,
+        extra,
+      }
+    }
     case 'products': {
       const extra: ProductExtra = {}
       if (extras.category)  extra.category  = extras.category  as ProductCategory
@@ -247,19 +406,94 @@ function buildUpdatePatch(
         product_type: (extras.productType as ProductType) || 'product',
         price:        extras.price ? Number(extras.price) : null,
         is_featured:  extras.isFeatured ?? false,
+        category_id:  (extras.categoryId as string) || null,
+        brand_id:     (extras.brandId as string) || null,
+        is_digital:      extras.isDigital ?? false,
+        digital_file_url: extras.isDigital ? ((extras.digitalFileUrl as string) || null) : null,
         extra,
       }
     }
+    case 'brands':
+      return {
+        ...base,
+        category:    extras.category || null,
+        is_featured: extras.isFeatured ?? false,
+        extra:       extras.linkUrl ? { link_url: extras.linkUrl } : {},
+      }
     case 'collections':  return { ...base }
     case 'campaigns':    return { ...base, cta_label: extras.ctaLabel || null, cta_url: extras.ctaUrl || null, start_date: extras.startDate || null, end_date: extras.endDate || null, is_featured: extras.isFeatured ?? false }
     default:             return base
   }
 }
 
+/**
+ * Reusable "shot album" editor — a repeatable list of { url, title, sub }
+ * frames, used by both gallery items and destinations (extra.shots). No
+ * prior array-of-objects `extra` field existed in this file to copy from
+ * (products.extra.sizes is an array of strings, not objects) — built fresh
+ * to match the shared `GalleryShot` shape read by the public website
+ * (apps/website/composables/repositories/parseShots.ts: url/title/sub,
+ * with `image`/`src`/`caption` accepted as aliases on read for resilience).
+ */
+function ShotsEditor({
+  shots, onChange, folder,
+}: {
+  shots: ShotEntry[]
+  onChange: (next: ShotEntry[]) => void
+  folder: string
+}) {
+  const updateShot = (i: number, patch: Partial<ShotEntry>) => {
+    onChange(shots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)))
+  }
+  const removeShot = (i: number) => onChange(shots.filter((_, idx) => idx !== i))
+  const addShot = () => onChange([...shots, { url: '' }])
+
+  return (
+    <div className="space-y-3">
+      {shots.map((shot, i) => (
+        <div key={i} className="rounded-lg border border-[var(--lito-border)] p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-body text-xs font-semibold text-[var(--text-muted)]">Shot {i + 1}</span>
+            <button
+              type="button"
+              onClick={() => removeShot(i)}
+              className="font-body text-xs text-[var(--s-danger)] hover:underline"
+            >
+              Remove
+            </button>
+          </div>
+          <ImageUploader value={shot.url || null} onChange={(url) => updateShot(i, { url: url ?? '' })} folder={folder} />
+          <FormField
+            label="Title"
+            value={shot.title ?? ''}
+            onChange={(e) => updateShot(i, { title: e.target.value })}
+            placeholder="e.g. Underpass, blue hour"
+          />
+          <FormField
+            label="Subtitle"
+            value={shot.sub ?? ''}
+            onChange={(e) => updateShot(i, { sub: e.target.value })}
+            placeholder="e.g. FIZ-R200 Shell Jacket"
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addShot}
+        className="cms-btn cms-btn-ghost cms-btn-sm w-full justify-center"
+      >
+        + Add Shot
+      </button>
+    </div>
+  )
+}
+
 function renderModuleExtras(
   module: SimpleModule | null,
   extras: Record<string, unknown>,
   setExtra: (key: string, value: unknown) => void,
+  /** products-only reference data for the Category / Brand pickers below. */
+  productPickers?: { categories: Category[]; brands: Brand[] },
 ): React.ReactNode {
   switch (module) {
     case 'stories':
@@ -286,6 +520,50 @@ function renderModuleExtras(
           </div>
         </div>
       )
+    case 'gallery':
+      return (
+        <>
+          <div className="cms-card p-4 space-y-3">
+            <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Gallery Item Details</h3>
+            <FormField label="Category"     value={extras.category     as string ?? ''} onChange={(e) => setExtra('category',     e.target.value)} placeholder="e.g. Landscape"        maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
+            <FormField label="Location"     value={extras.location     as string ?? ''} onChange={(e) => setExtra('location',     e.target.value)} placeholder="e.g. Bali"             maxLength={FIELD_LIMITS.LOCATION} />
+            <FormField label="Region"       value={extras.region       as string ?? ''} onChange={(e) => setExtra('region',       e.target.value)} placeholder="e.g. Ubud"             maxLength={FIELD_LIMITS.LOCATION} />
+            <FormField label="Photographer" value={extras.photographer as string ?? ''} onChange={(e) => setExtra('photographer', e.target.value)} placeholder="e.g. Karin Wijaya" />
+            <FormField label="Shoot Date"   type="date" value={extras.shootDate as string ?? ''} onChange={(e) => setExtra('shootDate', e.target.value)} />
+            <div className="space-y-1.5">
+              <label className="cms-label">Aspect Ratio</label>
+              <select
+                className="cms-input w-full"
+                value={extras.aspectRatio as string ?? ''}
+                onChange={(e) => setExtra('aspectRatio', e.target.value)}
+              >
+                <option value="">— Default (3:4) —</option>
+                <option value="3:4">Portrait (3:4)</option>
+                <option value="4:3">Landscape (4:3)</option>
+                <option value="1:1">Square (1:1)</option>
+                <option value="16:9">Widescreen (16:9)</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
+              <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+            </div>
+          </div>
+          <div className="cms-card p-4 space-y-3">
+            <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">
+              Shot Album
+              <span className="font-body text-xs font-normal text-[var(--text-muted)] ml-1.5">
+                — extra frames shown in the gallery detail lightbox
+              </span>
+            </h3>
+            <ShotsEditor
+              shots={(extras.shots as ShotEntry[]) ?? []}
+              onChange={(next) => setExtra('shots', next)}
+              folder="gallery/shots"
+            />
+          </div>
+        </>
+      )
     case 'services':
       return (
         <div className="cms-card p-4 space-y-3">
@@ -304,21 +582,36 @@ function renderModuleExtras(
       )
     case 'destinations':
       return (
-        <div className="cms-card p-4 space-y-3">
-          <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Location Details</h3>
-          <FormField label="Island"   value={extras.island   as string ?? ''} onChange={(e) => setExtra('island',   e.target.value)} placeholder="e.g. Bali"      maxLength={FIELD_LIMITS.LOCATION} />
-          <FormField label="Region"   value={extras.region   as string ?? ''} onChange={(e) => setExtra('region',   e.target.value)} placeholder="e.g. Ubud"      maxLength={FIELD_LIMITS.LOCATION} />
-          <FormField label="Province" value={extras.province as string ?? ''} onChange={(e) => setExtra('province', e.target.value)} placeholder="e.g. Bali"      maxLength={FIELD_LIMITS.LOCATION} />
-          <FormField label="Country"  value={extras.country  as string ?? ''} onChange={(e) => setExtra('country',  e.target.value)} placeholder="Indonesia"      maxLength={FIELD_LIMITS.LOCATION} />
-          <div className="grid grid-cols-2 gap-2">
-            <FormField label="Lat" type="number" value={String(extras.lat ?? '')} onChange={(e) => setExtra('lat', e.target.value)} placeholder="-8.409" />
-            <FormField label="Lng" type="number" value={String(extras.lng ?? '')} onChange={(e) => setExtra('lng', e.target.value)} placeholder="115.188" />
+        <>
+          <div className="cms-card p-4 space-y-3">
+            <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Location Details</h3>
+            <FormField label="Island"   value={extras.island   as string ?? ''} onChange={(e) => setExtra('island',   e.target.value)} placeholder="e.g. Bali"      maxLength={FIELD_LIMITS.LOCATION} />
+            <FormField label="Region"   value={extras.region   as string ?? ''} onChange={(e) => setExtra('region',   e.target.value)} placeholder="e.g. Ubud"      maxLength={FIELD_LIMITS.LOCATION} />
+            <FormField label="Province" value={extras.province as string ?? ''} onChange={(e) => setExtra('province', e.target.value)} placeholder="e.g. Bali"      maxLength={FIELD_LIMITS.LOCATION} />
+            <FormField label="Country"  value={extras.country  as string ?? ''} onChange={(e) => setExtra('country',  e.target.value)} placeholder="Indonesia"      maxLength={FIELD_LIMITS.LOCATION} />
+            <div className="grid grid-cols-2 gap-2">
+              <FormField label="Lat" type="number" value={String(extras.lat ?? '')} onChange={(e) => setExtra('lat', e.target.value)} placeholder="-8.409" />
+              <FormField label="Lng" type="number" value={String(extras.lng ?? '')} onChange={(e) => setExtra('lng', e.target.value)} placeholder="115.188" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
+              <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+            </div>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
-            <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+          <div className="cms-card p-4 space-y-3">
+            <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">
+              Shot Album
+              <span className="font-body text-xs font-normal text-[var(--text-muted)] ml-1.5">
+                — campaign/location photos shown in the destination detail lightbox
+              </span>
+            </h3>
+            <ShotsEditor
+              shots={(extras.shots as ShotEntry[]) ?? []}
+              onChange={(next) => setExtra('shots', next)}
+              folder="destinations/shots"
+            />
           </div>
-        </div>
+        </>
       )
     case 'products': {
       const cat = (extras.category as string) || ''
@@ -342,9 +635,85 @@ function renderModuleExtras(
             </select>
           </div>
 
-          {/* Category */}
+          {/* Digital product — real top-level column (is_digital), gates
+              whether checkout asks for a shipping address at all (Task
+              #28). File upload itself reuses the Media Library (any file
+              type in the ALLOWED_TYPES allowlist, including zip/pdf/epub
+              since migration alongside this feature) — paste the resulting
+              URL here rather than a dedicated uploader widget. */}
+          <div className="flex items-center justify-between">
+            <span className="font-body text-xs text-[var(--text-primary)]">Digital product (no shipping)</span>
+            <Switch
+              checked={!!(extras.isDigital)}
+              onChange={(v) => { setExtra('isDigital', v); if (!v) setExtra('digitalFileUrl', '') }}
+            />
+          </div>
+          {!!(extras.isDigital) && (
+            <FormField
+              label="Digital file URL"
+              value={extras.digitalFileUrl as string ?? ''}
+              onChange={(e) => setExtra('digitalFileUrl', e.target.value)}
+              placeholder="https://…"
+              hint="Upload the file on the Media Library page first, then paste its URL here. Sent to the customer once payment is confirmed."
+            />
+          )}
+
+          {/* Category — real site taxonomy (categories table, migration 085).
+              Determines where the product shows up in nav/filtering, NOT
+              which extra fields appear below (that's "Attributes" further
+              down). Empty until categories are added on the Categories page. */}
           <div className="space-y-1.5">
-            <label className="cms-label">Category</label>
+            <div className="flex items-center justify-between">
+              <label className="cms-label">Category</label>
+              <Link to="/categories" className="font-body text-[11px] text-[var(--lito-teal)] hover:underline">Manage categories</Link>
+            </div>
+            <select
+              className="cms-input w-full"
+              value={(extras.categoryId as string) ?? ''}
+              onChange={(e) => setExtra('categoryId', e.target.value || null)}
+            >
+              <option value="">— No category —</option>
+              {(productPickers?.categories ?? []).map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            {(productPickers?.categories?.length ?? 0) === 0 && (
+              <p className="font-body text-xs text-[var(--text-muted)]">No categories yet — add one on the Categories page.</p>
+            )}
+          </div>
+
+          {/* Brand — real content_items brand (content_type='brand',
+              category='product'), migration 085. Reuses the same Brands
+              module/page that already manages payment/courier logos —
+              product brands just live in the same list under a 'product'
+              category, distinguished by that field. */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="cms-label">Brand</label>
+              <Link to="/brands/new" className="font-body text-[11px] text-[var(--lito-teal)] hover:underline">+ Add brand</Link>
+            </div>
+            <select
+              className="cms-input w-full"
+              value={(extras.brandId as string) ?? ''}
+              onChange={(e) => setExtra('brandId', e.target.value || null)}
+            >
+              <option value="">— No brand —</option>
+              {(productPickers?.brands ?? []).map((b) => (
+                <option key={b.id} value={b.id}>{getTitle(b)}</option>
+              ))}
+            </select>
+            {(productPickers?.brands?.length ?? 0) === 0 && (
+              <p className="font-body text-xs text-[var(--text-muted)]">No product brands yet — add one on the Brands page with category "product".</p>
+            )}
+          </div>
+
+          {/* Attributes — a fixed template that decides which of the
+              category-specific fields below (sizes, skin type, shade…)
+              appear. Independent of the real Category above — e.g. a
+              product can be in the "Sale" category but still use the
+              Fashion attribute template. */}
+          <div className="space-y-1.5">
+            <label className="cms-label">Attributes</label>
             <select className="cms-input w-full" value={cat} onChange={(e) => {
               setExtra('category', e.target.value)
               // reset category-specific fields on change
@@ -356,7 +725,7 @@ function renderModuleExtras(
               setExtra('color', '')
               setExtra('material', '')
             }}>
-              <option value="">— Select category —</option>
+              <option value="">— None —</option>
               <option value="fashion">Fashion</option>
               <option value="skincare">Skin Care</option>
               <option value="beauty">Beauty</option>
@@ -365,14 +734,6 @@ function renderModuleExtras(
               <option value="other">Other</option>
             </select>
           </div>
-
-          {/* Brand */}
-          <FormField
-            label="Brand"
-            value={extras.brand as string ?? ''}
-            onChange={(e) => setExtra('brand', e.target.value)}
-            placeholder="e.g. Nike, Wardah, or leave blank"
-          />
 
           {/* ── Fashion fields ─────────────────────── */}
           {cat === 'fashion' && (
@@ -508,6 +869,49 @@ function renderModuleExtras(
         </div>
       )
     }
+    case 'brands':
+      return (
+        <div className="cms-card p-4 space-y-3">
+          <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Brand Details</h3>
+          <div className="space-y-1.5">
+            <label className="cms-label">Category</label>
+            <input
+              list="brand-category-suggestions"
+              className="cms-input w-full"
+              value={extras.category as string ?? ''}
+              onChange={(e) => setExtra('category', e.target.value)}
+              placeholder="e.g. payment, courier"
+              maxLength={FIELD_LIMITS.CONTENT_CATEGORY}
+            />
+            {/* Free text, not a closed dropdown — new categories (fashion,
+                awards, etc.) can be typed straight in, same convention as
+                Story/Journal/Gallery's category field. These three are just
+                the currently-seeded suggestions — 'product' (migration 085)
+                is what makes a brand selectable in the product editor's
+                Brand picker (products.brand_id requires category='product'). */}
+            <datalist id="brand-category-suggestions">
+              <option value="payment" />
+              <option value="courier" />
+              <option value="product" />
+              {/* partners + architects both render together under one combined
+                  "Partners" footer section — see useSiteFooter.ts's
+                  FOOTER_BRAND_GROUPS */}
+              <option value="partners" />
+              <option value="architects" />
+            </datalist>
+          </div>
+          <FormField
+            label="Link URL"
+            value={extras.linkUrl as string ?? ''}
+            onChange={(e) => setExtra('linkUrl', e.target.value)}
+            placeholder="https://…"
+          />
+          <div className="flex items-center justify-between">
+            <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
+            <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+          </div>
+        </div>
+      )
     case 'campaigns':
       return (
         <div className="cms-card p-4 space-y-3">
@@ -551,6 +955,27 @@ export default function SimpleContentEditorPage() {
     enabled:   !!config && !isNew && !!id,
     staleTime: 0,
   })
+
+  // Reference data for the products Category/Brand pickers — fetched only
+  // when actually editing a product, reusing the Categories module's own
+  // service (taxonomy.service.ts) and the existing brandsService.
+  const { data: categoriesData } = useQuery({
+    queryKey:  ['simple-editor-categories', activeSite?.id],
+    queryFn:   () => categoryService.getList(activeSite!.id),
+    enabled:   module === 'products' && !!activeSite,
+    staleTime: 2 * 60 * 1000,
+  })
+  const { data: brandsData } = useQuery({
+    queryKey:  ['simple-editor-brands', activeSite?.id],
+    queryFn:   () => brandsService.getList({ site_id: activeSite!.id }),
+    enabled:   module === 'products' && !!activeSite,
+    staleTime: 2 * 60 * 1000,
+  })
+  const productCategories = categoriesData?.data ?? []
+  // Only brands seeded/created under the 'product' content_categories slug
+  // (migration 085) are valid picks — payment/courier logo brands share the
+  // same table/list but must not show up here.
+  const productBrands = ((brandsData?.data ?? []) as Brand[]).filter((b) => b.category === 'product')
 
   // ── Local state ──────────────────────────────────────────────────────
 
@@ -637,6 +1062,23 @@ export default function SimpleContentEditorPage() {
           if (!title.trim())   throw new Error('Title is required')
           if (!slug.trim())    throw new Error('Slug is required')
 
+          // Brands: case-insensitive duplicate check within the same
+          // category. The DB only rejects an exact slug clash — two brands
+          // named "Visa" / "VISA " under the same category would otherwise
+          // both save fine as different slugs.
+          if (module === 'brands') {
+            const existing = await brandsService.getList({ site_id: activeSite.id })
+            const normalizedTitle    = title.trim().toLowerCase()
+            const normalizedCategory = String(extras.category ?? '').trim().toLowerCase()
+            const clash = (existing.data ?? []).find((b) =>
+              getTitle(b).trim().toLowerCase() === normalizedTitle
+              && (b.category ?? '').trim().toLowerCase() === normalizedCategory,
+            )
+            if (clash) {
+              throw new Error(`A brand named "${title.trim()}" already exists in the "${extras.category || 'uncategorized'}" category.`)
+            }
+          }
+
           const createPayload = buildCreatePayload(
             module, slug.trim(), title.trim(), excerpt, body,
             coverImage, tags, effectiveStatus, extras, activeSite.id,
@@ -701,7 +1143,7 @@ export default function SimpleContentEditorPage() {
   )
 
   const siteDomain = activeSite?.domain ?? 'yoursite.com'
-  const hasTags    = module === 'stories'
+  const hasTags    = module === 'stories' || module === 'gallery'
 
   // ── Render ───────────────────────────────────────────────────────────
 
@@ -727,7 +1169,15 @@ export default function SimpleContentEditorPage() {
 
           <div className="cms-card p-4 space-y-3">
             <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Cover Image</h3>
-            <ImageUploader value={coverImage} onChange={setCoverImage} folder={`${module}/covers`} />
+            <ImageUploader
+              value={coverImage}
+              onChange={setCoverImage}
+              folder={`${module}/covers`}
+              // Brand logos are capped at 1MB (payment/courier marks, not
+              // hero photography) — every other module keeps the
+              // ImageUploader's default 5MB limit.
+              maxBytes={module === 'brands' ? 1024 * 1024 : undefined}
+            />
             <input
               type="text"
               value={coverImage ?? ''}
@@ -744,7 +1194,7 @@ export default function SimpleContentEditorPage() {
             </div>
           )}
 
-          {renderModuleExtras(module, extras, setExtra)}
+          {renderModuleExtras(module, extras, setExtra, { categories: productCategories, brands: productBrands })}
 
           <SeoCard
             metaTitle={metaTitle}

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { storiesService } from '@/services/content.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
@@ -11,6 +11,13 @@ export interface StoriesFilter {
   limit: number
 }
 
+// Fixed server-sort — there's no sort-column UI on StoriesPageView (never
+// was, even before the EnterpriseDataTable migration), so this doesn't need
+// to be mutable state. Kept as a named constant rather than inlined into the
+// query below purely for readability.
+const SORT_KEY = 'updated_at'
+const SORT_ORDER = 'desc'
+
 export function useStories() {
   const { activeSite } = useWebsiteStore()
   const qc = useQueryClient()
@@ -21,14 +28,9 @@ export function useStories() {
     page: 1,
     limit: 20,
   })
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [sortKey, setSortKey] = useState('updated_at')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-
-  const queryKey = ['stories', activeSite?.id, filter, sortKey, sortOrder]
 
   const { data, isLoading } = useQuery({
-    queryKey,
+    queryKey: ['stories', activeSite?.id, filter],
     queryFn: () =>
       storiesService.getList({
         site_id: activeSite!.id,
@@ -36,8 +38,8 @@ export function useStories() {
         status: filter.status || undefined,
         page: filter.page,
         limit: filter.limit,
-        sort: sortKey,
-        order: sortOrder,
+        sort: SORT_KEY,
+        order: SORT_ORDER,
       }),
     enabled: !!activeSite,
     staleTime: 2 * 60 * 1000,
@@ -45,44 +47,16 @@ export function useStories() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => storiesService.remove(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['stories', activeSite?.id] })
-      setSelectedIds([])
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['stories', activeSite?.id] }),
   })
 
+  // Backs EnterpriseDataTable's `bulkActions` "Delete" button
+  // (StoriesPageView.tsx) — row-selection state itself is owned internally
+  // by EnterpriseDataTable, not here.
   const bulkDeleteMutation = useMutation({
     mutationFn: (ids: string[]) => storiesService.bulkDelete({ ids }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['stories', activeSite?.id] })
-      setSelectedIds([])
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['stories', activeSite?.id] }),
   })
-
-  const bulkStatusMutation = useMutation({
-    mutationFn: ({ ids, status }: { ids: string[]; status: ContentStatus }) =>
-      storiesService.bulkUpdate({ ids, data: { status } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['stories', activeSite?.id] })
-      setSelectedIds([])
-    },
-  })
-
-  const handleSort = useCallback((key: string) => {
-    setSortKey((prev) => {
-      if (prev === key) setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))
-      else { setSortOrder('desc') }
-      return key
-    })
-  }, [])
-
-  const handleSelect = useCallback((id: string, checked: boolean) => {
-    setSelectedIds((prev) => checked ? [...prev, id] : prev.filter((x) => x !== id))
-  }, [])
-
-  const handleSelectAll = useCallback((checked: boolean) => {
-    setSelectedIds(checked ? (data?.data.map((s) => s.id) ?? []) : [])
-  }, [data])
 
   return {
     stories: data?.data ?? [],
@@ -90,14 +64,7 @@ export function useStories() {
     isLoading,
     filter,
     setFilter,
-    selectedIds,
-    handleSelect,
-    handleSelectAll,
-    sortKey,
-    sortOrder,
-    handleSort,
     deleteMutation,
     bulkDeleteMutation,
-    bulkStatusMutation,
   }
 }

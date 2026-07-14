@@ -33,6 +33,12 @@ export interface Story {
   created_at: string
   updated_at: string
   translations: (Translation & { subtitle?: string })[]
+  // Index signature — lets this satisfy EnterpriseDataTable's
+  // `T extends Record<string, unknown>` generic constraint (an `interface`
+  // without one isn't structurally assignable to a Record type, even though
+  // every declared property already is). Same convention as
+  // apps/cms-superadmin/src/types/api.types.ts's SAOrganization/SAUser.
+  [key: string]: unknown
 }
 
 export interface StoryCreateRequest {
@@ -86,21 +92,33 @@ export interface JournalCreateRequest {
 export interface JournalUpdateRequest extends Partial<JournalCreateRequest> {}
 
 // ── Gallery ───────────────────────────────────────────────────────────────
+//
+// 2026-07-09 fix: this used to model the OLD dedicated `gallery_items` table
+// (image_url, story_id, aspect_ratio as real columns). Gallery moved to the
+// unified `content_items` table (content_type='gallery') — see
+// content.service.ts galleryService (createContentItemService) and backend
+// content.routes.ts. content_items has NO image_url/story_id/aspect_ratio
+// columns; the real shape is cover_image + a generic `extra` JSONB (where
+// aspect_ratio, photographer, shoot_date, shots, shutterstock live — see
+// apps/website/composables/repositories/useGalleryRepository.ts for the
+// public-site read side of the same convention). GalleryPageView.tsx was
+// reading `item.image_url`, which is always undefined against the real API
+// — the admin gallery grid never actually rendered images. Fixed alongside.
 
 export interface GalleryItem {
   id: string
   site_id: string
-  story_id: string | null
   slug: string
-  image_url: string | null
+  cover_image: string | null
   category: string | null
   location: string | null
   region: string | null
-  aspect_ratio: string | null
   tags: string[]
   is_featured: boolean
   status: ContentStatus
   sort_order: number
+  /** aspect_ratio, photographer, shoot_date, shots, shutterstock, etc. */
+  extra?: Record<string, unknown>
   created_at: string
   updated_at: string
   translations: Translation[]
@@ -108,17 +126,29 @@ export interface GalleryItem {
 
 export interface GalleryCreateRequest {
   slug: string
-  image_url?: string
+  cover_image?: string
   category?: string
+  location?: string
+  region?: string
   tags?: string[]
   is_featured?: boolean
   status?: ContentStatus
-  translation: { locale: string; title: string; description?: string }
+  extra?: Record<string, unknown>
+  translation: { locale: string; title: string; excerpt?: string }
 }
 
 export interface GalleryUpdateRequest extends Partial<GalleryCreateRequest> {}
 
 // ── Destination ───────────────────────────────────────────────────────────
+//
+// 2026-07-09 fix: island/province/country/lat/lng are NOT real content_items
+// columns (confirmed against DB.sql) — only category/location/region/tags
+// are first-class; everything else destination-specific lives in `extra`
+// JSONB (see content.routes.ts:230 "island isn't a first-class column — it
+// lives in extra.island"). They're kept here as a flattened convenience
+// shape for callers, but SimpleContentEditorPage.tsx must read/write them
+// via `extra`, not as top-level PATCH/POST fields (sending them top-level
+// causes a Postgres "column does not exist" error — see fix in that file).
 
 export interface Destination {
   id: string
@@ -134,9 +164,37 @@ export interface Destination {
   is_featured: boolean
   status: ContentStatus
   sort_order: number
+  /** island, province, country, lat, lng, shots, etc. live here on the wire. */
+  extra?: Record<string, unknown>
   created_at: string
   updated_at: string
   translations: (Translation & { name?: string; description?: string })[]
+}
+
+// ── Brand ─────────────────────────────────────────────────────────────────
+//
+// content_items table, content_type='brand' — payment/courier logos shown
+// in the site footer (see migrations/082_seed_brand_content_type.sql).
+// `category` is a first-class content_items column (free text — e.g.
+// 'payment' | 'courier', but not a closed set: more categories can be added
+// just by typing a new value, same convention as story/journal category).
+// `link_url` is brand-specific and NOT a real content_items column, so it
+// lives in the generic `extra` JSONB, same as destinations' island/province/etc.
+
+export interface Brand {
+  id: string
+  site_id: string
+  slug: string
+  category: string | null
+  cover_image: string | null
+  is_featured: boolean
+  status: ContentStatus
+  sort_order: number
+  /** link_url lives here on the wire. */
+  extra?: Record<string, unknown>
+  created_at: string
+  updated_at: string
+  translations: Translation[]
 }
 
 // ── Product ───────────────────────────────────────────────────────────────
@@ -192,6 +250,18 @@ export interface Product {
   extra?: ProductExtra | null
   sort_order: number
   status: ContentStatus
+  /** Real FK -> categories.id (migration 085). Single category per product. */
+  category_id?: string | null
+  /** Soft ref -> content_items.id where content_type='brand' AND category='product' (migration 085, no DB FK — polymorphic table). */
+  brand_id?: string | null
+  /** True for a downloadable/digital-only good — no shipping step in checkout (Task #28). */
+  is_digital?: boolean
+  /** Public CDN URL to the downloadable file, sent in the order-paid email when is_digital=true (migration 094). */
+  digital_file_url?: string | null
+  /** False when there's no tracked inventory row at all (services/packages, or physical products with stock tracking off) — UI should show a neutral "—", not "0 in stock". */
+  stock_tracked?: boolean
+  /** Sum of available (quantity - reserved) across every tracked inventory row (product-level + variants). null when stock_tracked is false. */
+  stock_total?: number | null
   created_at: string
   updated_at: string
   translations: Translation[]
@@ -210,6 +280,10 @@ export interface ProductCreateRequest {
   extra?: ProductExtra
   sort_order?: number
   status?: ContentStatus
+  category_id?: string | null
+  brand_id?: string | null
+  is_digital?: boolean
+  digital_file_url?: string | null
   translation?: { locale: string; name?: string; title?: string; description?: string; excerpt?: string; body?: unknown }
 }
 
@@ -277,26 +351,69 @@ export interface ReviewUpdateRequest {
 
 // ── FAQ ───────────────────────────────────────────────────────────────────
 
-export interface Faq {
+export interface FaqCategory {
   id: string
   site_id: string
   slug: string
+  name: string
   sort_order: number
-  status: ContentStatus
   created_at: string
   updated_at: string
-  translations: (Translation & { question?: string; answer?: string })[]
+}
+
+export interface FaqCategoryCreateRequest {
+  site_id: string
+  name: string
+  slug?: string
+  sort_order?: number
+}
+
+export interface FaqCategoryUpdateRequest {
+  name?: string
+  slug?: string
+  sort_order?: number
+}
+
+export interface Faq {
+  id: string
+  site_id: string
+  // NOTE: the real `faqs` table has no `slug` column (confirmed against the
+  // live schema) — do not send or expect one. An earlier version of this
+  // type declared a fictional required `slug` field that the backend never
+  // read or returned.
+  sort_order: number
+  status: ContentStatus
+  category_id: string | null
+  // Present when the backend joins faq_categories(name, slug) — absent on
+  // rows fetched without that join (e.g. right after a bulk operation).
+  faq_categories?: { name: string; slug: string } | null
+  tags: string[]
+  related_ids: string[]
+  is_featured: boolean
+  created_at: string
+  updated_at: string
+  // NOTE: the backend returns this relation as `faq_translations` (the real
+  // Postgres/PostgREST relation name), not `translations` — a prior version
+  // of this type and FaqsPageView.tsx read `.translations`, which the API
+  // never actually sends, so every FAQ row rendered blank question/answer
+  // text in the CMS list.
+  faq_translations: Array<{ locale: string; question: string; answer: string }>
 }
 
 export interface FaqCreateRequest {
   site_id?: string
-  slug: string
   sort_order?: number
   status?: ContentStatus
-  translation: { locale: string; question: string; answer?: string }
+  category_id?: string | null
+  tags?: string[]
+  related_ids?: string[]
+  is_featured?: boolean
+  translations: Array<{ locale: string; question: string; answer: string }>
 }
 
-export interface FaqUpdateRequest extends Partial<FaqCreateRequest> {}
+export interface FaqUpdateRequest extends Partial<Omit<FaqCreateRequest, 'translations'>> {
+  translations?: Array<{ locale: string; question?: string; answer?: string }>
+}
 
 // ── Service ───────────────────────────────────────────────────────────────
 

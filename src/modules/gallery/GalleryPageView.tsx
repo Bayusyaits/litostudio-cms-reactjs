@@ -1,4 +1,4 @@
-import { Image, Trash2, Check, Search, X } from 'lucide-react'
+import { Image, Trash2, Check, Search, X, Plus, Pencil } from 'lucide-react'
 import { Button, SearchInput, MediaSkeleton, EmptyState } from '@litostudio/ui-cms'
 import { cn } from '@/lib/utils'
 import { getTitle } from '@/types/content.types'
@@ -14,11 +14,13 @@ interface Props {
   onSelect: (id: string, checked: boolean) => void
   onDelete: (id: string) => void
   onBulkDelete: (ids: string[]) => void
+  onNew: () => void
+  onEdit: (id: string) => void
 }
 
 export function GalleryPageView({
   items, meta, isLoading, filter, setFilter,
-  selectedIds, onSelect, onDelete, onBulkDelete,
+  selectedIds, onSelect, onDelete, onBulkDelete, onNew, onEdit,
 }: Props) {
   return (
     <div className="p-6 space-y-5 overflow-y-auto">
@@ -29,16 +31,21 @@ export function GalleryPageView({
             {meta ? `${meta.total} items` : 'Manage gallery collections'}
           </p>
         </div>
-        {selectedIds.length > 0 && (
-          <Button skin="cms"
-            variant="danger"
-            size="sm"
-            leftIcon={<Trash2 className="w-3.5 h-3.5" />}
-            onClick={() => onBulkDelete(selectedIds)}
-          >
-            Delete {selectedIds.length}
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <Button skin="cms"
+              variant="danger"
+              size="sm"
+              leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+              onClick={() => onBulkDelete(selectedIds)}
+            >
+              Delete {selectedIds.length}
+            </Button>
+          )}
+          <Button skin="cms" onClick={onNew} leftIcon={<Plus className="w-4 h-4" />}>
+            New Gallery Item
           </Button>
-        )}
+        </div>
       </div>
 
       <SearchInput
@@ -78,9 +85,9 @@ export function GalleryPageView({
                 aria-label={getTitle(item) ?? 'Gallery item'}
               >
                 <div className="aspect-square bg-[var(--cms-surface-2)]">
-                  {item.image_url ? (
+                  {item.cover_image ? (
                     <img
-                      src={item.image_url}
+                      src={item.cover_image}
                       alt={item.translations?.[0]?.title ?? ''}
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -103,18 +110,25 @@ export function GalleryPageView({
                   {isSelected && <Check className="w-3 h-3 text-white" aria-hidden />}
                 </div>
 
-                {/* Delete on hover */}
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onDelete(item.id) }}
-                  className={cn(
-                    'absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60',
-                    'flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity',
-                  )}
-                  aria-label="Delete item"
-                >
-                  <Trash2 className="w-3 h-3 text-white" aria-hidden />
-                </button>
+                {/* Edit + delete on hover */}
+                <div className="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onEdit(item.id) }}
+                    className="w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
+                    aria-label="Edit item"
+                  >
+                    <Pencil className="w-3 h-3 text-white" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onDelete(item.id) }}
+                    className="w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
+                    aria-label="Delete item"
+                  >
+                    <Trash2 className="w-3 h-3 text-white" aria-hidden />
+                  </button>
+                </div>
 
                 {getTitle(item) && (
                   <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-2">

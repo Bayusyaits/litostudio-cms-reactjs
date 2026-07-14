@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { faqsService } from '@/services/content.service'
+import { faqsService, faqCategoriesService } from '@/services/content.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { FaqsPageView } from './FaqsPageView'
 
@@ -13,6 +13,7 @@ export default function FaqsPageContainer() {
   const [filter, setFilter] = useState({
     search: '',
     status: '',
+    category_id: '',
     page: 1,
     limit: 20,
   })
@@ -25,11 +26,19 @@ export default function FaqsPageContainer() {
         site_id: activeSite!.id,
         search: filter.search || undefined,
         status: filter.status || undefined,
+        category_id: filter.category_id || undefined,
         page: filter.page,
         limit: filter.limit,
       }),
     enabled: !!activeSite,
     staleTime: 2 * 60 * 1000,
+  })
+
+  const { data: categories } = useQuery({
+    queryKey: ['faq-categories', activeSite?.id],
+    queryFn: () => faqCategoriesService.getList(activeSite!.id),
+    enabled: !!activeSite,
+    staleTime: 5 * 60 * 1000,
   })
 
   const deleteMutation = useMutation({
@@ -62,6 +71,7 @@ export default function FaqsPageContainer() {
   return (
     <FaqsPageView
       faqs={data?.data ?? []}
+      categories={categories ?? []}
       meta={data?.meta}
       isLoading={isLoading}
       filter={filter}

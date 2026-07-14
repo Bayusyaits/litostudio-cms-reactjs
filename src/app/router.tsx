@@ -1,8 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { lazy, Suspense } from 'react'
+import { lazy } from 'react'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
-import { DashboardSkeleton } from '@litostudio/ui-cms'
+import { S } from './RouteHelpers'
 
 // Error / utility pages
 const NotFoundPage      = lazy(() => import('@/modules/not-found/NotFoundPage'))
@@ -24,6 +24,7 @@ const JournalPage      = lazy(() => import('@/modules/journal/JournalPageContain
 const GalleryPage      = lazy(() => import('@/modules/gallery/GalleryPageContainer'))
 const MediaPage        = lazy(() => import('@/modules/media/MediaPageContainer'))
 const DestinationsPage = lazy(() => import('@/modules/destinations/DestinationsPageContainer'))
+const BrandsPage       = lazy(() => import('@/modules/brands/BrandsPageContainer'))
 const TeamPage         = lazy(() => import('@/modules/team/TeamPageContainer'))
 const SettingsPage     = lazy(() => import('@/modules/settings/SettingsPageContainer'))
 const CategoriesPage   = lazy(() => import('@/modules/taxonomy/CategoriesPageContainer'))
@@ -35,6 +36,8 @@ const ProductsPage     = lazy(() => import('@/modules/products/ProductsPageConta
 const CollectionsPage  = lazy(() => import('@/modules/collections/CollectionsPageContainer'))
 const ReviewsPage      = lazy(() => import('@/modules/reviews/ReviewsPageContainer'))
 const FaqsPage         = lazy(() => import('@/modules/faqs/FaqsPageContainer'))
+const FaqEditorPage    = lazy(() => import('@/modules/faqs/FaqEditorPage'))
+const LegalPage        = lazy(() => import('@/modules/legal/LegalPageContainer'))
 const OnboardingPage          = lazy(() => import('@/modules/onboarding/OnboardingPage'))
 const GenerateContentPage     = lazy(() => import('@/modules/onboarding/GenerateContentPage'))
 // Both resolve from the same @litostudio/ui-cms barrel dynamic import, so
@@ -56,6 +59,7 @@ const LabelsPage         = lazy(() => import('@/modules/settings/labels/LabelsPa
 
 // Commerce + engagement pages
 const OrdersPage         = lazy(() => import('@/modules/orders/OrdersPageContainer'))
+const ShippingOriginsPage = lazy(() => import('@/modules/shipping/ShippingOriginsPageContainer'))
 const NewsletterPage     = lazy(() => import('@/modules/newsletter/NewsletterPageContainer'))
 const MessagesPage       = lazy(() => import('@/modules/messages/MessagesPageContainer'))
 
@@ -66,18 +70,6 @@ const DeploymentsPage    = lazy(() => import('@/modules/deployments/DeploymentsP
 const CsvPage            = lazy(() => import('@/modules/csv/CsvPageContainer'))
 const AiAssistantPage    = lazy(() => import('@/modules/ai-assistant/AiAssistantPageContainer'))
 const SiteContentPage    = lazy(() => import('@/modules/site-content/SiteContentPageContainer'))
-
-function PageLoader() {
-  return (
-    <div className="p-6">
-      <DashboardSkeleton />
-    </div>
-  )
-}
-
-function S({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<PageLoader />}>{children}</Suspense>
-}
 
 export const router = createBrowserRouter([
   {
@@ -118,12 +110,19 @@ export const router = createBrowserRouter([
       { path: 'journal/:id/edit',  element: <S><SimpleContentEditorPage /></S> },
 
       { path: 'gallery',           element: <S><GalleryPage /></S> },
+      { path: 'gallery/new',       element: <S><SimpleContentEditorPage /></S> },
+      { path: 'gallery/:id/edit',  element: <S><SimpleContentEditorPage /></S> },
       { path: 'media',             element: <S><MediaPage /></S> },
 
       // Destinations
       { path: 'destinations',               element: <S><DestinationsPage /></S> },
       { path: 'destinations/new',           element: <S><SimpleContentEditorPage /></S> },
       { path: 'destinations/:id/edit',      element: <S><SimpleContentEditorPage /></S> },
+
+      // Brands
+      { path: 'brands',                     element: <S><BrandsPage /></S> },
+      { path: 'brands/new',                 element: <S><SimpleContentEditorPage /></S> },
+      { path: 'brands/:id/edit',            element: <S><SimpleContentEditorPage /></S> },
 
       { path: 'team',              element: <S><TeamPage /></S> },
       { path: 'settings',               element: <S><SettingsPage /></S> },
@@ -149,6 +148,9 @@ export const router = createBrowserRouter([
 
       { path: 'reviews',           element: <S><ReviewsPage /></S> },
       { path: 'faqs',              element: <S><FaqsPage /></S> },
+      { path: 'faqs/new',          element: <S><FaqEditorPage /></S> },
+      { path: 'faqs/:id/edit',     element: <S><FaqEditorPage /></S> },
+      { path: 'legal',             element: <S><LegalPage /></S> },
       { path: 'onboarding',          element: <S><OnboardingPage /></S> },
       { path: 'onboarding/generate', element: <S><GenerateContentPage /></S> },
       { path: 'organizations',     element: <S><OrganizationsPage /></S> },
@@ -166,6 +168,7 @@ export const router = createBrowserRouter([
 
       // Commerce + engagement
       { path: 'orders',            element: <S><OrdersPage /></S> },
+      { path: 'shipping-origins',  element: <S><ShippingOriginsPage /></S> },
       { path: 'newsletter',        element: <S><NewsletterPage /></S> },
       { path: 'messages',          element: <S><MessagesPage /></S> },
 

@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Users, UserPlus, MoreHorizontal, Trash2, Search, X } from 'lucide-react'
-import { AppImageThumb, Skeleton, SearchInput, EmptyState } from '@litostudio/ui-cms'
+import { Users, UserPlus, MoreHorizontal, Trash2 } from 'lucide-react'
+import { AppImageThumb, EnterpriseDataTable } from '@litostudio/ui-cms'
 import type { TeamMember, InvitePayload } from '@/services/team.service'
-import type { OrgRole } from '@litostudio/ui-cms'
+import type { OrgRole, EDTColumn } from '@litostudio/ui-cms'
 
 const ROLES: OrgRole[] = ['owner', 'admin', 'editor', 'viewer']
 
@@ -18,12 +18,7 @@ const ROLE_LABELS: Record<OrgRole, { label: string; fg: string; bg: string }> = 
 
 interface Props {
   members: TeamMember[]
-  meta?: { total: number; page: number; limit: number; totalPages: number }
   isLoading: boolean
-  search: string
-  onSearch: (v: string) => void
-  page: number
-  onPage: (p: number) => void
   onInvite: (payload: InvitePayload) => void
   inviting: boolean
   inviteError: string | null
@@ -168,17 +163,74 @@ function MemberAvatar({ member }: { member: TeamMember }) {
   )
 }
 
+function buildMemberColumns(onChangeRole: (id: string, role: OrgRole) => void, onRemove: (id: string) => void): EDTColumn<TeamMember>[] {
+  return [
+    {
+      key: 'full_name',
+      label: 'Member',
+      sortable: true,
+      render: (member) => (
+        <div className="flex items-center gap-[10px]">
+          <MemberAvatar member={member} />
+          <div>
+            <div className="font-body text-[13px] font-medium text-[var(--text-muted)]">
+              {member.full_name ?? '—'}
+            </div>
+            <div className="font-body text-[11px] text-[var(--text-muted)]">
+              {member.email}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'role',
+      label: 'Role',
+      render: (member) => <RoleBadge role={member.role} />,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (member) => <StatusDot status={member.status} />,
+    },
+    {
+      key: 'joined_at',
+      label: 'Joined',
+      sortable: true,
+      render: (member) => (
+        <span className="text-xs text-[var(--text-muted)]">
+          {new Date(member.joined_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: '',
+      width: 48,
+      render: (member) => (
+        member.role !== 'owner' && (
+          <MemberActions
+            onChangeRole={(role) => onChangeRole(member.id, role)}
+            onRemove={() => onRemove(member.id)}
+          />
+        )
+      ),
+    },
+  ]
+}
+
 export function TeamPageView({
-  members, meta, isLoading, search, onSearch,
-  page, onPage, onInvite, inviting, inviteError,
+  members, isLoading, onInvite, inviting, inviteError,
   onChangeRole, onRemove,
 }: Props) {
+  const columns = buildMemberColumns(onChangeRole, onRemove)
+
   return (
     <div className="cms-page p-8 overflow-y-auto h-full">
       <div className="mb-6">
         <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Team</h1>
         <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
-          {meta ? `${meta.total} member${meta.total !== 1 ? 's' : ''}` : 'Manage workspace members and their roles'}
+          {members.length} member{members.length !== 1 ? 's' : ''}
         </p>
       </div>
 
@@ -189,98 +241,17 @@ export function TeamPageView({
         <InviteForm onInvite={onInvite} inviting={inviting} error={inviteError} />
       </div>
 
-      <div className="flex items-center justify-between mb-[14px]">
-        <SearchInput skin="cms" icon={<Search className="w-3.5 h-3.5" />} clearIcon={<X className="w-3.5 h-3.5" />} value={search} onChange={onSearch} placeholder="Search members…" className="w-64" />
-        <span className="text-xs text-[var(--text-muted)]">
-          {meta?.total ?? 0} member{(meta?.total ?? 0) !== 1 ? 's' : ''}
-        </span>
-      </div>
-
-      <div className="cms-card overflow-hidden">
-        <table className="cms-table">
-          <thead>
-            <tr>
-              <th>Member</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Joined</th>
-              <th className="w-12" />
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  <td>
-                    <div className="flex items-center gap-[10px]">
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                      <div><Skeleton className="h-3.5 w-36 mb-1" /><Skeleton className="h-2.5 w-40" /></div>
-                    </div>
-                  </td>
-                  <td><Skeleton className="h-5 w-16 rounded-full" /></td>
-                  <td><Skeleton className="h-4 w-16" /></td>
-                  <td><Skeleton className="h-4 w-24" /></td>
-                  <td />
-                </tr>
-              ))
-            ) : members.length === 0 ? (
-              <tr>
-                <td colSpan={5}>
-                  <EmptyState skin="cms" icon={<Users className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No team members" description="Invite colleagues to collaborate on this workspace" />
-                </td>
-              </tr>
-            ) : (
-              members.map(member => (
-                <tr key={member.id}>
-                  <td>
-                    <div className="flex items-center gap-[10px]">
-                      <MemberAvatar member={member} />
-                      <div>
-                        <div className="font-body text-[13px] font-medium text-[var(--text-muted)]">
-                          {member.full_name ?? '—'}
-                        </div>
-                        <div className="font-body text-[11px] text-[var(--text-muted)]">
-                          {member.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td><RoleBadge role={member.role} /></td>
-                  <td><StatusDot status={member.status} /></td>
-                  <td>
-                    <span className="text-xs text-[var(--text-muted)]">
-                      {new Date(member.joined_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </span>
-                  </td>
-                  <td>
-                    {member.role !== 'owner' && (
-                      <MemberActions
-                        onChangeRole={(role) => onChangeRole(member.id, role)}
-                        onRemove={() => onRemove(member.id)}
-                      />
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {meta && meta.totalPages > 1 && (
-        <div className="flex justify-center gap-[6px] mt-4">
-          {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map(p => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => onPage(p)}
-              className={`w-8 h-8 rounded border text-xs cursor-pointer transition-all duration-150 ${p === page ? 'border-[var(--lito-ink)] bg-[var(--lito-ink)] text-[var(--lito-cream)]' : 'border-[var(--lito-border)] bg-transparent text-[var(--text-muted)]'}`}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      )}
+      <EnterpriseDataTable<TeamMember>
+        skin="cms"
+        columns={columns}
+        data={members}
+        loading={isLoading}
+        searchKeys={['full_name', 'email']}
+        searchPlaceholder="Search members…"
+        emptyIcon={<Users className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />}
+        emptyTitle="No team members"
+        emptyDescription="Invite colleagues to collaborate on this workspace"
+      />
     </div>
   )
 }

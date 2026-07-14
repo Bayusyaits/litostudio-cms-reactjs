@@ -112,6 +112,10 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
       }
       setTranslations(map)
     }
+  // Deliberately keyed on slide?.id only — re-syncing on every `slide` object
+  // identity change (parent may pass a new reference each render) would wipe
+  // in-progress edits; a real slide switch always changes the id.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slide?.id])
 
   function updateTranslation(locale: string, field: keyof TranslationDraft, value: string) {

@@ -46,7 +46,6 @@ export function useTokenRefresh(): void {
 
       // ── Hard 6-hour session ceiling ──────────────────────────────────────
       if (sessionExpiresAt !== null && now >= sessionExpiresAt) {
-        console.info('[useTokenRefresh] 6-hour session expired — logging out')
         fullLogout('/login?reason=session_expired')
         return
       }
@@ -57,10 +56,8 @@ export function useTokenRefresh(): void {
       // ── Proactive refresh when within REFRESH_BUFFER_MS of expiry ───────
       if (expiresAt !== null && now >= expiresAt - REFRESH_BUFFER_MS) {
         try {
-          console.info('[useTokenRefresh] Access token expiring soon — refreshing…')
           const result = await authService.refresh(refreshToken)
           updateTokens(result.access_token, result.refresh_token, result.expires_at)
-          console.info('[useTokenRefresh] Token refreshed successfully')
         } catch (err) {
           console.warn('[useTokenRefresh] Refresh failed — logging out', err)
           fullLogout('/login?reason=session_expired')
@@ -74,6 +71,5 @@ export function useTokenRefresh(): void {
 
     const intervalId = setInterval(checkAndRefresh, CHECK_INTERVAL_MS)
     return () => clearInterval(intervalId)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])  // empty deps — stateRef always carries the latest values
 }

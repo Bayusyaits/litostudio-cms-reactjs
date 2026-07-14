@@ -981,3 +981,15 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
 .ck-body-wrapper .ck.ck-balloon-panel {
   z-index: 45 !important;
 }
+
+/* ── EnterpriseDataTable: sticky table header + skeleton loading ──────────
+   Byte-identical to apps/cms-superadmin/src/styles/design-tokens.css's
+   .edt-table-scroll/.edt-skel block — duplicated verbatim rather than
+   shared via one file, same convention as this package's Input/Label
+   components (see packages/ui-cms/src/index.ts's file header). Used by
+   EnterpriseDataTable (packages/ui-cms/src/organisms/EnterpriseDataTable/
+   index.tsx) with skin="cms". Keep both blocks in sync if either changes. */
+.edt-table-scroll thead th { position: sticky; top: 0; background: var(--cms-card-bg); z-index: 2; box-shadow: 0 1px 0 var(--lito-border); }
+.edt-skel { background: linear-gradient(90deg, rgba(17,17,17,0.05) 25%, rgba(17,17,17,0.09) 37%, rgba(17,17,17,0.05) 63%); background-size: 400% 100%; animation: edtShimmer 1.4s ease infinite; border-radius: 4px; }
+[data-dark] .edt-skel { background: linear-gradient(90deg, rgba(240,237,231,0.05) 25%, rgba(240,237,231,0.09) 37%, rgba(240,237,231,0.05) 63%); background-size: 400% 100%; }
+@keyframes edtShimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }

@@ -40,6 +40,25 @@ function formatPrice(price: number | null): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
 }
 
+/** Warning at <5, danger at <3 — same thresholds as the buyer-facing
+ * "Only N left" message on the storefront, just applied per-product here
+ * instead of per-variant. */
+function StockCell({ product }: { product: Product }) {
+  if (!product.stock_tracked || product.stock_total == null) {
+    return <span className="font-body text-xs text-[var(--text-muted)]">—</span>
+  }
+  const stock = product.stock_total
+  const color = stock < 3 ? 'var(--s-danger, #c0392b)' : stock < 5 ? '#b8860b' : 'var(--text-primary)'
+  const weight = stock < 5 ? 600 : 400
+  return (
+    <span className="font-body text-sm" style={{ color, fontWeight: weight }}>
+      {stock}
+      {stock < 3 && <span className="ml-1 text-[10px] uppercase tracking-[0.05em]">Critical</span>}
+      {stock >= 3 && stock < 5 && <span className="ml-1 text-[10px] uppercase tracking-[0.05em]">Low</span>}
+    </span>
+  )
+}
+
 interface Filter {
   search: string
   status: string
@@ -108,6 +127,12 @@ export function ProductsPageView({
           {formatPrice(product.price)}
         </span>
       ),
+    },
+    {
+      key: 'stock_total',
+      header: 'Stock',
+      width: '90px',
+      render: (product) => <StockCell product={product} />,
     },
     {
       key: 'sort_order',

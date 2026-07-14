@@ -26,6 +26,20 @@ export default function DashboardPageContainer() {
     staleTime: 2 * 60 * 1000,
   })
 
+  const { data: readiness } = useQuery({
+    queryKey: ['dashboard', 'commerce-readiness'],
+    queryFn: () => orgService.getCommerceReadiness(),
+    enabled: wsState === 'ready',
+    staleTime: 2 * 60 * 1000,
+  })
+
+  const { data: lowStock } = useQuery({
+    queryKey: ['dashboard', 'low-stock'],
+    queryFn: () => orgService.getLowStockProducts(),
+    enabled: wsState === 'ready',
+    staleTime: 2 * 60 * 1000,
+  })
+
   // ── CASE 2: Org + Site present → rich dashboard ───────────────────────────
   if (wsState === 'ready') {
     return (
@@ -36,6 +50,8 @@ export default function DashboardPageContainer() {
         siteName={activeSite?.name}
         org={org!}
         site={activeSite!}
+        readiness={readiness}
+        lowStock={lowStock}
       />
     )
   }

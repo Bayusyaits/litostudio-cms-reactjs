@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Outlet, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth.store'
 import { useWebsiteStore } from '@litostudio/ui-cms'
@@ -6,7 +6,6 @@ import { useOrgStore } from '@litostudio/ui-cms'
 import { useThemeStore } from '@/stores/theme.store'
 import { AppSidebar } from '@/components/organisms/AppSidebar'
 import { AppHeader } from '@/components/organisms/AppHeader'
-import { CommandPalette } from '@/components/organisms/CommandPalette'
 import { DashboardSkeleton } from '@litostudio/ui-cms'
 import { useWorkspaceHydration } from '@/hooks/useWorkspaceHydration'
 import { useTokenRefresh } from '@/hooks/useTokenRefresh'
@@ -39,7 +38,6 @@ export function DashboardLayout() {
   const { org } = useOrgStore()
   const { applyTheme } = useThemeStore()
   const location = useLocation()
-  const [cmdOpen, setCmdOpen] = useState(false)
 
   // Wire PostHog identify — re-runs when user id, role, or org plan changes.
   // resetAnalytics() clears the PostHog distinct_id cookie on logout.
@@ -87,6 +85,7 @@ export function DashboardLayout() {
       '/journal':     'Journal',
       '/destinations':'Destinations',
       '/hero':        'Hero',
+      '/legal':       'Legal Center',
       '/onboarding':  'Welcome',
     }
     const match = Object.keys(routeLabels)
@@ -96,17 +95,10 @@ export function DashboardLayout() {
     document.title = `${label} — Lito Studio`
   }, [location.pathname])
 
-  // Global ⌘K shortcut
-  useEffect(() => {
-    function handler(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setCmdOpen(o => !o)
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [])
+  // Global ⌘K shortcut — owned by AppHeader (opens SearchDialog, which now
+  // also surfaces the Navigate/Create quick actions this layout's separate
+  // CommandPalette + duplicate ⌘K listener used to own). Two listeners on
+  // the same keydown meant ⌘K used to open both dialogs stacked at once.
 
   // ── Proactive token refresh (keeps session alive up to 6 hours) ─────────────
   useTokenRefresh()
@@ -188,8 +180,6 @@ export function DashboardLayout() {
           <Outlet />
         </main>
       </div>
-
-      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
     </div>
   )
 }

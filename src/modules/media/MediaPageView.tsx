@@ -1,9 +1,10 @@
 import { useRef, useCallback, useState } from 'react'
-import { AppImage, Skeleton, SearchInput, EmptyState } from '@litostudio/ui-cms'
+import { AppImage, Skeleton, SearchInput, EmptyState, EnterpriseDataTable } from '@litostudio/ui-cms'
 import { FolderOpen, Upload, Trash2, FileVideo, FileText, File, Grid, List, Check, Search, X } from 'lucide-react'
 import { formatBytes, isImageMime, isVideoMime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { Media } from '@litostudio/ui-cms'
+import type { EDTColumn } from '@litostudio/ui-cms'
 
 type ViewMode = 'grid' | 'list'
 
@@ -98,6 +99,62 @@ function GridCard({ item, selected, onSelect, onDelete }: { item: Media; selecte
       </div>
     </div>
   )
+}
+
+function buildMediaColumns(onDelete: (id: string) => void): EDTColumn<Media>[] {
+  return [
+    {
+      key: 'filename',
+      label: 'File',
+      render: (item) => (
+        <div className="flex items-center gap-[10px]">
+          {isImageMime(item.mime_type) ? (
+            <AppImage src={item.cdn_url ?? item.original_url ?? ''} alt="" objectFit="cover" skeleton={false} wrapperStyle={{ width: 48, height: 34, flexShrink: 0, borderRadius: 3 }} style={{ width: '100%', height: '100%' }} />
+          ) : (
+            <div className="w-12 h-[34px] rounded-[3px] bg-[var(--lito-cream-alt)] flex items-center justify-center shrink-0">
+              <MediaTypeIcon mimeType={item.mime_type} className="w-4 h-4" />
+            </div>
+          )}
+          <span className="font-body text-[13px] font-medium text-[var(--text-muted)]">{item.filename}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'mime_type',
+      label: 'Type',
+      render: (item) => (
+        <span className="px-[7px] py-[2px] rounded-[3px] bg-[var(--lito-cream-alt)] text-[10px] font-semibold text-[var(--text-muted)] uppercase">
+          {item.mime_type.split('/')[1]?.slice(0, 4)}
+        </span>
+      ),
+    },
+    {
+      key: 'size_bytes',
+      label: 'Size',
+      render: (item) => <span className="text-xs text-[var(--text-muted)]">{formatBytes(item.size_bytes)}</span>,
+    },
+    {
+      key: 'created_at',
+      label: 'Added',
+      sortable: true,
+      render: (item) => <span className="text-xs text-[var(--text-muted)]">{new Date(item.created_at).toLocaleDateString()}</span>,
+    },
+    {
+      key: 'actions',
+      label: '',
+      width: 48,
+      render: (item) => (
+        <button
+          type="button"
+          aria-label={`Delete ${item.filename}`}
+          onClick={(e) => { e.stopPropagation(); onDelete(item.id) }}
+          className="bg-transparent border-none cursor-pointer p-1 text-[var(--text-muted)] flex rounded hover:text-[var(--cms-danger)] hover:bg-[var(--cms-danger-bg)]"
+        >
+          <Trash2 size={14} />
+        </button>
+      ),
+    },
+  ]
 }
 
 export function MediaPageView({
@@ -259,54 +316,14 @@ export function MediaPageView({
           </div>
         ) : (
           <div className="cms-card overflow-hidden">
-            <table className="cms-table">
-              <thead>
-                <tr>
-                  <th className="w-5"><input type="checkbox" aria-label="Select all" /></th>
-                  <th>File</th>
-                  <th>Type</th>
-                  <th>Size</th>
-                  <th>Added</th>
-                  <th className="w-12" />
-                </tr>
-              </thead>
-              <tbody>
-                {items.map(item => (
-                  <tr key={item.id}>
-                    <td><input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleSelect(item.id)} aria-label={`Select ${item.filename}`} /></td>
-                    <td>
-                      <div className="flex items-center gap-[10px]">
-                        {isImageMime(item.mime_type) ? (
-                          <AppImage src={item.cdn_url ?? item.original_url ?? ''} alt="" objectFit="cover" skeleton={false} wrapperStyle={{ width: 48, height: 34, flexShrink: 0, borderRadius: 3 }} style={{ width: '100%', height: '100%' }} />
-                        ) : (
-                          <div className="w-12 h-[34px] rounded-[3px] bg-[var(--lito-cream-alt)] flex items-center justify-center shrink-0">
-                            <MediaTypeIcon mimeType={item.mime_type} className="w-4 h-4" />
-                          </div>
-                        )}
-                        <span className="font-body text-[13px] font-medium text-[var(--text-muted)]">{item.filename}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="px-[7px] py-[2px] rounded-[3px] bg-[var(--lito-cream-alt)] text-[10px] font-semibold text-[var(--text-muted)] uppercase">
-                        {item.mime_type.split('/')[1]?.slice(0, 4)}
-                      </span>
-                    </td>
-                    <td><span className="text-xs text-[var(--text-muted)]">{formatBytes(item.size_bytes)}</span></td>
-                    <td><span className="text-xs text-[var(--text-muted)]">{new Date(item.created_at).toLocaleDateString()}</span></td>
-                    <td>
-                      <button
-                        type="button"
-                        aria-label={`Delete ${item.filename}`}
-                        onClick={() => onDelete(item.id)}
-                        className="bg-transparent border-none cursor-pointer p-1 text-[var(--text-muted)] flex rounded hover:text-[var(--cms-danger)] hover:bg-[var(--cms-danger-bg)]"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <EnterpriseDataTable<Media>
+              skin="cms"
+              columns={buildMediaColumns(onDelete)}
+              data={items}
+              emptyIcon={<FolderOpen className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />}
+              emptyTitle="No media files"
+              emptyDescription="Upload images and videos to get started"
+            />
           </div>
         )}
       </div>

@@ -136,21 +136,25 @@ export function TemplateSystemProvider({ children }: TemplateSystemProviderProps
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 /** Returns the active template name + full TemplateDefinition */
+// eslint-disable-next-line react-refresh/only-export-components -- hook belongs with its provider/context; splitting would require updating every import site for no runtime benefit
 export function useTemplateSystem(): TemplateContextValue {
   return useContext(TemplateCtx)
 }
 
 /** Returns `getVariant(blockType)` bound to the active template */
+// eslint-disable-next-line react-refresh/only-export-components -- hook belongs with its provider/context; splitting would require updating every import site for no runtime benefit
 export function useVariantContext(): VariantContextValue {
   return useContext(VariantCtx)
 }
 
 /** Returns the pages allowed in the active template */
+// eslint-disable-next-line react-refresh/only-export-components -- hook belongs with its provider/context; splitting would require updating every import site for no runtime benefit
 export function usePageTypeContext(): PageTypeContextValue {
   return useContext(PageTypeCtx)
 }
 
 /** Returns `getFields(blockType)` for DynamicField inspector rendering */
+// eslint-disable-next-line react-refresh/only-export-components -- hook belongs with its provider/context; splitting would require updating every import site for no runtime benefit
 export function useContractContext(): ContractContextValue {
   return useContext(ContractCtx)
 }

@@ -74,7 +74,6 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
         // Disable tracking in dev unless explicitly enabled
         if (import.meta.env.DEV && import.meta.env.VITE_ANALYTICS_DEBUG !== 'true') {
           ph.opt_out_capturing()
-          console.debug('[Analytics] Dev mode — set VITE_ANALYTICS_DEBUG=true to enable PostHog')
         }
         if (import.meta.env.VITE_ANALYTICS_DEBUG === 'true') {
           ph.opt_in_capturing()
@@ -148,6 +147,7 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
   return <AnalyticsCtx.Provider value={ctx}>{children}</AnalyticsCtx.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook belongs with its provider/context; splitting would require updating every import site for no runtime benefit
 export function useAnalytics(): AnalyticsContextValue {
   return useContext(AnalyticsCtx)
 }

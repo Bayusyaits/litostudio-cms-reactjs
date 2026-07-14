@@ -1,8 +1,9 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Tag, Trash2, Plus, FolderOpen, Search, X } from 'lucide-react'
-import { Skeleton, SearchInput, EmptyState, FIELD_LIMITS } from '@litostudio/ui-cms'
+import { Tag, Trash2, Plus, FolderOpen } from 'lucide-react'
+import { EnterpriseDataTable, FIELD_LIMITS } from '@litostudio/ui-cms'
+import type { EDTColumn } from '@litostudio/ui-cms'
 import type { Category, CategoryCreateRequest } from '@/services/taxonomy.service'
 
 const categorySchema = z.object({
@@ -15,50 +16,71 @@ interface Props {
   categories: Category[]
   total: number
   isLoading: boolean
-  search: string
-  onSearch: (v: string) => void
   onCreate: (payload: Omit<CategoryCreateRequest, 'site_id'>) => void
   creating: boolean
   createError: string | null
   onDelete: (id: string) => void
 }
 
-function CategoryRow({ cat, onDelete }: { cat: Category; onDelete: (id: string) => void }) {
-  return (
-    <tr>
-      <td>
+function buildCategoryColumns(onDelete: (id: string) => void): EDTColumn<Category>[] {
+  return [
+    {
+      key: 'name',
+      label: 'Name',
+      sortable: true,
+      render: (cat) => (
         <div className="flex items-center gap-2">
           <FolderOpen size={14} className="text-[var(--text-muted)] shrink-0" />
           <span className="font-body text-[13px] text-[var(--text-primary)]">
-            {cat.translations?.[0]?.name ?? cat.slug}
+            {cat.name ?? cat.slug}
           </span>
         </div>
-      </td>
-      <td>
+      ),
+    },
+    {
+      key: 'slug',
+      label: 'Slug',
+      render: (cat) => (
         <code className="font-mono text-[11px] text-[var(--text-muted)] bg-[rgba(17,17,17,0.04)] px-[6px] py-[2px] rounded">
           {cat.slug}
         </code>
-      </td>
-      <td>
+      ),
+    },
+    {
+      key: 'parent_id',
+      label: 'Type',
+      render: (cat) => (
         <span className="text-xs text-[var(--text-muted)]">
           {cat.parent_id ? 'Sub-category' : 'Top-level'}
         </span>
-      </td>
-      <td>
+      ),
+    },
+    {
+      key: 'created_at',
+      label: 'Created',
+      sortable: true,
+      render: (cat) => (
         <span className="font-body text-xs text-[var(--text-muted)]">
           {new Date(cat.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
         </span>
-      </td>
-      <td>
-        <button type="button" onClick={() => onDelete(cat.id)}
+      ),
+    },
+    {
+      key: 'actions',
+      label: '',
+      width: 40,
+      render: (cat) => (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(cat.id) }}
           aria-label="Delete category"
           className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 rounded flex hover:text-[var(--cms-danger)] hover:bg-[var(--cms-danger-bg)]"
         >
           <Trash2 size={13} />
         </button>
-      </td>
-    </tr>
-  )
+      ),
+    },
+  ]
 }
 
 function AddCategoryForm({ onCreate, creating, error }: {
@@ -75,7 +97,7 @@ function AddCategoryForm({ onCreate, creating, error }: {
   const slugVal = watch('slug') ?? ''
 
   function onSubmit(values: CategoryForm) {
-    onCreate({ translation: { locale: 'id', name: values.name }, slug: values.slug })
+    onCreate({ name: values.name, slug: values.slug })
     reset()
   }
 
@@ -128,7 +150,9 @@ function AddCategoryForm({ onCreate, creating, error }: {
   )
 }
 
-export function CategoriesPageView({ categories, total, isLoading, search, onSearch, onCreate, creating, createError, onDelete }: Props) {
+export function CategoriesPageView({ categories, total, isLoading, onCreate, creating, createError, onDelete }: Props) {
+  const columns = buildCategoryColumns(onDelete)
+
   return (
     <div className="cms-page p-8 overflow-y-auto h-full">
       <div className="mb-6">
@@ -143,22 +167,17 @@ export function CategoriesPageView({ categories, total, isLoading, search, onSea
         <AddCategoryForm onCreate={onCreate} creating={creating} error={createError} />
       </div>
 
-      <div className="flex items-center justify-between mb-[14px]">
-        <SearchInput skin="cms" icon={<Search className="w-3.5 h-3.5" />} clearIcon={<X className="w-3.5 h-3.5" />} value={search} onChange={onSearch} placeholder="Search categories…" className="w-64" />
-      </div>
-
-      <div className="cms-card overflow-hidden">
-        <table className="cms-table">
-          <thead><tr><th>Name</th><th>Slug</th><th>Type</th><th>Created</th><th className="w-10" /></tr></thead>
-          <tbody>
-            {isLoading ? Array.from({ length: 5 }).map((_, i) => (
-              <tr key={i}><td><Skeleton className="h-4 w-40" /></td><td><Skeleton className="h-4 w-24" /></td><td><Skeleton className="h-4 w-20" /></td><td><Skeleton className="h-4 w-24" /></td><td /></tr>
-            )) : categories.length === 0 ? (
-              <tr><td colSpan={5}><EmptyState skin="cms" icon={<Tag className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No categories" description="Add your first category above" /></td></tr>
-            ) : categories.map(cat => <CategoryRow key={cat.id} cat={cat} onDelete={onDelete} />)}
-          </tbody>
-        </table>
-      </div>
+      <EnterpriseDataTable<Category>
+        skin="cms"
+        columns={columns}
+        data={categories}
+        loading={isLoading}
+        searchKeys={['name', 'slug']}
+        searchPlaceholder="Search categories…"
+        emptyIcon={<Tag className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />}
+        emptyTitle="No categories"
+        emptyDescription="Add your first category above"
+      />
     </div>
   )
 }

@@ -1,11 +1,13 @@
 import { http } from '@litostudio/ui-cms'
 import type { ApiResponse, PaginatedResponse, ListParams, BulkUpdateRequest, BulkDeleteRequest, BulkUpdateResponse, BulkDeleteResponse } from '@/types/api.types'
-import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination, Product, ProductCreateRequest, ProductUpdateRequest, Collection, CollectionCreateRequest, CollectionUpdateRequest, Review, ReviewUpdateRequest, Faq, FaqCreateRequest, FaqUpdateRequest, Service, ServiceCreateRequest, ServiceUpdateRequest, Testimonial, TestimonialCreateRequest, TestimonialUpdateRequest, Feedback, FeedbackCreateRequest, FeedbackUpdateRequest, PricingPackage, PricingCreateRequest, PricingUpdateRequest, HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, Comment, CommentUpdateRequest, Campaign, CampaignCreateRequest, CampaignUpdateRequest, SeoMetadata, SeoSaveRequest } from '@/types/content.types'
+import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination, Brand, Product, ProductCreateRequest, ProductUpdateRequest, Collection, CollectionCreateRequest, CollectionUpdateRequest, Review, ReviewUpdateRequest, Faq, FaqCreateRequest, FaqUpdateRequest, FaqCategory, FaqCategoryCreateRequest, FaqCategoryUpdateRequest, Service, ServiceCreateRequest, ServiceUpdateRequest, Testimonial, TestimonialCreateRequest, TestimonialUpdateRequest, Feedback, FeedbackCreateRequest, FeedbackUpdateRequest, PricingPackage, PricingCreateRequest, PricingUpdateRequest, HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, Comment, CommentUpdateRequest, Campaign, CampaignCreateRequest, CampaignUpdateRequest, SeoMetadata, SeoSaveRequest } from '@/types/content.types'
 import type { Order, UpdateOrderStatusRequest, NewsletterSubscriber, UpdateNewsletterStatusRequest, ContactMessage } from '@/types/commerce.types'
 
 // ── Generic content service factory ─────────────────────────────────────
 
-function buildParams(params: ListParams & { site_id?: string }): Record<string, string> {
+type ExtraListParams = { site_id?: string; category_id?: string; is_featured?: boolean }
+
+function buildParams(params: ListParams & ExtraListParams): Record<string, string> {
   const q: Record<string, string> = {}
   if (params.page)    q.page    = String(params.page)
   if (params.limit)   q.limit   = String(params.limit)
@@ -14,6 +16,10 @@ function buildParams(params: ListParams & { site_id?: string }): Record<string, 
   if (params.sort)    q.sort    = params.sort
   if (params.order)   q.order   = params.order
   if (params.site_id) q.site_id = params.site_id
+  // FAQs-only filters — harmless no-ops for every other resource's backend
+  // route, which simply ignores unrecognized query params.
+  if (params.category_id)          q.category_id  = params.category_id
+  if (params.is_featured !== undefined) q.is_featured = String(params.is_featured)
   return q
 }
 
@@ -24,7 +30,7 @@ function buildParams(params: ListParams & { site_id?: string }): Record<string, 
  */
 function createContentService<Entity, CreateDTO, UpdateDTO>(basePath: string) {
   return {
-    async getList(params?: ListParams & { site_id?: string }) {
+    async getList(params?: ListParams & ExtraListParams) {
       const query = params ? new URLSearchParams(buildParams(params)).toString() : ''
       const url = query ? `${basePath}?${query}` : basePath
       const data = await http.get<PaginatedResponse<Entity>>(url)
@@ -143,6 +149,7 @@ export const storiesService       = createContentItemService<Story,          Sto
 export const journalService       = createContentItemService<JournalPost,    JournalCreateRequest,     JournalUpdateRequest>(    'journal')
 export const galleryService       = createContentItemService<GalleryItem,    GalleryCreateRequest,     GalleryUpdateRequest>(    'gallery')
 export const destinationsService  = createContentItemService<Destination,    Record<string,unknown>,   Record<string,unknown>>(  'destination')
+export const brandsService        = createContentItemService<Brand,          Record<string,unknown>,   Record<string,unknown>>(  'brand')
 export const heroService          = createContentItemService<HeroSlide,      HeroSlideCreateRequest,   HeroSlideUpdateRequest>(  'hero')
 
 // Reviews & Testimonials → feedbacks table
@@ -156,8 +163,34 @@ export const pricingService       = createContentService<PricingPackage, Pricing
 
 // Dedicated routes
 export const productsService      = createContentService<Product,        ProductCreateRequest,      ProductUpdateRequest>(      '/api/v1/cms/content/products')
+// Categories: reuse the existing `categoryService` from taxonomy.service.ts
+// (the dedicated Categories CMS module at /categories) — do NOT add a
+// second category client here. See taxonomy.service.ts for details.
 export const collectionsService   = createContentService<Collection,     CollectionCreateRequest,   CollectionUpdateRequest>(   '/api/v1/cms/content/collections')
 export const faqsService          = createContentService<Faq,            FaqCreateRequest,          FaqUpdateRequest>(          '/api/v1/cms/content/faqs')
+// FAQ categories — its own small table (faq_categories), not the generic
+// `categories` taxonomy used by products; see faq_categories migration
+// comment for why these are kept separate. GET here returns a plain array
+// (ApiResponse<FaqCategory[]>), not a paginated list, so this is a
+// hand-written client rather than createContentService's getList (which
+// expects a `{data, meta}` paginated shape).
+export const faqCategoriesService = {
+  async getList(site_id: string) {
+    const data = await http.get<ApiResponse<FaqCategory[]>>(`/api/v1/cms/content/faq-categories?${new URLSearchParams({ site_id })}`)
+    return data.data
+  },
+  async create(payload: FaqCategoryCreateRequest) {
+    const data = await http.post<ApiResponse<FaqCategory>>('/api/v1/cms/content/faq-categories', payload)
+    return data.data
+  },
+  async update(id: string, payload: FaqCategoryUpdateRequest) {
+    const data = await http.patch<ApiResponse<FaqCategory>>(`/api/v1/cms/content/faq-categories/${id}`, payload)
+    return data.data
+  },
+  async remove(id: string) {
+    await http.delete(`/api/v1/cms/content/faq-categories/${id}`)
+  },
+}
 export const commentsService      = createContentService<Comment,        Record<string,unknown>,    CommentUpdateRequest>(      '/api/v1/cms/content/comments')
 export const campaignsService     = createContentService<Campaign,       CampaignCreateRequest,     CampaignUpdateRequest>(     '/api/v1/cms/content/campaigns')
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { http } from '@litostudio/ui-cms'
+import { http, EnterpriseDataTable } from '@litostudio/ui-cms'
+import type { EDTColumn } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 import { useOrgStore } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
@@ -20,6 +21,12 @@ interface Deployment {
   error_message: string | null
   created_at: string
   sites?: { id: string; name: string; domain: string }
+  // Index signature — lets this satisfy EnterpriseDataTable's
+  // `T extends Record<string, unknown>` generic constraint (an `interface`
+  // without one isn't structurally assignable to a Record type, even though
+  // every declared property already is). Same convention as
+  // apps/cms-superadmin/src/types/api.types.ts's SAOrganization/SAUser.
+  [key: string]: unknown
 }
 
 const STATUS_STYLE: Record<string, string> = {
@@ -34,6 +41,48 @@ function formatDate(d: string | null) {
   if (!d) return '—'
   return new Date(d).toLocaleString()
 }
+
+const deploymentColumns: EDTColumn<Deployment>[] = [
+  {
+    key: 'site',
+    label: 'Site',
+    render: (dep) => <span className="text-[var(--text-primary)]">{dep.sites?.name ?? dep.site_id.slice(0, 8)}</span>,
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    render: (dep) => (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[dep.status] ?? ''}`}>
+        {dep.status.replace('_', ' ')}
+      </span>
+    ),
+  },
+  {
+    key: 'environment',
+    label: 'Environment',
+    render: (dep) => <span className="text-[var(--text-muted)]">{dep.environment ?? '—'}</span>,
+  },
+  {
+    key: 'version',
+    label: 'Version',
+    render: (dep) => (
+      <span className="font-mono text-xs text-[var(--text-muted)]">
+        {dep.version ?? dep.commit_hash?.slice(0, 8) ?? '—'}
+      </span>
+    ),
+  },
+  {
+    key: 'started_at',
+    label: 'Started',
+    sortable: true,
+    render: (dep) => <span className="text-[var(--text-muted)] text-xs">{formatDate(dep.started_at)}</span>,
+  },
+  {
+    key: 'completed_at',
+    label: 'Completed',
+    render: (dep) => <span className="text-[var(--text-muted)] text-xs">{formatDate(dep.completed_at)}</span>,
+  },
+]
 
 export default function DeploymentsPageContainer() {
   const { org } = useOrgStore()
@@ -106,64 +155,20 @@ export default function DeploymentsPageContainer() {
 
       {/* Table */}
       <div className="bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-[8px] overflow-hidden">
-        {query.isLoading ? (
-          <div className="p-8 text-center text-[var(--text-faint)] text-sm">Loading…</div>
-        ) : deployments.length === 0 ? (
-          <div className="p-8 text-center text-[var(--text-muted)] text-sm">No deployments found.</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--cms-surface-2,rgba(0,0,0,0.02))] border-b border-[var(--lito-border)]">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Site</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Environment</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Version</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Started</th>
-                <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Completed</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--lito-border)]">
-              {deployments.map(dep => (
-                <tr key={dep.id} className="hover:bg-[var(--cms-surface-2,rgba(0,0,0,0.02))]">
-                  <td className="px-4 py-3 text-[var(--text-primary)]">
-                    {dep.sites?.name ?? dep.site_id.slice(0, 8)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[dep.status] ?? ''}`}>
-                      {dep.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--text-muted)]">{dep.environment ?? '—'}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-[var(--text-muted)]">
-                    {dep.version ?? dep.commit_hash?.slice(0, 8) ?? '—'}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--text-muted)] text-xs">{formatDate(dep.started_at)}</td>
-                  <td className="px-4 py-3 text-[var(--text-muted)] text-xs">{formatDate(dep.completed_at)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <EnterpriseDataTable<Deployment>
+          skin="cms"
+          columns={deploymentColumns}
+          data={deployments}
+          loading={query.isLoading}
+          server={{
+            total,
+            limit,
+            offset: page * limit,
+            onPageChange: (offset) => setPage(Math.floor(offset / limit)),
+          }}
+          emptyTitle="No deployments found"
+        />
       </div>
-
-      {/* Pagination */}
-      {total > limit && (
-        <div className="flex justify-between items-center text-sm text-[var(--text-muted)]">
-          <span>Showing {page * limit + 1}–{Math.min((page + 1) * limit, total)} of {total}</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage(p => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="px-3 py-1 border border-[var(--lito-border)] rounded disabled:opacity-40 hover:bg-[var(--cms-surface-2,rgba(0,0,0,0.02))]"
-            >← Prev</button>
-            <button
-              onClick={() => setPage(p => p + 1)}
-              disabled={(page + 1) * limit >= total}
-              className="px-3 py-1 border border-[var(--lito-border)] rounded disabled:opacity-40 hover:bg-[var(--cms-surface-2,rgba(0,0,0,0.02))]"
-            >Next →</button>
-          </div>
-        </div>
-      )}
     </div>
 
     {showRepublish && activeSite && (

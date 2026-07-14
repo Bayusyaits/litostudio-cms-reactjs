@@ -1,7 +1,8 @@
 // modules/settings/labels/LabelsPageView.tsx
 import { useState } from 'react'
 import { Languages, Plus, Upload, Download, Pencil, Trash2, Check, X, Lock, Search } from 'lucide-react'
-import { Button, SearchInput } from '@litostudio/ui-cms'
+import { Button, SearchInput, EnterpriseDataTable } from '@litostudio/ui-cms'
+import type { EDTColumn } from '@litostudio/ui-cms'
 import type { Label, LabelUpsertPayload } from '@/services/labels.service'
 
 // ── GROUP_LABELS ──────────────────────────────────────────────────────────────
@@ -223,6 +224,110 @@ interface Props {
   mutateError: string | null
 }
 
+function buildLabelColumns({
+  editingId, editingValue, onStartEdit, onCancelEdit, onSaveEdit, onEditingValueChange, saving, onDelete,
+}: {
+  editingId: string | null
+  editingValue: string
+  onStartEdit: (id: string, value: string) => void
+  onCancelEdit: () => void
+  onSaveEdit: (id: string) => void
+  onEditingValueChange: (v: string) => void
+  saving: boolean
+  onDelete: (id: string) => void
+}): EDTColumn<Label>[] {
+  return [
+    {
+      key: 'key',
+      label: 'Key',
+      width: '20%',
+      render: (label) => (
+        <div className="flex items-center gap-1.5">
+          {label.is_system && (
+            <span title="System label — cannot be deleted">
+              <Lock className="w-3 h-3 text-[var(--text-muted)] shrink-0" />
+            </span>
+          )}
+          <code className="font-mono text-xs text-[var(--text-primary)]">{label.key}</code>
+        </div>
+      ),
+    },
+    {
+      key: 'value',
+      label: 'Value',
+      render: (label) => (
+        editingId === label.id ? (
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <input
+              className="cms-input text-sm flex-1"
+              value={editingValue}
+              autoFocus
+              onChange={(e) => onEditingValueChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onSaveEdit(label.id)
+                if (e.key === 'Escape') onCancelEdit()
+              }}
+            />
+            <button
+              onClick={() => onSaveEdit(label.id)}
+              disabled={saving}
+              className="text-[var(--s-success)] hover:opacity-80 disabled:opacity-50"
+              title="Save"
+            >
+              <Check className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onCancelEdit}
+              className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              title="Cancel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <span className="font-body text-sm text-[var(--text-primary)]">{label.value}</span>
+        )
+      ),
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      render: (label) => (
+        <span className="font-body text-xs text-[var(--text-muted)]">{label.description ?? '—'}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: '',
+      width: 72,
+      render: (label) => (
+        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          {editingId !== label.id && (
+            <button
+              onClick={() => onStartEdit(label.id, label.value)}
+              className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--border)] transition-colors"
+              title="Edit value"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {!label.is_system && (
+            <button
+              onClick={() => {
+                if (confirm(`Delete label "${label.key}"?`)) onDelete(label.id)
+              }}
+              className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--s-danger)] hover:bg-[var(--border)] transition-colors"
+              title="Delete label"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ]
+}
+
 export function LabelsPageView({
   labels, groups, isLoading, filter, setFilter,
   editingId, editingValue, onStartEdit, onCancelEdit, onSaveEdit, onEditingValueChange, saving,
@@ -243,6 +348,10 @@ export function LabelsPageView({
   const groupsToShow = filter.group_name
     ? [filter.group_name]
     : Object.keys(grouped).sort()
+
+  const columns = buildLabelColumns({
+    editingId, editingValue, onStartEdit, onCancelEdit, onSaveEdit, onEditingValueChange, saving, onDelete,
+  })
 
   return (
     <div className="p-6 space-y-5 overflow-y-auto">
@@ -336,108 +445,11 @@ export function LabelsPageView({
                     ({rows.length})
                   </span>
                 </div>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[var(--border)]">
-                      <th className="text-left px-4 py-2 font-body text-xs font-medium text-[var(--text-muted)] w-48">Key</th>
-                      <th className="text-left px-4 py-2 font-body text-xs font-medium text-[var(--text-muted)]">Value</th>
-                      <th className="text-left px-4 py-2 font-body text-xs font-medium text-[var(--text-muted)] w-48 hidden md:table-cell">Description</th>
-                      <th className="w-24 px-4 py-2" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((label) => (
-                      <tr
-                        key={label.id}
-                        className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-muted)] transition-colors"
-                      >
-                        {/* Key */}
-                        <td className="px-4 py-2">
-                          <div className="flex items-center gap-1.5">
-                            {label.is_system && (
-                              <span title="System label — cannot be deleted">
-                                <Lock className="w-3 h-3 text-[var(--text-muted)] shrink-0" />
-                              </span>
-                            )}
-                            <code className="font-mono text-xs text-[var(--text-primary)]">
-                              {label.key}
-                            </code>
-                          </div>
-                        </td>
-
-                        {/* Value — inline edit */}
-                        <td className="px-4 py-2">
-                          {editingId === label.id ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                className="cms-input text-sm flex-1"
-                                value={editingValue}
-                                autoFocus
-                                onChange={(e) => onEditingValueChange(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') onSaveEdit(label.id)
-                                  if (e.key === 'Escape') onCancelEdit()
-                                }}
-                              />
-                              <button
-                                onClick={() => onSaveEdit(label.id)}
-                                disabled={saving}
-                                className="text-[var(--s-success)] hover:opacity-80 disabled:opacity-50"
-                                title="Save"
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={onCancelEdit}
-                                className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                                title="Cancel"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="font-body text-sm text-[var(--text-primary)]">
-                              {label.value}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Description */}
-                        <td className="px-4 py-2 hidden md:table-cell">
-                          <span className="font-body text-xs text-[var(--text-muted)]">
-                            {label.description ?? '—'}
-                          </span>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="px-4 py-2">
-                          <div className="flex items-center justify-end gap-1">
-                            {editingId !== label.id && (
-                              <button
-                                onClick={() => onStartEdit(label.id, label.value)}
-                                className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--border)] transition-colors"
-                                title="Edit value"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            {!label.is_system && (
-                              <button
-                                onClick={() => {
-                                  if (confirm(`Delete label "${label.key}"?`)) onDelete(label.id)
-                                }}
-                                className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--s-danger)] hover:bg-[var(--border)] transition-colors"
-                                title="Delete label"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <EnterpriseDataTable<Label>
+                  skin="cms"
+                  columns={columns}
+                  data={rows}
+                />
               </div>
             )
           })}

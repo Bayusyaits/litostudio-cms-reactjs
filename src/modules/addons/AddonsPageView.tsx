@@ -31,11 +31,13 @@ interface AddonsPageViewProps {
 
 function TierBadge({ tier }: { tier: string }) {
   const colors: Record<string, string> = {
+    core:       'rgba(148,163,184,0.15)',
     free:       'rgba(34,197,94,0.15)',
     pro:        'rgba(212,168,83,0.15)',
     enterprise: 'rgba(139,92,246,0.15)',
   }
   const text: Record<string, string> = {
+    core:       '#94a3b8',
     free:       '#22c55e',
     pro:        '#D4A853',
     enterprise: '#8b5cf6',

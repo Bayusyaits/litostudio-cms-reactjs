@@ -1,25 +1,30 @@
-import { HelpCircle, Trash2, Plus, PenLine, Search, X } from 'lucide-react'
-import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { HelpCircle, Trash2, Plus, PenLine, Search, X, Star } from 'lucide-react'
+import { Button, StatusBadge, Badge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
-import type { Faq } from '@/types/content.types'
+import type { Faq, FaqCategory } from '@/types/content.types'
 
+// NOTE: the backend relation is `faq_translations` (see content.types.ts —
+// this used to read the nonexistent `.translations`, which always resolved
+// to undefined, so every row in this table silently rendered "—").
 function getFaqQuestion(faq: Faq): string {
-  return faq.translations?.[0]?.question ?? faq.translations?.[0]?.title ?? faq.slug ?? '—'
+  return faq.faq_translations?.[0]?.question ?? '—'
 }
 
 function getFaqAnswer(faq: Faq): string | undefined {
-  return faq.translations?.[0]?.answer ?? faq.translations?.[0]?.excerpt
+  return faq.faq_translations?.[0]?.answer
 }
 
 interface Filter {
   search: string
   status: string
+  category_id: string
   page: number
   limit: number
 }
 
 interface Props {
   faqs: Faq[]
+  categories: FaqCategory[]
   meta?: { total: number; page: number; limit: number }
   isLoading: boolean
   filter: Filter
@@ -34,7 +39,7 @@ interface Props {
 }
 
 export function FaqsPageView({
-  faqs, meta, isLoading, filter, setFilter,
+  faqs, categories, meta, isLoading, filter, setFilter,
   selectedIds, onSelect, onSelectAll,
   onNew, onEdit, onDelete, onBulkDelete,
 }: Props) {
@@ -59,6 +64,26 @@ export function FaqsPageView({
             )}
           </div>
         </div>
+      ),
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      width: '140px',
+      render: (faq) => (
+        faq.faq_categories
+          ? <Badge variant="default">{faq.faq_categories.name}</Badge>
+          : <span className="font-body text-xs text-[var(--text-faint)]">—</span>
+      ),
+    },
+    {
+      key: 'featured',
+      header: '',
+      width: '36px',
+      render: (faq) => (
+        faq.is_featured
+          ? <Star className="w-4 h-4 text-[var(--s-warning,#d4a017)] fill-current" aria-label="Featured" />
+          : null
       ),
     },
     {
@@ -136,6 +161,16 @@ export function FaqsPageView({
           <option value="active">Published</option>
           <option value="draft">Draft</option>
           <option value="archived">Archived</option>
+        </select>
+        <select
+          className="cms-input h-9 text-sm w-44"
+          value={filter.category_id}
+          onChange={(e) => setFilter({ category_id: e.target.value, page: 1 })}
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
         </select>
       </div>
 
