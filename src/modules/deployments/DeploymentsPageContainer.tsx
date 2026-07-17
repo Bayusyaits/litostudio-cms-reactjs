@@ -1,24 +1,31 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { http, EnterpriseDataTable } from '@litostudio/ui-cms'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { http, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
 import type { EDTColumn } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 import { useOrgStore } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { RepublishPagesModal } from '@/modules/themes/RepublishPagesModal'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Rocket } from 'lucide-react'
 
+// Field names/status values below match the REAL `deployments` table
+// (migrations/*.sql, DB.sql) and apps/backend/src/modules/deployments —
+// verified 2026-07-16 while adding the Deploy button below. Previously this
+// interface listed fields that don't exist in the schema at all
+// (commit_hash, deployed_by, completed_at, error_message, version, and a
+// status value 'in_progress'/'rolled_back' the real CHECK constraint never
+// allowed) — dead code that never matched what the API actually returns.
 interface Deployment {
   id: string
   site_id: string
-  status: 'pending' | 'in_progress' | 'success' | 'failed' | 'rolled_back'
+  status: 'pending' | 'building' | 'success' | 'failed' | 'cancelled' | 'blocked'
   environment: string
-  version: string | null
-  commit_hash: string | null
-  deployed_by: string | null
+  deploy_url: string | null
+  git_commit: string | null
+  triggered_by: string | null
+  provider: string
   started_at: string | null
-  completed_at: string | null
-  error_message: string | null
+  finished_at: string | null
   created_at: string
   sites?: { id: string; name: string; domain: string }
   // Index signature — lets this satisfy EnterpriseDataTable's
@@ -30,11 +37,12 @@ interface Deployment {
 }
 
 const STATUS_STYLE: Record<string, string> = {
-  success:     'text-[var(--s-pub-fg)] bg-[var(--s-pub-bg)]',
-  in_progress: 'text-[var(--s-sched-fg)] bg-[var(--s-sched-bg)]',
-  pending:     'text-[var(--s-draft-fg)] bg-[var(--s-draft-bg)]',
-  failed:      'text-[var(--cms-danger)] bg-[var(--cms-danger-bg)]',
-  rolled_back: 'bg-[var(--cms-surface-3,rgba(0,0,0,0.04))] text-[var(--text-muted)]',
+  success:  'text-[var(--s-pub-fg)] bg-[var(--s-pub-bg)]',
+  building: 'text-[var(--s-sched-fg)] bg-[var(--s-sched-bg)]',
+  pending:  'text-[var(--s-draft-fg)] bg-[var(--s-draft-bg)]',
+  failed:   'text-[var(--cms-danger)] bg-[var(--cms-danger-bg)]',
+  cancelled: 'bg-[var(--cms-surface-3,rgba(0,0,0,0.04))] text-[var(--text-muted)]',
+  blocked:  'bg-[var(--cms-surface-3,rgba(0,0,0,0.04))] text-[var(--text-muted)]',
 }
 
 function formatDate(d: string | null) {
@@ -63,11 +71,11 @@ const deploymentColumns: EDTColumn<Deployment>[] = [
     render: (dep) => <span className="text-[var(--text-muted)]">{dep.environment ?? '—'}</span>,
   },
   {
-    key: 'version',
-    label: 'Version',
+    key: 'git_commit',
+    label: 'Commit',
     render: (dep) => (
       <span className="font-mono text-xs text-[var(--text-muted)]">
-        {dep.version ?? dep.commit_hash?.slice(0, 8) ?? '—'}
+        {dep.git_commit ? dep.git_commit.slice(0, 8) : '—'}
       </span>
     ),
   },
@@ -78,9 +86,16 @@ const deploymentColumns: EDTColumn<Deployment>[] = [
     render: (dep) => <span className="text-[var(--text-muted)] text-xs">{formatDate(dep.started_at)}</span>,
   },
   {
-    key: 'completed_at',
-    label: 'Completed',
-    render: (dep) => <span className="text-[var(--text-muted)] text-xs">{formatDate(dep.completed_at)}</span>,
+    key: 'finished_at',
+    label: 'Finished',
+    render: (dep) => <span className="text-[var(--text-muted)] text-xs">{formatDate(dep.finished_at)}</span>,
+  },
+  {
+    key: 'deploy_url',
+    label: 'URL',
+    render: (dep) => dep.deploy_url
+      ? <a href={dep.deploy_url} target="_blank" rel="noreferrer" className="text-[var(--lito-gold)] text-xs hover:underline">View</a>
+      : <span className="text-[var(--text-muted)] text-xs">—</span>,
   },
 ]
 
@@ -92,6 +107,8 @@ export default function DeploymentsPageContainer() {
   const [page, setPage] = useState(0)
   const limit = 20
   const [showRepublish, setShowRepublish] = useState(false)
+  const [deployError, setDeployError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
   const query = useQuery({
     queryKey: ['deployments', org?.id, siteFilter, statusFilter, page],
@@ -106,6 +123,25 @@ export default function DeploymentsPageContainer() {
     enabled: !!org?.id,
   })
 
+  // 2026-07-16: fires the site's Vercel Deploy Hook via the backend
+  // (apps/backend sites.routes.ts POST /:siteId/deploy — shares its core
+  // logic with cms-superadmin's Rebuild button, not a duplicate). Requires
+  // the site to have vercel_deploy_hook_url configured first — the backend
+  // returns a clear 503 message if it isn't, surfaced below as-is.
+  const deployMutation = useMutation({
+    mutationFn: () => {
+      if (!activeSite) throw new Error('No active site selected')
+      return http.post<ApiResponse<Deployment>>(`/api/v1/cms/sites/${activeSite.id}/deploy`, {})
+    },
+    onSuccess: () => {
+      setDeployError(null)
+      void queryClient.invalidateQueries({ queryKey: ['deployments'] })
+    },
+    onError: (err: unknown) => {
+      setDeployError(err instanceof Error ? err.message : 'Deploy failed — see console for details')
+    },
+  })
+
   const deployments = query.data?.data ?? []
   const total = (query.data as { total?: number })?.total ?? 0
 
@@ -118,39 +154,57 @@ export default function DeploymentsPageContainer() {
           <p className="text-sm text-[var(--text-muted)] mt-1">Deployment history for your sites.</p>
         </div>
         {activeSite && (
-          <button
-            type="button"
-            onClick={() => setShowRepublish(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--lito-border)] bg-transparent font-body text-[12px] text-[var(--text-muted)] cursor-pointer hover:border-[var(--lito-gold)] hover:text-[var(--text-primary)] transition-colors duration-150 shrink-0 mt-1"
-          >
-            <RefreshCw size={13} />
-            Republish All Pages
-          </button>
+          <div className="flex items-center gap-2 shrink-0 mt-1">
+            <button
+              type="button"
+              onClick={() => deployMutation.mutate()}
+              disabled={deployMutation.isPending}
+              title="Triggers a new build via this site's Vercel Deploy Hook"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--lito-gold)] bg-[var(--lito-gold)] font-body text-[12px] text-[var(--cms-bg,#fff)] cursor-pointer hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Rocket size={13} />
+              {deployMutation.isPending ? 'Deploying…' : 'Deploy Now'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowRepublish(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--lito-border)] bg-transparent font-body text-[12px] text-[var(--text-muted)] cursor-pointer hover:border-[var(--lito-gold)] hover:text-[var(--text-primary)] transition-colors duration-150"
+            >
+              <RefreshCw size={13} />
+              Republish All Pages
+            </button>
+          </div>
         )}
       </div>
 
+      {deployError && (
+        <div className="px-4 py-2.5 rounded-lg text-[var(--cms-danger)] bg-[var(--cms-danger-bg)] text-sm" role="alert">
+          {deployError}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
-        <select
+        <Select
           value={siteFilter}
-          onChange={e => { setSiteFilter(e.target.value); setPage(0) }}
-          className="border border-[var(--lito-border)] rounded px-3 py-2 text-sm !text-[#000000]"
-        >
-          <option value="">All sites</option>
-          {activeSite && <option value={activeSite.id}>{activeSite.name ?? activeSite.id}</option>}
-        </select>
-        <select
+          onChange={(v) => { setSiteFilter(v); setPage(0) }}
+          options={[
+            { value: '', label: 'All sites' },
+            ...(activeSite ? [{ value: activeSite.id, label: activeSite.name ?? activeSite.id }] : []),
+          ]}
+        />
+        <Select
           value={statusFilter}
-          onChange={e => { setStatusFilter(e.target.value); setPage(0) }}
-          className="border border-[var(--lito-border)] rounded px-3 py-2 text-sm !text-[#000000]"
-        >
-          <option value="">All statuses</option>
-          <option value="success">Success</option>
-          <option value="in_progress">In Progress</option>
-          <option value="pending">Pending</option>
-          <option value="failed">Failed</option>
-          <option value="rolled_back">Rolled Back</option>
-        </select>
+          onChange={(v) => { setStatusFilter(v); setPage(0) }}
+          options={[
+            { value: '', label: 'All statuses' },
+            { value: 'success', label: 'Success' },
+            { value: 'in_progress', label: 'In Progress' },
+            { value: 'pending', label: 'Pending' },
+            { value: 'failed', label: 'Failed' },
+            { value: 'rolled_back', label: 'Rolled Back' },
+          ]}
+        />
       </div>
 
       {/* Table */}

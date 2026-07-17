@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import {
   Puzzle, ToggleLeft, ToggleRight, Settings, ChevronRight,
-  Check, AlertCircle, Loader2, Tag,
+  Check, AlertCircle, AlertTriangle, Loader2, Tag,
 } from 'lucide-react'
+import { Select } from '@litostudio/ui-cms'
 import type { OrgAddon, Addon } from '@/services/addon.service'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -25,6 +26,15 @@ interface AddonsPageViewProps {
   isSavingSettings: boolean
   settingsError: string | null
   settingsSuccess: boolean
+  /** Non-blocking heads-up from the last install/toggle/settings-save
+   * (2026-07-15, addon-settings-compatibility-plan) — e.g. a "position"
+   * clash between two enabled add-ons. Distinct from settingsError, which
+   * is a hard 409 that already prevented the save. */
+  settingsWarnings: string[]
+  /** addon.slug → "Conflicts with X" — proactive badge shown on the
+   * catalog card before an admin attempts to enable something that
+   * conflicts with an already-enabled add-on. */
+  conflictBadgeBySlug: Map<string, string>
 }
 
 // ─── Tier badge ───────────────────────────────────────────────────────────────
@@ -73,9 +83,11 @@ interface AddonCardProps {
   onConfigure: () => void
   isInstalling: boolean
   isToggling: boolean
+  /** "Conflicts with X" — proactive heads-up, see AddonsPageViewProps. */
+  conflictBadge?: string
 }
 
-function AddonCard({ item, onInstall, onToggle, onConfigure, isInstalling, isToggling }: AddonCardProps) {
+function AddonCard({ item, onInstall, onToggle, onConfigure, isInstalling, isToggling, conflictBadge }: AddonCardProps) {
   const { addon, orgAddon } = item
   const installed = !!orgAddon
   const enabled = orgAddon?.enabled ?? false
@@ -116,6 +128,16 @@ function AddonCard({ item, onInstall, onToggle, onConfigure, isInstalling, isTog
           </button>
         )}
       </div>
+
+      {conflictBadge && (
+        <span
+          className="inline-flex items-center gap-1 self-start px-2 py-[3px] rounded text-[10px] font-medium font-body"
+          style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}
+        >
+          <AlertTriangle size={10} />
+          {conflictBadge}
+        </span>
+      )}
 
       {addon.description && (
         <p className="font-body text-xs leading-relaxed text-[var(--text-secondary)] m-0">
@@ -165,19 +187,26 @@ interface SettingsPanelProps {
   isSaving: boolean
   error: string | null
   success: boolean
+  warnings: string[]
 }
 
-function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: SettingsPanelProps) {
-  const schema = orgAddon.addons?.settings_schema as Record<string, {
-    type: string
-    label?: string
-    description?: string
-    default?: unknown
-  }> | null
+// Bug fix (2026-07-15, addon-settings-compatibility-plan): `settings_schema`
+// is real JSON Schema — `{"type":"object","properties":{...}}` — for every
+// seeded add-on with configurable settings (verified against every row in
+// migrations/020_addons_navigation_language.sql). The old code cast the
+// whole schema object to a flat key→{type,label,default} map and iterated
+// its own top-level keys directly (Object.entries(schema)), which for a
+// real schema produces a bogus `["properties", {...}]` entry whose
+// `.default` resolves to a nested field's own sub-schema object — exactly
+// the shape React rejected with "Objects are not valid as a React child".
+// Reading `schema.properties` instead is the fix.
+function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success, warnings }: SettingsPanelProps) {
+  const rawSchema = orgAddon.addons?.settings_schema
+  const properties = rawSchema && 'properties' in rawSchema ? rawSchema.properties : null
 
   const initialValues: Record<string, unknown> = {}
-  if (schema) {
-    for (const [key, def] of Object.entries(schema)) {
+  if (properties) {
+    for (const [key, def] of Object.entries(properties)) {
       const existing = orgAddon.addon_settings?.find(s => s.key === key)
       initialValues[key] = existing?.value ?? def.default ?? ''
     }
@@ -185,7 +214,7 @@ function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: 
 
   const [values, setValues] = useState<Record<string, unknown>>(initialValues)
 
-  if (!schema || Object.keys(schema).length === 0) {
+  if (!properties || Object.keys(properties).length === 0) {
     return (
       <div className="p-6">
         <p className="font-body text-[13px] text-[var(--text-secondary)] m-0 text-center">
@@ -210,6 +239,18 @@ function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: 
           {error}
         </div>
       )}
+      {/* Non-blocking, visually distinct from the error banner above (amber,
+          not red) — the save already succeeded; this is just a heads-up. */}
+      {warnings.length > 0 && (
+        <div className="flex flex-col gap-1.5 px-3.5 py-2.5 bg-[rgba(217,119,6,0.1)] border border-[rgba(217,119,6,0.25)] rounded-md text-[#d97706] font-body text-xs">
+          {warnings.map((w) => (
+            <div key={w} className="flex items-start gap-2">
+              <AlertTriangle size={14} className="shrink-0 mt-[1px]" />
+              <span>{w}</span>
+            </div>
+          ))}
+        </div>
+      )}
       {success && (
         <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] rounded-md text-[#22c55e] font-body text-xs">
           <Check size={14} />
@@ -217,10 +258,10 @@ function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: 
         </div>
       )}
 
-      {Object.entries(schema).map(([key, def]) => (
+      {Object.entries(properties).map(([key, def]) => (
         <div key={key} className="flex flex-col gap-1.5">
           <label className="font-body text-xs font-medium text-[var(--text-primary)]">
-            {def.label ?? key}
+            {def.title ?? key}
           </label>
           {def.description && (
             <p className="font-body text-[11px] text-[var(--text-secondary)] m-0">
@@ -238,13 +279,21 @@ function SettingsPanel({ orgAddon, onClose, onSave, isSaving, error, success }: 
                 {values[key] ? 'Enabled' : 'Disabled'}
               </span>
             </label>
+          ) : def.enum ? (
+            <Select
+              className="w-full"
+              value={String(values[key] ?? '')}
+              onChange={(v) => setValues(prev => ({ ...prev, [key]: v }))}
+              options={def.enum.map((opt) => ({ value: String(opt), label: String(opt) }))}
+            />
           ) : (
             <input
-              type={def.type === 'number' ? 'number' : 'text'}
+              type={def.type === 'number' || def.type === 'integer' ? 'number' : 'text'}
               value={String(values[key] ?? '')}
+              placeholder={def.placeholder}
               onChange={e => setValues(prev => ({
                 ...prev,
-                [key]: def.type === 'number' ? Number(e.target.value) : e.target.value,
+                [key]: (def.type === 'number' || def.type === 'integer') ? Number(e.target.value) : e.target.value,
               }))}
               className="px-3 py-2 rounded-md border border-[var(--lito-border)] bg-[var(--cms-input-bg,rgba(255,255,255,0.04))] text-[var(--text-primary)] font-body text-[13px] outline-none w-full box-border"
             />
@@ -289,6 +338,8 @@ export function AddonsPageView({
   isSavingSettings,
   settingsError,
   settingsSuccess,
+  settingsWarnings,
+  conflictBadgeBySlug,
 }: AddonsPageViewProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all')
 
@@ -310,6 +361,19 @@ export function AddonsPageView({
             {installedCount} of {mergedAddons.length} add-ons installed
           </p>
         </div>
+
+        {/* Plans-Addons project (2026-07-15): install/toggle on a
+            plan-gated marketplace addon now returns a clear 403 from the
+            backend (assertAddonAllowedForOrg) — this used to only surface
+            inside the settings drawer, which stays closed during an
+            install attempt, so the error was effectively invisible. Shown
+            here at the page level regardless of drawer state. */}
+        {settingsError && (
+          <div className="flex items-center gap-2 px-3.5 py-2.5 mb-5 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] rounded-md text-[#ef4444] font-body text-xs">
+            <AlertCircle size={14} />
+            {settingsError}
+          </div>
+        )}
 
         <div className="flex gap-1.5 flex-wrap mb-6">
           {categories.map(cat => (
@@ -348,6 +412,7 @@ export function AddonsPageView({
                 onConfigure={() => orgAddon && onSelectAddon(orgAddon)}
                 isInstalling={isInstalling}
                 isToggling={isToggling}
+                conflictBadge={conflictBadgeBySlug.get(addon.slug)}
               />
             ))}
           </div>
@@ -382,6 +447,7 @@ export function AddonsPageView({
             isSaving={isSavingSettings}
             error={settingsError}
             success={settingsSuccess}
+            warnings={settingsWarnings}
           />
         </div>
       )}

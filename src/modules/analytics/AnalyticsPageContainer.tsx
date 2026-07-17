@@ -7,6 +7,13 @@ import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTracking } from '@/tracking'
+import { FormInput, FormTextarea, FormSelect, FormCheckbox, type SelectOption } from '@litostudio/ui-cms'
+
+const SCRIPT_POSITION_OPTIONS: SelectOption[] = [
+  { value: 'head',   label: 'Head' },
+  { value: 'body',   label: 'Body (start)' },
+  { value: 'footer', label: 'Footer' },
+]
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -46,7 +53,7 @@ export default function AnalyticsPageContainer() {
     enabled: !!siteId,
   })
 
-  const { register, handleSubmit, reset, control, formState: { isDirty } } = useForm<AnalyticsSettings>({
+  const { handleSubmit, reset, control, formState: { isDirty } } = useForm<AnalyticsSettings>({
     resolver: zodResolver(analyticsSchema),
     mode: 'onChange',
   })
@@ -168,66 +175,35 @@ export default function AnalyticsPageContainer() {
         <form onSubmit={handleSubmit(v => saveMutation.mutate(v))} className="space-y-5">
           {/* GA4 */}
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <input type="checkbox" {...register('ga4_enabled')} id="ga4_enabled" className="h-4 w-4" />
-              <label htmlFor="ga4_enabled" className="font-medium text-sm">Google Analytics 4 (GA4)</label>
-            </div>
-            <input
-              {...register('ga4_measurement_id')}
-              placeholder="G-XXXXXXXXXX"
-              className="cms-input font-mono"
-            />
+            <FormCheckbox name="ga4_enabled" control={control} label="Google Analytics 4 (GA4)" />
+            <FormInput name="ga4_measurement_id" control={control} placeholder="G-XXXXXXXXXX" inputClassName="font-mono" />
           </div>
 
           {/* GTM */}
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <input type="checkbox" {...register('gtm_enabled')} id="gtm_enabled" className="h-4 w-4" />
-              <label htmlFor="gtm_enabled" className="font-medium text-sm">Google Tag Manager (GTM)</label>
-            </div>
-            <input
-              {...register('gtm_container_id')}
-              placeholder="GTM-XXXXXXX"
-              className="cms-input font-mono"
-            />
+            <FormCheckbox name="gtm_enabled" control={control} label="Google Tag Manager (GTM)" />
+            <FormInput name="gtm_container_id" control={control} placeholder="GTM-XXXXXXX" inputClassName="font-mono" />
           </div>
 
           {/* Meta Pixel */}
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <input type="checkbox" {...register('meta_enabled')} id="meta_enabled" className="h-4 w-4" />
-              <label htmlFor="meta_enabled" className="font-medium text-sm">Meta Pixel</label>
-            </div>
-            <input
-              {...register('meta_pixel_id')}
-              placeholder="Pixel ID (numeric)"
-              className="cms-input font-mono"
-            />
+            <FormCheckbox name="meta_enabled" control={control} label="Meta Pixel" />
+            <FormInput name="meta_pixel_id" control={control} placeholder="Pixel ID (numeric)" inputClassName="font-mono" />
           </div>
 
           {/* TikTok Pixel */}
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <input type="checkbox" {...register('tiktok_enabled')} id="tiktok_enabled" className="h-4 w-4" />
-              <label htmlFor="tiktok_enabled" className="font-medium text-sm">TikTok Pixel</label>
-            </div>
-            <input
-              {...register('tiktok_pixel_id')}
-              placeholder="TikTok Pixel ID"
-              className="cms-input font-mono"
-            />
+            <FormCheckbox name="tiktok_enabled" control={control} label="TikTok Pixel" />
+            <FormInput name="tiktok_pixel_id" control={control} placeholder="TikTok Pixel ID" inputClassName="font-mono" />
           </div>
 
           {/* Sentry */}
           <div className="space-y-2 pt-2 border-t border-[var(--lito-border)]">
-            <div className="flex items-center gap-3">
-              <input type="checkbox" {...register('sentry_enabled')} id="sentry_enabled" className="h-4 w-4" />
-              <label htmlFor="sentry_enabled" className="font-medium text-sm">Sentry Error Monitoring</label>
-            </div>
-            <input
-              {...register('sentry_dsn')}
+            <FormCheckbox name="sentry_enabled" control={control} label="Sentry Error Monitoring" />
+            <FormInput
+              name="sentry_dsn" control={control}
               placeholder="https://xxx@oyyy.ingest.sentry.io/project-id"
-              className="cms-input font-mono text-xs"
+              inputClassName="font-mono text-xs"
             />
             <p className="text-xs text-[var(--text-muted)]">
               DSN from your Sentry project settings. Enables automatic error tracking on your published website.
@@ -236,14 +212,8 @@ export default function AnalyticsPageContainer() {
 
           {/* Privacy */}
           <div className="flex items-center gap-6 pt-2 border-t border-[var(--lito-border)]">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" {...register('anonymize_ip')} className="h-4 w-4" />
-              Anonymize IP
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" {...register('cookie_consent')} className="h-4 w-4" />
-              Require cookie consent before tracking
-            </label>
+            <FormCheckbox name="anonymize_ip" control={control} label="Anonymize IP" />
+            <FormCheckbox name="cookie_consent" control={control} label="Require cookie consent before tracking" />
           </div>
 
           <div className="flex justify-end">
@@ -304,32 +274,17 @@ export default function AnalyticsPageContainer() {
             className="mt-4 p-4 border border-[var(--lito-border)] rounded-[6px] bg-[var(--cms-surface-3)] space-y-3"
           >
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">{editScript ? 'Edit Script' : 'New Script'}</h3>
-            <input
-              {...scriptForm.register('name', { required: true })}
-              placeholder="Script name"
-              className="cms-input"
-            />
-            <select {...scriptForm.register('position')} className="cms-input">
-              <option value="head">Head</option>
-              <option value="body">Body (start)</option>
-              <option value="footer">Footer</option>
-            </select>
-            <textarea
-              {...scriptForm.register('content', { required: true })}
+            <FormInput name="name" control={scriptForm.control} placeholder="Script name" required />
+            <FormSelect name="position" control={scriptForm.control} options={SCRIPT_POSITION_OPTIONS} />
+            <FormTextarea
+              name="content" control={scriptForm.control}
               placeholder="<script>…</script>"
               rows={5}
-              className="cms-input font-mono text-xs"
+              textareaClassName="font-mono text-xs"
+              required
             />
-            <input
-              {...scriptForm.register('load_order', { valueAsNumber: true })}
-              type="number"
-              placeholder="Load order (0 = first)"
-              className="cms-input"
-            />
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" {...scriptForm.register('is_active')} className="h-4 w-4" />
-              Active
-            </label>
+            <FormInput name="load_order" control={scriptForm.control} type="number" placeholder="Load order (0 = first)" />
+            <FormCheckbox name="is_active" control={scriptForm.control} label="Active" />
             <div className="flex gap-2 justify-end">
               <button
                 type="button"

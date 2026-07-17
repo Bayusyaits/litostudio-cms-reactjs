@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { shippingOriginsService, type ShippingOrigin, type ShippingOriginPayload } from '@/services/shipping-origins.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
-import { getErrorMessage } from '@litostudio/ui-cms'
+import { getErrorMessage, useToast } from '@litostudio/ui-cms'
 import { ShippingOriginsPageView } from './ShippingOriginsPageView'
 
 export default function ShippingOriginsPageContainer() {
   const { activeSite } = useWebsiteStore()
   const qc = useQueryClient()
+  const toast = useToast()
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing]   = useState<ShippingOrigin | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -36,9 +37,22 @@ export default function ShippingOriginsPageContainer() {
     onError: (err) => setSaveError(getErrorMessage(err)),
   })
 
+  // Bug hunt fix (2026-07-16): same silent-failure class as promotions'
+  // delete and orders' status update — no onError, and neither this
+  // container nor ShippingOriginsPageView surfaces any delete-specific
+  // error state (saveError/error prop is wired only to the create/update
+  // form). A failed deactivation (e.g. last remaining origin, or a
+  // courier-registered origin the backend refuses to remove) previously
+  // gave zero feedback after the user confirmed the browser confirm()
+  // dialog — the card just silently stays. Toast + re-invalidate, same
+  // pattern as the other two fixes.
   const deleteMutation = useMutation({
     mutationFn: (id: string) => shippingOriginsService.remove(activeSite!.id, id),
     onSuccess: () => invalidate(),
+    onError: (err) => {
+      toast.show({ message: 'Could not deactivate shipping origin', description: getErrorMessage(err), variant: 'error' })
+      invalidate()
+    },
   })
 
   return (

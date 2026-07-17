@@ -15,7 +15,7 @@
  */
 import { useState, useEffect, useRef } from 'react'
 import { X, Save } from 'lucide-react'
-import { Button, ImageUploader, FIELD_LIMITS, FormField, TextAreaField } from '@litostudio/ui-cms'
+import { Button, ImageUploader, FIELD_LIMITS, FormField, TextAreaField, Select } from '@litostudio/ui-cms'
 import type { HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, HeroStatus } from '@/types/content.types'
 import { heroService } from '@/services/content.service'
 import { draftMediaStore } from '@litostudio/ui-cms'
@@ -273,18 +273,12 @@ export function HeroFormModal({ slide, siteId, onClose, onSaved }: Props) {
           {/* Status */}
           <div className="cms-field-wrapper">
             <label htmlFor="hero-status" className="cms-label">Status</label>
-            <select
+            <Select
               id="hero-status"
               value={status}
-              onChange={(e) => setStatus(e.target.value as HeroStatus)}
-              className="cms-input"
-            >
-              {STATUS_OPTIONS.map(s => (
-                <option key={s} value={s}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setStatus(v as HeroStatus)}
+              options={STATUS_OPTIONS.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))}
+            />
           </div>
 
           {/* Translations */}

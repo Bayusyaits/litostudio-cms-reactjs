@@ -262,6 +262,31 @@ export interface Product {
   stock_tracked?: boolean
   /** Sum of available (quantity - reserved) across every tracked inventory row (product-level + variants). null when stock_tracked is false. */
   stock_total?: number | null
+  /** Added alongside execution-plan-variants-mass-upload-pdp-2026-07-16.md Phase 1 —
+   *  this type previously omitted every column added by migrations 085/089,
+   *  even though the backend has returned them since those shipped. */
+  sku?: string | null
+  weight_grams?: number | null
+  length_cm?: number | null
+  width_cm?: number | null
+  height_cm?: number | null
+  biteship_category?: string
+  /** Present on the CMS single-product GET (`variants:product_variants(*)`) —
+   *  absent from list responses. Used by VariantsCard to hydrate the matrix. */
+  variants?: Array<{
+    id: string
+    sku: string | null
+    name: string
+    price: number | null
+    compare_at_price: number | null
+    options: Record<string, string>
+    is_default: boolean
+    status: string
+  }>
+  /** Present on the CMS single-product GET (`media:product_media(*)`). */
+  media?: Array<{ id: string; variant_id: string | null; url: string; alt_text: string | null; sort_order: number }>
+  /** Present on the CMS single-product GET (`inventory:product_inventory(*)`). */
+  inventory?: Array<{ variant_id: string | null; quantity: number; reserved: number; track_stock: boolean }>
   created_at: string
   updated_at: string
   translations: Translation[]
@@ -793,3 +818,76 @@ export interface SeoSaveRequest extends Omit<SeoMetadata, 'id' | 'site_id' | 'en
   page_type?: string
   locale?: string
 }
+
+// ── Promotions (coupon/campaign/promo discount engine) ─────────────────────
+// Mirrors PROMOTION_SELECT in apps/backend/src/modules/promotions/promotions.routes.ts
+// exactly — column list is verified against that file, not assumed.
+
+export type PromotionType = 'coupon' | 'campaign' | 'promo'
+export type PromotionDiscountType = 'percentage' | 'fixed_amount'
+export type PromotionAppliesTo = 'all' | 'specific_products' | 'specific_collections'
+export type PromotionStatus = 'draft' | 'active' | 'paused' | 'expired' | 'archived'
+
+export interface PromotionScope {
+  id: string
+  product_id: string | null
+  collection_id: string | null
+}
+
+export interface Promotion {
+  id: string
+  org_id: string
+  /** NULL = org-wide, applies to every site under org_id (2026-07-15,
+   * Workstream E of dev-spec-promo-tier1-display-multisite-mfa-2026-07-15.md). */
+  site_id: string | null
+  type: PromotionType
+  code: string | null
+  name: string
+  description?: string | null
+  discount_type: PromotionDiscountType
+  discount_value: number
+  max_discount_amount: number | null
+  min_order_amount: number
+  /** Minimum distinct products (not total quantity) in cart to qualify. */
+  min_distinct_products: number
+  usage_limit_total: number | null
+  usage_limit_per_customer: number | null
+  usage_count: number
+  applies_to: PromotionAppliesTo
+  status: PromotionStatus
+  stackable: boolean
+  starts_at: string | null
+  ends_at: string | null
+  metadata?: Record<string, unknown>
+  created_at: string
+  updated_at: string
+  /** Only present on GET /:id — joined promotion_scopes rows. */
+  scopes?: PromotionScope[]
+  /** Satisfies EnterpriseDataTable's `T extends Record<string, unknown>`
+   * generic constraint (same reasoning as SAOrder in cms-superadmin's
+   * api.types.ts). */
+  [key: string]: unknown
+}
+
+export interface PromotionCreateRequest {
+  /** Omit or send null for an org-wide promotion (Workstream E). */
+  site_id?: string | null
+  type: PromotionType
+  code?: string
+  name: string
+  description?: string
+  discount_type: PromotionDiscountType
+  discount_value: number
+  max_discount_amount?: number
+  min_order_amount?: number
+  min_distinct_products?: number
+  usage_limit_total?: number
+  usage_limit_per_customer?: number
+  applies_to?: PromotionAppliesTo
+  status?: PromotionStatus
+  stackable?: boolean
+  starts_at?: string
+  ends_at?: string
+}
+
+export interface PromotionUpdateRequest extends Partial<PromotionCreateRequest> {}

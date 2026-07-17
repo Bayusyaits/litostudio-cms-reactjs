@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { labelsService } from '@/services/labels.service'
+import { languagesService } from '@/services/languages.service'
 import { useOrgStore } from '@litostudio/ui-cms'
 import { LabelsPageView } from './LabelsPageView'
 import type { LabelUpdatePayload, LabelUpsertPayload } from '@/services/labels.service'
@@ -45,6 +46,18 @@ export default function LabelsPageContainer() {
     enabled: !!org,
     staleTime: 5 * 60_000,
   })
+
+  const { data: languagesData } = useQuery({
+    queryKey: ['org-languages', org?.id],
+    queryFn: () => languagesService.list(),
+    enabled: !!org,
+    staleTime: 5 * 60_000,
+  })
+  // Fallback keeps the filter usable if the org has no organization_locales
+  // rows yet (e.g. never explicitly seeded) — matches the previous
+  // hardcoded default rather than rendering an empty select.
+  const locales = (languagesData?.data ?? []).map((l) => l.locale)
+  const localeOptions = locales.length > 0 ? locales : ['id', 'en']
 
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: LabelUpdatePayload }) =>
@@ -128,6 +141,7 @@ export default function LabelsPageContainer() {
     <LabelsPageView
       labels={data?.data ?? []}
       groups={groupsData?.data ?? []}
+      locales={localeOptions}
       isLoading={isLoading}
       filter={filter}
       setFilter={(f) => setFilter((prev) => ({ ...prev, ...f }))}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { pagesService, type PageStatus, type Page } from '@litostudio/ui-cms'
+import { getErrorMessage, useToast } from '@litostudio/ui-cms'
 import { PagesPageView } from './PagesPageView'
 
 interface Filter {
@@ -15,6 +16,7 @@ const LIMIT = 20
 export default function PagesPageContainer() {
   const { activeSite } = useWebsiteStore()
   const qc = useQueryClient()
+  const toast = useToast()
   const siteId = activeSite?.id ?? ''
 
   const [filter, setFilter] = useState<Filter>({ status: '', search: '', offset: 0 })
@@ -58,48 +60,92 @@ export default function PagesPageContainer() {
       (a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at),
     )
     const updates = sorted.map((p, i) => ({ id: p.id, sort_order: i }))
-    void pagesService.reorder(siteId, updates).then(invalidate)
+    // Automatic background normalization, not user-initiated — log rather
+    // than toast so a transient failure here doesn't confuse the user with
+    // an error about an action they never took.
+    void pagesService.reorder(siteId, updates).then(invalidate).catch((err) => {
+      console.error('Failed to auto-normalize duplicate sort_order values:', err)
+    })
   }, [allPagesQuery.data, siteId])   // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Bug hunt fix (2026-07-16): same silent-failure class as promotions'
+  // delete, orders' status update, shipping's deactivate, domains', and
+  // organizations' delete — NONE of this module's mutations had an onError
+  // handler, and PagesPageView surfaces no error state anywhere. A failed
+  // delete (permission error, a page still referenced as another page's
+  // parent_id, a backend rule rejecting it, network blip) previously gave
+  // the user zero feedback after confirming the browser confirm() dialog —
+  // the row just silently stayed in the list, exactly matching the reported
+  // "I can't delete a page, nothing happens" symptom. Toast + re-invalidate,
+  // same pattern as the other fixes; applied to every mutation in this file
+  // for consistency, not just delete.
   const deleteMutation = useMutation({
     mutationFn: (id: string) => pagesService.remove(id),
     onSuccess:  invalidate,
+    onError: (err) => {
+      toast.show({ message: 'Could not delete page', description: getErrorMessage(err), variant: 'error' })
+      invalidate()
+    },
   })
 
   const toggleMenuMutation = useMutation({
     mutationFn: ({ id, is_in_menu }: { id: string; is_in_menu: boolean }) =>
       pagesService.toggleMenu(id, is_in_menu),
     onSuccess: invalidate,
+    onError: (err) => {
+      toast.show({ message: 'Could not update menu visibility', description: getErrorMessage(err), variant: 'error' })
+      invalidate()
+    },
   })
 
   const toggleHeaderMutation = useMutation({
     mutationFn: ({ id, is_header }: { id: string; is_header: boolean }) =>
       pagesService.toggleHeader(id, is_header),
     onSuccess: invalidate,
+    onError: (err) => {
+      toast.show({ message: 'Could not update header visibility', description: getErrorMessage(err), variant: 'error' })
+      invalidate()
+    },
   })
 
   const toggleFooterMutation = useMutation({
     mutationFn: ({ id, is_footer }: { id: string; is_footer: boolean }) =>
       pagesService.toggleFooter(id, is_footer),
     onSuccess: invalidate,
+    onError: (err) => {
+      toast.show({ message: 'Could not update footer visibility', description: getErrorMessage(err), variant: 'error' })
+      invalidate()
+    },
   })
 
   const toggleMobileMenuMutation = useMutation({
     mutationFn: ({ id, is_mobile_menu }: { id: string; is_mobile_menu: boolean }) =>
       pagesService.toggleMobileMenu(id, is_mobile_menu),
     onSuccess: invalidate,
+    onError: (err) => {
+      toast.show({ message: 'Could not update mobile menu visibility', description: getErrorMessage(err), variant: 'error' })
+      invalidate()
+    },
   })
 
   const updateMenuLabelMutation = useMutation({
     mutationFn: ({ id, menu_label }: { id: string; menu_label: string | null }) =>
       pagesService.updateMenuLabel(id, menu_label),
     onSuccess: invalidate,
+    onError: (err) => {
+      toast.show({ message: 'Could not update menu label', description: getErrorMessage(err), variant: 'error' })
+      invalidate()
+    },
   })
 
   const updateParentIdMutation = useMutation({
     mutationFn: ({ id, parent_id }: { id: string; parent_id: string | null }) =>
       pagesService.updateParentId(id, parent_id),
     onSuccess: invalidate,
+    onError: (err) => {
+      toast.show({ message: 'Could not change parent page', description: getErrorMessage(err), variant: 'error' })
+      invalidate()
+    },
   })
 
   /**
@@ -116,7 +162,10 @@ export default function PagesPageContainer() {
 
     if (!conflict) {
       // Simple single-page update
-      void pagesService.updateSortOrder(pageId, newOrder).then(invalidate)
+      void pagesService.updateSortOrder(pageId, newOrder).then(invalidate).catch((err) => {
+        toast.show({ message: 'Could not reorder page', description: getErrorMessage(err), variant: 'error' })
+        invalidate()
+      })
       return
     }
 
@@ -134,7 +183,10 @@ export default function PagesPageContainer() {
     // Insert target at desired position
     updates.push({ id: pageId, sort_order: newOrder })
 
-    void pagesService.reorder(siteId, updates).then(invalidate)
+    void pagesService.reorder(siteId, updates).then(invalidate).catch((err) => {
+      toast.show({ message: 'Could not reorder pages', description: getErrorMessage(err), variant: 'error' })
+      invalidate()
+    })
   }
 
   return (

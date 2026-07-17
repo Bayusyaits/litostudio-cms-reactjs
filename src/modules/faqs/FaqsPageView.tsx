@@ -1,5 +1,5 @@
 import { HelpCircle, Trash2, Plus, PenLine, Search, X, Star } from 'lucide-react'
-import { Button, StatusBadge, Badge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Button, StatusBadge, Badge, SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Faq, FaqCategory } from '@/types/content.types'
 
@@ -152,26 +152,26 @@ export function FaqsPageView({
           placeholder="Search FAQs…"
           className="w-64"
         />
-        <select
-          className="cms-input h-9 text-sm w-40"
+        <Select
+          className="w-40"
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value, page: 1 })}
-        >
-          <option value="">All statuses</option>
-          <option value="active">Published</option>
-          <option value="draft">Draft</option>
-          <option value="archived">Archived</option>
-        </select>
-        <select
-          className="cms-input h-9 text-sm w-44"
+          onChange={(v) => setFilter({ status: v, page: 1 })}
+          options={[
+            { value: '', label: 'All statuses' },
+            { value: 'active', label: 'Published' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'archived', label: 'Archived' },
+          ]}
+        />
+        <Select
+          className="w-44"
           value={filter.category_id}
-          onChange={(e) => setFilter({ category_id: e.target.value, page: 1 })}
-        >
-          <option value="">All categories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          onChange={(v) => setFilter({ category_id: v, page: 1 })}
+          options={[
+            { value: '', label: 'All categories' },
+            ...categories.map((c) => ({ value: c.id, label: c.name })),
+          ]}
+        />
       </div>
 
       <div className="cms-card overflow-hidden">

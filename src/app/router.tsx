@@ -33,6 +33,7 @@ const ThemesPage       = lazy(() => import('@/modules/themes/ThemesPageContainer
 const PagesPage        = lazy(() => import('@/modules/pages/PagesPageContainer'))
 const PagesNewPage     = lazy(() => import('@/modules/pages/PagesNewPageContainer'))
 const ProductsPage     = lazy(() => import('@/modules/products/ProductsPageContainer'))
+const ProductsMassUploadPage = lazy(() => import('@/modules/products/MassUploadPageContainer'))
 const CollectionsPage  = lazy(() => import('@/modules/collections/CollectionsPageContainer'))
 const ReviewsPage      = lazy(() => import('@/modules/reviews/ReviewsPageContainer'))
 const FaqsPage         = lazy(() => import('@/modules/faqs/FaqsPageContainer'))
@@ -59,6 +60,12 @@ const LabelsPage         = lazy(() => import('@/modules/settings/labels/LabelsPa
 
 // Commerce + engagement pages
 const OrdersPage         = lazy(() => import('@/modules/orders/OrdersPageContainer'))
+const OrderDetailPage    = lazy(() => import('@/modules/orders/OrderDetailPage'))
+const PromotionsPage     = lazy(() => import('@/modules/promotions/PromotionsPageContainer'))
+const PromotionFormPage  = lazy(() => import('@/modules/promotions/PromotionFormPage'))
+const LoyaltyAccountsPage      = lazy(() => import('@/modules/loyalty/LoyaltyAccountsPageContainer'))
+const LoyaltyAccountDetailPage = lazy(() => import('@/modules/loyalty/LoyaltyAccountDetailPage'))
+const LoyaltySettingsPage      = lazy(() => import('@/modules/loyalty/LoyaltySettingsPage'))
 const ShippingOriginsPage = lazy(() => import('@/modules/shipping/ShippingOriginsPageContainer'))
 const NewsletterPage     = lazy(() => import('@/modules/newsletter/NewsletterPageContainer'))
 const MessagesPage       = lazy(() => import('@/modules/messages/MessagesPageContainer'))
@@ -137,9 +144,10 @@ export const router = createBrowserRouter([
       { path: 'pages/:pageId/edit', element: <S><BlockEditorPage /></S> },
 
       // Products
-      { path: 'products',          element: <S><ProductsPage /></S> },
-      { path: 'products/new',      element: <S><SimpleContentEditorPage /></S> },
-      { path: 'products/:id/edit', element: <S><SimpleContentEditorPage /></S> },
+      { path: 'products',              element: <S><ProductsPage /></S> },
+      { path: 'products/mass-upload',  element: <S><ProductsMassUploadPage /></S> },
+      { path: 'products/new',          element: <S><SimpleContentEditorPage /></S> },
+      { path: 'products/:id/edit',     element: <S><SimpleContentEditorPage /></S> },
 
       // Collections
       { path: 'collections',           element: <S><CollectionsPage /></S> },
@@ -168,6 +176,18 @@ export const router = createBrowserRouter([
 
       // Commerce + engagement
       { path: 'orders',            element: <S><OrdersPage /></S> },
+      { path: 'orders/:id',        element: <S><OrderDetailPage /></S> },
+
+      // Promotions (coupon/campaign/promo discount engine)
+      { path: 'promotions',           element: <S><PromotionsPage /></S> },
+      { path: 'promotions/new',       element: <S><PromotionFormPage /></S> },
+      { path: 'promotions/:id/edit',  element: <S><PromotionFormPage /></S> },
+
+      // Loyalty (points accounts, manual adjustments, earn rules + tiers)
+      { path: 'loyalty/accounts',      element: <S><LoyaltyAccountsPage /></S> },
+      { path: 'loyalty/accounts/:id',  element: <S><LoyaltyAccountDetailPage /></S> },
+      { path: 'loyalty/settings',      element: <S><LoyaltySettingsPage /></S> },
+
       { path: 'shipping-origins',  element: <S><ShippingOriginsPage /></S> },
       { path: 'newsletter',        element: <S><NewsletterPage /></S> },
       { path: 'messages',          element: <S><MessagesPage /></S> },

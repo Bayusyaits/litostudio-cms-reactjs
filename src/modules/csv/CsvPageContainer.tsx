@@ -1,9 +1,18 @@
-import { useState } from 'react'
-import { useWebsiteStore } from '@litostudio/ui-cms'
-import { useOrgStore } from '@litostudio/ui-cms'
+import { useRef, useState } from 'react'
+import { useWebsiteStore, useOrgStore, http, RadioGroup, type RadioOption } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
-import { http } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
+
+// 2026-07-17 style-standardization pass: replaced hardcoded Tailwind colors
+// (green-600/orange-300/red-600 etc.) with the CMS's real design tokens
+// (--lito-teal, --s-pub-*, --s-draft-*, --s-danger), swapped raw
+// <textarea>/<input type=radio> for .cms-input/.cms-label/RadioGroup —
+// this page predates the 2026-07 form-standardization pass (Track A) and
+// was never migrated. See DECISIONS.md.
+const MODE_OPTIONS: RadioOption[] = [
+  { value: 'upsert', label: 'Upsert (create or update)' },
+  { value: 'insert', label: 'Insert only (new records)' },
+]
 
 const MODULES = [
   { key: 'products',    label: 'Products',    siteScoped: true },
@@ -31,11 +40,13 @@ export default function CsvPageContainer() {
   const siteId = activeSite?.id ?? ''
   const orgId = org?.id ?? ''
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedModule, setSelectedModule] = useState('products')
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [csvText, setCsvText] = useState('')
+  const [fileName, setFileName] = useState<string | null>(null)
   const [importMode, setImportMode] = useState<'upsert' | 'insert'>('upsert')
 
   const moduleConfig = MODULES.find(m => m.key === selectedModule)!
@@ -95,6 +106,7 @@ export default function CsvPageContainer() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    setFileName(file.name)
     const reader = new FileReader()
     reader.onload = ev => setCsvText((ev.target?.result as string) ?? '')
     reader.readAsText(file)
@@ -126,91 +138,103 @@ export default function CsvPageContainer() {
       </div>
 
       {/* Export */}
-      <section className="bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-[8px] p-5 space-y-3">
-        <h2 className="font-semibold text-[var(--text-primary)]">Export</h2>
+      <section className="cms-card p-5 space-y-3">
+        <h2 className="font-body text-sm font-semibold text-[var(--text-primary)]">Export</h2>
         <p className="text-sm text-[var(--text-muted)]">
           Download all <strong>{moduleConfig.label}</strong> records as CSV.
           {moduleConfig.siteScoped && !siteId && (
-            <span className="text-orange-600 ml-1">Select a site first.</span>
+            <span className="text-[var(--s-draft-fg)] ml-1">Select a site first.</span>
           )}
         </p>
         <button
           onClick={handleExport}
           disabled={exporting || (moduleConfig.siteScoped && !siteId)}
-          className="px-4 py-2 bg-green-600 text-white rounded text-sm font-medium disabled:opacity-50 hover:bg-green-700"
+          className="cms-btn cms-btn-secondary cms-btn-sm"
         >
           {exporting ? 'Exporting…' : `Export ${moduleConfig.label}`}
         </button>
       </section>
 
       {/* Import */}
-      <section className="bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-[8px] p-5 space-y-4">
-        <h2 className="font-semibold text-[var(--text-primary)]">Import</h2>
+      <section className="cms-card p-5 space-y-4">
+        <h2 className="font-body text-sm font-semibold text-[var(--text-primary)]">Import</h2>
         <p className="text-sm text-[var(--text-muted)]">
           Paste CSV content or upload a .csv file. The first row must be a header row.
         </p>
 
-        {/* File upload */}
+        {/* File upload — native <input type=file> is visually hidden (sr-only) and
+            triggered via a real .cms-btn, matching the pattern already established
+            in MediaPageView.tsx. A raw unstyled file input renders as the browser's
+            own control (no radius/color tokens), which is what this fixes. */}
         <div>
-          <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Upload CSV file</label>
+          <label className="cms-label">Upload CSV file</label>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="cms-btn cms-btn-secondary cms-btn-sm"
+            >
+              Choose file
+            </button>
+            <span className="text-sm text-[var(--text-muted)]">{fileName ?? 'No file chosen'}</span>
+          </div>
           <input
+            ref={fileInputRef}
             type="file"
             accept=".csv,text/csv"
             onChange={handleFileUpload}
-            className="text-sm text-[var(--text-muted)]"
+            className="sr-only"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Or paste CSV content</label>
+          <label className="cms-label">Or paste CSV content</label>
           <textarea
             value={csvText}
             onChange={e => setCsvText(e.target.value)}
             rows={8}
             placeholder="id,slug,title&#10;,my-product,My Product"
-            className="w-full border border-[var(--lito-border)] rounded px-3 py-2 text-xs font-mono"
+            className="cms-input min-h-[80px] resize-y font-mono text-xs"
           />
         </div>
 
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-[var(--text-primary)]">Mode:</label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio" value="upsert"
-              checked={importMode === 'upsert'}
-              onChange={() => setImportMode('upsert')}
-            />
-            Upsert (create or update)
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio" value="insert"
-              checked={importMode === 'insert'}
-              onChange={() => setImportMode('insert')}
-            />
-            Insert only (new records)
-          </label>
+        <div>
+          <label className="cms-label">Mode</label>
+          <RadioGroup
+            name="import-mode"
+            layout="inline"
+            options={MODE_OPTIONS}
+            value={importMode}
+            onChange={v => setImportMode(v as 'upsert' | 'insert')}
+          />
         </div>
 
         <button
           onClick={handleImport}
           disabled={importing || !csvText.trim() || (moduleConfig.siteScoped && !siteId)}
-          className="cms-btn cms-btn-primary cms-btn-sm hover:bg-blue-700"
+          className="cms-btn cms-btn-primary cms-btn-sm"
         >
           {importing ? 'Importing…' : `Import ${moduleConfig.label}`}
         </button>
 
         {/* Result */}
         {importResult && (
-          <div className={`p-3 rounded border text-sm ${importResult.errors.length > 0 ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'}`}>
-            <p className="font-medium">{importResult.message}</p>
+          <div
+            role={importResult.errors.length > 0 ? 'alert' : 'status'}
+            className={`p-3 rounded-[var(--radius-sm)] border text-sm ${
+              importResult.errors.length > 0
+                ? 'border-[var(--s-draft-fg)] bg-[var(--s-draft-bg)]'
+                : 'border-[var(--s-pub-fg)] bg-[var(--s-pub-bg)]'
+            }`}
+          >
+            <p className="font-medium text-[var(--text-primary)]">{importResult.message}</p>
             <p className="text-xs mt-1 text-[var(--text-muted)]">
               Imported: {importResult.imported} · Skipped: {importResult.skipped}
             </p>
             {importResult.errors.length > 0 && (
               <ul className="mt-2 space-y-0.5">
                 {importResult.errors.map((e, i) => (
-                  <li key={i} className="text-xs text-red-600">Row {e.row}: {e.message}</li>
+                  <li key={i} className="text-xs text-[var(--s-danger)]">Row {e.row}: {e.message}</li>
                 ))}
               </ul>
             )}

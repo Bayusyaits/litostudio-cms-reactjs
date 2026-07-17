@@ -1,5 +1,5 @@
 import { useRef, useCallback, useState } from 'react'
-import { AppImage, Skeleton, SearchInput, EmptyState, EnterpriseDataTable } from '@litostudio/ui-cms'
+import { AppImage, Skeleton, SearchInput, EmptyState, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
 import { FolderOpen, Upload, Trash2, FileVideo, FileText, File, Grid, List, Check, Search, X } from 'lucide-react'
 import { formatBytes, isImageMime, isVideoMime } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -253,16 +253,18 @@ export function MediaPageView({
             placeholder="Search media…"
             className="w-56"
           />
-          <select
-            className="cms-input h-[34px] w-[140px] text-xs"
+          <Select
+            size="sm"
+            className="w-[140px]"
             value={filter.media_type}
-            onChange={e => setFilter({ media_type: e.target.value, page: 1 })}
-          >
-            <option value="">All types</option>
-            <option value="image">Images</option>
-            <option value="video">Videos</option>
-            <option value="document">Documents</option>
-          </select>
+            onChange={(v) => setFilter({ media_type: v, page: 1 })}
+            options={[
+              { value: '', label: 'All types' },
+              { value: 'image', label: 'Images' },
+              { value: 'video', label: 'Videos' },
+              { value: 'document', label: 'Documents' },
+            ]}
+          />
 
           <div className="ml-auto flex gap-1">
             <button type="button" aria-label="Grid view" onClick={() => setViewMode('grid')}

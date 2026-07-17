@@ -46,6 +46,18 @@ export interface Order {
   customer_email: string | null
   customer_phone: string | null
   status: OrderStatus
+  // Verified against apps/backend/src/modules/payments/doku/doku.routes.ts
+  // (webhook handlers) and apps/backend/src/modules/shipping/biteship/
+  // biteship.routes.ts — these are real top-level `orders` columns, not
+  // metadata JSON. fetchOrderDetail()'s `select('*, ...')` in
+  // orders.routes.ts returns them on GET /:id (list endpoints select a
+  // narrower column set and may omit them).
+  payment_status?: string
+  payment_method?: string | null
+  gateway_transaction_id?: string | null
+  biteship_order_id?: string | null
+  biteship_waybill_id?: string | null
+  biteship_tracking_status?: string | null
   currency: string
   subtotal: number
   tax_amount: number

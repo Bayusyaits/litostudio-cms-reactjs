@@ -1,7 +1,7 @@
 // modules/settings/labels/LabelsPageView.tsx
 import { useState } from 'react'
 import { Languages, Plus, Upload, Download, Pencil, Trash2, Check, X, Lock, Search } from 'lucide-react'
-import { Button, SearchInput, EnterpriseDataTable } from '@litostudio/ui-cms'
+import { Button, SearchInput, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
 import type { EDTColumn } from '@litostudio/ui-cms'
 import type { Label, LabelUpsertPayload } from '@/services/labels.service'
 
@@ -86,15 +86,12 @@ function CreateModal({
 
           <div>
             <label className="cms-label">Group</label>
-            <select
-              className="cms-input mt-1 w-full"
+            <Select
+              className="mt-1 w-full"
               value={form.group_name}
-              onChange={(e) => setForm((p) => ({ ...p, group_name: e.target.value }))}
-            >
-              {ALL_GROUPS.map((g) => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
+              onChange={(v) => setForm((p) => ({ ...p, group_name: v }))}
+              options={ALL_GROUPS.map((g) => ({ value: g, label: g }))}
+            />
           </div>
 
           <div>
@@ -191,6 +188,7 @@ interface Filter {
 interface Props {
   labels: Label[]
   groups: string[]
+  locales: string[]
   isLoading: boolean
   filter: Filter
   setFilter: (f: Partial<Filter>) => void
@@ -329,7 +327,7 @@ function buildLabelColumns({
 }
 
 export function LabelsPageView({
-  labels, groups, isLoading, filter, setFilter,
+  labels, groups, locales, isLoading, filter, setFilter,
   editingId, editingValue, onStartEdit, onCancelEdit, onSaveEdit, onEditingValueChange, saving,
   showCreateModal, onOpenCreate, onCloseCreate, onCreate, creating,
   onDelete,
@@ -337,7 +335,10 @@ export function LabelsPageView({
   bulkImporting, bulkError,
   onExport, mutateError,
 }: Props) {
-  const LOCALES = ['id', 'en']
+  // Sourced from GET /api/v1/public/languages via LabelsPageContainer — no
+  // longer hardcoded (superadmin-language-management-plan-2026-07-15.md,
+  // Phase 4).
+  const LOCALES = locales
 
   // Group by group_name for display
   const grouped = labels.reduce<Record<string, Label[]>>((acc, l) => {
@@ -390,25 +391,21 @@ export function LabelsPageView({
           placeholder="Search by key or value…"
           className="w-60"
         />
-        <select
-          className="cms-input h-9 text-sm w-32"
+        <Select
+          className="w-32"
           value={filter.locale}
-          onChange={(e) => setFilter({ locale: e.target.value })}
-        >
-          {LOCALES.map((l) => (
-            <option key={l} value={l}>{l.toUpperCase()}</option>
-          ))}
-        </select>
-        <select
-          className="cms-input h-9 text-sm w-40"
+          onChange={(v) => setFilter({ locale: v })}
+          options={LOCALES.map((l) => ({ value: l, label: l.toUpperCase() }))}
+        />
+        <Select
+          className="w-40"
           value={filter.group_name}
-          onChange={(e) => setFilter({ group_name: e.target.value })}
-        >
-          <option value="">All groups</option>
-          {(groups.length ? groups : ALL_GROUPS).map((g) => (
-            <option key={g} value={g}>{g}</option>
-          ))}
-        </select>
+          onChange={(v) => setFilter({ group_name: v })}
+          options={[
+            { value: '', label: 'All groups' },
+            ...(groups.length ? groups : ALL_GROUPS).map((g) => ({ value: g, label: g })),
+          ]}
+        />
       </div>
 
       {mutateError && (

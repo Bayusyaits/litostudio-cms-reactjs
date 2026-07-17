@@ -1,5 +1,6 @@
+import { Link } from 'react-router-dom'
 import { ShoppingBag, Search, X } from 'lucide-react'
-import { SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Order, OrderStatus } from '@/types/commerce.types'
 
@@ -33,14 +34,14 @@ export function OrdersPageView({ orders, meta, isLoading, filter, setFilter, onS
       key: 'customer_name',
       header: 'Customer',
       render: (order) => (
-        <div>
-          <p className="font-body text-sm font-medium text-[var(--text-muted)]">
+        <Link to={`/orders/${order.id}`} className="block hover:opacity-80">
+          <p className="font-body text-sm font-medium text-[var(--text-primary)] underline decoration-transparent hover:decoration-current">
             {order.customer_name ?? '—'}
           </p>
           {order.customer_email && (
             <p className="font-body text-xs text-[var(--text-muted)]">{order.customer_email}</p>
           )}
-        </div>
+        </Link>
       ),
     },
     {
@@ -58,18 +59,14 @@ export function OrdersPageView({ orders, meta, isLoading, filter, setFilter, onS
       header: 'Status',
       width: '160px',
       render: (order) => (
-        <select
-          className="cms-input h-8 text-xs w-36"
+        <Select
+          size="sm"
+          className="w-36"
           value={order.status}
-          onChange={(e) => onStatusChange(order.id, e.target.value as OrderStatus)}
+          onChange={(v) => onStatusChange(order.id, v as OrderStatus)}
           aria-label="Change order status"
-        >
-          {ORDER_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </option>
-          ))}
-        </select>
+          options={ORDER_STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))}
+        />
       ),
     },
     {
@@ -106,16 +103,15 @@ export function OrdersPageView({ orders, meta, isLoading, filter, setFilter, onS
           placeholder="Search by name or email…"
           className="w-64"
         />
-        <select
-          className="cms-input h-9 text-sm w-44"
+        <Select
+          className="w-44"
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value as OrderStatus | '', page: 1 })}
-        >
-          <option value="">All statuses</option>
-          {ORDER_STATUSES.map((s) => (
-            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-          ))}
-        </select>
+          onChange={(v) => setFilter({ status: v as OrderStatus | '', page: 1 })}
+          options={[
+            { value: '', label: 'All statuses' },
+            ...ORDER_STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })),
+          ]}
+        />
       </div>
 
       <div className="cms-card overflow-hidden">

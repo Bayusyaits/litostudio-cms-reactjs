@@ -72,6 +72,7 @@ export default function ProductsPageContainer() {
       onSelect={handleSelect}
       onSelectAll={handleSelectAll}
       onNew={() => navigate('/products/new')}
+      onImport={() => navigate('/products/mass-upload')}
       onEdit={(id) => navigate(`/products/${id}/edit`)}
       onOpenEditor={(id) => navigate(`/products/${id}/edit`)}
       onDelete={(id) => deleteMutation.mutate(id)}

@@ -23,6 +23,24 @@ const CHECK_INTERVAL_MS = 60_000       // 1 minute
 /** Refresh the access_token when it expires within this window */
 const REFRESH_BUFFER_MS = 5 * 60_000  // 5 minutes before expiry
 
+/**
+ * Bug fix (2026-07-18): this hook's two fullLogout() calls previously
+ * redirected to a bare `/login?reason=session_expired`, with no `returnTo`
+ * — unlike every other logout trigger in this app (see
+ * lib/http/auth.ts's handleUnauthorized, DashboardLayout's route guard),
+ * which all preserve the current path so LoginPage can navigate back after
+ * re-authenticating. Since this hook fires on a background timer/refresh
+ * failure — i.e. the most common "got logged out while working" path, not
+ * a user manually visiting /login — its omission was the actual cause of
+ * "logged back in but wasn't returned to the previous page". Mirrors the
+ * exact `returnTo` convention from lib/http/auth.ts:102-103.
+ */
+function sessionExpiredRedirect(): string {
+  if (typeof window === 'undefined') return '/login?reason=session_expired'
+  const returnTo = encodeURIComponent(window.location.pathname + window.location.search)
+  return `/login?reason=session_expired&returnTo=${returnTo}`
+}
+
 export function useTokenRefresh(): void {
   const { refreshToken, expiresAt, sessionExpiresAt, isAuthenticated, updateTokens, fullLogout } =
     useAuthStore()
@@ -46,7 +64,7 @@ export function useTokenRefresh(): void {
 
       // ── Hard 6-hour session ceiling ──────────────────────────────────────
       if (sessionExpiresAt !== null && now >= sessionExpiresAt) {
-        fullLogout('/login?reason=session_expired')
+        fullLogout(sessionExpiredRedirect())
         return
       }
 
@@ -60,7 +78,7 @@ export function useTokenRefresh(): void {
           updateTokens(result.access_token, result.refresh_token, result.expires_at)
         } catch (err) {
           console.warn('[useTokenRefresh] Refresh failed — logging out', err)
-          fullLogout('/login?reason=session_expired')
+          fullLogout(sessionExpiredRedirect())
         }
       }
     }

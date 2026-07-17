@@ -5,7 +5,7 @@ import {
   GripVertical, Eye, EyeOff, Plus, Trash2, ChevronUp, ChevronDown, X, Check, AlertCircle,
 } from 'lucide-react'
 import {
-  pageSectionsService,
+  pageSectionsService, Select,
   type PageSection, type SectionType,
 } from '@litostudio/ui-cms'
 import { getTemplate, getPageManifest } from '@litostudio/template-registry'
@@ -312,18 +312,16 @@ export function PageSectionsManager({ pageId, pageTitle, pageSlug, templateSlug,
 
         {/* Add section footer */}
         <div className="px-5 pt-3 pb-4 border-t border-[var(--lito-border)] flex gap-2 items-center shrink-0">
-          <select
+          <Select
+            className="flex-1"
             value={addType}
-            onChange={e => setAddType(e.target.value as SectionType | '')}
+            onChange={(v) => setAddType(v as SectionType | '')}
             aria-label="Select section type to add"
-            className={`flex-1 px-[10px] py-[7px] rounded-[7px] border border-[var(--lito-border)] bg-[var(--cms-surface-3)] font-body text-[13px] outline-none cursor-pointer ${addType ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}`}
-            style={{ colorScheme: 'light dark' }}
-          >
-            <option value="">— Add section type —</option>
-            {allowedSectionTypes.map(t => (
-              <option key={t} value={t}>{getSectionLabel(t)}</option>
-            ))}
-          </select>
+            options={[
+              { value: '', label: '— Add section type —' },
+              ...allowedSectionTypes.map(t => ({ value: t, label: getSectionLabel(t) })),
+            ]}
+          />
 
           <button
             type="button"

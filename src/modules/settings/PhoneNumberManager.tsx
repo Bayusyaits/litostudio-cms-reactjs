@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { CheckCircle2, Send, ShieldCheck, Trash2, AlertCircle, Loader2 } from 'lucide-react'
+import { Select } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
 
 // ── Country definitions ───────────────────────────────────────────────────────
@@ -205,18 +206,13 @@ export function PhoneNumberManager() {
           </p>
 
           <div className="flex gap-2.5 mb-2.5">
-            <select
+            <Select
+              className="w-[180px]"
               value={country.code}
-              onChange={e => setCountry(COUNTRIES.find(c => c.code === e.target.value) ?? COUNTRIES[0])}
-              className={`${inputCls} w-[180px]`}
+              onChange={(v) => setCountry(COUNTRIES.find(c => c.code === v) ?? COUNTRIES[0])}
               aria-label="Country code"
-            >
-              {COUNTRIES.map(c => (
-                <option key={c.code} value={c.code}>
-                  {c.flag} {c.name} ({c.code})
-                </option>
-              ))}
-            </select>
+              options={COUNTRIES.map(c => ({ value: c.code, label: `${c.flag} ${c.name} (${c.code})` }))}
+            />
 
             <input
               type="tel"

@@ -1,5 +1,5 @@
 import { Megaphone, Trash2, Pencil, Plus, LayoutTemplate, Search, X } from 'lucide-react'
-import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Button, StatusBadge, SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Campaign } from '@/types/content.types'
 import type { ContentStatus } from '@litostudio/ui-cms'
@@ -148,17 +148,18 @@ export function CampaignsPageView({
           placeholder="Search campaigns…"
           className="w-64"
         />
-        <select
-          className="cms-input h-9 text-sm w-44"
+        <Select
+          className="w-44"
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value as ContentStatus | '', page: 1 })}
-        >
-          <option value="">All statuses</option>
-          <option value="published">Published</option>
-          <option value="draft">Draft</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="archived">Archived</option>
-        </select>
+          onChange={(v) => setFilter({ status: v as ContentStatus | '', page: 1 })}
+          options={[
+            { value: '', label: 'All statuses' },
+            { value: 'published', label: 'Published' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'scheduled', label: 'Scheduled' },
+            { value: 'archived', label: 'Archived' },
+          ]}
+        />
       </div>
 
       <div className="cms-card overflow-hidden">

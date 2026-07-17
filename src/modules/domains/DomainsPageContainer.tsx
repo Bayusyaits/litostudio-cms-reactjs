@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useOrgStore } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
+import { useToast, getErrorMessage } from '@litostudio/ui-cms'
 import { domainsService } from '@/services/domains.service'
 import type { DomainRecord } from '@/services/domains.service'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTracking } from '@/tracking'
+import { FormInput, FormCheckbox } from '@litostudio/ui-cms'
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +35,7 @@ export default function DomainsPageContainer() {
   const qc = useQueryClient()
   const orgId = org?.id ?? ''
   const { trackDomainConnected } = useTracking()
+  const toast = useToast()
 
   const domainsQuery = useQuery({
     queryKey: ['domains', orgId],
@@ -41,17 +44,34 @@ export default function DomainsPageContainer() {
   })
 
   const [showAdd, setShowAdd] = useState(false)
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<Pick<DomainRecord, 'domain' | 'is_primary' | 'redirect_to_www'>>({
+  const [addError, setAddError] = useState<string | null>(null)
+  // 2026-07 standardization pass: register() → Controller (see
+  // cms-form-standardization-execution-plan-2026-07-16.md, Track A). `errors`
+  // no longer destructured here — FormInput/FormCheckbox read fieldState
+  // internally via Controller.
+  const { control, handleSubmit, reset } = useForm<Pick<DomainRecord, 'domain' | 'is_primary' | 'redirect_to_www'>>({
     resolver: zodResolver(domainSchema),
     mode: 'onChange',
   })
 
+  // Bug hunt fix (2026-07-16): NONE of this module's 4 mutations had an
+  // onError handler, and — unlike every other module audited in this pass —
+  // there was no error surface anywhere for add/verify/remove/set-primary,
+  // not even a toast. A rejected domain add (duplicate, already claimed by
+  // another org, invalid DNS target) silently left the form open with no
+  // explanation; a failed verify/remove/set-primary gave literally nothing.
+  // Wiring all 4 through the same toast + re-invalidate pattern used in
+  // orders/promotions/shipping this session. Add also gets its own inline
+  // error (mirrors promotions/shipping's saveError-in-form convention) since
+  // that failure needs to stay visible next to the form, not just flash by
+  // in a toast.
   const addMutation = useMutation({
     mutationFn: (v: Pick<DomainRecord, 'domain' | 'is_primary' | 'redirect_to_www'>) =>
       domainsService.add(orgId, v),
     onSuccess: (_, _variables) => {
       void qc.invalidateQueries({ queryKey: ['domains', orgId] })
       setShowAdd(false)
+      setAddError(null)
       reset()
       if (activeSite) {
         trackDomainConnected({
@@ -61,21 +81,33 @@ export default function DomainsPageContainer() {
         })
       }
     },
+    onError: (err) => setAddError(getErrorMessage(err)),
   })
 
   const verifyMutation = useMutation({
     mutationFn: (id: string) => domainsService.verify(orgId, id),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['domains', orgId] }),
+    onError: (err) => {
+      toast.show({ message: 'Verification check failed', description: getErrorMessage(err), variant: 'error' })
+    },
   })
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => domainsService.remove(orgId, id),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['domains', orgId] }),
+    onError: (err) => {
+      toast.show({ message: 'Could not remove domain', description: getErrorMessage(err), variant: 'error' })
+      void qc.invalidateQueries({ queryKey: ['domains', orgId] })
+    },
   })
 
   const setPrimaryMutation = useMutation({
     mutationFn: (id: string) => domainsService.update(orgId, id, { is_primary: true }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['domains', orgId] }),
+    onError: (err) => {
+      toast.show({ message: 'Could not set primary domain', description: getErrorMessage(err), variant: 'error' })
+      void qc.invalidateQueries({ queryKey: ['domains', orgId] })
+    },
   })
 
   if (!orgId) {
@@ -92,7 +124,7 @@ export default function DomainsPageContainer() {
           <p className="text-sm text-[var(--text-muted)] mt-1">Connect custom domains to your organization.</p>
         </div>
         <button
-          onClick={() => setShowAdd(true)}
+          onClick={() => { setAddError(null); setShowAdd(true) }}
           className="cms-btn cms-btn-primary cms-btn-sm"
         >
           + Add Domain
@@ -106,24 +138,23 @@ export default function DomainsPageContainer() {
           className="p-4 border border-[var(--lito-border)] rounded-[6px] bg-[var(--cms-surface-3)] space-y-3"
         >
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Add Custom Domain</h3>
-          <input
-            {...register('domain', { required: 'Domain is required' })}
+          <FormInput
+            name="domain"
+            control={control}
             placeholder="shop.yourbrand.com"
-            className="cms-input font-mono"
+            inputClassName="font-mono"
           />
-          {errors.domain && <p className="text-xs text-red-500">{errors.domain.message}</p>}
+          {addError && (
+            <div className="px-3 py-2 rounded-lg border border-[var(--cms-danger)] bg-[var(--cms-danger-bg)]" role="alert">
+              <p className="text-xs text-[var(--cms-danger)]">{addError}</p>
+            </div>
+          )}
           <div className="flex gap-6">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" {...register('is_primary')} className="h-4 w-4" />
-              Set as primary domain
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" {...register('redirect_to_www')} className="h-4 w-4" />
-              Redirect to www
-            </label>
+            <FormCheckbox name="is_primary" control={control} label="Set as primary domain" />
+            <FormCheckbox name="redirect_to_www" control={control} label="Redirect to www" />
           </div>
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={() => { setShowAdd(false); reset() }} className="text-sm text-[var(--text-muted)]">Cancel</button>
+            <button type="button" onClick={() => { setShowAdd(false); setAddError(null); reset() }} className="text-sm text-[var(--text-muted)]">Cancel</button>
             <button
               type="submit"
               disabled={addMutation.isPending}
@@ -197,7 +228,21 @@ export default function DomainsPageContainer() {
                     </button>
                   )}
                   <button
-                    onClick={() => domain.id && removeMutation.mutate(domain.id)}
+                    onClick={() => {
+                      if (!domain.id) return
+                      // Bug hunt fix (2026-07-16): this was the only
+                      // destructive action found across the whole audited
+                      // codebase with zero confirmation of any kind — one
+                      // misclick disconnects a live custom domain from the
+                      // storefront. Shipping origins uses window.confirm()
+                      // for its own "deactivate" action and promotions uses
+                      // a full step-up MFA gate; a plain confirm() here
+                      // matches the lower-severity end of that same
+                      // established pattern.
+                      if (window.confirm(`Remove ${domain.domain}? Visitors using this domain will no longer reach your site until it's reconnected.`)) {
+                        removeMutation.mutate(domain.id)
+                      }
+                    }}
                     className="text-xs text-[var(--s-danger)] hover:underline"
                   >
                     Remove

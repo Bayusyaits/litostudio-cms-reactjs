@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Users, UserPlus, MoreHorizontal, Trash2 } from 'lucide-react'
-import { AppImageThumb, EnterpriseDataTable } from '@litostudio/ui-cms'
+import { AppImageThumb, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
 import type { TeamMember, InvitePayload } from '@/services/team.service'
 import type { OrgRole, EDTColumn } from '@litostudio/ui-cms'
 
@@ -102,7 +102,7 @@ const inviteSchema = z.object({
 type InviteFormValues = z.infer<typeof inviteSchema>
 
 function InviteForm({ onInvite, inviting, error }: { onInvite: (p: InvitePayload) => void; inviting: boolean; error: string | null }) {
-  const { register, handleSubmit, reset, formState: { errors, isValid } } = useForm<InviteFormValues>({
+  const { register, control, handleSubmit, reset, formState: { errors, isValid } } = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
     mode: 'onChange',
     defaultValues: { email: '', role: 'editor' },
@@ -134,11 +134,19 @@ function InviteForm({ onInvite, inviting, error }: { onInvite: (p: InvitePayload
       </div>
       <div className="w-[130px]">
         <label className="cms-label" htmlFor="invite-role">Role</label>
-        <select {...register('role')} id="invite-role" className="cms-input h-[34px]">
-          {ROLES.filter(r => r !== 'owner').map(r => (
-            <option key={r} value={r}>{ROLE_LABELS[r].label}</option>
-          ))}
-        </select>
+        <Controller
+          name="role"
+          control={control}
+          render={({ field }) => (
+            <Select
+              id="invite-role"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              options={ROLES.filter(r => r !== 'owner').map(r => ({ value: r, label: ROLE_LABELS[r].label }))}
+            />
+          )}
+        />
       </div>
       <button type="submit" disabled={inviting || !isValid} className="cms-btn cms-btn-primary cms-btn-sm">
         <UserPlus size={13} /> {inviting ? 'Sending…' : 'Invite'}

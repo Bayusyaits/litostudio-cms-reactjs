@@ -39,15 +39,16 @@ import {
 // Category picker for products — reuses the (fixed) Categories CMS module's
 // own service rather than adding a second category client. See
 // taxonomy.service.ts's file-header comment for why this was broken before.
-import { categoryService, type Category } from '@/services/taxonomy.service'
+import { categoryService, tagService, type Category } from '@/services/taxonomy.service'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { formatRelative }                    from '@/lib/utils'
 
 import { ContentEditorLayout }                   from '@/components/organisms/ContentEditorLayout'
-import { RichTextEditor, encodeBody, decodeBody, ImageUploader, FIELD_LIMITS, DashboardSkeleton, FormField, TextAreaField } from '@litostudio/ui-cms'
+import { RichTextEditor, encodeBody, decodeBody, ImageUploader, FIELD_LIMITS, DashboardSkeleton, FormField, TextAreaField, Select } from '@litostudio/ui-cms'
 import { SeoCard }                                from '@/components/molecules/SeoCard'
 import { PublishCard }                            from '@/components/molecules/PublishCard'
 import { TagInput }                               from '@/components/molecules/TagInput'
+import { VariantsCard }                           from '@/components/molecules/VariantsCard'
 import { Switch }                                 from '@/components/atoms/Switch'
 
 import type { ContentStatus } from '@litostudio/ui-cms'
@@ -90,6 +91,36 @@ interface ShotEntry { url: string; title?: string; sub?: string }
 function slugify(str: string): string {
   return str.toLowerCase().trim()
     .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 100)
+}
+
+/**
+ * Volumetric ("dimensional") weight estimate, used as a fallback when a
+ * physical product has no real scale weight entered. Divisor 6000
+ * (cm³ per kg) is the standard used by Indonesian domestic couriers
+ * (JNE/JNT/SiCepat etc.) and matches Shopee's own dimensional-weight
+ * calculator — confirmed with the user (2026-07-17 shipping-fields audit)
+ * rather than assumed. weight_grams = (L×W×H in cm) / 6000 × 1000 = /6.
+ * Rounded UP (Math.ceil) — couriers round dimensional weight up, never down.
+ */
+function computeVolumetricWeightGrams(lengthCm: number, widthCm: number, heightCm: number): number {
+  return Math.ceil((lengthCm * widthCm * heightCm) / 6)
+}
+
+/** Resolves the weight_grams to actually save for a product: explicit
+ * user-entered weight wins; otherwise falls back to the volumetric
+ * estimate from dimensions (if all three are present); otherwise null
+ * (digital products don't need one; assertPublishReady on the backend
+ * still blocks publish for a physical product with neither). */
+function resolveProductWeightGrams(extras: Record<string, unknown>): number | null {
+  const explicit = extras.weightGrams ? Number(extras.weightGrams) : null
+  if (explicit != null && !Number.isNaN(explicit) && explicit > 0) return explicit
+
+  const l = extras.lengthCm ? Number(extras.lengthCm) : null
+  const w = extras.widthCm  ? Number(extras.widthCm)  : null
+  const h = extras.heightCm ? Number(extras.heightCm) : null
+  if (l && w && h) return computeVolumetricWeightGrams(l, w, h)
+
+  return null
 }
 
 function getCoverImage(e: AnyEntity): string {
@@ -220,6 +251,18 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
         // "paid" email links to for a digital product.
         isDigital:      p.is_digital ?? false,
         digitalFileUrl: p.digital_file_url ?? '',
+        // Shipping attributes — real top-level columns (migration 089,
+        // 2026-07-13 payment+shipping+catalog session). Required by the
+        // Biteship Rates API for physical products; assertPublishReady()
+        // on the backend already hard-blocks publishing a non-digital
+        // product with weight_grams null — this editor previously had NO
+        // input for any of these 5 fields, so publishing a physical
+        // product was impossible via the CMS (2026-07-17 audit finding).
+        weightGrams:      p.weight_grams != null ? String(p.weight_grams) : '',
+        lengthCm:         p.length_cm    != null ? String(p.length_cm)    : '',
+        widthCm:          p.width_cm     != null ? String(p.width_cm)     : '',
+        heightCm:         p.height_cm    != null ? String(p.height_cm)    : '',
+        biteshipCategory: p.biteship_category ?? 'others',
       }
     }
     case 'collections': {
@@ -229,6 +272,50 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
       const c = e as Campaign
       return { ctaLabel: c.cta_label ?? '', ctaUrl: c.cta_url ?? '', startDate: c.start_date ?? '', endDate: c.end_date ?? '', isFeatured: c.is_featured ?? false }
     }
+  }
+}
+
+/**
+ * Syncs a product's free-text tags[] (products.tags column, the array the
+ * <TagInput> above actually edits) into the real, canonical `tags` table +
+ * content_tags join (migration 011) so tags typed on a product actually
+ * show up on the Tags page and are shared with the rest of the site's
+ * taxonomy — same integration Category/Brand already had, Tags never did
+ * (2026-07-17 audit finding). Find-or-create by case-insensitive name match
+ * against the site's existing tags, then POST /tags/assign with
+ * replace:true so the product's tag set exactly matches what's in the
+ * TagInput (removed tags get unlinked too, not just added).
+ *
+ * Best-effort: failures here are logged, not thrown — a tag-sync hiccup
+ * must never block the product save itself from succeeding, since the
+ * product's own row (including the products.tags array, fixed separately
+ * above) already saved successfully by the time this runs.
+ */
+async function syncProductTags(siteId: string, productId: string, tagNames: string[]): Promise<void> {
+  try {
+    const existing = (await tagService.getList(siteId)).data ?? []
+    const byLowerName = new Map(existing.map((t) => [t.name.toLowerCase(), t]))
+
+    const tagIds: string[] = []
+    for (const name of tagNames) {
+      const key = name.toLowerCase()
+      let tag = byLowerName.get(key)
+      if (!tag) {
+        try {
+          tag = await tagService.create({ site_id: siteId, name, slug: slugify(name) })
+        } catch {
+          // Likely a 409 slug clash from a concurrent save — re-fetch once
+          // rather than failing the whole sync over a single tag.
+          const refreshed = (await tagService.getList(siteId)).data ?? []
+          tag = refreshed.find((t) => t.name.toLowerCase() === key)
+        }
+      }
+      if (tag) tagIds.push(tag.id)
+    }
+
+    await tagService.assign({ tag_ids: tagIds, content_type: 'product', content_id: productId, replace: true })
+  } catch (err) {
+    console.error('[SimpleContentEditor] tag sync failed (non-fatal, product itself was saved)', err)
   }
 }
 
@@ -326,6 +413,20 @@ function buildCreatePayload(
         brand_id:     (extras.brandId as string) || undefined,
         is_digital:      extras.isDigital ?? false,
         digital_file_url: extras.isDigital ? ((extras.digitalFileUrl as string) || undefined) : undefined,
+        // Shipping attributes (migration 089) — see resolveProductWeightGrams's
+        // docstring. Length/width/height are sent as-entered; weight falls back
+        // to the volumetric estimate when left blank and dimensions exist.
+        weight_grams:      extras.isDigital ? undefined : (resolveProductWeightGrams(extras) ?? undefined),
+        length_cm:         extras.lengthCm ? Number(extras.lengthCm) : undefined,
+        width_cm:          extras.widthCm  ? Number(extras.widthCm)  : undefined,
+        height_cm:         extras.heightCm ? Number(extras.heightCm) : undefined,
+        biteship_category: (extras.biteshipCategory as string) || 'others',
+        // 'tags' was accepted as a param here but never forwarded — every
+        // other module below sends it, products silently didn't (2026-07-17
+        // audit finding: typing tags on a product and saving discarded them
+        // with no error). products.tags is a real column (selected in
+        // products.routes.ts's GET) — fixed to match every other module.
+        tags,
         extra,
       }
     }
@@ -410,6 +511,13 @@ function buildUpdatePatch(
         brand_id:     (extras.brandId as string) || null,
         is_digital:      extras.isDigital ?? false,
         digital_file_url: extras.isDigital ? ((extras.digitalFileUrl as string) || null) : null,
+        weight_grams:      extras.isDigital ? null : resolveProductWeightGrams(extras),
+        length_cm:         extras.lengthCm ? Number(extras.lengthCm) : null,
+        width_cm:          extras.widthCm  ? Number(extras.widthCm)  : null,
+        height_cm:         extras.heightCm ? Number(extras.heightCm) : null,
+        biteship_category: (extras.biteshipCategory as string) || 'others',
+        // See buildCreatePayload's products case — same forgotten-tags fix.
+        tags,
         extra,
       }
     }
@@ -532,17 +640,18 @@ function renderModuleExtras(
             <FormField label="Shoot Date"   type="date" value={extras.shootDate as string ?? ''} onChange={(e) => setExtra('shootDate', e.target.value)} />
             <div className="space-y-1.5">
               <label className="cms-label">Aspect Ratio</label>
-              <select
-                className="cms-input w-full"
+              <Select
+                className="w-full"
                 value={extras.aspectRatio as string ?? ''}
-                onChange={(e) => setExtra('aspectRatio', e.target.value)}
-              >
-                <option value="">— Default (3:4) —</option>
-                <option value="3:4">Portrait (3:4)</option>
-                <option value="4:3">Landscape (4:3)</option>
-                <option value="1:1">Square (1:1)</option>
-                <option value="16:9">Widescreen (16:9)</option>
-              </select>
+                onChange={(v) => setExtra('aspectRatio', v)}
+                options={[
+                  { value: '', label: '— Default (3:4) —' },
+                  { value: '3:4', label: 'Portrait (3:4)' },
+                  { value: '4:3', label: 'Landscape (4:3)' },
+                  { value: '1:1', label: 'Square (1:1)' },
+                  { value: '16:9', label: 'Widescreen (16:9)' },
+                ]}
+              />
             </div>
             <div className="flex items-center justify-between">
               <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
@@ -628,11 +737,16 @@ function renderModuleExtras(
           {/* Type */}
           <div className="space-y-1.5">
             <label className="cms-label">Type <span className="text-[var(--s-danger)] ml-0.5">*</span></label>
-            <select className="cms-input w-full" value={extras.productType as string ?? 'product'} onChange={(e) => setExtra('productType', e.target.value)}>
-              <option value="product">Product</option>
-              <option value="service">Service</option>
-              <option value="package">Package</option>
-            </select>
+            <Select
+              className="w-full"
+              value={extras.productType as string ?? 'product'}
+              onChange={(v) => setExtra('productType', v)}
+              options={[
+                { value: 'product', label: 'Product' },
+                { value: 'service', label: 'Service' },
+                { value: 'package', label: 'Package' },
+              ]}
+            />
           </div>
 
           {/* Digital product — real top-level column (is_digital), gates
@@ -658,6 +772,86 @@ function renderModuleExtras(
             />
           )}
 
+          {/* Shipping — real columns (weight_grams/length_cm/width_cm/
+              height_cm/biteship_category, migration 089). Required by the
+              Biteship Rates API for any physical (non-digital) product; the
+              backend hard-blocks publishing without weight_grams. Added
+              2026-07-17 — this editor previously had no input for any of
+              these 5 fields at all, so a physical product could never be
+              published. Weight is optional if all 3 dimensions are given —
+              resolveProductWeightGrams() estimates it (industry-standard
+              volumetric divisor 6000) at save time; the live estimate below
+              is shown so the seller can see what will be used. */}
+          {!extras.isDigital && (
+            <div className="space-y-1.5 pt-1 border-t border-[var(--lito-border)]">
+              <label className="cms-label pt-2 block">Shipping</label>
+              <div className="grid grid-cols-3 gap-2">
+                <FormField
+                  label="Length (cm)"
+                  type="number" min="0" step="0.1"
+                  value={extras.lengthCm as string ?? ''}
+                  onChange={(e) => setExtra('lengthCm', e.target.value)}
+                  placeholder="0"
+                />
+                <FormField
+                  label="Width (cm)"
+                  type="number" min="0" step="0.1"
+                  value={extras.widthCm as string ?? ''}
+                  onChange={(e) => setExtra('widthCm', e.target.value)}
+                  placeholder="0"
+                />
+                <FormField
+                  label="Height (cm)"
+                  type="number" min="0" step="0.1"
+                  value={extras.heightCm as string ?? ''}
+                  onChange={(e) => setExtra('heightCm', e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <FormField
+                label="Weight (grams)"
+                type="number" min="0" step="1"
+                value={extras.weightGrams as string ?? ''}
+                onChange={(e) => setExtra('weightGrams', e.target.value)}
+                placeholder="Leave blank to auto-estimate from dimensions"
+                hint={(() => {
+                  if (extras.weightGrams) return 'Required for shipping rate calculation at checkout.'
+                  const l = extras.lengthCm ? Number(extras.lengthCm) : null
+                  const w = extras.widthCm  ? Number(extras.widthCm)  : null
+                  const h = extras.heightCm ? Number(extras.heightCm) : null
+                  if (l && w && h) {
+                    return `No weight entered — will use the estimated volumetric weight from dimensions: ≈${computeVolumetricWeightGrams(l, w, h)}g.`
+                  }
+                  return 'Required before this product can be published. Enter a weight, or fill in Length/Width/Height above to auto-estimate it.'
+                })()}
+              />
+              <div className="space-y-1.5">
+                <label className="cms-label">Shipping Category (Biteship)</label>
+                <Select
+                  className="w-full"
+                  value={extras.biteshipCategory as string ?? 'others'}
+                  onChange={(v) => setExtra('biteshipCategory', v)}
+                  options={[
+                    { value: 'fashion',          label: 'Fashion' },
+                    { value: 'healthcare',       label: 'Healthcare' },
+                    { value: 'food_and_drink',   label: 'Food & Drink' },
+                    { value: 'electronic',       label: 'Electronic' },
+                    { value: 'beauty',           label: 'Beauty' },
+                    { value: 'outdoor_gear',     label: 'Outdoor Gear' },
+                    { value: 'home_accessories', label: 'Home Accessories' },
+                    { value: 'hobby',            label: 'Hobby' },
+                    { value: 'collection',       label: 'Collection' },
+                    { value: 'sparepart',        label: 'Sparepart' },
+                    { value: 'groceries',        label: 'Groceries' },
+                    { value: 'frozen_food',      label: 'Frozen Food' },
+                    { value: 'others',           label: 'Others' },
+                  ]}
+                />
+                <p className="font-body text-xs text-[var(--text-muted)]">Used by the courier (Biteship) to assign the correct handling/rate — separate from the storefront Category above.</p>
+              </div>
+            </div>
+          )}
+
           {/* Category — real site taxonomy (categories table, migration 085).
               Determines where the product shows up in nav/filtering, NOT
               which extra fields appear below (that's "Attributes" further
@@ -667,16 +861,15 @@ function renderModuleExtras(
               <label className="cms-label">Category</label>
               <Link to="/categories" className="font-body text-[11px] text-[var(--lito-teal)] hover:underline">Manage categories</Link>
             </div>
-            <select
-              className="cms-input w-full"
+            <Select
+              className="w-full"
               value={(extras.categoryId as string) ?? ''}
-              onChange={(e) => setExtra('categoryId', e.target.value || null)}
-            >
-              <option value="">— No category —</option>
-              {(productPickers?.categories ?? []).map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+              onChange={(v) => setExtra('categoryId', v || null)}
+              options={[
+                { value: '', label: '— No category —' },
+                ...(productPickers?.categories ?? []).map((c) => ({ value: c.id, label: c.name })),
+              ]}
+            />
             {(productPickers?.categories?.length ?? 0) === 0 && (
               <p className="font-body text-xs text-[var(--text-muted)]">No categories yet — add one on the Categories page.</p>
             )}
@@ -692,16 +885,15 @@ function renderModuleExtras(
               <label className="cms-label">Brand</label>
               <Link to="/brands/new" className="font-body text-[11px] text-[var(--lito-teal)] hover:underline">+ Add brand</Link>
             </div>
-            <select
-              className="cms-input w-full"
+            <Select
+              className="w-full"
               value={(extras.brandId as string) ?? ''}
-              onChange={(e) => setExtra('brandId', e.target.value || null)}
-            >
-              <option value="">— No brand —</option>
-              {(productPickers?.brands ?? []).map((b) => (
-                <option key={b.id} value={b.id}>{getTitle(b)}</option>
-              ))}
-            </select>
+              onChange={(v) => setExtra('brandId', v || null)}
+              options={[
+                { value: '', label: '— No brand —' },
+                ...(productPickers?.brands ?? []).map((b) => ({ value: b.id, label: getTitle(b) })),
+              ]}
+            />
             {(productPickers?.brands?.length ?? 0) === 0 && (
               <p className="font-body text-xs text-[var(--text-muted)]">No product brands yet — add one on the Brands page with category "product".</p>
             )}
@@ -714,25 +906,30 @@ function renderModuleExtras(
               Fashion attribute template. */}
           <div className="space-y-1.5">
             <label className="cms-label">Attributes</label>
-            <select className="cms-input w-full" value={cat} onChange={(e) => {
-              setExtra('category', e.target.value)
-              // reset category-specific fields on change
-              setExtra('sizes', [])
-              setExtra('gender', '')
-              setExtra('skin_type', '')
-              setExtra('volume', '')
-              setExtra('shade', '')
-              setExtra('color', '')
-              setExtra('material', '')
-            }}>
-              <option value="">— None —</option>
-              <option value="fashion">Fashion</option>
-              <option value="skincare">Skin Care</option>
-              <option value="beauty">Beauty</option>
-              <option value="accessories">Accessories</option>
-              <option value="food_beverage">Food &amp; Beverage</option>
-              <option value="other">Other</option>
-            </select>
+            <Select
+              className="w-full"
+              value={cat}
+              onChange={(v) => {
+                setExtra('category', v)
+                // reset category-specific fields on change
+                setExtra('sizes', [])
+                setExtra('gender', '')
+                setExtra('skin_type', '')
+                setExtra('volume', '')
+                setExtra('shade', '')
+                setExtra('color', '')
+                setExtra('material', '')
+              }}
+              options={[
+                { value: '', label: '— None —' },
+                { value: 'fashion', label: 'Fashion' },
+                { value: 'skincare', label: 'Skin Care' },
+                { value: 'beauty', label: 'Beauty' },
+                { value: 'accessories', label: 'Accessories' },
+                { value: 'food_beverage', label: 'Food & Beverage' },
+                { value: 'other', label: 'Other' },
+              ]}
+            />
           </div>
 
           {/* ── Fashion fields ─────────────────────── */}
@@ -789,14 +986,19 @@ function renderModuleExtras(
             <>
               <div className="space-y-1.5">
                 <label className="cms-label">Skin Type</label>
-                <select className="cms-input w-full" value={extras.skin_type as string ?? ''} onChange={(e) => setExtra('skin_type', e.target.value)}>
-                  <option value="">— All skin types —</option>
-                  <option value="oily">Oily</option>
-                  <option value="dry">Dry</option>
-                  <option value="combination">Combination</option>
-                  <option value="sensitive">Sensitive</option>
-                  <option value="all">All types</option>
-                </select>
+                <Select
+                  className="w-full"
+                  value={extras.skin_type as string ?? ''}
+                  onChange={(v) => setExtra('skin_type', v)}
+                  options={[
+                    { value: '', label: '— All skin types —' },
+                    { value: 'oily', label: 'Oily' },
+                    { value: 'dry', label: 'Dry' },
+                    { value: 'combination', label: 'Combination' },
+                    { value: 'sensitive', label: 'Sensitive' },
+                    { value: 'all', label: 'All types' },
+                  ]}
+                />
               </div>
               <FormField
                 label="Volume / Size"
@@ -818,14 +1020,19 @@ function renderModuleExtras(
               />
               <div className="space-y-1.5">
                 <label className="cms-label">Skin Type</label>
-                <select className="cms-input w-full" value={extras.skin_type as string ?? ''} onChange={(e) => setExtra('skin_type', e.target.value)}>
-                  <option value="">— All skin types —</option>
-                  <option value="oily">Oily</option>
-                  <option value="dry">Dry</option>
-                  <option value="combination">Combination</option>
-                  <option value="sensitive">Sensitive</option>
-                  <option value="all">All types</option>
-                </select>
+                <Select
+                  className="w-full"
+                  value={extras.skin_type as string ?? ''}
+                  onChange={(v) => setExtra('skin_type', v)}
+                  options={[
+                    { value: '', label: '— All skin types —' },
+                    { value: 'oily', label: 'Oily' },
+                    { value: 'dry', label: 'Dry' },
+                    { value: 'combination', label: 'Combination' },
+                    { value: 'sensitive', label: 'Sensitive' },
+                    { value: 'all', label: 'All types' },
+                  ]}
+                />
               </div>
             </>
           )}
@@ -1056,6 +1263,22 @@ export default function SimpleContentEditorPage() {
       setIsSaving(true)
       const effectiveStatus = nextStatus ?? status
 
+      // 6.4 fix: price was never required to save/publish a product. A NULL
+      // price is coerced to 0 on the storefront (apps/website), which then
+      // displays and adds-to-cart as "Rp 0" — a free product. Checkout does
+      // reject it at the final step, but only after the shopper has already
+      // gone through the motions; catching it here, at the moment an editor
+      // actually publishes, is the preventable point. Draft saves are left
+      // alone — a WIP product with no price yet is normal.
+      if (module === 'products' && effectiveStatus === 'published') {
+        const priceNum = extras.price ? Number(extras.price) : 0
+        if (!priceNum || priceNum <= 0) {
+          setIsSaving(false)
+          setSaveError('Set a price before publishing — a product with no price would show as "Rp 0" (free) on the storefront.')
+          return
+        }
+      }
+
       try {
         if (isNew) {
           if (!activeSite?.id) throw new Error('No active site selected')
@@ -1093,6 +1316,8 @@ export default function SimpleContentEditorPage() {
             )
           }
 
+          if (module === 'products') void syncProductTags(activeSite.id, newEntity.id, tags)
+
           if (nextStatus) setStatus(nextStatus)
           setLastSaved(formatRelative(new Date().toISOString()))
           void queryClient.invalidateQueries({ queryKey: [module] })
@@ -1110,6 +1335,8 @@ export default function SimpleContentEditorPage() {
               buildUpdatePatch(module, title, coverImage, tags, effectiveStatus, extras),
             ),
           ])
+
+          if (module === 'products' && activeSite?.id) void syncProductTags(activeSite.id, id, tags)
 
           if (nextStatus) setStatus(nextStatus)
           setLastSaved(formatRelative(new Date().toISOString()))
@@ -1143,7 +1370,10 @@ export default function SimpleContentEditorPage() {
   )
 
   const siteDomain = activeSite?.domain ?? 'yoursite.com'
-  const hasTags    = module === 'stories' || module === 'gallery'
+  // 'products' added 2026-07-17 — the Tags card (and its <TagInput>) never
+  // rendered for products at all, on top of the save-payload bug fixed
+  // above; there was no way to even attempt entering a product tag before.
+  const hasTags    = module === 'stories' || module === 'gallery' || module === 'products'
 
   // ── Render ───────────────────────────────────────────────────────────
 
@@ -1267,6 +1497,16 @@ export default function SimpleContentEditorPage() {
           minHeight={400}
         />
       </div>
+
+      {module === 'products' && (
+        <VariantsCard
+          productId={isNew ? null : (id ?? null)}
+          disabled={isNew}
+          product={!isNew ? (entity as Product | undefined) : undefined}
+          skuPrefix={slug ? slug.toUpperCase().replace(/[^A-Z0-9]+/g, '-') : ''}
+          onSynced={() => void queryClient.invalidateQueries({ queryKey: ['simple-editor', module, id] })}
+        />
+      )}
 
       {saveError && (
         <div className="px-3 py-2 rounded-lg border border-[var(--cms-danger)] bg-[var(--cms-danger-bg)]" role="alert">

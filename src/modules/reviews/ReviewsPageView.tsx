@@ -1,5 +1,5 @@
 import { MessageSquare, Trash2, CheckCircle, XCircle, Search, X } from 'lucide-react'
-import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Button, StatusBadge, SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Review, ReviewStatus } from '@/types/content.types'
 
@@ -176,16 +176,17 @@ export function ReviewsPageView({
           placeholder="Search reviews…"
           className="w-64"
         />
-        <select
-          className="cms-input h-9 text-sm w-44"
+        <Select
+          className="w-44"
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value as ReviewStatus | '', page: 1 })}
-        >
-          <option value="">All statuses</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
+          onChange={(v) => setFilter({ status: v as ReviewStatus | '', page: 1 })}
+          options={[
+            { value: '', label: 'All statuses' },
+            { value: 'pending', label: 'Pending' },
+            { value: 'approved', label: 'Approved' },
+            { value: 'rejected', label: 'Rejected' },
+          ]}
+        />
       </div>
 
       <div className="cms-card overflow-hidden">

@@ -1,5 +1,5 @@
-import { Package, Trash2, Plus, Pencil, LayoutTemplate, Search, X } from 'lucide-react'
-import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Package, Trash2, Plus, Pencil, LayoutTemplate, Search, X, Upload } from 'lucide-react'
+import { Button, StatusBadge, SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Product, ProductType } from '@/types/content.types'
 
@@ -77,6 +77,7 @@ interface Props {
   onSelect: (id: string, checked: boolean) => void
   onSelectAll: (checked: boolean) => void
   onNew: () => void
+  onImport: () => void
   onEdit: (id: string) => void
   onOpenEditor: (id: string) => void
   onDelete: (id: string) => void
@@ -86,7 +87,7 @@ interface Props {
 export function ProductsPageView({
   products, meta, isLoading, filter, setFilter,
   selectedIds, onSelect, onSelectAll,
-  onNew, onEdit, onOpenEditor, onDelete, onBulkDelete,
+  onNew, onImport, onEdit, onOpenEditor, onDelete, onBulkDelete,
 }: Props) {
   const filtered =
     filter.product_type
@@ -188,9 +189,14 @@ export function ProductsPageView({
             {meta ? `${meta.total} product${meta.total !== 1 ? 's' : ''}` : 'Manage products, services and packages'}
           </p>
         </div>
-        <Button skin="cms" leftIcon={<Plus className="w-4 h-4" />} onClick={onNew}>
-          New Product
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button skin="cms" variant="secondary" leftIcon={<Upload className="w-4 h-4" />} onClick={onImport}>
+            Import
+          </Button>
+          <Button skin="cms" leftIcon={<Plus className="w-4 h-4" />} onClick={onNew}>
+            New Product
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
@@ -203,26 +209,28 @@ export function ProductsPageView({
           placeholder="Search products…"
           className="w-64"
         />
-        <select
-          className="cms-input h-9 text-sm w-44"
+        <Select
+          className="w-44"
           value={filter.product_type}
-          onChange={(e) => setFilter({ product_type: e.target.value as ProductType | '', page: 1 })}
-        >
-          <option value="">All types</option>
-          <option value="product">Product</option>
-          <option value="service">Service</option>
-          <option value="package">Package</option>
-        </select>
-        <select
-          className="cms-input h-9 text-sm w-40"
+          onChange={(v) => setFilter({ product_type: v as ProductType | '', page: 1 })}
+          options={[
+            { value: '', label: 'All types' },
+            { value: 'product', label: 'Product' },
+            { value: 'service', label: 'Service' },
+            { value: 'package', label: 'Package' },
+          ]}
+        />
+        <Select
+          className="w-40"
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value, page: 1 })}
-        >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="draft">Draft</option>
-          <option value="archived">Archived</option>
-        </select>
+          onChange={(v) => setFilter({ status: v, page: 1 })}
+          options={[
+            { value: '', label: 'All statuses' },
+            { value: 'active', label: 'Active' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'archived', label: 'Archived' },
+          ]}
+        />
       </div>
 
       <div className="cms-card overflow-hidden">

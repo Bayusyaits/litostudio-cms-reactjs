@@ -7,7 +7,7 @@
 
 import { Globe, FileText, Archive, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@litostudio/ui-cms'
+import { Button, Select } from '@litostudio/ui-cms'
 import type { ContentStatus } from '@litostudio/ui-cms'
 
 const STATUS_OPTIONS: { value: ContentStatus; label: string; icon: React.ReactNode }[] = [
@@ -49,16 +49,13 @@ export function PublishCard({
         {/* Status selector */}
         <div className="space-y-1.5">
           <label className="cms-label">Visibility</label>
-          <select
+          <Select
+            className="w-full"
             value={status}
-            onChange={(e) => onStatusChange(e.target.value as ContentStatus)}
-            className="cms-input w-full"
+            onChange={(v) => onStatusChange(v as ContentStatus)}
             disabled={isSaving || isPublishing}
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+            options={STATUS_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
+          />
         </div>
 
         {/* Status badge row */}

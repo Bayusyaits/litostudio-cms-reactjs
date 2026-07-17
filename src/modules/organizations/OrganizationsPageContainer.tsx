@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth.store'
-import { orgService, useOrgStore, useWebsiteStore } from '@litostudio/ui-cms'
+import { orgService, useOrgStore, useWebsiteStore, useToast, getErrorMessage } from '@litostudio/ui-cms'
 import type { Organization } from '@litostudio/ui-cms'
 import { OrganizationsPageView } from './OrganizationsPageView'
 import { OrgFormModal } from './OrgFormModal'
@@ -14,6 +14,7 @@ export default function OrganizationsPageContainer() {
   const { org: activeOrg, setOrg } = useOrgStore()
   const { setActiveSite, clearSites } = useWebsiteStore()
   const { user, setUser } = useAuthStore()
+  const toast = useToast()
 
   const [modalOrg, setModalOrg] = useState<Organization | null | undefined>(undefined)
   // undefined = closed, null = create mode, Organization = edit mode
@@ -74,6 +75,14 @@ export default function OrganizationsPageContainer() {
   })
 
   // ── Delete ───────────────────────────────────────────────────────────────
+  // Bug hunt fix (2026-07-16): no onError — and OrganizationsPageView's
+  // click-twice-to-confirm button resets its local "confirming" state right
+  // after firing this (unawaited) mutate() call, regardless of outcome. Of
+  // every silent-failure instance found this session (orders, promotions,
+  // shipping, domains), this is the most severe: it's the org-deletion
+  // action, and a failure previously looked identical to success — the
+  // confirm button just reset with the org still sitting in the list, no
+  // explanation why. Toast + re-invalidate, same pattern as the rest.
   const deleteMutation = useMutation({
     mutationFn: (id: string) => orgService.deleteOrg(id),
     onSuccess: (_v, id) => {
@@ -82,6 +91,10 @@ export default function OrganizationsPageContainer() {
         setOrg(null)
         clearSites()
       }
+    },
+    onError: (err) => {
+      toast.show({ message: 'Could not delete organization', description: getErrorMessage(err), variant: 'error' })
+      qc.invalidateQueries({ queryKey: ['orgs'] })
     },
   })
 

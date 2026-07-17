@@ -14,7 +14,7 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
@@ -189,7 +189,7 @@ function CreateOrgStep({ onComplete }: { onComplete: (org: Organization) => void
         {errors.type && (
           <p className="text-xs text-[var(--s-danger)] font-body" role="alert">{errors.type.message}</p>
         )}
-        <input type="hidden" {...form.register('type')} />
+        <Controller name="type" control={form.control} render={({ field }) => <input type="hidden" {...field} />} />
       </div>
 
       {createMutation.error && (
@@ -314,7 +314,7 @@ function CreateSiteStep({
         {errors.template && (
           <p className="text-xs text-[var(--s-danger)] font-body" role="alert">{errors.template.message}</p>
         )}
-        <input type="hidden" {...form.register('template')} />
+        <Controller name="template" control={form.control} render={({ field }) => <input type="hidden" {...field} />} />
       </div>
 
       {createMutation.error && (

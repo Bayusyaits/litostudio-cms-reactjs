@@ -1,5 +1,5 @@
 import { Scale, FileText, Cookie, Settings as SettingsIcon, ExternalLink, Sparkles } from 'lucide-react'
-import { Button, Badge, FormField, EnterpriseDataTable } from '@litostudio/ui-cms'
+import { Button, Badge, FormField, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
 import type { LegalTemplateSummary, LegalPageMeta, CookieCategory, EDTColumn } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 
@@ -209,25 +209,35 @@ export function LegalPageView({
 
           <div className="space-y-1.5">
             <label className="cms-label">Business type</label>
-            <select className="cms-input w-full" value={form.business_type} onChange={(e) => setForm({ business_type: e.target.value })}>
-              {businessTypes.map((bt) => <option key={bt} value={bt}>{bt.replace(/_/g, ' ')}</option>)}
-            </select>
+            <Select
+              className="w-full"
+              value={form.business_type}
+              onChange={(v) => setForm({ business_type: v })}
+              options={businessTypes.map((bt) => ({ value: bt, label: bt.replace(/_/g, ' ') }))}
+            />
           </div>
 
           <div className="space-y-1.5">
             <label className="cms-label">Document</label>
-            <select className="cms-input w-full" value={form.legal_kind} onChange={(e) => setForm({ legal_kind: e.target.value })}>
-              {legalKinds.map((k) => <option key={k} value={k}>{KIND_LABELS[k] ?? k}</option>)}
-            </select>
+            <Select
+              className="w-full"
+              value={form.legal_kind}
+              onChange={(v) => setForm({ legal_kind: v })}
+              options={legalKinds.map((k) => ({ value: k, label: KIND_LABELS[k] ?? k }))}
+            />
           </div>
 
           <div className="space-y-1.5">
             <label className="cms-label">Language</label>
-            <select className="cms-input w-full" value={form.locale} onChange={(e) => setForm({ locale: e.target.value })}>
-              {(availableLocales.length > 0 ? availableLocales : ['id', 'en']).map((l) => (
-                <option key={l} value={l}>{l === 'id' ? 'Indonesian' : l === 'en' ? 'English' : l}</option>
-              ))}
-            </select>
+            <Select
+              className="w-full"
+              value={form.locale}
+              onChange={(v) => setForm({ locale: v })}
+              options={(availableLocales.length > 0 ? availableLocales : ['id', 'en']).map((l) => ({
+                value: l,
+                label: l === 'id' ? 'Indonesian' : l === 'en' ? 'English' : l,
+              }))}
+            />
           </div>
 
           <FormField

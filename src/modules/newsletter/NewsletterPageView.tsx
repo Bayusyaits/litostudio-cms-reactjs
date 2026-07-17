@@ -1,5 +1,5 @@
 import { Trash2, Mail, Search, X } from 'lucide-react'
-import { Button, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Button, SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { NewsletterSubscriber, NewsletterStatus } from '@/types/commerce.types'
 
@@ -49,16 +49,14 @@ export function NewsletterPageView({ subscribers, meta, isLoading, filter, setFi
       header: 'Status',
       width: '140px',
       render: (sub) => (
-        <select
-          className="cms-input h-8 text-xs w-36"
+        <Select
+          size="sm"
+          className="w-36"
           value={sub.status}
-          onChange={(e) => onUpdateStatus(sub.id, e.target.value as NewsletterStatus)}
+          onChange={(v) => onUpdateStatus(sub.id, v as NewsletterStatus)}
           aria-label="Change subscriber status"
-        >
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-          ))}
-        </select>
+          options={STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))}
+        />
       ),
     },
     {
@@ -106,16 +104,15 @@ export function NewsletterPageView({ subscribers, meta, isLoading, filter, setFi
           placeholder="Search by email or name…"
           className="w-64"
         />
-        <select
-          className="cms-input h-9 text-sm w-44"
+        <Select
+          className="w-44"
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value as NewsletterStatus | '', page: 1 })}
-        >
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-          ))}
-        </select>
+          onChange={(v) => setFilter({ status: v as NewsletterStatus | '', page: 1 })}
+          options={[
+            { value: '', label: 'All statuses' },
+            ...STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })),
+          ]}
+        />
       </div>
 
       <div className="cms-card overflow-hidden">

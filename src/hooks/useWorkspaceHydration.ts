@@ -17,12 +17,27 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useOrgStore, useWebsiteStore, orgService } from '@litostudio/ui-cms'
 
 export function useWorkspaceHydration(): { isHydrating: boolean } {
-  const [isHydrating, setIsHydrating] = useState(false)
   const qc = useQueryClient()
 
   const { user } = useAuthStore()
   const { org, setOrg } = useOrgStore()
   const { activeSite, setActiveSite } = useWebsiteStore()
+
+  // Bug fix (2026-07): lazily seed isHydrating from the CURRENT store values
+  // instead of always starting `false`. Right after login/OAuth (or any
+  // fresh mount where user.org_id is already set but the org store hasn't
+  // been fetched yet), the very first render of this hook — and of
+  // DashboardLayout, which computes wsState from isHydrating on that same
+  // render — happens BEFORE the effect below has a chance to run and flip
+  // isHydrating to true. DashboardLayout's getWorkspaceState() then sees
+  // org_id set + org null + isHydrating still false, which it (correctly,
+  // for the case where hydration already ran and failed) reads as "no org"
+  // → redirects to /onboarding. That redirect replaces history, clobbering
+  // whatever `returnTo` destination LoginPage/OAuthCallbackPage had just
+  // navigated to. Seeding isHydrating from a lazy initializer means the
+  // very first render already reports "loading" instead of "onboarding"
+  // whenever hydration is actually about to happen, closing the race.
+  const [isHydrating, setIsHydrating] = useState(() => !!(user?.org_id && !org))
 
   useEffect(() => {
     let cancelled = false

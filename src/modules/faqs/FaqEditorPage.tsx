@@ -22,7 +22,7 @@ import { useWebsiteStore } from '@litostudio/ui-cms'
 import { ContentEditorLayout } from '@/components/organisms/ContentEditorLayout'
 import { TagInput } from '@/components/molecules/TagInput'
 import { Switch } from '@/components/atoms/Switch'
-import { DashboardSkeleton, TextAreaField } from '@litostudio/ui-cms'
+import { DashboardSkeleton, TextAreaField, Select } from '@litostudio/ui-cms'
 
 const LOCALE = 'id'
 
@@ -140,14 +140,13 @@ export default function FaqEditorPage() {
             <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Publish</h3>
             <div className="space-y-1.5">
               <label className="cms-label">Status</label>
-              <select
-                className="cms-input w-full"
+              <Select
+                className="w-full"
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                onChange={setStatus}
                 disabled={isSaving}
-              >
-                {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+                options={STATUS_OPTIONS}
+              />
             </div>
             <button
               type="button"
@@ -166,16 +165,15 @@ export default function FaqEditorPage() {
             <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Details</h3>
             <div className="space-y-1.5">
               <label className="cms-label">Category</label>
-              <select
-                className="cms-input w-full"
+              <Select
+                className="w-full"
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-              >
-                <option value="">— No category —</option>
-                {(categories ?? []).map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+                onChange={setCategoryId}
+                options={[
+                  { value: '', label: '— No category —' },
+                  ...(categories ?? []).map((c) => ({ value: c.id, label: c.name })),
+                ]}
+              />
             </div>
             <div className="space-y-1.5">
               <label className="cms-label">Sort order</label>

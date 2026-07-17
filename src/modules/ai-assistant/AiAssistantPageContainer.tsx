@@ -5,10 +5,32 @@ import type { AiAssistantSettings, KnowledgeEntry } from '@litostudio/ui-cms'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { FormInput, FormTextarea, FormSelect, FormCheckbox, Select, type SelectOption } from '@litostudio/ui-cms'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
 const CONTENT_TYPES = ['products', 'collections', 'services', 'blogs', 'stories', 'faq', 'custom', 'policies', 'about'] as const
+
+const CONTENT_TYPE_OPTIONS: SelectOption[] = CONTENT_TYPES.map(t => ({ value: t, label: t }))
+
+const MODEL_OPTIONS: SelectOption[] = [
+  { value: 'claude-3-haiku-20240307',  label: 'Claude 3 Haiku (fast, economical)' },
+  { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet (balanced)' },
+  { value: 'claude-3-opus-20240229',   label: 'Claude 3 Opus (powerful)' },
+]
+
+const WIDGET_POSITION_OPTIONS: SelectOption[] = [
+  { value: 'bottom-right', label: 'Bottom Right' },
+  { value: 'bottom-left',  label: 'Bottom Left' },
+  { value: 'top-right',    label: 'Top Right' },
+  { value: 'top-left',     label: 'Top Left' },
+]
+
+const WIDGET_THEME_OPTIONS: SelectOption[] = [
+  { value: 'light', label: 'Light' },
+  { value: 'dark',  label: 'Dark' },
+  { value: 'auto',  label: 'Auto (system)' },
+]
 
 const aiSettingsSchema = z.object({
   is_enabled:          z.boolean().optional(),
@@ -122,82 +144,42 @@ export default function AiAssistantPageContainer() {
       <section className="bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-[8px] p-6 space-y-5 overflow-y-auto">
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">Configuration</h2>
         <form onSubmit={settingsForm.handleSubmit(v => saveSettingsMutation.mutate(v))} className="space-y-4">
-          <label className="flex items-center gap-3">
-            <input type="checkbox" {...settingsForm.register('is_enabled')} className="h-4 w-4" />
-            <span className="text-sm font-medium">Enable AI Assistant</span>
-          </label>
+          <FormCheckbox name="is_enabled" control={settingsForm.control} label="Enable AI Assistant" />
 
-          <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Model</label>
-            <select {...settingsForm.register('model')} className="cms-input">
-              <option value="claude-3-haiku-20240307">Claude 3 Haiku (fast, economical)</option>
-              <option value="claude-3-sonnet-20240229">Claude 3 Sonnet (balanced)</option>
-              <option value="claude-3-opus-20240229">Claude 3 Opus (powerful)</option>
-            </select>
-          </div>
+          <FormSelect name="model" control={settingsForm.control} label="Model" options={MODEL_OPTIONS} />
 
-          <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">System Prompt (optional override)</label>
-            <textarea
-              {...settingsForm.register('system_prompt')}
-              rows={3}
-              placeholder="You are a helpful assistant for…"
-              className="cms-input"
-            />
-          </div>
+          <FormTextarea
+            name="system_prompt" control={settingsForm.control}
+            label="System Prompt (optional override)"
+            rows={3}
+            placeholder="You are a helpful assistant for…"
+          />
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Temperature (0–2)</label>
-              <input
-                type="number" step="0.1" min="0" max="2"
-                {...settingsForm.register('temperature', { valueAsNumber: true })}
-                className="cms-input"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Max Tokens</label>
-              <input
-                type="number" min="1" max="8192"
-                {...settingsForm.register('max_tokens', { valueAsNumber: true })}
-                className="cms-input"
-              />
-            </div>
+            <FormInput
+              name="temperature" control={settingsForm.control}
+              label="Temperature (0–2)"
+              type="number" step="0.1" min="0" max="2"
+            />
+            <FormInput
+              name="max_tokens" control={settingsForm.control}
+              label="Max Tokens"
+              type="number" min="1" max="8192"
+            />
           </div>
 
           <div className="pt-3 border-t border-[var(--lito-border)] space-y-3">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Widget</h3>
-            <label className="flex items-center gap-3">
-              <input type="checkbox" {...settingsForm.register('widget_enabled')} className="h-4 w-4" />
-              <span className="text-sm">Show AI chat widget on website</span>
-            </label>
+            <FormCheckbox name="widget_enabled" control={settingsForm.control} label="Show AI chat widget on website" />
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Position</label>
-                <select {...settingsForm.register('widget_position')} className="cms-input">
-                  <option value="bottom-right">Bottom Right</option>
-                  <option value="bottom-left">Bottom Left</option>
-                  <option value="top-right">Top Right</option>
-                  <option value="top-left">Top Left</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Theme</label>
-                <select {...settingsForm.register('widget_theme')} className="cms-input">
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                  <option value="auto">Auto (system)</option>
-                </select>
-              </div>
+              <FormSelect name="widget_position" control={settingsForm.control} label="Position" options={WIDGET_POSITION_OPTIONS} />
+              <FormSelect name="widget_theme" control={settingsForm.control} label="Theme" options={WIDGET_THEME_OPTIONS} />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Welcome Message</label>
-              <input
-                {...settingsForm.register('welcome_message')}
-                placeholder="Hi! How can I help you today?"
-                className="cms-input"
-              />
-            </div>
+            <FormInput
+              name="welcome_message" control={settingsForm.control}
+              label="Welcome Message"
+              placeholder="Hi! How can I help you today?"
+            />
           </div>
 
           <div className="flex justify-end">
@@ -217,14 +199,14 @@ export default function AiAssistantPageContainer() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">Knowledge Base</h2>
           <div className="flex items-center gap-2">
-            <select
+            <Select
               value={typeFilter}
-              onChange={e => setTypeFilter(e.target.value)}
-              className="cms-input"
-            >
-              <option value="">All types</option>
-              {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+              onChange={setTypeFilter}
+              options={[
+                { value: '', label: 'All types' },
+                ...CONTENT_TYPES.map(t => ({ value: t, label: t })),
+              ]}
+            />
             <button
               onClick={() => { setEditEntry(null); setShowEntryForm(true) }}
               className="cms-btn cms-btn-primary cms-btn-sm"
@@ -265,31 +247,17 @@ export default function AiAssistantPageContainer() {
             className="mt-4 p-4 border border-[var(--lito-border)] rounded-[6px] bg-[var(--cms-surface-3)] space-y-3"
           >
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">{editEntry ? 'Edit Entry' : 'New Entry'}</h3>
-            <select {...entryForm.register('content_type')} className="cms-input">
-              {CONTENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <input
-              {...entryForm.register('title', { required: true })}
-              placeholder="Entry title"
-              className="cms-input"
-            />
-            <textarea
-              {...entryForm.register('content', { required: true })}
+            <FormSelect name="content_type" control={entryForm.control} options={CONTENT_TYPE_OPTIONS} />
+            <FormInput name="title" control={entryForm.control} placeholder="Entry title" required />
+            <FormTextarea
+              name="content" control={entryForm.control}
               placeholder="Knowledge content (plain text or markdown)"
               rows={6}
-              className="cms-input"
+              required
             />
             <div className="grid grid-cols-2 gap-3">
-              <input
-                type="number"
-                {...entryForm.register('priority', { valueAsNumber: true })}
-                placeholder="Priority (higher = more relevant)"
-                className="cms-input"
-              />
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" {...entryForm.register('is_active')} className="h-4 w-4" />
-                Active
-              </label>
+              <FormInput name="priority" control={entryForm.control} type="number" placeholder="Priority (higher = more relevant)" />
+              <FormCheckbox name="is_active" control={entryForm.control} label="Active" />
             </div>
             <div className="flex gap-2 justify-end">
               <button

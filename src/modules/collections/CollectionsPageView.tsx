@@ -1,5 +1,5 @@
 import { Layers, Trash2, Plus, Pencil, LayoutTemplate, Search, X } from 'lucide-react'
-import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Button, StatusBadge, SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Collection } from '@/types/content.types'
 
@@ -121,16 +121,17 @@ export function CollectionsPageView({
           placeholder="Search collections…"
           className="w-64"
         />
-        <select
-          className="cms-input h-9 text-sm w-40"
+        <Select
+          className="w-40"
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value, page: 1 })}
-        >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="draft">Draft</option>
-          <option value="archived">Archived</option>
-        </select>
+          onChange={(v) => setFilter({ status: v, page: 1 })}
+          options={[
+            { value: '', label: 'All statuses' },
+            { value: 'active', label: 'Active' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'archived', label: 'Archived' },
+          ]}
+        />
       </div>
 
       <div className="cms-card overflow-hidden">

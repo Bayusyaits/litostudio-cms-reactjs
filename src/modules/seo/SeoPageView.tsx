@@ -3,31 +3,55 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Save, Search, Share2, Twitter, Globe, CheckCircle, AlertCircle } from 'lucide-react'
-import { AppImage, Button, FormSkeleton, FIELD_LIMITS, FormField, TextAreaField } from '@litostudio/ui-cms'
+import {
+  AppImage, Button, FormSkeleton, FIELD_LIMITS,
+  FormInput, FormTextarea, FormSelect, FormCheckbox, type SelectOption,
+  optionalWebsiteUrlSchema, optionalImageUrlSchema,
+} from '@litostudio/ui-cms'
 import { cn } from '@/lib/utils'
 import type { SeoMetadata, SeoSaveRequest } from '@/types/content.types'
 import type { PAGE_TYPES, SeoPageType } from './SeoPageContainer'
 
+// 2026-07 standardization pass: register() → Controller (see
+// cms-form-standardization-execution-plan-2026-07-16.md, Track A). URL
+// fields now use the shared optionalWebsiteUrlSchema/optionalImageUrlSchema
+// (packages/ui-cms/src/utils/validators.ts) instead of ad hoc `z.string().url()`.
 const schema = z.object({
   title:               z.string().max(FIELD_LIMITS.META_TITLE).optional(),
   description:         z.string().max(FIELD_LIMITS.META_DESCRIPTION).optional(),
   keywords:            z.string().max(FIELD_LIMITS.META_KEYWORDS).optional(),
-  canonical:           z.string().url().optional().or(z.literal('')),
+  canonical:           optionalWebsiteUrlSchema,
   robots:              z.string().max(100).optional(),
   noindex:             z.boolean().optional(),
   nofollow:            z.boolean().optional(),
   og_title:            z.string().max(255).optional(),
   og_description:      z.string().max(500).optional(),
-  og_image:            z.string().url().optional().or(z.literal('')),
-  og_url:              z.string().url().optional().or(z.literal('')),
+  og_image:            optionalImageUrlSchema,
+  og_url:              optionalWebsiteUrlSchema,
   og_type:             z.string().optional(),
   twitter_card:        z.enum(['summary', 'summary_large_image', 'app', 'player']).optional(),
   twitter_site:        z.string().max(100).optional(),
   twitter_title:       z.string().max(255).optional(),
   twitter_description: z.string().max(500).optional(),
-  twitter_image:       z.string().url().optional().or(z.literal('')),
+  twitter_image:       optionalImageUrlSchema,
   schema_markup:       z.string().optional(), // JSON string input, parsed before save
 })
+
+const ROBOTS_OPTIONS: SelectOption[] = [
+  { value: 'index, follow',     label: 'index, follow' },
+  { value: 'noindex, follow',   label: 'noindex, follow' },
+  { value: 'index, nofollow',   label: 'index, nofollow' },
+  { value: 'noindex, nofollow', label: 'noindex, nofollow' },
+]
+const OG_TYPE_OPTIONS: SelectOption[] = [
+  { value: 'website', label: 'website' },
+  { value: 'article', label: 'article' },
+  { value: 'profile', label: 'profile' },
+]
+const TWITTER_CARD_OPTIONS: SelectOption[] = [
+  { value: 'summary_large_image', label: 'Summary with large image' },
+  { value: 'summary',             label: 'Summary' },
+]
 
 type FormValues = z.infer<typeof schema>
 
@@ -43,7 +67,7 @@ interface Props {
 }
 
 export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading, saveStatus, serverError, onSave }: Props) {
-  const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, watch, reset } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: '', description: '', keywords: '', canonical: '', robots: 'index, follow',
@@ -158,50 +182,30 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
                   <Search className="w-4 h-4 text-[var(--text-muted)]" />
                   <h2 className="font-body text-sm font-semibold text-[var(--text-primary)]">Search Engine</h2>
                 </div>
-                <FormField
+                <FormInput
+                  name="title" control={control}
                   label="Meta Title" placeholder="Page title (50-60 chars ideal)"
-                  error={errors.title?.message}
                   maxLength={FIELD_LIMITS.META_TITLE}
-                  value={title ?? ''}
-                  {...register('title')}
                 />
-                <TextAreaField
+                <FormTextarea
+                  name="description" control={control}
                   label="Meta Description" rows={3} placeholder="Page description (120-160 chars ideal)"
-                  error={errors.description?.message}
                   maxLength={FIELD_LIMITS.META_DESCRIPTION}
-                  value={description ?? ''}
-                  {...register('description')}
                 />
-                <FormField
+                <FormInput
+                  name="keywords" control={control}
                   label="Keywords" placeholder="photography, bali, wedding (comma-separated)"
-                  error={errors.keywords?.message}
                   maxLength={FIELD_LIMITS.META_KEYWORDS}
-                  {...register('keywords')}
                 />
-                <FormField
+                <FormInput
+                  name="canonical" control={control}
                   label="Canonical URL" placeholder="https://yourdomain.com/page"
-                  error={errors.canonical?.message}
-                  {...register('canonical')}
                 />
                 <div className="flex items-center gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="rounded" {...register('noindex')} />
-                    <span className="cms-label mb-0">noindex</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="rounded" {...register('nofollow')} />
-                    <span className="cms-label mb-0">nofollow</span>
-                  </label>
+                  <FormCheckbox name="noindex" control={control} label="noindex" />
+                  <FormCheckbox name="nofollow" control={control} label="nofollow" />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="cms-label" htmlFor="robots">Robots</label>
-                  <select id="robots" className="cms-input w-full" {...register('robots')}>
-                    <option value="index, follow">index, follow</option>
-                    <option value="noindex, follow">noindex, follow</option>
-                    <option value="index, nofollow">index, nofollow</option>
-                    <option value="noindex, nofollow">noindex, nofollow</option>
-                  </select>
-                </div>
+                <FormSelect name="robots" control={control} label="Robots" options={ROBOTS_OPTIONS} />
               </div>
 
               {/* Open Graph */}
@@ -210,18 +214,11 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
                   <Share2 className="w-4 h-4 text-[var(--text-muted)]" />
                   <h2 className="font-body text-sm font-semibold text-[var(--text-primary)]">Open Graph (Facebook / LinkedIn)</h2>
                 </div>
-                <FormField label="OG Title"       placeholder="Overrides meta title for social"    error={errors.og_title?.message}       {...register('og_title')} />
-                <TextAreaField label="OG Description" rows={2} placeholder="Overrides meta description" error={errors.og_description?.message} {...register('og_description')} />
-                <FormField label="OG Image URL"   placeholder="https://… (1200×630 recommended)"  error={errors.og_image?.message}       {...register('og_image')} />
-                <FormField label="OG URL"         placeholder="Canonical URL for social share"    error={errors.og_url?.message}         {...register('og_url')} />
-                <div className="space-y-1.5">
-                  <label className="cms-label" htmlFor="og_type">OG Type</label>
-                  <select id="og_type" className="cms-input w-full" {...register('og_type')}>
-                    <option value="website">website</option>
-                    <option value="article">article</option>
-                    <option value="profile">profile</option>
-                  </select>
-                </div>
+                <FormInput name="og_title" control={control} label="OG Title" placeholder="Overrides meta title for social" />
+                <FormTextarea name="og_description" control={control} label="OG Description" rows={2} placeholder="Overrides meta description" />
+                <FormInput name="og_image" control={control} label="OG Image URL" placeholder="https://… (1200×630 recommended)" />
+                <FormInput name="og_url" control={control} label="OG URL" placeholder="Canonical URL for social share" />
+                <FormSelect name="og_type" control={control} label="OG Type" options={OG_TYPE_OPTIONS} />
               </div>
 
               {/* Twitter / X */}
@@ -230,17 +227,11 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
                   <Twitter className="w-4 h-4 text-[var(--text-muted)]" />
                   <h2 className="font-body text-sm font-semibold text-[var(--text-primary)]">Twitter / X Card</h2>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="cms-label" htmlFor="twitter_card">Card Type</label>
-                  <select id="twitter_card" className="cms-input w-full" {...register('twitter_card')}>
-                    <option value="summary_large_image">Summary with large image</option>
-                    <option value="summary">Summary</option>
-                  </select>
-                </div>
-                <FormField label="Twitter @site"       placeholder="@yourbrand"                          error={errors.twitter_site?.message}        {...register('twitter_site')} />
-                <FormField label="Twitter Title"       placeholder="Overrides OG title for Twitter"      error={errors.twitter_title?.message}       {...register('twitter_title')} />
-                <TextAreaField label="Twitter Description" rows={2} placeholder="Overrides OG description" error={errors.twitter_description?.message} {...register('twitter_description')} />
-                <FormField label="Twitter Image URL"   placeholder="https://… (1200×628 recommended)"   error={errors.twitter_image?.message}       {...register('twitter_image')} />
+                <FormSelect name="twitter_card" control={control} label="Card Type" options={TWITTER_CARD_OPTIONS} />
+                <FormInput name="twitter_site" control={control} label="Twitter @site" placeholder="@yourbrand" />
+                <FormInput name="twitter_title" control={control} label="Twitter Title" placeholder="Overrides OG title for Twitter" />
+                <FormTextarea name="twitter_description" control={control} label="Twitter Description" rows={2} placeholder="Overrides OG description" />
+                <FormInput name="twitter_image" control={control} label="Twitter Image URL" placeholder="https://… (1200×628 recommended)" />
               </div>
 
               {/* Schema.org JSON-LD */}
@@ -252,11 +243,11 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
                 <p className="font-body text-xs text-[var(--text-muted)]">
                   Structured data for Google rich results. Must be valid JSON.
                 </p>
-                <textarea
+                <FormTextarea
+                  name="schema_markup" control={control}
                   rows={8}
-                  className="cms-input resize-y w-full font-mono text-xs"
+                  textareaClassName="font-mono text-xs"
                   placeholder={'{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": ""\n}'}
-                  {...register('schema_markup')}
                 />
               </div>
 

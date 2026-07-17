@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, FileText, Trash2, Pencil, Globe } from 'lucide-react'
-import { Skeleton, StatusBadge, useTemplateManifest, EnterpriseDataTable } from '@litostudio/ui-cms'
+import { Skeleton, StatusBadge, useTemplateManifest, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
 import type { Page, PageStatus, PageListMeta, EDTColumn } from '@litostudio/ui-cms'
 import { PageSectionsManager } from './PageSectionsManager'
 
@@ -44,7 +44,7 @@ const STATUS_OPTS: { value: PageStatus | ''; label: string }[] = [
 // see also migration 20260714160000_fix_footer_only_pages_header_flag.sql,
 // which corrects any pre-existing rows the seed's ON CONFLICT DO NOTHING
 // left with the wrong flags.
-const FOOTER_ONLY_SLUGS = ['faq', 'privacy', 'terms']
+export const FOOTER_ONLY_SLUGS = ['faq', 'privacy', 'terms']
 
 function MenuToggle({ checked, onChange, disabled, disabledReason }: { checked: boolean; onChange: () => void; disabled?: boolean; disabledReason?: string }) {
   return (
@@ -167,21 +167,20 @@ function buildPageColumns({
       render: (page) => {
         const eligibleParents = allPages.filter((p) => p.id !== page.id)
         return (
-          <select
+          <Select
+            size="sm"
+            className="max-w-[130px]"
             value={page.parent_id ?? ''}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => {
-              const val = e.target.value || null
-              if (val !== page.parent_id) onUpdateParentId(page.id, val)
+            onChange={(val) => {
+              const v = val || null
+              if (v !== page.parent_id) onUpdateParentId(page.id, v)
             }}
-            title="Parent page"
-            className="font-body text-xs px-[6px] py-[3px] bg-[var(--cms-header-bg)] border border-[var(--lito-border)] rounded text-[var(--text-muted)] outline-none cursor-pointer max-w-[130px]"
-          >
-            <option value="">— root —</option>
-            {eligibleParents.map((p) => (
-              <option key={p.id} value={p.id}>{pageLabel(p)}</option>
-            ))}
-          </select>
+            aria-label="Parent page"
+            options={[
+              { value: '', label: '— root —' },
+              ...eligibleParents.map((p) => ({ value: p.id, label: pageLabel(p) })),
+            ]}
+          />
         )
       },
     },
@@ -356,15 +355,11 @@ export function PagesPageView({
           onChange={(e) => setFilter({ search: e.target.value, offset: 0 })}
           className="flex-1 font-body text-[13px] px-3 py-[7px] bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-lg text-[var(--text-primary)] outline-none"
         />
-        <select
+        <Select
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value as PageStatus | '', offset: 0 })}
-          className="font-body text-[13px] px-3 py-[7px] bg-[var(--cms-card-bg)] border border-[var(--lito-border)] rounded-lg text-[var(--text-primary)] cursor-pointer outline-none"
-        >
-          {STATUS_OPTS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+          onChange={(v) => setFilter({ status: v as PageStatus | '', offset: 0 })}
+          options={STATUS_OPTS}
+        />
       </div>
 
       {isLoading ? (

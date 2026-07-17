@@ -1,6 +1,6 @@
 import { http } from '@litostudio/ui-cms'
 import type { ApiResponse, PaginatedResponse, ListParams, BulkUpdateRequest, BulkDeleteRequest, BulkUpdateResponse, BulkDeleteResponse } from '@/types/api.types'
-import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination, Brand, Product, ProductCreateRequest, ProductUpdateRequest, Collection, CollectionCreateRequest, CollectionUpdateRequest, Review, ReviewUpdateRequest, Faq, FaqCreateRequest, FaqUpdateRequest, FaqCategory, FaqCategoryCreateRequest, FaqCategoryUpdateRequest, Service, ServiceCreateRequest, ServiceUpdateRequest, Testimonial, TestimonialCreateRequest, TestimonialUpdateRequest, Feedback, FeedbackCreateRequest, FeedbackUpdateRequest, PricingPackage, PricingCreateRequest, PricingUpdateRequest, HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, Comment, CommentUpdateRequest, Campaign, CampaignCreateRequest, CampaignUpdateRequest, SeoMetadata, SeoSaveRequest } from '@/types/content.types'
+import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination, Brand, Product, ProductCreateRequest, ProductUpdateRequest, Collection, CollectionCreateRequest, CollectionUpdateRequest, Review, ReviewUpdateRequest, Faq, FaqCreateRequest, FaqUpdateRequest, FaqCategory, FaqCategoryCreateRequest, FaqCategoryUpdateRequest, Service, ServiceCreateRequest, ServiceUpdateRequest, Testimonial, TestimonialCreateRequest, TestimonialUpdateRequest, Feedback, FeedbackCreateRequest, FeedbackUpdateRequest, PricingPackage, PricingCreateRequest, PricingUpdateRequest, HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, Comment, CommentUpdateRequest, Campaign, CampaignCreateRequest, CampaignUpdateRequest, SeoMetadata, SeoSaveRequest, Promotion, PromotionCreateRequest, PromotionUpdateRequest, PromotionScope } from '@/types/content.types'
 import type { Order, UpdateOrderStatusRequest, NewsletterSubscriber, UpdateNewsletterStatusRequest, ContactMessage } from '@/types/commerce.types'
 
 // ── Generic content service factory ─────────────────────────────────────
@@ -192,6 +192,66 @@ export const faqCategoriesService = {
   },
 }
 export const commentsService      = createContentService<Comment,        Record<string,unknown>,    CommentUpdateRequest>(      '/api/v1/cms/content/comments')
+
+// Promotions (coupon/campaign/promo discount engine) — hand-written, not
+// createContentService, for two reasons verified against
+// apps/backend/src/modules/promotions/promotions.routes.ts:
+//   1. The list route paginates on `page`/`per_page`, not the generic
+//      client's `page`/`limit` — buildParams() above never sends
+//      `per_page`, so going through createContentService would silently
+//      cap every list at the backend's default per_page=20 with no way
+//      for the caller to request a different page size.
+//   2. Promotions have a scopes sub-resource
+//      (POST/DELETE /:id/scopes) with no equivalent on the generic factory.
+const PROMOTIONS_BASE = '/api/v1/cms/content/promotions'
+
+// The generic PaginatedResponse<T>/PaginationMeta types (api.types.ts)
+// declare camelCase `limit`/`totalPages`, but this route's actual runtime
+// response (verified against promotions.routes.ts:190) returns snake_case
+// `per_page`/`total_pages` — same as collections' and every other
+// dedicated-route backend response in this codebase. Using an accurate
+// local type here instead of the generic one, rather than typing against
+// fields that don't actually exist in the response body.
+export interface PromotionListResponse {
+  success: boolean
+  data: Promotion[]
+  meta: { total: number; page: number; per_page: number; total_pages: number }
+}
+
+export const promotionsService = {
+  async getList(params: { site_id?: string; page?: number; per_page?: number; type?: string; status?: string }) {
+    const q: Record<string, string> = {}
+    if (params.site_id) q.site_id = params.site_id
+    if (params.page)    q.page    = String(params.page)
+    if (params.per_page) q.per_page = String(params.per_page)
+    if (params.type)    q.type    = params.type
+    if (params.status)  q.status  = params.status
+    const query = new URLSearchParams(q).toString()
+    return http.get<PromotionListResponse>(`${PROMOTIONS_BASE}${query ? `?${query}` : ''}`)
+  },
+  async getById(id: string) {
+    const data = await http.get<ApiResponse<Promotion>>(`${PROMOTIONS_BASE}/${id}`)
+    return data.data
+  },
+  async create(payload: PromotionCreateRequest) {
+    const data = await http.post<ApiResponse<Promotion>>(PROMOTIONS_BASE, payload)
+    return data.data
+  },
+  async update(id: string, payload: PromotionUpdateRequest) {
+    const data = await http.patch<ApiResponse<Promotion>>(`${PROMOTIONS_BASE}/${id}`, payload)
+    return data.data
+  },
+  async remove(id: string) {
+    await http.delete(`${PROMOTIONS_BASE}/${id}`)
+  },
+  async addScope(promotionId: string, target: { product_id?: string; collection_id?: string }) {
+    const data = await http.post<ApiResponse<PromotionScope>>(`${PROMOTIONS_BASE}/${promotionId}/scopes`, target)
+    return data.data
+  },
+  async removeScope(promotionId: string, scopeId: string) {
+    await http.delete(`${PROMOTIONS_BASE}/${promotionId}/scopes/${scopeId}`)
+  },
+}
 export const campaignsService     = createContentService<Campaign,       CampaignCreateRequest,     CampaignUpdateRequest>(     '/api/v1/cms/content/campaigns')
 
 // ── Commerce services ─────────────────────────────────────────────────────────

@@ -108,4 +108,13 @@ export const tagService = {
   async remove(id: string) {
     await http.delete(`/api/v1/cms/content/tags/${id}`)
   },
+
+  /** Links existing tag rows to a piece of content via the real
+   * content_tags join table (migration 011) — this is what actually makes
+   * a tag "count" as used/appear consistently, as opposed to products.tags'
+   * free-text array which has no relation to the canonical `tags` table at
+   * all. `replace: true` fully syncs content's tag set to exactly `tag_ids`. */
+  async assign(payload: { tag_ids: string[]; content_type: string; content_id: string; replace?: boolean }) {
+    await http.post<ApiResponse<null>>('/api/v1/cms/content/tags/assign', payload)
+  },
 }

@@ -9,7 +9,7 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { FormField } from '@litostudio/ui-cms'
+import { FormField, Select } from '@litostudio/ui-cms'
 import { Switch } from '@/components/atoms/Switch'
 import { wilayahService } from '@/services/wilayah.service'
 import type { ShippingOrigin, ShippingOriginPayload } from '@/services/shipping-origins.service'
@@ -80,62 +80,66 @@ export function ShippingOriginForm({ initial, onSubmit, onCancel, submitting, er
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1.5">
           <label className="cms-label">Province <span className="text-[var(--s-danger)] ml-0.5">*</span></label>
-          <select
-            className="cms-input w-full"
-            value={provinceId ?? ''}
-            onChange={(e) => {
-              const v = e.target.value ? Number(e.target.value) : null
-              setProvinceId(v); setRegencyId(null); setDistrictId(null); setVillageId(null)
+          <Select
+            className="w-full"
+            value={provinceId != null ? String(provinceId) : ''}
+            onChange={(v) => {
+              const id = v ? Number(v) : null
+              setProvinceId(id); setRegencyId(null); setDistrictId(null); setVillageId(null)
             }}
-          >
-            <option value="">— Select —</option>
-            {(provinces ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+            options={[
+              { value: '', label: '— Select —' },
+              ...(provinces ?? []).map((p) => ({ value: String(p.id), label: p.name })),
+            ]}
+          />
         </div>
         <div className="space-y-1.5">
           <label className="cms-label">Regency / City <span className="text-[var(--s-danger)] ml-0.5">*</span></label>
-          <select
-            className="cms-input w-full"
-            value={regencyId ?? ''}
+          <Select
+            className="w-full"
+            value={regencyId != null ? String(regencyId) : ''}
             disabled={!provinceId}
-            onChange={(e) => {
-              const v = e.target.value ? Number(e.target.value) : null
-              setRegencyId(v); setDistrictId(null); setVillageId(null)
+            onChange={(v) => {
+              const id = v ? Number(v) : null
+              setRegencyId(id); setDistrictId(null); setVillageId(null)
             }}
-          >
-            <option value="">— Select —</option>
-            {(regencies ?? []).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
+            options={[
+              { value: '', label: '— Select —' },
+              ...(regencies ?? []).map((r) => ({ value: String(r.id), label: r.name })),
+            ]}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1.5">
           <label className="cms-label">District <span className="text-[var(--s-danger)] ml-0.5">*</span></label>
-          <select
-            className="cms-input w-full"
-            value={districtId ?? ''}
+          <Select
+            className="w-full"
+            value={districtId != null ? String(districtId) : ''}
             disabled={!regencyId}
-            onChange={(e) => {
-              const v = e.target.value ? Number(e.target.value) : null
-              setDistrictId(v); setVillageId(null)
+            onChange={(v) => {
+              const id = v ? Number(v) : null
+              setDistrictId(id); setVillageId(null)
             }}
-          >
-            <option value="">— Select —</option>
-            {(districts ?? []).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
+            options={[
+              { value: '', label: '— Select —' },
+              ...(districts ?? []).map((d) => ({ value: String(d.id), label: d.name })),
+            ]}
+          />
         </div>
         <div className="space-y-1.5">
           <label className="cms-label">Village <span className="font-normal text-[var(--text-faint)]">(optional)</span></label>
-          <select
-            className="cms-input w-full"
-            value={villageId ?? ''}
+          <Select
+            className="w-full"
+            value={villageId != null ? String(villageId) : ''}
             disabled={!districtId}
-            onChange={(e) => setVillageId(e.target.value ? Number(e.target.value) : null)}
-          >
-            <option value="">— None —</option>
-            {(villages ?? []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-          </select>
+            onChange={(v) => setVillageId(v ? Number(v) : null)}
+            options={[
+              { value: '', label: '— None —' },
+              ...(villages ?? []).map((v) => ({ value: String(v.id), label: v.name })),
+            ]}
+          />
         </div>
       </div>
 

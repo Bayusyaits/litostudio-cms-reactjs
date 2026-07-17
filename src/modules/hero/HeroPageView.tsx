@@ -1,5 +1,5 @@
 import { Tv2, Trash2, Pencil, Plus, ExternalLink, Search, X } from 'lucide-react'
-import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column } from '@litostudio/ui-cms'
+import { Button, StatusBadge, SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { HeroSlide, HeroStatus } from '@/types/content.types'
 
@@ -154,17 +154,18 @@ export function HeroPageView({
           placeholder="Search slides…"
           className="w-64"
         />
-        <select
-          className="cms-input h-9 text-sm w-44"
+        <Select
+          className="w-44"
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value as HeroStatus | '', page: 1 })}
-        >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="draft">Draft</option>
-          <option value="inactive">Inactive</option>
-          <option value="archived">Archived</option>
-        </select>
+          onChange={(v) => setFilter({ status: v as HeroStatus | '', page: 1 })}
+          options={[
+            { value: '', label: 'All statuses' },
+            { value: 'active', label: 'Active' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'inactive', label: 'Inactive' },
+            { value: 'archived', label: 'Archived' },
+          ]}
+        />
       </div>
 
       {/* Table */}

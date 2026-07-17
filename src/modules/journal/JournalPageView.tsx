@@ -1,5 +1,5 @@
 import { Plus, FileText, Trash2, LayoutTemplate, PenLine, Search, X } from 'lucide-react'
-import { Button, StatusBadge, SearchInput, DataTable, type DataTableColumn as Column, AppImageThumb } from '@litostudio/ui-cms'
+import { Button, StatusBadge, SearchInput, DataTable, Select, type DataTableColumn as Column, AppImageThumb } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import { getTitle } from '@/types/content.types'
 import type { JournalPost } from '@/types/content.types'
@@ -98,16 +98,17 @@ export function JournalPageView({
           placeholder="Search journal…"
           className="w-64"
         />
-        <select
-          className="cms-input h-9 text-sm w-40"
+        <Select
+          className="w-40"
           value={filter.status}
-          onChange={(e) => setFilter({ status: e.target.value, page: 1 })}
-        >
-          <option value="">All statuses</option>
-          <option value="active">Published</option>
-          <option value="draft">Draft</option>
-          <option value="archived">Archived</option>
-        </select>
+          onChange={(v) => setFilter({ status: v, page: 1 })}
+          options={[
+            { value: '', label: 'All statuses' },
+            { value: 'active', label: 'Published' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'archived', label: 'Archived' },
+          ]}
+        />
       </div>
 
       <div className="cms-card overflow-hidden">
