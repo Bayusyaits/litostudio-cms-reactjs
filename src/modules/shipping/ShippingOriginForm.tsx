@@ -1,17 +1,16 @@
 // apps/cms/src/modules/shipping/ShippingOriginForm.tsx
-// Add/edit form for a single site_shipping_origins row — cascading
-// province -> regency -> district -> village selects (wilayahService),
+// Add/edit form for a single site_shipping_origins row. The address region
+// (province/regency/district/village/postal code) is set entirely via the
+// single-field AddressAutocomplete search — no manual cascading selects —
 // used by both the "Add origin" and "Edit origin" flows in
-// ShippingOriginsPageView. Owns its own field state + wilayah queries
-// (self-contained reference-data lookups, not app state the page container
-// needs to know about) — only the final payload/edit-id round-trips back up
-// via onSubmit.
+// ShippingOriginsPageView. Owns its own field state (self-contained; only
+// the final payload/edit-id round-trips back up via onSubmit).
 
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { FormField, Select } from '@litostudio/ui-cms'
+import { FormField } from '@litostudio/ui-cms'
 import { Switch } from '@/components/atoms/Switch'
-import { wilayahService } from '@/services/wilayah.service'
+import { AddressAutocomplete } from '@/components/molecules/AddressAutocomplete'
+import type { WilayahSearchResult } from '@/services/wilayah.service'
 import type { ShippingOrigin, ShippingOriginPayload } from '@/services/shipping-origins.service'
 
 interface Props {
@@ -26,9 +25,13 @@ export function ShippingOriginForm({ initial, onSubmit, onCancel, submitting, er
   const [label, setLabel]               = useState(initial?.label ?? '')
   const [addressLine, setAddressLine]   = useState(initial?.address_line ?? '')
   const [provinceId, setProvinceId]     = useState<number | null>(initial?.province?.id ?? null)
+  const [provinceName, setProvinceName] = useState(initial?.province?.name ?? '')
   const [regencyId, setRegencyId]       = useState<number | null>(initial?.regency?.id ?? null)
+  const [regencyName, setRegencyName]   = useState(initial?.regency?.name ?? '')
   const [districtId, setDistrictId]     = useState<number | null>(initial?.district?.id ?? null)
+  const [districtName, setDistrictName] = useState(initial?.district?.name ?? '')
   const [villageId, setVillageId]       = useState<number | null>(initial?.village?.id ?? null)
+  const [villageName, setVillageName]   = useState(initial?.village?.name ?? '')
   const [postalCode, setPostalCode]     = useState(initial?.postal_code ?? '')
   const [contactName, setContactName]   = useState(initial?.contact_name ?? '')
   const [contactPhone, setContactPhone] = useState(initial?.contact_phone ?? '')
@@ -36,15 +39,18 @@ export function ShippingOriginForm({ initial, onSubmit, onCancel, submitting, er
   const [longitude, setLongitude]       = useState(initial?.longitude != null ? String(initial.longitude) : '')
   const [isDefault, setIsDefault]       = useState(initial?.is_default ?? false)
 
-  const { data: provinces }  = useQuery({ queryKey: ['wilayah-provinces'], queryFn: () => wilayahService.getProvinces(), staleTime: 60 * 60 * 1000 })
-  const { data: regencies }  = useQuery({ queryKey: ['wilayah-regencies', provinceId], queryFn: () => wilayahService.getRegencies(provinceId!), enabled: !!provinceId, staleTime: 60 * 60 * 1000 })
-  const { data: districts }  = useQuery({ queryKey: ['wilayah-districts', regencyId], queryFn: () => wilayahService.getDistricts(regencyId!), enabled: !!regencyId, staleTime: 60 * 60 * 1000 })
-  const { data: villages }   = useQuery({ queryKey: ['wilayah-villages', districtId], queryFn: () => wilayahService.getVillages(districtId!), enabled: !!districtId, staleTime: 60 * 60 * 1000 })
-
-  // Reset dependent selects when a parent level changes to something that no
-  // longer matches (but NOT on first mount when hydrating from `initial` —
-  // that's why this only fires on user-driven provinceId/regencyId/districtId
-  // changes further down via the onChange handlers themselves, not an effect).
+  // Search-only: one pick fills all 4 wilayah levels + postal code.
+  function handleAddressAutocomplete(result: WilayahSearchResult) {
+    setProvinceId(result.province_id)
+    setProvinceName(result.province_name)
+    setRegencyId(result.regency_id)
+    setRegencyName(result.regency_name)
+    setDistrictId(result.district_id)
+    setDistrictName(result.district_name)
+    setVillageId(result.village_id)
+    setVillageName(result.village_name)
+    setPostalCode(result.postal_code)
+  }
 
   const canSubmit = label.trim() && addressLine.trim() && provinceId && regencyId && districtId && postalCode.trim().length >= 5
 
@@ -77,73 +83,20 @@ export function ShippingOriginForm({ initial, onSubmit, onCancel, submitting, er
 
       <FormField label="Street address" required value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Jl. Sudirman No. 1" maxLength={500} />
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1.5">
-          <label className="cms-label">Province <span className="text-[var(--s-danger)] ml-0.5">*</span></label>
-          <Select
-            className="w-full"
-            value={provinceId != null ? String(provinceId) : ''}
-            onChange={(v) => {
-              const id = v ? Number(v) : null
-              setProvinceId(id); setRegencyId(null); setDistrictId(null); setVillageId(null)
-            }}
-            options={[
-              { value: '', label: '— Select —' },
-              ...(provinces ?? []).map((p) => ({ value: String(p.id), label: p.name })),
-            ]}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="cms-label">Regency / City <span className="text-[var(--s-danger)] ml-0.5">*</span></label>
-          <Select
-            className="w-full"
-            value={regencyId != null ? String(regencyId) : ''}
-            disabled={!provinceId}
-            onChange={(v) => {
-              const id = v ? Number(v) : null
-              setRegencyId(id); setDistrictId(null); setVillageId(null)
-            }}
-            options={[
-              { value: '', label: '— Select —' },
-              ...(regencies ?? []).map((r) => ({ value: String(r.id), label: r.name })),
-            ]}
-          />
-        </div>
-      </div>
+      <AddressAutocomplete onSelect={handleAddressAutocomplete} />
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1.5">
-          <label className="cms-label">District <span className="text-[var(--s-danger)] ml-0.5">*</span></label>
-          <Select
-            className="w-full"
-            value={districtId != null ? String(districtId) : ''}
-            disabled={!regencyId}
-            onChange={(v) => {
-              const id = v ? Number(v) : null
-              setDistrictId(id); setVillageId(null)
-            }}
-            options={[
-              { value: '', label: '— Select —' },
-              ...(districts ?? []).map((d) => ({ value: String(d.id), label: d.name })),
-            ]}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="cms-label">Village <span className="font-normal text-[var(--text-faint)]">(optional)</span></label>
-          <Select
-            className="w-full"
-            value={villageId != null ? String(villageId) : ''}
-            disabled={!districtId}
-            onChange={(v) => setVillageId(v ? Number(v) : null)}
-            options={[
-              { value: '', label: '— None —' },
-              ...(villages ?? []).map((v) => ({ value: String(v.id), label: v.name })),
-            ]}
-          />
-        </div>
-      </div>
-
-      <FormField label="Postal code" required value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="12190" maxLength={10} />
+      {provinceId
+        ? (
+            <div className="rounded-lg border border-[var(--cms-border)] bg-[var(--cms-surface-alt)] px-3 py-2 space-y-0.5">
+              <p className="font-body text-xs text-[var(--text-primary)]">
+                {[villageName, districtName, regencyName, provinceName].filter(Boolean).join(', ')}
+              </p>
+              <p className="font-body text-xs text-[var(--text-muted)]">Postal code: {postalCode}</p>
+            </div>
+          )
+        : (
+            <p className="font-body text-xs text-[var(--text-muted)]">Search and select an address above to set the region.</p>
+          )}
 
       <div className="grid grid-cols-2 gap-2">
         <FormField label="Contact name" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Warehouse PIC" />

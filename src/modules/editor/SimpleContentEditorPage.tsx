@@ -596,6 +596,54 @@ function ShotsEditor({
   )
 }
 
+function UnitInputField({
+  label,
+  unit,
+  value,
+  onChange,
+  placeholder,
+  hint,
+  required,
+  min,
+  step,
+}: {
+  label: string
+  unit: string
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  placeholder?: string
+  hint?: string
+  required?: boolean
+  min?: string
+  step?: string
+}) {
+  const fieldId = label.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={fieldId} className="cms-label">
+        {label}
+        {required && <span className="text-[var(--s-danger)] ml-0.5">*</span>}
+      </label>
+      <div className="flex w-full overflow-hidden rounded-[var(--radius-sm)] border border-[var(--lito-border)] bg-[var(--cms-card-bg)] transition-colors duration-200 focus-within:border-[var(--lito-ink)]">
+        <input
+          id={fieldId}
+          type="number"
+          min={min}
+          step={step}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className="min-w-0 flex-1 border-none bg-transparent px-3 py-2 font-body text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)]"
+        />
+        <span className="inline-flex shrink-0 items-center border-l border-[var(--lito-border)] px-3 font-body text-[13px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">
+          {unit}
+        </span>
+      </div>
+      {hint && <p className="font-body text-xs text-[var(--text-muted)]">{hint}</p>}
+    </div>
+  )
+}
+
 function renderModuleExtras(
   module: SimpleModule | null,
   extras: Record<string, unknown>,
@@ -783,48 +831,64 @@ function renderModuleExtras(
               volumetric divisor 6000) at save time; the live estimate below
               is shown so the seller can see what will be used. */}
           {!extras.isDigital && (
-            <div className="space-y-1.5 pt-1 border-t border-[var(--lito-border)]">
+            <div className="space-y-3 pt-1 border-t border-[var(--lito-border)]">
               <label className="cms-label pt-2 block">Shipping</label>
-              <div className="grid grid-cols-3 gap-2">
-                <FormField
-                  label="Length (cm)"
-                  type="number" min="0" step="0.1"
-                  value={extras.lengthCm as string ?? ''}
-                  onChange={(e) => setExtra('lengthCm', e.target.value)}
-                  placeholder="0"
-                />
-                <FormField
-                  label="Width (cm)"
-                  type="number" min="0" step="0.1"
-                  value={extras.widthCm as string ?? ''}
-                  onChange={(e) => setExtra('widthCm', e.target.value)}
-                  placeholder="0"
-                />
-                <FormField
-                  label="Height (cm)"
-                  type="number" min="0" step="0.1"
-                  value={extras.heightCm as string ?? ''}
-                  onChange={(e) => setExtra('heightCm', e.target.value)}
-                  placeholder="0"
-                />
-              </div>
-              <FormField
-                label="Weight (grams)"
-                type="number" min="0" step="1"
+              <UnitInputField
+                label="Weight"
+                unit="gram"
+                min="0"
+                step="1"
+                required
                 value={extras.weightGrams as string ?? ''}
                 onChange={(e) => setExtra('weightGrams', e.target.value)}
-                placeholder="Leave blank to auto-estimate from dimensions"
+                placeholder="0"
                 hint={(() => {
                   if (extras.weightGrams) return 'Required for shipping rate calculation at checkout.'
                   const l = extras.lengthCm ? Number(extras.lengthCm) : null
                   const w = extras.widthCm  ? Number(extras.widthCm)  : null
                   const h = extras.heightCm ? Number(extras.heightCm) : null
                   if (l && w && h) {
-                    return `No weight entered — will use the estimated volumetric weight from dimensions: ≈${computeVolumetricWeightGrams(l, w, h)}g.`
+                    return `No weight entered - will use estimated volumetric weight from dimensions: ~${computeVolumetricWeightGrams(l, w, h)} g.`
                   }
-                  return 'Required before this product can be published. Enter a weight, or fill in Length/Width/Height above to auto-estimate it.'
+                  return 'Required before publish. Enter weight manually, or fill parcel size below for automatic volumetric estimate.'
                 })()}
               />
+
+              <div className="rounded-lg border border-[var(--lito-border)] bg-[var(--cms-surface-2)] p-3 space-y-2.5">
+                <p className="font-body text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                  Parcel Size
+                </p>
+                <div className="flex flex-col gap-2">
+                  <UnitInputField
+                    label="Length"
+                    unit="cm"
+                    min="0"
+                    step="0.1"
+                    value={extras.lengthCm as string ?? ''}
+                    onChange={(e) => setExtra('lengthCm', e.target.value)}
+                    placeholder="0"
+                  />
+                  <UnitInputField
+                    label="Width"
+                    unit="cm"
+                    min="0"
+                    step="0.1"
+                    value={extras.widthCm as string ?? ''}
+                    onChange={(e) => setExtra('widthCm', e.target.value)}
+                    placeholder="0"
+                  />
+                  <UnitInputField
+                    label="Height"
+                    unit="cm"
+                    min="0"
+                    step="0.1"
+                    value={extras.heightCm as string ?? ''}
+                    onChange={(e) => setExtra('heightCm', e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="cms-label">Shipping Category (Biteship)</label>
                 <Select

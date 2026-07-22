@@ -73,6 +73,7 @@ export function DashboardLayout() {
       '/team':        'Team',
       '/products':    'Products',
       '/orders':      'Orders',
+      '/returns':     'Returns',
       '/reviews':     'Reviews',
       '/newsletter':  'Newsletter',
       '/messages':    'Messages',

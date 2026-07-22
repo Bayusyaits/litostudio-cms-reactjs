@@ -72,7 +72,11 @@ export default function ProductsPageContainer() {
       onSelect={handleSelect}
       onSelectAll={handleSelectAll}
       onNew={() => navigate('/products/new')}
-      onImport={() => navigate('/products/mass-upload')}
+      // 2026-07-22: /products/mass-upload now just redirects to /csv (see
+      // router.tsx) — going straight there with ?tab=catalog so this button
+      // still lands the editor on the right tab instead of the default
+      // generic CSV tab (see CsvPageContainer.tsx's tab-from-query-param read).
+      onImport={() => navigate('/csv?tab=catalog')}
       onEdit={(id) => navigate(`/products/${id}/edit`)}
       onOpenEditor={(id) => navigate(`/products/${id}/edit`)}
       onDelete={(id) => deleteMutation.mutate(id)}

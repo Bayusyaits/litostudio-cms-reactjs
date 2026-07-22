@@ -11,21 +11,64 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
-import { addonService } from '@/services/addon.service'
-import { WorkspaceSwitcher } from '@litostudio/ui-cms'
+import { menuService, type MenuNode } from '@/services/menu.service'
+import { WorkspaceSwitcher, useWebsiteStore } from '@litostudio/ui-cms'
 
-interface NavItem {
-  label: string
-  icon: React.ElementType
-  to: string
-  // Plans-Addons project (2026-07-15): if set, this item only renders when
-  // the org has this addon slug enabled right now (live state, not a static
-  // list) — resolves the gap the user flagged from the sidebar screenshot:
-  // Promotions/Campaigns/Loyalty were always visible regardless of whether
-  // the org's plan actually includes them or a superadmin had disabled them.
-  addonSlug?: string
-}
+interface NavItem { label: string; icon: React.ElementType; to: string }
 interface NavSection { section: string; items: NavItem[] }
+
+// 2026-07-21 (admin-menu role/addon/flag/plan gating): the sidebar is now
+// data-driven from GET /api/v1/cms/sites/:siteId/menu (visibility already
+// resolved server-side — see cms-menu.routes.ts). This name->component map
+// resolves the icon column (a lucide-react name string in cms_menu_items,
+// maintained via the cms-superadmin "Admin Menu" page) back to the same
+// components this file already imported for the old static array.
+const ICONS: Record<string, React.ElementType> = {
+  LayoutDashboard, FileText, BookOpen, Image, Film, MapPin,
+  Megaphone, Globe, Settings, Users, BarChart2, Search,
+  Tag, Hash, Palette, Sliders,
+  Package, Layers, MessageSquare, HelpCircle, Puzzle,
+  Briefcase, Quote, DollarSign, Tv2, MessageCircle,
+  ShoppingBag, Mail, Inbox, Bot, Link2, Rocket, FileSpreadsheet,
+  Building2, Languages, Truck, Scale, Percent, Award, Settings2, Upload,
+}
+
+// Fail-open fallback — used only while the menu tree is loading/erroring, or
+// before a site is selected (the endpoint needs a siteId). Mirrors the old
+// static NAV array's shape exactly, so a transient API hiccup shows the same
+// baseline menu instead of an empty sidebar. Server-resolved gating (the
+// addon/role/flag/plan checks) simply isn't applied during this fallback
+// window — same trade-off the old addonSlug fail-open comment already
+// accepted here, just widened from one gate to all of them.
+const FALLBACK_NAV: NavSection[] = [
+  { section: 'Overview', items: [
+    { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
+    { label: 'Analytics', icon: BarChart2, to: '/analytics' },
+  ] },
+  { section: 'Content', items: [
+    { label: 'Stories', icon: FileText, to: '/stories' },
+    { label: 'Journal', icon: BookOpen, to: '/journal' },
+    { label: 'Gallery', icon: Image, to: '/gallery' },
+    { label: 'Media', icon: Film, to: '/media' },
+    { label: 'Pages', icon: Globe, to: '/pages' },
+  ] },
+  { section: 'Settings', items: [
+    { label: 'Settings', icon: Settings, to: '/settings' },
+  ] },
+]
+
+function treeToSections(tree: MenuNode[]): NavSection[] {
+  return tree
+    .filter((node) => node.children.length > 0)
+    .map((node) => ({
+      section: node.label,
+      items: node.children.map((c) => ({
+        label: c.label,
+        icon: ICONS[c.icon] ?? Package,
+        to: c.path,
+      })),
+    }))
+}
 
 // Bug fix (2026-07): react-router's NavLink does prefix matching by default
 // (no `end` prop here), so a parent route whose path is a literal prefix of
@@ -41,103 +84,13 @@ interface NavSection { section: string; items: NavItem[] }
 // only that one path as active. This naturally resolves both prefix
 // collisions above while preserving sub-route highlighting for routes that
 // have no sibling nav item claiming a more specific path.
-function useActiveNavPath(): string | null {
+function useActiveNavPath(sections: NavSection[]): string | null {
   const { pathname } = useLocation()
-  const allPaths = NAV.flatMap((s) => s.items.map((i) => i.to))
+  const allPaths = sections.flatMap((s) => s.items.map((i) => i.to))
   const matches = allPaths.filter((p) => pathname === p || pathname.startsWith(`${p}/`))
   if (matches.length === 0) return null
   return matches.reduce((longest, p) => (p.length > longest.length ? p : longest))
 }
-
-const NAV: NavSection[] = [
-  {
-    section: 'Overview',
-    items: [
-      { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
-      { label: 'Analytics',  icon: BarChart2,       to: '/analytics' },
-    ],
-  },
-  {
-    section: 'Content',
-    items: [
-      { label: 'Stories',      icon: FileText, to: '/stories' },
-      { label: 'Journal',      icon: BookOpen, to: '/journal' },
-      { label: 'Gallery',      icon: Image,    to: '/gallery' },
-      { label: 'Media',        icon: Film,     to: '/media' },
-      { label: 'Destinations', icon: MapPin,   to: '/destinations' },
-      { label: 'Brands',       icon: Building2, to: '/brands' },
-      { label: 'Categories',   icon: Tag,      to: '/categories' },
-      { label: 'Tags',         icon: Hash,     to: '/tags' },
-    ],
-  },
-  {
-    section: 'Commerce',
-    items: [
-      { label: 'Products',    icon: Package,       to: '/products' },
-      { label: 'Catalog Import', icon: Upload,     to: '/products/mass-upload' },
-      { label: 'Collections', icon: Layers,        to: '/collections' },
-      { label: 'Orders',      icon: ShoppingBag,   to: '/orders' },
-      { label: 'Promotions',  icon: Percent,       to: '/promotions', addonSlug: 'promotions' },
-      { label: 'Loyalty',     icon: Award,         to: '/loyalty/accounts', addonSlug: 'loyalty_points' },
-      { label: 'Loyalty Settings', icon: Settings2, to: '/loyalty/settings', addonSlug: 'loyalty_points' },
-      { label: 'Shipping Origins', icon: Truck,    to: '/shipping-origins' },
-      { label: 'Reviews',     icon: MessageSquare, to: '/reviews' },
-    ],
-  },
-  {
-    section: 'Services',
-    items: [
-      { label: 'Services',      icon: Briefcase,    to: '/services' },
-      { label: 'Testimonials',  icon: Quote,        to: '/testimonials' },
-      { label: 'Pricing',       icon: DollarSign,   to: '/pricing' },
-    ],
-  },
-  {
-    section: 'Engagement',
-    items: [
-      { label: 'Messages',    icon: Inbox,         to: '/messages' },
-      { label: 'Newsletter',  icon: Mail,          to: '/newsletter' },
-      { label: 'FAQs',        icon: HelpCircle,    to: '/faqs' },
-      { label: 'Comments',    icon: MessageCircle, to: '/comments' },
-    ],
-  },
-  {
-    section: 'Marketing',
-    items: [
-      { label: 'Campaigns', icon: Megaphone, to: '/campaigns', addonSlug: 'campaigns' },
-      { label: 'SEO',       icon: Search,    to: '/seo' },
-    ],
-  },
-  {
-    section: 'Website',
-    items: [
-      { label: 'Hero Slides', icon: Tv2,     to: '/hero' },
-      { label: 'Pages',       icon: Globe,   to: '/pages' },
-      { label: 'Themes',        icon: Palette,  to: '/themes' },
-      { label: 'Site Content',  icon: Sliders,  to: '/site-content' },
-      { label: 'Legal Center',  icon: Scale,    to: '/legal' },
-      { label: 'Add-Ons',       icon: Puzzle,   to: '/addons' },
-    ],
-  },
-  {
-    section: 'Administration',
-    items: [
-      { label: 'Team',          icon: Users,          to: '/team' },
-      { label: 'Organizations', icon: Building2,       to: '/organizations' },
-      { label: 'Domains',       icon: Link2,           to: '/domains' },
-      { label: 'Deployments',   icon: Rocket,          to: '/deployments' },
-      { label: 'CSV Import',    icon: FileSpreadsheet, to: '/csv' },
-      { label: 'AI Assistant',  icon: Bot,             to: '/ai-assistant' },
-    ],
-  },
-  {
-    section: 'Settings',
-    items: [
-      { label: 'Settings',     icon: Settings,   to: '/settings' },
-      { label: 'Labels',       icon: Languages,  to: '/settings/localization' },
-    ],
-  },
-]
 
 function UserWidget() {
   const { user, logout } = useAuthStore()
@@ -186,32 +139,27 @@ function UserWidget() {
 
 export function AppSidebar() {
   const { sidebarOpen } = useThemeStore()
-  const { user } = useAuthStore()
-  const activeNavPath = useActiveNavPath()
+  const { activeSite } = useWebsiteStore()
 
-  // Plans-Addons project (2026-07-15) — live addon state, not the static nav
-  // array. 5 min staleTime matches the addon system's own cache TTL
-  // (addons.routes.ts CACHE_TTL); real-time disable still reaches this menu
-  // within that window without polling on every render.
-  const orgAddonsQuery = useQuery({
-    queryKey: ['cms', 'organization', user?.org_id, 'addons'],
-    queryFn: () => addonService.listOrgAddons(user!.org_id!),
-    enabled: !!user?.org_id,
+  // 2026-07-21 (admin-menu role/addon/flag/plan gating): visibility is now
+  // resolved server-side (role rank + org add-ons + site feature flags +
+  // org plan) — see menu.service.ts / cms-menu.routes.ts. 5 min staleTime
+  // matches the addon system's own cache TTL (addons.routes.ts CACHE_TTL);
+  // a superadmin toggle still reaches this menu within that window without
+  // polling on every render.
+  const menuQuery = useQuery({
+    queryKey: ['cms', 'menu', activeSite?.id],
+    queryFn: () => menuService.getTree(activeSite!.id),
+    enabled: !!activeSite?.id,
     staleTime: 5 * 60 * 1000,
   })
-  const enabledAddonSlugs = new Set(
-    (orgAddonsQuery.data ?? []).filter((oa) => oa.enabled).map((oa) => oa.addons?.slug).filter(Boolean),
-  )
-  // Fail open while loading/erroring — an addon-gated nav item briefly
-  // showing before the check resolves (or on a fetch failure) is a much
-  // smaller problem than every gated CMS section vanishing during a
-  // transient network hiccup. The backend routes remain the real
-  // enforcement point regardless of what this menu shows.
-  const isNavItemVisible = (item: NavItem): boolean => {
-    if (!item.addonSlug) return true
-    if (orgAddonsQuery.isLoading || orgAddonsQuery.isError) return true
-    return enabledAddonSlugs.has(item.addonSlug)
-  }
+  // Fail open (no site selected yet, still loading, or the fetch errored):
+  // fall back to a small baseline menu rather than an empty sidebar — same
+  // trade-off the old addonSlug fail-open comment already accepted here,
+  // just widened from one gate to all of them. The backend routes remain
+  // the real enforcement point regardless of what this menu shows.
+  const sections: NavSection[] = menuQuery.data ? treeToSections(menuQuery.data) : FALLBACK_NAV
+  const activeNavPath = useActiveNavPath(sections)
 
   if (!sidebarOpen) return null
 
@@ -231,8 +179,7 @@ export function AppSidebar() {
 
       {/* Nav */}
       <nav className="cms-scroll flex-1 py-2">
-        {NAV.map(({ section, items }) => {
-          const visibleItems = items.filter(isNavItemVisible)
+        {sections.map(({ section, items: visibleItems }) => {
           if (visibleItems.length === 0) return null
           return (
             <div key={section} className="mb-1">

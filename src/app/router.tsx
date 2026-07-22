@@ -33,7 +33,6 @@ const ThemesPage       = lazy(() => import('@/modules/themes/ThemesPageContainer
 const PagesPage        = lazy(() => import('@/modules/pages/PagesPageContainer'))
 const PagesNewPage     = lazy(() => import('@/modules/pages/PagesNewPageContainer'))
 const ProductsPage     = lazy(() => import('@/modules/products/ProductsPageContainer'))
-const ProductsMassUploadPage = lazy(() => import('@/modules/products/MassUploadPageContainer'))
 const CollectionsPage  = lazy(() => import('@/modules/collections/CollectionsPageContainer'))
 const ReviewsPage      = lazy(() => import('@/modules/reviews/ReviewsPageContainer'))
 const FaqsPage         = lazy(() => import('@/modules/faqs/FaqsPageContainer'))
@@ -47,6 +46,10 @@ const GenerateContentPage     = lazy(() => import('@/modules/onboarding/Generate
 const BlockEditorPage          = lazy(() => import('@litostudio/ui-cms').then((m) => ({ default: m.BlockEditorPage })))
 const PagePreviewPage          = lazy(() => import('@litostudio/ui-cms').then((m) => ({ default: m.PagePreviewPage })))
 const SimpleContentEditorPage  = lazy(() => import('@/modules/editor/SimpleContentEditorPage'))
+// Product-editor rebuild (grill-me 2026-07-22) — replaces
+// SimpleContentEditorPage's products case (category/attributes/brand were
+// hardcoded there against the legacy site-scoped tables).
+const ProductWizardPage        = lazy(() => import('@/modules/products/wizard/ProductWizardPage'))
 const OrganizationsPage  = lazy(() => import('@/modules/organizations/OrganizationsPageContainer'))
 const AddonsPage         = lazy(() => import('@/modules/addons/AddonsPageContainer'))
 const ServicesPage       = lazy(() => import('@/modules/services/ServicesPageContainer'))
@@ -61,6 +64,7 @@ const LabelsPage         = lazy(() => import('@/modules/settings/labels/LabelsPa
 // Commerce + engagement pages
 const OrdersPage         = lazy(() => import('@/modules/orders/OrdersPageContainer'))
 const OrderDetailPage    = lazy(() => import('@/modules/orders/OrderDetailPage'))
+const ReturnsPage        = lazy(() => import('@/modules/returns/ReturnsPage'))
 const PromotionsPage     = lazy(() => import('@/modules/promotions/PromotionsPageContainer'))
 const PromotionFormPage  = lazy(() => import('@/modules/promotions/PromotionFormPage'))
 const LoyaltyAccountsPage      = lazy(() => import('@/modules/loyalty/LoyaltyAccountsPageContainer'))
@@ -145,9 +149,14 @@ export const router = createBrowserRouter([
 
       // Products
       { path: 'products',              element: <S><ProductsPage /></S> },
-      { path: 'products/mass-upload',  element: <S><ProductsMassUploadPage /></S> },
-      { path: 'products/new',          element: <S><SimpleContentEditorPage /></S> },
-      { path: 'products/:id/edit',     element: <S><SimpleContentEditorPage /></S> },
+      // 2026-07-22 (import-menu consolidation): "Catalog Import" no longer
+      // has its own sidebar entry/route — the same MassUploadPageContainer
+      // is now rendered as a tab inside /csv (CsvPageContainer.tsx). This
+      // redirect keeps the old URL (bookmarks, any hardcoded link) working
+      // instead of 404ing, same convention as the '/' redirect above.
+      { path: 'products/mass-upload',  element: <Navigate to="/csv" replace /> },
+      { path: 'products/new',          element: <S><ProductWizardPage /></S> },
+      { path: 'products/:id/edit',     element: <S><ProductWizardPage /></S> },
 
       // Collections
       { path: 'collections',           element: <S><CollectionsPage /></S> },
@@ -177,6 +186,7 @@ export const router = createBrowserRouter([
       // Commerce + engagement
       { path: 'orders',            element: <S><OrdersPage /></S> },
       { path: 'orders/:id',        element: <S><OrderDetailPage /></S> },
+      { path: 'returns',           element: <S><ReturnsPage /></S> },
 
       // Promotions (coupon/campaign/promo discount engine)
       { path: 'promotions',           element: <S><PromotionsPage /></S> },

@@ -31,6 +31,7 @@ import {
 } from '@litostudio/ui-cms'
 import type { VariantSyncRow } from '@litostudio/ui-cms'
 import { TagInput } from './TagInput'
+import { skuGeneratorService } from '@/services/catalog.service'
 import type { Product } from '@/types/content.types'
 
 const MAX_AXES = 2
@@ -39,6 +40,7 @@ interface MatrixRow {
   color: string
   size: string
   sku: string
+  barcode: string
   price: string
   quantity: string
 }
@@ -62,10 +64,15 @@ interface VariantsCardProps {
   product?: Product
   /** SKU prefix seed, typically the product slug — keeps auto-generated SKUs human-readable. */
   skuPrefix?: string
+  /** Category/brand/product name feed the "Generate SKU" button's
+   * CATEGORY-BRAND-PRODUCT-VARIANT-SEQUENCE format (sku-generator.ts). */
+  categoryId?: string | null
+  brandId?: string | null
+  productName?: string
   onSynced?: () => void
 }
 
-export function VariantsCard({ productId, disabled, product, skuPrefix = '', onSynced }: VariantsCardProps) {
+export function VariantsCard({ productId, disabled, product, skuPrefix = '', categoryId, brandId, productName = '', onSynced }: VariantsCardProps) {
   const toast = useToast()
   const [colors, setColors] = useState<string[]>([])
   const [sizes, setSizes]   = useState<string[]>([])
@@ -103,6 +110,7 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', onS
       nextRows.push({
         color, size,
         sku: v.sku ?? autoSku(skuPrefix, color, size, idx),
+        barcode: v.barcode ?? '',
         price: v.price != null ? String(v.price) : '',
         quantity: inv ? String(inv.quantity ?? 0) : '0',
       })
@@ -138,6 +146,7 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', onS
           next.push(existing ?? {
             color, size,
             sku: autoSku(skuPrefix, color, size, next.length),
+            barcode: '',
             price: '', quantity: '0',
           })
         }
@@ -152,6 +161,17 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', onS
 
   function removeRow(color: string, size: string) {
     setRows(prev => prev.filter(r => !(r.color === color && r.size === size)))
+  }
+
+  async function generateRowSku(color: string, size: string) {
+    if (!productName.trim()) return
+    const sku = await skuGeneratorService.generate({
+      category_id: categoryId ?? null,
+      brand_id: brandId ?? null,
+      product_name: productName,
+      variant_options: { ...(color ? { color } : {}), ...(size ? { size } : {}) },
+    })
+    updateRow(color, size, { sku })
   }
 
   function applyBulkPrice() {
@@ -178,6 +198,7 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', onS
 
       const syncRows: VariantSyncRow[] = rows.map(r => ({
         sku: r.sku.trim(),
+        barcode: r.barcode.trim() || null,
         name: [r.color, r.size].filter(Boolean).join(' / ') || 'Default',
         options: {
           ...(r.color ? { color: r.color } : {}),
@@ -318,6 +339,7 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', onS
                   {colors.length > 0 && <th className="py-1.5 pr-2 font-body font-medium">Color</th>}
                   {sizes.length > 0 && <th className="py-1.5 pr-2 font-body font-medium">Size</th>}
                   <th className="py-1.5 pr-2 font-body font-medium">SKU</th>
+                  <th className="py-1.5 pr-2 font-body font-medium">Barcode</th>
                   <th className="py-1.5 pr-2 font-body font-medium">Price</th>
                   <th className="py-1.5 pr-2 font-body font-medium">Stock</th>
                   <th className="py-1.5 font-body font-medium" />
@@ -329,11 +351,28 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', onS
                     {colors.length > 0 && <td className="py-1.5 pr-2 font-body">{r.color}</td>}
                     {sizes.length > 0 && <td className="py-1.5 pr-2 font-body">{r.size}</td>}
                     <td className="py-1.5 pr-2">
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          className="cms-input w-28 font-mono text-[11px]"
+                          value={r.sku}
+                          onChange={e => updateRow(r.color, r.size, { sku: e.target.value })}
+                        />
+                        <button
+                          type="button"
+                          className="font-body text-[10px] text-[var(--text-muted)] hover:underline whitespace-nowrap"
+                          onClick={() => void generateRowSku(r.color, r.size)}
+                        >
+                          Generate
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-1.5 pr-2">
                       <input
                         type="text"
-                        className="cms-input w-32 font-mono text-[11px]"
-                        value={r.sku}
-                        onChange={e => updateRow(r.color, r.size, { sku: e.target.value })}
+                        className="cms-input w-28 font-mono text-[11px]"
+                        value={r.barcode}
+                        onChange={e => updateRow(r.color, r.size, { barcode: e.target.value })}
                       />
                     </td>
                     <td className="py-1.5 pr-2">

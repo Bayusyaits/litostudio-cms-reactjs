@@ -1,7 +1,13 @@
 import { useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useWebsiteStore, useOrgStore, http, RadioGroup, type RadioOption } from '@litostudio/ui-cms'
 import { useAuthStore } from '@/stores/auth.store'
 import type { ApiResponse } from '@/types/api.types'
+// 2026-07-22 (import-menu consolidation): folded in as a tab rather than its
+// own sidebar entry/route — see this file's header comment below and
+// DECISIONS.md. Component itself is untouched; only where it's rendered from
+// changed (was routed standalone at /products/mass-upload).
+import MassUploadPageContainer from '@/modules/products/MassUploadPageContainer'
 
 // 2026-07-17 style-standardization pass: replaced hardcoded Tailwind colors
 // (green-600/orange-300/red-600 etc.) with the CMS's real design tokens
@@ -33,12 +39,31 @@ interface ImportResult {
   message: string
 }
 
+// 2026-07-22 (import-menu consolidation, per user request): "Catalog Import"
+// used to be its own sidebar entry + route (/products/mass-upload,
+// MassUploadPageContainer.tsx — a real, distinct tool: .xlsx-based,
+// variant/image-aware, backed by product-mass-upload.routes.ts, NOT the
+// same backend as this page's per-module CSV import at
+// /api/v1/cms/csv/:module/import). Rather than deleting that capability or
+// awkwardly folding its different data model into the generic CSV
+// import/export flow below, it's now a second tab on this single "Imports"
+// page — same component, unchanged, just no longer reachable via its own
+// nav item. See router.tsx (products/mass-upload now redirects here) and
+// the cms_menu_items migration that deactivates 'menu-catalog-import'.
+type ImportTab = 'csv' | 'catalog'
+
 export default function CsvPageContainer() {
   const { activeSite } = useWebsiteStore()
   const { org } = useOrgStore()
   const { token } = useAuthStore()
   const siteId = activeSite?.id ?? ''
   const orgId = org?.id ?? ''
+
+  // Deep-link support (e.g. ProductsPageContainer.tsx's "Import" button now
+  // goes to /csv?tab=catalog directly, since /products/mass-upload is just
+  // a redirect here and would otherwise land on the wrong default tab).
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState<ImportTab>(searchParams.get('tab') === 'catalog' ? 'catalog' : 'csv')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedModule, setSelectedModule] = useState('products')
@@ -116,10 +141,41 @@ export default function CsvPageContainer() {
   return (
     <div className="p-6 space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">CSV Import / Export</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Bulk import or export content data as CSV.</p>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Imports</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-1">
+          Every bulk import/export tool lives here now — pick a tab below.
+        </p>
       </div>
 
+      {/* Tabs: generic per-module CSV import/export vs. the richer
+          product-specific catalog mass-upload tool (see file header). */}
+      <div className="flex gap-1 border-b border-[var(--lito-border)]">
+        <button
+          type="button"
+          onClick={() => setTab('csv')}
+          className={`cms-tab ${tab === 'csv' ? 'active' : ''}`}
+        >
+          CSV Import / Export
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('catalog')}
+          className={`cms-tab ${tab === 'catalog' ? 'active' : ''}`}
+        >
+          Catalog Mass Upload
+        </button>
+      </div>
+
+      {tab === 'catalog' && (
+        // Untouched component, rendered without its own outer page padding
+        // (this page already supplies that) — see MassUploadPageContainer.tsx.
+        <div className="-mx-6 -mt-2">
+          <MassUploadPageContainer />
+        </div>
+      )}
+
+      {tab === 'csv' && (
+        <>
       {/* Module selector */}
       <div className="flex gap-2 flex-wrap">
         {MODULES.map(m => (
@@ -241,6 +297,8 @@ export default function CsvPageContainer() {
           </div>
         )}
       </section>
+        </>
+      )}
     </div>
   )
 }

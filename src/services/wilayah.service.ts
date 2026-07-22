@@ -14,6 +14,23 @@ export interface WilayahOption {
   code: string | number
 }
 
+// One row = a fully-resolvable village → its whole province/regency/
+// district/postal-code chain. Only villages where postal_code could be
+// confidently backfilled are searchable (see migrations/20260721220000_
+// wilayah_postal_code_search.sql) — everything else still needs the
+// cascading selects this supplements, not replaces.
+export interface WilayahSearchResult {
+  province_id: number
+  province_name: string
+  regency_id: number
+  regency_name: string
+  district_id: number
+  district_name: string
+  village_id: number
+  village_name: string
+  postal_code: string
+}
+
 export const wilayahService = {
   async getProvinces() {
     const data = await http.get<ApiResponse<WilayahOption[]>>('/api/v1/cms/wilayah/provinces')
@@ -29,6 +46,10 @@ export const wilayahService = {
   },
   async getVillages(districtId: number) {
     const data = await http.get<ApiResponse<WilayahOption[]>>(`/api/v1/cms/wilayah/villages?district_id=${districtId}`)
+    return data.data
+  },
+  async search(q: string) {
+    const data = await http.get<ApiResponse<WilayahSearchResult[]>>(`/api/v1/cms/wilayah/search?q=${encodeURIComponent(q)}`)
     return data.data
   },
 }

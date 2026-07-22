@@ -266,6 +266,12 @@ export interface Product {
    *  this type previously omitted every column added by migrations 085/089,
    *  even though the backend has returned them since those shipped. */
   sku?: string | null
+  /** Product-editor rebuild (2026-07-22) — was missing entirely; the
+   *  backend has always read/written these columns (products.routes.ts). */
+  barcode?: string | null
+  cover_image?: string | null
+  images?: string[]
+  requires_booking?: boolean
   weight_grams?: number | null
   length_cm?: number | null
   width_cm?: number | null
@@ -276,6 +282,7 @@ export interface Product {
   variants?: Array<{
     id: string
     sku: string | null
+    barcode?: string | null
     name: string
     price: number | null
     compare_at_price: number | null
@@ -297,10 +304,14 @@ export interface ProductCreateRequest {
   slug: string
   name: string
   product_type: ProductType
+  sku?: string | null
+  barcode?: string | null
   price?: number
   compare_at_price?: number
   currency?: string
   is_featured?: boolean
+  cover_image?: string | null
+  images?: string[]
   tags?: string[]
   extra?: ProductExtra
   sort_order?: number
@@ -309,6 +320,12 @@ export interface ProductCreateRequest {
   brand_id?: string | null
   is_digital?: boolean
   digital_file_url?: string | null
+  requires_booking?: boolean
+  weight_grams?: number | null
+  length_cm?: number | null
+  width_cm?: number | null
+  height_cm?: number | null
+  biteship_category?: string
   translation?: { locale: string; name?: string; title?: string; description?: string; excerpt?: string; body?: unknown }
 }
 
