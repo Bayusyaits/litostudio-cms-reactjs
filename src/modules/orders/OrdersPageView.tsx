@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ShoppingBag, Search, X } from 'lucide-react'
 import { SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Order, OrderStatus } from '@/types/commerce.types'
+import { OrdersReportsPanel } from './OrdersReportsPanel'
 
 const ORDER_STATUSES: OrderStatus[] = [
   'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded',
@@ -29,6 +31,8 @@ function formatCurrency(amount: number, currency = 'IDR') {
 }
 
 export function OrdersPageView({ orders, meta, isLoading, filter, setFilter, onStatusChange }: Props) {
+  const [tab, setTab] = useState<'orders' | 'reports'>('orders')
+
   const columns: Column<Order>[] = [
     {
       key: 'customer_name',
@@ -93,38 +97,53 @@ export function OrdersPageView({ orders, meta, isLoading, filter, setFilter, onS
         </div>
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <SearchInput
-          skin="cms"
-          icon={<Search className="w-3.5 h-3.5" />}
-          clearIcon={<X className="w-3.5 h-3.5" />}
-          value={filter.search}
-          onChange={(search) => setFilter({ search, page: 1 })}
-          placeholder="Search by name or email…"
-          className="w-64"
-        />
-        <Select
-          className="w-44"
-          value={filter.status}
-          onChange={(v) => setFilter({ status: v as OrderStatus | '', page: 1 })}
-          options={[
-            { value: '', label: 'All statuses' },
-            ...ORDER_STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })),
-          ]}
-        />
+      <div className="flex items-center gap-1 border-b border-[var(--lito-border)]">
+        <button type="button" className={`cms-tab ${tab === 'orders' ? 'active' : ''}`} onClick={() => setTab('orders')}>
+          Orders
+        </button>
+        <button type="button" className={`cms-tab ${tab === 'reports' ? 'active' : ''}`} onClick={() => setTab('reports')}>
+          Reports
+        </button>
       </div>
 
-      <div className="cms-card overflow-hidden">
-        <DataTable
-          data={orders}
-          columns={columns}
-          keyField="id"
-          loading={isLoading}
-          emptyTitle="No orders yet"
-          emptyDescription="Customer orders will appear here once placed"
-          emptyIcon={<ShoppingBag />}
-        />
-      </div>
+      {tab === 'orders' && (
+        <>
+          <div className="flex items-center gap-3 flex-wrap">
+            <SearchInput
+              skin="cms"
+              icon={<Search className="w-3.5 h-3.5" />}
+              clearIcon={<X className="w-3.5 h-3.5" />}
+              value={filter.search}
+              onChange={(search) => setFilter({ search, page: 1 })}
+              placeholder="Search by name or email…"
+              className="w-64"
+            />
+            <Select
+              className="w-44"
+              value={filter.status}
+              onChange={(v) => setFilter({ status: v as OrderStatus | '', page: 1 })}
+              options={[
+                { value: '', label: 'All statuses' },
+                ...ORDER_STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })),
+              ]}
+            />
+          </div>
+
+          <div className="cms-card overflow-hidden">
+            <DataTable
+              data={orders}
+              columns={columns}
+              keyField="id"
+              loading={isLoading}
+              emptyTitle="No orders yet"
+              emptyDescription="Customer orders will appear here once placed"
+              emptyIcon={<ShoppingBag />}
+            />
+          </div>
+        </>
+      )}
+
+      {tab === 'reports' && <OrdersReportsPanel />}
     </div>
   )
 }

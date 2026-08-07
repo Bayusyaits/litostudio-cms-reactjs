@@ -33,7 +33,10 @@ export interface Addon {
   name: string
   description: string | null
   category: string
-  tier: 'free' | 'pro' | 'enterprise'
+  // 2026-07-25 bug fix (QA audit, Low-Medium #5): the real `addons.tier`
+  // CHECK constraint (migrations/020_addons_navigation_language.sql) only
+  // allows core/builtin/marketplace — this type never matched reality.
+  tier: 'core' | 'builtin' | 'marketplace'
   icon: string | null
   sort_order: number
   // Empty schema is seeded as '{}' (no `type`/`properties`) for add-ons

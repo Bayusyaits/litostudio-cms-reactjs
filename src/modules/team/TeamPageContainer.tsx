@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { teamService, type InvitePayload } from '@/services/team.service'
 import { TeamPageView } from './TeamPageView'
 import { getErrorMessage } from '@litostudio/ui-cms'
+import { useAuthStore } from '@/stores/auth.store'
 
 // `page`/`search` used to be tracked here and threaded through to
 // teamService.getMembers({ page, limit, search }) — but that call ignores
@@ -18,6 +19,18 @@ import { getErrorMessage } from '@litostudio/ui-cms'
 export default function TeamPageContainer() {
   const qc = useQueryClient()
   const [inviteError, setInviteError] = useState<string | null>(null)
+
+  // BUG FIX (QA-AUDIT-2026-08-05.md finding 2.1): the member-actions menu
+  // (change role / remove member) used to render for ANY logged-in user
+  // regardless of their own role, but the backend requires role 'owner' for
+  // both actions (see apps/backend organization.routes.ts) — a non-owner
+  // clicking "Remove member" got a 403 that (before the MutationCache fix
+  // in lib/queryClient.ts) surfaced with zero feedback at all. Hiding the
+  // menu for non-owners prevents the doomed request from ever being sent;
+  // the global error toast now also covers the case where role changes
+  // mid-session and a stale client still shows the menu.
+  const { user } = useAuthStore()
+  const currentUserIsOwner = user?.org_role === 'owner'
 
   const { data, isLoading } = useQuery({
     queryKey: ['team'],
@@ -54,6 +67,7 @@ export default function TeamPageContainer() {
       inviteError={inviteError}
       onChangeRole={(id, role) => roleChangeMutation.mutate({ id, role })}
       onRemove={(id) => removeMutation.mutate(id)}
+      currentUserIsOwner={currentUserIsOwner}
     />
   )
 }

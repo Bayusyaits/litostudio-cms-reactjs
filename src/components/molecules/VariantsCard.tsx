@@ -23,6 +23,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
+import { z } from 'zod'
 import {
   ImageUploader,
   draftMediaStore,
@@ -35,6 +36,33 @@ import { skuGeneratorService } from '@/services/catalog.service'
 import type { Product } from '@/types/content.types'
 
 const MAX_AXES = 2
+
+/**
+ * 2026-07-22 (user request): per-row mandatory validation, using this
+ * codebase's actual standard — Zod (see DynamicAttributeForm.tsx's header
+ * comment for the same "it's Zod, not Yup" grounding — verified by grep,
+ * not assumed). Replaces the old bare `if (...) throw new Error(...)`
+ * checks that only covered axis-count and a non-empty SKU; price is now
+ * required too — product_variants.price is nullable in the DB (confirmed
+ * against DB.sql), so nothing below the app layer stops a half-priced
+ * variant matrix from saving otherwise. Server-side counterpart:
+ * assertVariantsReady in products.routes.ts blocks the whole product from
+ * being published if any non-archived variant is still missing a SKU or
+ * price — this client check alone only guards this card's own "Save
+ * Variants" button, not the product's Publish action.
+ */
+const variantRowSchema = z.object({
+  color: z.string(),
+  size: z.string(),
+  sku: z.string().trim().min(1, 'SKU is required'),
+  barcode: z.string(),
+  price: z.string().trim().min(1, 'Price is required')
+    .refine((v) => Number.isFinite(Number(v)) && Number(v) > 0, 'Price must be greater than 0'),
+  quantity: z.string(),
+}).refine((r) => [r.color, r.size].filter(Boolean).length <= MAX_AXES, {
+  message: `Too many option axes on one row — maximum is ${MAX_AXES} (Color x Size).`,
+  path: ['sku'], // surfaced on the row; axis count itself has no dedicated cell to attach to
+})
 
 interface MatrixRow {
   color: string
@@ -82,6 +110,7 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', cat
   const [bulkStock, setBulkStock] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [rowErrors, setRowErrors] = useState<Record<string, string>>({})
 
   // ── Hydrate once from the loaded product (existing variants/media/inventory) ──
   const hydrated = useRef(false)
@@ -157,6 +186,7 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', cat
 
   function updateRow(color: string, size: string, patch: Partial<MatrixRow>) {
     setRows(prev => prev.map(r => (r.color === color && r.size === size ? { ...r, ...patch } : r)))
+    setRowErrors(prev => { const next = { ...prev }; delete next[rowKey(color, size)]; return next })
   }
 
   function removeRow(color: string, size: string) {
@@ -187,13 +217,20 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', cat
     if (!productId || rows.length === 0) return
     setSaving(true)
     setSaveError(null)
+    setRowErrors({})
     try {
-      // 2-axis cap is also enforced server-side (product-variants.routes.ts)
-      // — this is a fast client-side check so a mistake never round-trips.
+      // 2-axis cap is also enforced server-side (product-variants.routes.ts).
+      // SKU + price presence is enforced server-side too, at publish time
+      // (assertVariantsReady, products.routes.ts) — this is the fast
+      // client-side check so a mistake never round-trips first.
+      const nextRowErrors: Record<string, string> = {}
       for (const r of rows) {
-        const axisCount = [r.color, r.size].filter(Boolean).length
-        if (axisCount > MAX_AXES) throw new Error(`Too many option axes on one row — maximum is ${MAX_AXES} (Color x Size).`)
-        if (!r.sku.trim()) throw new Error('Every variant needs a SKU.')
+        const result = variantRowSchema.safeParse(r)
+        if (!result.success) nextRowErrors[rowKey(r.color, r.size)] = result.error.issues[0]?.message ?? 'Invalid row'
+      }
+      if (Object.keys(nextRowErrors).length > 0) {
+        setRowErrors(nextRowErrors)
+        throw new Error('Fix the highlighted variant row(s) before saving — every variant needs a SKU and a price greater than 0.')
       }
 
       const syncRows: VariantSyncRow[] = rows.map(r => ({
@@ -338,23 +375,26 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', cat
                 <tr className="text-left text-[var(--text-faint)] border-b border-[var(--lito-border)]">
                   {colors.length > 0 && <th className="py-1.5 pr-2 font-body font-medium">Color</th>}
                   {sizes.length > 0 && <th className="py-1.5 pr-2 font-body font-medium">Size</th>}
-                  <th className="py-1.5 pr-2 font-body font-medium">SKU</th>
+                  <th className="py-1.5 pr-2 font-body font-medium">SKU <span className="text-[var(--s-danger)]">*</span></th>
                   <th className="py-1.5 pr-2 font-body font-medium">Barcode</th>
-                  <th className="py-1.5 pr-2 font-body font-medium">Price</th>
+                  <th className="py-1.5 pr-2 font-body font-medium">Price <span className="text-[var(--s-danger)]">*</span></th>
                   <th className="py-1.5 pr-2 font-body font-medium">Stock</th>
                   <th className="py-1.5 font-body font-medium" />
                 </tr>
               </thead>
               <tbody>
-                {rows.map(r => (
-                  <tr key={rowKey(r.color, r.size)} className="border-b border-[var(--lito-border)] last:border-0">
+                {rows.map(r => {
+                  const key = rowKey(r.color, r.size)
+                  const rowError = rowErrors[key]
+                  return (
+                  <tr key={key} className="border-b border-[var(--lito-border)] last:border-0 align-top">
                     {colors.length > 0 && <td className="py-1.5 pr-2 font-body">{r.color}</td>}
                     {sizes.length > 0 && <td className="py-1.5 pr-2 font-body">{r.size}</td>}
                     <td className="py-1.5 pr-2">
                       <div className="flex items-center gap-1">
                         <input
                           type="text"
-                          className="cms-input w-28 font-mono text-[11px]"
+                          className={`cms-input w-28 font-mono text-[11px] ${rowError ? 'border-[var(--s-danger)]' : ''}`}
                           value={r.sku}
                           onChange={e => updateRow(r.color, r.size, { sku: e.target.value })}
                         />
@@ -378,11 +418,12 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', cat
                     <td className="py-1.5 pr-2">
                       <input
                         type="number"
-                        className="cms-input w-24 text-xs"
+                        className={`cms-input w-24 text-xs ${rowError ? 'border-[var(--s-danger)]' : ''}`}
                         value={r.price}
                         onChange={e => updateRow(r.color, r.size, { price: e.target.value })}
                         placeholder="—"
                       />
+                      {rowError && <p className="font-body text-[10px] text-[var(--s-danger)] mt-0.5 whitespace-nowrap">{rowError}</p>}
                     </td>
                     <td className="py-1.5 pr-2">
                       <input
@@ -402,7 +443,8 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', cat
                       </button>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>

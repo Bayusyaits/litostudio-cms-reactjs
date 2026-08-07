@@ -39,18 +39,21 @@ interface AddonsPageViewProps {
 
 // ─── Tier badge ───────────────────────────────────────────────────────────────
 
+// 2026-07-25 bug fix (QA audit, Low-Medium #5): these declared
+// free/pro/enterprise, but the real `addons.tier` CHECK constraint
+// (migrations/020_addons_navigation_language.sql) only allows
+// core/builtin/marketplace — only `core` ever matched, so nearly every real
+// add-on rendered this badge's unstyled fallback.
 function TierBadge({ tier }: { tier: string }) {
   const colors: Record<string, string> = {
-    core:       'rgba(148,163,184,0.15)',
-    free:       'rgba(34,197,94,0.15)',
-    pro:        'rgba(212,168,83,0.15)',
-    enterprise: 'rgba(139,92,246,0.15)',
+    core:        'rgba(148,163,184,0.15)',
+    builtin:     'rgba(212,168,83,0.15)',
+    marketplace: 'rgba(139,92,246,0.15)',
   }
   const text: Record<string, string> = {
-    core:       '#94a3b8',
-    free:       '#22c55e',
-    pro:        '#D4A853',
-    enterprise: '#8b5cf6',
+    core:        '#94a3b8',
+    builtin:     '#D4A853',
+    marketplace: '#8b5cf6',
   }
   return (
     <span
@@ -64,14 +67,20 @@ function TierBadge({ tier }: { tier: string }) {
 
 // ─── Category label ───────────────────────────────────────────────────────────
 
+// 2026-07-25 bug fix (QA audit, Low #6): customer/integration/ui don't exist
+// in the database's real seeded categories (migrations/
+// 020_addons_navigation_language.sql) — replaced with the 3 real categories
+// that were missing labels here (feature, communication, legal), which
+// previously rendered as raw lowercase text for real seeded add-ons like
+// search (feature), whatsapp_chat (communication), and cookie_consent (legal).
 const CATEGORY_LABELS: Record<string, string> = {
-  marketing:   'Marketing',
-  ecommerce:   'E-Commerce',
-  content:     'Content',
-  analytics:   'Analytics',
-  customer:    'Customer',
-  integration: 'Integration',
-  ui:          'UI',
+  feature:       'Feature',
+  marketing:     'Marketing',
+  legal:         'Legal',
+  communication: 'Communication',
+  analytics:     'Analytics',
+  content:       'Content',
+  ecommerce:     'E-Commerce',
 }
 
 // ─── Addon Card ───────────────────────────────────────────────────────────────
@@ -115,7 +124,15 @@ function AddonCard({ item, onInstall, onToggle, onConfigure, isInstalling, isTog
           </div>
         </div>
 
-        {installed && (
+        {/* 2026-07-25 bug fix (QA audit, High #7): migrations/
+            083_addons_catalog_pricing_tier_fix.sql reclassified `blog` and
+            `cart` as `core` tier specifically because disabling them breaks
+            routing/checkout, and explicitly states "no toggle should be
+            exposed for them" — this button rendered regardless of tier
+            before. The backend now also rejects a core-tier disable
+            server-side (defense in depth), but hiding the toggle here is
+            what actually stops an admin from making the mistake. */}
+        {installed && addon.tier !== 'core' && (
           <button
             type="button"
             onClick={onToggle}
@@ -126,6 +143,14 @@ function AddonCard({ item, onInstall, onToggle, onConfigure, isInstalling, isTog
           >
             {enabled ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
           </button>
+        )}
+        {installed && addon.tier === 'core' && (
+          <span
+            title="Core add-ons are always on and required for the site to function"
+            className="text-[10px] font-body uppercase tracking-[0.05em] text-[var(--text-secondary)] shrink-0 py-1"
+          >
+            Always on
+          </span>
         )}
       </div>
 

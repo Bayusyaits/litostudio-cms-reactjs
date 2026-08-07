@@ -1,39 +1,15 @@
-/** SeoForm — per-locale meta title/description, saved via the same
- * product_translations upsert endpoint every other content module uses. */
-import { useEffect, useState } from 'react'
-import { productsService } from '@/services/content.service'
-
-const LOCALE = 'id'
-
+/** SeoForm — per-locale meta title/description. Controlled by the parent
+ * wizard's state and persisted via its own Save Draft/Publish flow (same
+ * pattern as InventoryEditor) — no separate save button here. */
 interface SeoFormProps {
   productId: string | null
-  initialMetaTitle: string
-  initialMetaDescription: string
+  metaTitle: string
+  onMetaTitleChange: (value: string) => void
+  metaDescription: string
+  onMetaDescriptionChange: (value: string) => void
 }
 
-export function SeoForm({ productId, initialMetaTitle, initialMetaDescription }: SeoFormProps) {
-  const [metaTitle, setMetaTitle] = useState(initialMetaTitle)
-  const [metaDescription, setMetaDescription] = useState(initialMetaDescription)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-
-  useEffect(() => {
-    setMetaTitle(initialMetaTitle)
-    setMetaDescription(initialMetaDescription)
-  }, [initialMetaTitle, initialMetaDescription])
-
-  async function handleSave() {
-    if (!productId) return
-    setSaving(true)
-    setSaved(false)
-    try {
-      await productsService.upsertTranslation(productId, LOCALE, { meta_title: metaTitle, meta_description: metaDescription })
-      setSaved(true)
-    } finally {
-      setSaving(false)
-    }
-  }
-
+export function SeoForm({ productId, metaTitle, onMetaTitleChange, metaDescription, onMetaDescriptionChange }: SeoFormProps) {
   if (!productId) {
     return (
       <div className="cms-card p-5">
@@ -47,16 +23,15 @@ export function SeoForm({ productId, initialMetaTitle, initialMetaDescription }:
       <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">SEO</h3>
       <div className="space-y-1.5">
         <label className="cms-label">Meta Title</label>
-        <input type="text" className="cms-input w-full" maxLength={70} value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
+        <input type="text" className="cms-input w-full" maxLength={70} value={metaTitle} onChange={(e) => onMetaTitleChange(e.target.value)} />
       </div>
       <div className="space-y-1.5">
         <label className="cms-label">Meta Description</label>
-        <textarea className="cms-input w-full" rows={3} maxLength={160} value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
+        <textarea className="cms-input w-full" rows={3} maxLength={160} value={metaDescription} onChange={(e) => onMetaDescriptionChange(e.target.value)} />
       </div>
-      {saved && <p className="font-body text-xs text-[var(--s-pub-fg)]">Saved</p>}
-      <button type="button" className="cms-btn cms-btn-primary cms-btn-sm" disabled={saving} onClick={handleSave}>
-        {saving ? 'Saving…' : 'Save SEO'}
-      </button>
+      <p className="font-body text-xs text-[var(--text-muted)]">
+        SEO changes follow the main save flow via Save Draft / Publish.
+      </p>
     </div>
   )
 }

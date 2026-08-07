@@ -72,6 +72,7 @@ const QUICK_CREATE: QuickAction[] = [
 
 const ROUTE_LABELS: Record<string, string> = {
   '/dashboard':    'Dashboard',
+  '/notifications': 'Notifications',
   '/analytics':    'Analytics',
   '/stories':      'Stories',
   '/journal':      'Journal',

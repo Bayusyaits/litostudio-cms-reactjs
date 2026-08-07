@@ -24,6 +24,10 @@ interface Props {
   inviteError: string | null
   onChangeRole: (id: string, role: OrgRole) => void
   onRemove: (id: string) => void
+  /** QA-AUDIT-2026-08-05.md finding 2.1 — only owners may change roles or
+   * remove members (backend-enforced); hide the actions menu for everyone
+   * else instead of letting them attempt a request that's guaranteed a 403. */
+  currentUserIsOwner: boolean
 }
 
 function RoleBadge({ role }: { role: OrgRole }) {
@@ -171,7 +175,11 @@ function MemberAvatar({ member }: { member: TeamMember }) {
   )
 }
 
-function buildMemberColumns(onChangeRole: (id: string, role: OrgRole) => void, onRemove: (id: string) => void): EDTColumn<TeamMember>[] {
+function buildMemberColumns(
+  onChangeRole: (id: string, role: OrgRole) => void,
+  onRemove: (id: string) => void,
+  currentUserIsOwner: boolean,
+): EDTColumn<TeamMember>[] {
   return [
     {
       key: 'full_name',
@@ -216,7 +224,7 @@ function buildMemberColumns(onChangeRole: (id: string, role: OrgRole) => void, o
       label: '',
       width: 48,
       render: (member) => (
-        member.role !== 'owner' && (
+        member.role !== 'owner' && currentUserIsOwner && (
           <MemberActions
             onChangeRole={(role) => onChangeRole(member.id, role)}
             onRemove={() => onRemove(member.id)}
@@ -229,9 +237,9 @@ function buildMemberColumns(onChangeRole: (id: string, role: OrgRole) => void, o
 
 export function TeamPageView({
   members, isLoading, onInvite, inviting, inviteError,
-  onChangeRole, onRemove,
+  onChangeRole, onRemove, currentUserIsOwner,
 }: Props) {
-  const columns = buildMemberColumns(onChangeRole, onRemove)
+  const columns = buildMemberColumns(onChangeRole, onRemove, currentUserIsOwner)
 
   return (
     <div className="cms-page p-8 overflow-y-auto h-full">

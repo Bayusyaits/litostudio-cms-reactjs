@@ -11,6 +11,26 @@ export interface Translation {
   meta_description?: string
 }
 
+// 2026-07-25 (QA audit, Products Critical #1 fix follow-up): `product_
+// translations` has a genuinely different column set than the generic
+// `Translation` shape above — `name`/`description`, not `title`/`excerpt`
+// (see migrations/004_products.sql / DB.sql). ProductWizardPage.tsx reads
+// `t?.name`/`t?.description` off Product.translations, which is real and
+// correct against the actual database and the backend's read path
+// (products.routes.ts embeds `translations:product_translations(*)`) — but
+// typing it as `Translation[]` made that a compile error since `Translation`
+// doesn't declare either field. Dedicated type instead of loosening
+// `Translation` itself, since Story/Journal/etc. genuinely don't have these
+// columns and shouldn't gain them just to satisfy Product's usage.
+export interface ProductTranslation {
+  locale: string
+  name?: string
+  description?: string
+  excerpt?: string
+  meta_title?: string
+  meta_description?: string
+}
+
 // ── Story ─────────────────────────────────────────────────────────────────
 
 export interface Story {
@@ -271,6 +291,10 @@ export interface Product {
   barcode?: string | null
   cover_image?: string | null
   images?: string[]
+  /** Optional single product video (CDN URL), parallel to cover_image —
+   *  not part of the images[] gallery array (migration
+   *  20260722190000_products_video_url.sql). */
+  video_url?: string | null
   requires_booking?: boolean
   weight_grams?: number | null
   length_cm?: number | null
@@ -296,13 +320,21 @@ export interface Product {
   inventory?: Array<{ variant_id: string | null; quantity: number; reserved: number; track_stock: boolean }>
   created_at: string
   updated_at: string
-  translations: Translation[]
+  translations: ProductTranslation[]
 }
 
 export interface ProductCreateRequest {
   site_id?: string
   slug: string
-  name: string
+  // 2026-07-22 bug fix: `products` has no `name` column at all (only
+  // product_translations.name/title, sent via `translation` below) — this
+  // required `name` field was itself the source of a real production bug:
+  // ProductWizardPage.tsx dutifully satisfied this type by sending a
+  // top-level `name`, which the backend then spread straight into the
+  // Supabase insert, and PostgREST rejected every product Add/Edit with
+  // "Could not find the 'name' column of 'products' in the schema cache."
+  // Removed to match the real DB shape instead of patching the caller to
+  // silence a type that was wrong in the first place.
   product_type: ProductType
   sku?: string | null
   barcode?: string | null
@@ -312,6 +344,7 @@ export interface ProductCreateRequest {
   is_featured?: boolean
   cover_image?: string | null
   images?: string[]
+  video_url?: string | null
   tags?: string[]
   extra?: ProductExtra
   sort_order?: number
@@ -878,7 +911,8 @@ export interface Promotion {
   metadata?: Record<string, unknown>
   created_at: string
   updated_at: string
-  /** Only present on GET /:id — joined promotion_scopes rows. */
+  /** Joined promotion_scopes rows — present on both GET /:id and the CMS
+   *  list endpoint (2026-07-22, product-page promo linkage). */
   scopes?: PromotionScope[]
   /** Satisfies EnterpriseDataTable's `T extends Record<string, unknown>`
    * generic constraint (same reasoning as SAOrder in cms-superadmin's

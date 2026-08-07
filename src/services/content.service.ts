@@ -1,11 +1,12 @@
 import { http } from '@litostudio/ui-cms'
 import type { ApiResponse, PaginatedResponse, ListParams, BulkUpdateRequest, BulkDeleteRequest, BulkUpdateResponse, BulkDeleteResponse } from '@/types/api.types'
+import type { ReportResult } from '@/types/reports.types'
 import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination, Brand, Product, ProductCreateRequest, ProductUpdateRequest, Collection, CollectionCreateRequest, CollectionUpdateRequest, Review, ReviewUpdateRequest, Faq, FaqCreateRequest, FaqUpdateRequest, FaqCategory, FaqCategoryCreateRequest, FaqCategoryUpdateRequest, Service, ServiceCreateRequest, ServiceUpdateRequest, Testimonial, TestimonialCreateRequest, TestimonialUpdateRequest, Feedback, FeedbackCreateRequest, FeedbackUpdateRequest, PricingPackage, PricingCreateRequest, PricingUpdateRequest, HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, Comment, CommentUpdateRequest, Campaign, CampaignCreateRequest, CampaignUpdateRequest, SeoMetadata, SeoSaveRequest, Promotion, PromotionCreateRequest, PromotionUpdateRequest, PromotionScope } from '@/types/content.types'
 import type { Order, UpdateOrderStatusRequest, NewsletterSubscriber, UpdateNewsletterStatusRequest, ContactMessage } from '@/types/commerce.types'
 
 // ── Generic content service factory ─────────────────────────────────────
 
-type ExtraListParams = { site_id?: string; category_id?: string; is_featured?: boolean }
+type ExtraListParams = { site_id?: string; category_id?: string; is_featured?: boolean; type?: string }
 
 function buildParams(params: ListParams & ExtraListParams): Record<string, string> {
   const q: Record<string, string> = {}
@@ -20,7 +21,47 @@ function buildParams(params: ListParams & ExtraListParams): Record<string, strin
   // route, which simply ignores unrecognized query params.
   if (params.category_id)          q.category_id  = params.category_id
   if (params.is_featured !== undefined) q.is_featured = String(params.is_featured)
+  // 2026-07-25 bug fix (QA audit, High #6): productsService (built on this
+  // generic factory) never sent `type` at all — the backend's `q.type`
+  // product_type filter existed but was unreachable, so ProductsPageView
+  // silently applied it only to the already-fetched page instead. Adding it
+  // here is a harmless no-op for every other resource's route.
+  if (params.type)    q.type    = params.type
   return q
+}
+
+/**
+ * Generic report client for a module's `/reports/*` sub-routes (2026-07-26 —
+ * Products + Orders Reports, embedded in each module's existing CMS page
+ * rather than a new top-level menu item, per instruction). One factory
+ * shared by both modules instead of hand-writing getX/downloadX per report.
+ *
+ *   getReport('sales', { from_date, to_date })       -> ReportResult (on-page table)
+ *   downloadReport('sales', { from_date, to_date }, 'laporan-penjualan.xlsx') -> triggers a file download
+ */
+function createReportClient(basePath: string) {
+  return {
+    async getReport(reportName: string, params: Record<string, string | number | undefined> = {}) {
+      const query: Record<string, string> = {}
+      for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== '') query[k] = String(v)
+      const data = await http.get<ApiResponse<ReportResult>>(`${basePath}/reports/${reportName}`, { params: query })
+      return data.data
+    },
+
+    async downloadReport(reportName: string, params: Record<string, string | number | undefined>, filename: string) {
+      const query: Record<string, string> = { format: 'xlsx' }
+      for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== '') query[k] = String(v)
+      const blob = await http.get<Blob>(`${basePath}/reports/${reportName}`, { params: query, responseType: 'blob' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    },
+  }
 }
 
 /**
@@ -162,7 +203,7 @@ export const servicesService      = createContentService<Service,        Service
 export const pricingService       = createContentService<PricingPackage, PricingCreateRequest,      PricingUpdateRequest>(      '/api/v1/cms/content/products')
 
 // Dedicated routes
-export const productsService      = createContentService<Product,        ProductCreateRequest,      ProductUpdateRequest>(      '/api/v1/cms/content/products')
+export const productsService      = { ...createContentService<Product, ProductCreateRequest, ProductUpdateRequest>('/api/v1/cms/content/products'), ...createReportClient('/api/v1/cms/content/products') }
 // Categories: reuse the existing `categoryService` from taxonomy.service.ts
 // (the dedicated Categories CMS module at /categories) — do NOT add a
 // second category client here. See taxonomy.service.ts for details.
@@ -258,8 +299,10 @@ export const campaignsService     = createContentService<Campaign,       Campaig
 
 // Orders use a custom updateStatus endpoint (PATCH /:id/status)
 const _ordersBase = createContentService<Order, Record<string,unknown>, Record<string,unknown>>('/api/v1/cms/content/orders')
+const _ordersReports = createReportClient('/api/v1/cms/content/orders')
 export const ordersService = {
   ..._ordersBase,
+  ..._ordersReports,
   async updateStatus(id: string, payload: UpdateOrderStatusRequest) {
     const data = await http.patch<ApiResponse<Order>>(`/api/v1/cms/content/orders/${id}/status`, payload)
     return data.data

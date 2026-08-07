@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Package, Trash2, Plus, Pencil, LayoutTemplate, Search, X, Upload } from 'lucide-react'
 import { Button, StatusBadge, SearchInput, DataTable, Select, type DataTableColumn as Column } from '@litostudio/ui-cms'
 import { formatRelative } from '@/lib/utils'
 import type { Product, ProductType } from '@/types/content.types'
+import { ProductsReportsPanel } from './ProductsReportsPanel'
 
 const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
   product: 'Product',
@@ -35,9 +37,15 @@ function ProductTypeBadge({ type }: { type: ProductType }) {
   )
 }
 
-function formatPrice(price: number | null): string {
+// 2026-07-25 bug fix (QA audit, Medium-High #9): hardcoded to USD regardless
+// of the product's actual currency — the rest of the platform (storefront,
+// pricing forms) treats IDR as the default and products carry their own
+// `currency` field. A normally-IDR-priced product previously rendered as
+// e.g. "$150,000.00" in this list.
+function formatPrice(price: number | null, currency?: string | null): string {
   if (price === null) return '—'
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
+  const cur = currency || 'IDR'
+  return new Intl.NumberFormat(cur === 'IDR' ? 'id-ID' : 'en-US', { style: 'currency', currency: cur }).format(price)
 }
 
 /** Warning at <5, danger at <3 — same thresholds as the buyer-facing
@@ -89,10 +97,14 @@ export function ProductsPageView({
   selectedIds, onSelect, onSelectAll,
   onNew, onImport, onEdit, onOpenEditor, onDelete, onBulkDelete,
 }: Props) {
-  const filtered =
-    filter.product_type
-      ? products.filter((p) => p.product_type === filter.product_type)
-      : products
+  const [tab, setTab] = useState<'products' | 'reports'>('products')
+
+  // 2026-07-25 bug fix (QA audit, High #6): this used to filter only the
+  // already-fetched page client-side, silently losing rows outside the
+  // current page while `meta.total` kept reporting the unfiltered count.
+  // `product_type` is now sent to the backend (ProductsPageContainer) and
+  // filtered/paginated there, so the list here is already correct — no
+  // client-side re-filtering needed or wanted.
 
   const columns: Column<Product>[] = [
     {
@@ -125,7 +137,7 @@ export function ProductsPageView({
       width: '110px',
       render: (product) => (
         <span className="font-body text-sm text-[var(--text-primary)]">
-          {formatPrice(product.price)}
+          {formatPrice(product.price, product.currency)}
         </span>
       ),
     },
@@ -199,63 +211,78 @@ export function ProductsPageView({
         </div>
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <SearchInput
-          skin="cms"
-          icon={<Search className="w-3.5 h-3.5" />}
-          clearIcon={<X className="w-3.5 h-3.5" />}
-          value={filter.search}
-          onChange={(search) => setFilter({ search, page: 1 })}
-          placeholder="Search products…"
-          className="w-64"
-        />
-        <Select
-          className="w-44"
-          value={filter.product_type}
-          onChange={(v) => setFilter({ product_type: v as ProductType | '', page: 1 })}
-          options={[
-            { value: '', label: 'All types' },
-            { value: 'product', label: 'Product' },
-            { value: 'service', label: 'Service' },
-            { value: 'package', label: 'Package' },
-          ]}
-        />
-        <Select
-          className="w-40"
-          value={filter.status}
-          onChange={(v) => setFilter({ status: v, page: 1 })}
-          options={[
-            { value: '', label: 'All statuses' },
-            { value: 'active', label: 'Active' },
-            { value: 'draft', label: 'Draft' },
-            { value: 'archived', label: 'Archived' },
-          ]}
-        />
+      <div className="flex items-center gap-1 border-b border-[var(--lito-border)]">
+        <button type="button" className={`cms-tab ${tab === 'products' ? 'active' : ''}`} onClick={() => setTab('products')}>
+          Products
+        </button>
+        <button type="button" className={`cms-tab ${tab === 'reports' ? 'active' : ''}`} onClick={() => setTab('reports')}>
+          Reports
+        </button>
       </div>
 
-      <div className="cms-card overflow-hidden">
-        <DataTable
-          data={filtered}
-          columns={columns}
-          keyField="id"
-          loading={isLoading}
-          selectedIds={selectedIds}
-          onSelect={onSelect}
-          onSelectAll={onSelectAll}
-          emptyTitle="No products yet"
-          emptyDescription="Create your first product, service or package"
-          emptyIcon={<Package />}
-          bulkActions={[
-            {
-              key: 'delete',
-              label: 'Delete',
-              icon: <Trash2 className="w-3.5 h-3.5" />,
-              variant: 'danger',
-              onClick: onBulkDelete,
-            },
-          ]}
-        />
-      </div>
+      {tab === 'products' && (
+        <>
+          <div className="flex items-center gap-3 flex-wrap">
+            <SearchInput
+              skin="cms"
+              icon={<Search className="w-3.5 h-3.5" />}
+              clearIcon={<X className="w-3.5 h-3.5" />}
+              value={filter.search}
+              onChange={(search) => setFilter({ search, page: 1 })}
+              placeholder="Search products…"
+              className="w-64"
+            />
+            <Select
+              className="w-44"
+              value={filter.product_type}
+              onChange={(v) => setFilter({ product_type: v as ProductType | '', page: 1 })}
+              options={[
+                { value: '', label: 'All types' },
+                { value: 'product', label: 'Product' },
+                { value: 'service', label: 'Service' },
+                { value: 'package', label: 'Package' },
+              ]}
+            />
+            <Select
+              className="w-40"
+              value={filter.status}
+              onChange={(v) => setFilter({ status: v, page: 1 })}
+              options={[
+                { value: '', label: 'All statuses' },
+                { value: 'active', label: 'Active' },
+                { value: 'draft', label: 'Draft' },
+                { value: 'archived', label: 'Archived' },
+              ]}
+            />
+          </div>
+
+          <div className="cms-card overflow-hidden">
+            <DataTable
+              data={products}
+              columns={columns}
+              keyField="id"
+              loading={isLoading}
+              selectedIds={selectedIds}
+              onSelect={onSelect}
+              onSelectAll={onSelectAll}
+              emptyTitle="No products yet"
+              emptyDescription="Create your first product, service or package"
+              emptyIcon={<Package />}
+              bulkActions={[
+                {
+                  key: 'delete',
+                  label: 'Delete',
+                  icon: <Trash2 className="w-3.5 h-3.5" />,
+                  variant: 'danger',
+                  onClick: onBulkDelete,
+                },
+              ]}
+            />
+          </div>
+        </>
+      )}
+
+      {tab === 'reports' && <ProductsReportsPanel />}
     </div>
   )
 }

@@ -24,11 +24,15 @@ export function PricingForm({ values, onChange }: PricingFormProps) {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <label className="cms-label">Price</label>
-          <input type="number" className="cms-input w-full" value={values.price} onChange={(e) => onChange('price', e.target.value)} />
+          {/* BUG FIX (QA-AUDIT-2026-08-05.md finding 2.3): min=0 is a UI hint
+              only (browsers still let you type/paste a negative number) —
+              the real gate is the ProductWizardPage save-time check plus the
+              backend's `minimum: 0` schema on price/weight/dimensions. */}
+          <input type="number" min={0} className="cms-input w-full" value={values.price} onChange={(e) => onChange('price', e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <label className="cms-label">Compare-at Price</label>
-          <input type="number" className="cms-input w-full" value={values.compareAtPrice} onChange={(e) => onChange('compareAtPrice', e.target.value)} placeholder="Optional — shown as a strikethrough" />
+          <input type="number" min={0} className="cms-input w-full" value={values.compareAtPrice} onChange={(e) => onChange('compareAtPrice', e.target.value)} placeholder="Optional — shown as a strikethrough" />
         </div>
       </div>
 

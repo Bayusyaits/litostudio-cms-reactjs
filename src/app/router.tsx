@@ -19,6 +19,7 @@ const EmailVerifiedPage     = lazy(() => import('@/modules/auth/EmailVerifiedPag
 
 // Dashboard pages
 const DashboardPage    = lazy(() => import('@/modules/dashboard/DashboardPageContainer'))
+const NotificationsPage = lazy(() => import('@/modules/notifications/NotificationsPageContainer'))
 const StoriesPage      = lazy(() => import('@/modules/stories/StoriesPageContainer'))
 const JournalPage      = lazy(() => import('@/modules/journal/JournalPageContainer'))
 const GalleryPage      = lazy(() => import('@/modules/gallery/GalleryPageContainer'))
@@ -109,6 +110,7 @@ export const router = createBrowserRouter([
     element: <DashboardLayout />,
     children: [
       { path: 'dashboard',         element: <S><DashboardPage /></S> },
+      { path: 'notifications',     element: <S><NotificationsPage /></S> },
 
       // Stories
       { path: 'stories',           element: <S><StoriesPage /></S> },

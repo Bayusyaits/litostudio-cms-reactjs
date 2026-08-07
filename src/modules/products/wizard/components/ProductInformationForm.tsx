@@ -37,7 +37,7 @@ interface ProductInformationFormProps {
   brandId?: string | null
 }
 
-export function ProductInformationForm({ values, onChange, categoryId, brandId }: ProductInformationFormProps) {
+export function ProductInformationForm({ values, onChange, categoryId, brandId }: Readonly<ProductInformationFormProps>) {
   const [generating, setGenerating] = useState(false)
 
   async function handleGenerateSku() {

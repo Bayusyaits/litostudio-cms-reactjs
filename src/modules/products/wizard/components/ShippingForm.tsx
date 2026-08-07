@@ -35,7 +35,10 @@ export function ShippingForm({ values, onChange }: ShippingFormProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="cms-label">Weight (grams)</label>
-              <input type="number" className="cms-input w-full" value={values.weightGrams} onChange={(e) => onChange('weightGrams', e.target.value)} />
+              {/* BUG FIX (QA-AUDIT-2026-08-05.md finding 2.3): min=0 is a UI
+                  hint only — real gate is ProductWizardPage's save-time check
+                  plus the backend's `minimum: 0` schema on this field. */}
+              <input type="number" min={0} className="cms-input w-full" value={values.weightGrams} onChange={(e) => onChange('weightGrams', e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <label className="cms-label">Biteship Category</label>
@@ -45,15 +48,15 @@ export function ShippingForm({ values, onChange }: ShippingFormProps) {
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <label className="cms-label">Length (cm)</label>
-              <input type="number" className="cms-input w-full" value={values.lengthCm} onChange={(e) => onChange('lengthCm', e.target.value)} />
+              <input type="number" min={0} className="cms-input w-full" value={values.lengthCm} onChange={(e) => onChange('lengthCm', e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <label className="cms-label">Width (cm)</label>
-              <input type="number" className="cms-input w-full" value={values.widthCm} onChange={(e) => onChange('widthCm', e.target.value)} />
+              <input type="number" min={0} className="cms-input w-full" value={values.widthCm} onChange={(e) => onChange('widthCm', e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <label className="cms-label">Height (cm)</label>
-              <input type="number" className="cms-input w-full" value={values.heightCm} onChange={(e) => onChange('heightCm', e.target.value)} />
+              <input type="number" min={0} className="cms-input w-full" value={values.heightCm} onChange={(e) => onChange('heightCm', e.target.value)} />
             </div>
           </div>
         </>

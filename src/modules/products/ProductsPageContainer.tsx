@@ -27,6 +27,11 @@ export default function ProductsPageContainer() {
         site_id: activeSite!.id,
         search: filter.search || undefined,
         status: filter.status || undefined,
+        // 2026-07-25 bug fix (QA audit, High #6): this was never sent, so
+        // the Type filter only ever narrowed the current fetched page
+        // client-side in ProductsPageView, silently losing rows outside it
+        // while the total count kept reporting the unfiltered total.
+        type: filter.product_type || undefined,
         page: filter.page,
         limit: filter.limit,
       }),

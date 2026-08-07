@@ -1,7 +1,7 @@
 // modules/settings/labels/LabelsPageView.tsx
 import { useState } from 'react'
 import { Languages, Plus, Upload, Download, Pencil, Trash2, Check, X, Lock, Search } from 'lucide-react'
-import { Button, SearchInput, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
+import { Button, SearchInput, EnterpriseDataTable, Select, TourLauncher, labelsTour } from '@litostudio/ui-cms'
 import type { EDTColumn } from '@litostudio/ui-cms'
 import type { Label, LabelUpsertPayload } from '@/services/labels.service'
 
@@ -368,20 +368,23 @@ export function LabelsPageView({
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Button skin="cms" variant="secondary" size="sm" onClick={onExport}>
-            <Download className="w-3.5 h-3.5 mr-1.5" />Export
-          </Button>
-          <Button skin="cms" variant="secondary" size="sm" onClick={onOpenBulk}>
-            <Upload className="w-3.5 h-3.5 mr-1.5" />Bulk Import
-          </Button>
-          <Button skin="cms" size="sm" onClick={onOpenCreate}>
+          <div data-tour="cms-labels-bulk" className="flex items-center gap-2">
+            <Button skin="cms" variant="secondary" size="sm" onClick={onExport}>
+              <Download className="w-3.5 h-3.5 mr-1.5" />Export
+            </Button>
+            <Button skin="cms" variant="secondary" size="sm" onClick={onOpenBulk}>
+              <Upload className="w-3.5 h-3.5 mr-1.5" />Bulk Import
+            </Button>
+          </div>
+          <Button data-tour="cms-labels-new" skin="cms" size="sm" onClick={onOpenCreate}>
             <Plus className="w-3.5 h-3.5 mr-1.5" />New Label
           </Button>
+          <TourLauncher skin="cms" config={labelsTour} />
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div data-tour="cms-labels-filters" className="flex items-center gap-3 flex-wrap">
         <SearchInput
           skin="cms"
           icon={<Search className="w-3.5 h-3.5" />}

@@ -6,15 +6,19 @@
  * time, same pattern VariantsCard already uses for its color photos.
  */
 import { ImageUploader } from '@litostudio/ui-cms'
+import { ProductVideoField } from './ProductVideoField'
 
 interface ProductMediaUploaderProps {
   coverImage: string | null
   images: string[]
+  videoUrl: string | null
   onCoverImageChange: (url: string | null) => void
   onImagesChange: (images: string[]) => void
+  onVideoUrlChange: (url: string | null) => void
+  siteId?: string | null
 }
 
-export function ProductMediaUploader({ coverImage, images, onCoverImageChange, onImagesChange }: ProductMediaUploaderProps) {
+export function ProductMediaUploader({ coverImage, images, videoUrl, onCoverImageChange, onImagesChange, onVideoUrlChange, siteId }: ProductMediaUploaderProps) {
   function updateImageAt(index: number, url: string | null) {
     const next = [...images]
     if (url === null) next.splice(index, 1)
@@ -40,6 +44,8 @@ export function ProductMediaUploader({ coverImage, images, onCoverImageChange, o
           )}
         </div>
       </div>
+
+      <ProductVideoField value={videoUrl} onChange={onVideoUrlChange} siteId={siteId} />
     </div>
   )
 }

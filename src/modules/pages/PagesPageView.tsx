@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, FileText, Trash2, Pencil, Globe } from 'lucide-react'
-import { Skeleton, StatusBadge, useTemplateManifest, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
+import { Skeleton, StatusBadge, useTemplateManifest, EnterpriseDataTable, Select, TourLauncher, pagesTour } from '@litostudio/ui-cms'
 import type { Page, PageStatus, PageListMeta, EDTColumn } from '@litostudio/ui-cms'
 import { PageSectionsManager } from './PageSectionsManager'
 
@@ -126,7 +126,7 @@ function buildPageColumns({
                   <span className="text-[var(--text-muted)] font-mono text-[11px]">└ </span>
                 </span>
               )}
-              <span className="font-body text-[13px] font-medium text-[var(--text-muted)]">
+              <span className="font-body text-[13px] font-medium text-[var(--text-muted)] capitalize">
                 {page.title ?? page.slug}
               </span>
               {page.parent_id == null && (
@@ -142,12 +142,12 @@ function buildPageColumns({
                   type="text"
                   placeholder={page.title ?? page.slug}
                   defaultValue={page.menu_label ?? ''}
-                  title="Menu label — leave blank to use page title"
+                  title="Menu label — leave blank to use page title (displayed capitalized on the site regardless of how it's typed here)"
                   onBlur={(e) => {
                     const val = e.target.value.trim() || null
                     if (val !== page.menu_label) onUpdateMenuLabel(page.id, val)
                   }}
-                  className="font-body text-[11px] px-[6px] py-[2px] w-[110px] bg-[var(--cms-header-bg)] border border-[var(--lito-border)] rounded text-[var(--text-primary)] outline-none"
+                  className="font-body text-[11px] px-[6px] py-[2px] w-[110px] bg-[var(--cms-header-bg)] border border-[var(--lito-border)] rounded text-[var(--text-primary)] outline-none capitalize placeholder:capitalize"
                 />
               </div>
             )}
@@ -341,13 +341,16 @@ export function PagesPageView({
             {meta.total} page{meta.total !== 1 ? 's' : ''} total · Toggle placement flags to control navigation
           </p>
         </div>
-        <Link to="/pages/new" className="cms-btn cms-btn-primary">
-          <Plus size={14} />
-          New Page
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/pages/new" data-tour="cms-pages-new" className="cms-btn cms-btn-primary">
+            <Plus size={14} />
+            New Page
+          </Link>
+          <TourLauncher skin="cms" config={pagesTour} />
+        </div>
       </div>
 
-      <div className="flex gap-[10px] mb-4">
+      <div data-tour="cms-pages-filters" className="flex gap-[10px] mb-4">
         <input
           type="search"
           placeholder="Search pages…"
@@ -371,19 +374,21 @@ export function PagesPageView({
           <Link to="/pages/new" className="cms-btn cms-btn-primary">Create your first page</Link>
         </div>
       ) : (
-        <EnterpriseDataTable<Page>
-          skin="cms"
-          columns={columns}
-          data={pages}
-          server={{
-            total: meta.total,
-            limit: meta.limit,
-            offset: meta.offset,
-            onPageChange: (offset) => setFilter({ offset }),
-          }}
-          emptyIcon={<FileText className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />}
-          emptyTitle="No pages found"
-        />
+        <div data-tour="cms-pages-table">
+          <EnterpriseDataTable<Page>
+            skin="cms"
+            columns={columns}
+            data={pages}
+            server={{
+              total: meta.total,
+              limit: meta.limit,
+              offset: meta.offset,
+              onPageChange: (offset) => setFilter({ offset }),
+            }}
+            emptyIcon={<FileText className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />}
+            emptyTitle="No pages found"
+          />
+        </div>
       )}
 
       {sectionManagerPage && (

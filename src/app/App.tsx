@@ -4,6 +4,7 @@ import { QueryProvider }          from '@/providers/QueryProvider'
 import { ThemeProvider }          from '@/providers/ThemeProvider'
 import { TemplateSystemProvider } from '@/providers/TemplateSystemProvider'
 import { AnalyticsProvider }      from '@/providers/AnalyticsProvider'
+import { ToastBridge } from './ToastBridge'
 import { router } from './router'
 
 // ToastProvider mounted once here — EnterpriseDataTable (skin="cms") calls
@@ -15,6 +16,9 @@ export function App() {
     <QueryProvider>
       <ThemeProvider>
         <ToastProvider>
+          {/* Registers this tree's useToast() for lib/queryClient.ts's
+              global MutationCache onError handler — see ToastBridge.tsx. */}
+          <ToastBridge />
           <AnalyticsProvider>
             <TemplateSystemProvider>
               <RouterProvider router={router} />

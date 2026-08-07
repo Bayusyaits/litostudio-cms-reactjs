@@ -19,6 +19,7 @@ import type { ContentStatus } from '@litostudio/ui-cms'
 import { ContentEditorLayout } from '@/components/organisms/ContentEditorLayout'
 import { PublishCard } from '@/components/molecules/PublishCard'
 import { VariantsCard } from '@/components/molecules/VariantsCard'
+import { productInventoryService } from '@/services/catalog.service'
 import { productsService } from '@/services/content.service'
 import type { Product, ProductType } from '@/types/content.types'
 
@@ -29,6 +30,7 @@ import { BrandSelector } from './components/BrandSelector'
 import { DynamicAttributeForm } from './components/DynamicAttributeForm'
 import { ProductMediaUploader } from './components/ProductMediaUploader'
 import { InventoryEditor } from './components/InventoryEditor'
+import { ProductPromotionsCard } from './components/ProductPromotionsCard'
 import { PricingForm } from './components/PricingForm'
 import { ShippingForm } from './components/ShippingForm'
 import { SeoForm } from './components/SeoForm'
@@ -70,6 +72,7 @@ export default function ProductWizardPage() {
   const [slugLocked, setSlugLocked] = useState(false)
   const [sku, setSku] = useState('')
   const [description, setDescription] = useState('')
+  const [sortOrder, setSortOrder] = useState('0')
   const [productType, setProductType] = useState<ProductType>('product')
   const [tags, setTags] = useState<string[]>([])
   const [status, setStatus] = useState<ContentStatus>('draft')
@@ -79,6 +82,7 @@ export default function ProductWizardPage() {
 
   const [coverImage, setCoverImage] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
 
   const [price, setPrice] = useState('')
   const [compareAtPrice, setCompareAtPrice] = useState('')
@@ -100,6 +104,9 @@ export default function ProductWizardPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
+  const [minStock, setMinStock] = useState('')
+  const [inventoryQuantity, setInventoryQuantity] = useState('0')
+  const [inventoryTrackStock, setInventoryTrackStock] = useState(true)
 
   // ── Hydrate from the loaded product (EDIT mode) ───────────────────────
   const hasHydrated = useRef(false)
@@ -107,18 +114,30 @@ export default function ProductWizardPage() {
     if (!product) return
     hasHydrated.current = true
     const t = product.translations?.[0]
-    setName(t?.title ?? '')
+    // 2026-07-25 bug fix (QA audit, Critical #1): `product_translations` has
+    // no `title` column — only `name`. Reading `t?.title` always returned
+    // undefined, so this field loaded empty and autosave then PATCHed the
+    // product with an empty name, silently blanking every product opened
+    // for editing. Read the real column instead.
+    setName(t?.name ?? '')
     setSlug(product.slug)
     setSlugLocked(true)
     setSku(product.sku ?? '')
-    setDescription(t?.excerpt ?? '')
+    // Same class of bug: the wizard's Description field was hydrated from
+    // `excerpt`, but the save payload below wrote to a key the backend
+    // never persists to `excerpt` (see the `translation` payload comment).
+    // Fall back the same way the storefront composables already do
+    // (`description ?? excerpt`) so existing data in either column shows.
+    setDescription(t?.description ?? t?.excerpt ?? '')
     setProductType(product.product_type)
+    setSortOrder(String(product.sort_order ?? 0))
     setTags(product.tags ?? [])
     setStatus(product.status)
     setCategoryId(product.category_id ?? null)
     setBrandId(product.brand_id ?? null)
     setCoverImage(product.cover_image ?? null)
     setImages(product.images ?? [])
+    setVideoUrl(product.video_url ?? null)
     setPrice(product.price != null ? String(product.price) : '')
     setCompareAtPrice(product.compare_at_price != null ? String(product.compare_at_price) : '')
     setIsFeatured(!!product.is_featured)
@@ -131,6 +150,10 @@ export default function ProductWizardPage() {
     setWidthCm(product.width_cm != null ? String(product.width_cm) : '')
     setHeightCm(product.height_cm != null ? String(product.height_cm) : '')
     setBiteshipCategory(product.biteship_category ?? '')
+    setMinStock(product.extra?.min_stock_alert != null ? String(product.extra.min_stock_alert) : '')
+    const productLevelInventory = product.inventory?.find((i) => i.variant_id === null)
+    setInventoryQuantity(String(productLevelInventory?.quantity ?? 0))
+    setInventoryTrackStock(productLevelInventory?.track_stock ?? true)
     setMetaTitle(t?.meta_title ?? '')
     setMetaDescription(t?.meta_description ?? '')
   }, [product])
@@ -138,6 +161,15 @@ export default function ProductWizardPage() {
   useEffect(() => {
     if (isNew && !slugLocked && name) setSlug(slugify(name))
   }, [isNew, slugLocked, name])
+
+  // BUG FIX: this was previously declared with the `return (` JSX block,
+  // AFTER `doSave`'s useCallback below — but doSave's own dependency array
+  // reads `hasVariants` directly (not just inside the callback body), so
+  // that ordering was a genuine temporal-dead-zone violation ("Cannot
+  // access 'hasVariants' before initialization" — this component crashed
+  // on every render, not just an edge case). Moved above doSave so it's
+  // initialized before anything reads it.
+  const hasVariants = (product?.variants ?? []).some((v) => v.status !== 'archived')
 
   // ── Save (create or patch core product fields) ───────────────────────
   const doSave = useCallback(async (nextStatus?: ContentStatus) => {
@@ -150,11 +182,42 @@ export default function ProductWizardPage() {
       }
     }
 
+    // BUG FIX (QA-AUDIT-2026-08-05.md finding 2.3): the pricing/shipping
+    // number inputs had no validation at all — a negative price, weight, or
+    // dimension saved silently (in any status, not just on publish) and,
+    // for weight/dimensions, flowed straight into the live Biteship
+    // shipping-rate integration. This runs on every save, not just publish
+    // — the backend's new `minimum: 0` schema (products.routes.ts) would
+    // reject the request either way, but checking here first gives an
+    // immediate, field-specific message instead of a generic 400. min={0}
+    // on the inputs themselves (PricingForm/ShippingForm) is only a
+    // browser-UI hint — typing or pasting a negative value still reaches
+    // this code, so it's not a substitute for this check.
+    const negativeFieldChecks: Array<[label: string, raw: string]> = [
+      ['Price', price],
+      ['Compare-at price', compareAtPrice],
+      ['Weight', weightGrams],
+      ['Length', lengthCm],
+      ['Width', widthCm],
+      ['Height', heightCm],
+      ['Days to ship', daysToShip],
+    ]
+    const firstNegative = negativeFieldChecks.find(([, raw]) => raw !== '' && Number(raw) < 0)
+    if (firstNegative) {
+      setSaveError(`${firstNegative[0]} can't be negative.`)
+      return
+    }
+
     setIsSaving(true)
     setSaveError(null)
     try {
       const resolvedCover = coverImage ? await draftMediaStore.resolveUrl(coverImage) : null
       const resolvedImages = images.length > 0 ? await draftMediaStore.resolveUrls(images) : []
+      const existingExtra = product?.extra && typeof product.extra === 'object' ? product.extra : undefined
+      const nextExtra: Record<string, unknown> = existingExtra ? { ...existingExtra } : {}
+      nextExtra.pre_order = preOrder
+      nextExtra.days_to_ship = daysToShip !== '' ? Number(daysToShip) : undefined
+      nextExtra.min_stock_alert = minStock !== '' ? Number(minStock) : null
 
       const payload = {
         // 2026-07-22 bug fix: this used to also send a top-level `name`
@@ -168,16 +231,22 @@ export default function ProductWizardPage() {
         slug,
         sku: sku.trim() || null,
         product_type: productType,
+        sort_order: sortOrder !== '' ? Number(sortOrder) : 0,
         status: nextStatus ?? status,
         tags,
         category_id: categoryId,
         brand_id: brandId,
         cover_image: resolvedCover,
         images: resolvedImages,
+        // Not deferred like cover/gallery above — mediaService.upload()
+        // (called directly from ProductVideoField, not through
+        // draftMediaStore) already returns a real CDN URL at upload time,
+        // so there's nothing left to resolve here.
+        video_url: videoUrl,
         price: price !== '' ? Number(price) : undefined,
         compare_at_price: compareAtPrice !== '' ? Number(compareAtPrice) : undefined,
         is_featured: isFeatured,
-        extra: { pre_order: preOrder, days_to_ship: daysToShip !== '' ? Number(daysToShip) : undefined },
+        extra: nextExtra,
         is_digital: isDigital,
         digital_file_url: isDigital ? (digitalFileUrl || null) : null,
         weight_grams: weightGrams !== '' ? Number(weightGrams) : undefined,
@@ -185,22 +254,40 @@ export default function ProductWizardPage() {
         width_cm: widthCm !== '' ? Number(widthCm) : undefined,
         height_cm: heightCm !== '' ? Number(heightCm) : undefined,
         biteship_category: biteshipCategory || undefined,
-        translation: { locale: 'id', title: name, excerpt: description },
+        // 2026-07-25 bug fix (QA audit, Critical #1, related finding): the
+        // backend's translation upsert writes `description: t.description`
+        // (products.routes.ts:489,531) — sending `excerpt` here meant that
+        // key was always absent from the upsert body and the description
+        // never actually persisted, independent of the name-blanking bug
+        // above. `title` stays as-is; the backend intentionally maps it to
+        // the `name` column.
+        translation: { locale: 'id', title: name, description },
       }
 
-      if (!productId) {
+      let savedProductId = productId
+      if (!savedProductId) {
         if (!activeSite?.id) throw new Error('No active site selected')
         if (!name.trim()) throw new Error('Product name is required')
         if (!slug.trim()) throw new Error('Slug is required')
         const created = await productsService.create({ ...payload, site_id: activeSite.id })
+        savedProductId = created.id
         setProductId(created.id)
         void queryClient.invalidateQueries({ queryKey: ['products', activeSite?.id] })
         navigate(`/products/${created.id}/edit`, { replace: true })
       } else {
-        await productsService.update(productId, payload)
-        void queryClient.invalidateQueries({ queryKey: ['products', activeSite?.id, productId] })
+        await productsService.update(savedProductId, payload)
+        void queryClient.invalidateQueries({ queryKey: ['products', activeSite?.id, savedProductId] })
         void queryClient.invalidateQueries({ queryKey: ['products', activeSite?.id] })
       }
+
+      if (savedProductId && !hasVariants) {
+        await productInventoryService.set(savedProductId, Number(inventoryQuantity) || 0, inventoryTrackStock)
+      }
+
+      if (savedProductId) {
+        await productsService.upsertTranslation(savedProductId, 'id', { meta_title: metaTitle, meta_description: metaDescription })
+      }
+
       setLastSaved(new Date().toLocaleTimeString())
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save product')
@@ -208,10 +295,11 @@ export default function ProductWizardPage() {
       setIsSaving(false)
     }
   }, [
-    productId, activeSite, name, slug, sku, productType, status, tags, categoryId, brandId,
-    coverImage, images, price, compareAtPrice, isFeatured, preOrder, daysToShip,
+    productId, activeSite, name, slug, sku, productType, sortOrder, status, tags, categoryId, brandId,
+    coverImage, images, videoUrl, price, compareAtPrice, isFeatured, preOrder, daysToShip,
     isDigital, digitalFileUrl, weightGrams, lengthCm, widthCm, heightCm, biteshipCategory,
-    description, navigate, queryClient,
+    description, minStock, inventoryQuantity, inventoryTrackStock, hasVariants, product?.extra, navigate, queryClient,
+    metaTitle, metaDescription,
   ])
 
   // ── Autosave (EDIT mode only, 2s debounce) — same pattern as the old
@@ -223,9 +311,7 @@ export default function ProductWizardPage() {
     autosaveTimer.current = setTimeout(() => { void doSave() }, 2_000)
     return () => { if (autosaveTimer.current) clearTimeout(autosaveTimer.current) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, slug, sku, description, tags, categoryId, brandId, coverImage, images, price, compareAtPrice, isFeatured, preOrder, daysToShip, isDigital, digitalFileUrl, weightGrams, lengthCm, widthCm, heightCm, biteshipCategory])
-
-  const hasVariants = (product?.variants ?? []).some((v) => v.status !== 'archived')
+  }, [name, slug, sku, description, tags, categoryId, brandId, coverImage, images, videoUrl, price, compareAtPrice, isFeatured, preOrder, daysToShip, isDigital, digitalFileUrl, weightGrams, lengthCm, widthCm, heightCm, biteshipCategory, sortOrder, minStock, inventoryQuantity, inventoryTrackStock])
 
   return (
     <ContentEditorLayout
@@ -249,29 +335,57 @@ export default function ProductWizardPage() {
 
       <WizardShell steps={STEPS} activeStepId={activeStep} onStepChange={setActiveStep}>
         {activeStep === 'information' && (
-          <ProductInformationForm
-            values={{ name, sku, description, productType, tags }}
-            categoryId={categoryId}
-            brandId={brandId}
-            onChange={(key, value) => {
-              if (key === 'name') setName(value as string)
-              if (key === 'sku') setSku(value as string)
-              if (key === 'description') setDescription(value as string)
-              if (key === 'productType') setProductType(value as ProductType)
-              if (key === 'tags') setTags(value as string[])
-            }}
-          />
+          <div className="space-y-4">
+            <ProductInformationForm
+              values={{ name, sku, description, productType, tags }}
+              categoryId={categoryId}
+              brandId={brandId}
+              onChange={(key, value) => {
+                if (key === 'name') setName(value as string)
+                if (key === 'sku') setSku(value as string)
+                if (key === 'description') setDescription(value as string)
+                if (key === 'productType') setProductType(value as ProductType)
+                if (key === 'tags') setTags(value as string[])
+              }}
+            />
+            {/* 2026-07-22 (user request): moved out of the Variants step —
+                Inventory belongs with the product's basic info, not buried
+                behind the variant matrix. For no-variant products this is
+                the only place stock lives; for variant products it already
+                self-collapses to a "tracked per-variant" note (see
+                InventoryEditor's hasVariants branch, unchanged). */}
+            <InventoryEditor
+              productId={productId}
+              hasVariants={hasVariants}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
+              quantity={inventoryQuantity}
+              onQuantityChange={setInventoryQuantity}
+              trackStock={inventoryTrackStock}
+              onTrackStockChange={setInventoryTrackStock}
+              minStock={minStock}
+              onMinStockChange={setMinStock}
+            />
+          </div>
         )}
 
         {activeStep === 'category' && (
           <div className="space-y-4">
             <div className="cms-card p-5 space-y-1.5">
-              <label className="cms-label">Category</label>
-              <CategorySelector value={categoryId} onChange={(cid) => setCategoryId(cid)} />
+              <p className="cms-label">Category</p>
+              <CategorySelector
+                id="product-category-combobox"
+                value={categoryId}
+                onChange={(cid) => {
+                  const categoryChanged = cid !== categoryId
+                  setCategoryId(cid)
+                  if (categoryChanged) setBrandId(null)
+                }}
+              />
             </div>
             <div className="cms-card p-5 space-y-1.5">
-              <label className="cms-label">Brand</label>
-              <BrandSelector value={brandId} categoryId={categoryId} onChange={setBrandId} />
+              <p className="cms-label">Brand</p>
+              <BrandSelector id="product-brand-combobox" value={brandId} categoryId={categoryId} onChange={setBrandId} />
             </div>
           </div>
         )}
@@ -284,8 +398,11 @@ export default function ProductWizardPage() {
           <ProductMediaUploader
             coverImage={coverImage}
             images={images}
+            videoUrl={videoUrl}
             onCoverImageChange={setCoverImage}
             onImagesChange={setImages}
+            onVideoUrlChange={setVideoUrl}
+            siteId={activeSite?.id}
           />
         )}
 
@@ -301,21 +418,23 @@ export default function ProductWizardPage() {
               productName={name}
               onSynced={() => void queryClient.invalidateQueries({ queryKey: ['products', activeSite?.id, productId] })}
             />
-            <InventoryEditor productId={productId} product={product} hasVariants={hasVariants} />
           </div>
         )}
 
         {activeStep === 'pricing' && (
-          <PricingForm
-            values={{ price, compareAtPrice, currency: 'IDR', isFeatured, preOrder, daysToShip }}
-            onChange={(key, value) => {
-              if (key === 'price') setPrice(value as string)
-              if (key === 'compareAtPrice') setCompareAtPrice(value as string)
-              if (key === 'isFeatured') setIsFeatured(value as boolean)
-              if (key === 'preOrder') setPreOrder(value as boolean)
-              if (key === 'daysToShip') setDaysToShip(value as string)
-            }}
-          />
+          <div className="space-y-4">
+            <PricingForm
+              values={{ price, compareAtPrice, currency: 'IDR', isFeatured, preOrder, daysToShip }}
+              onChange={(key, value) => {
+                if (key === 'price') setPrice(value as string)
+                if (key === 'compareAtPrice') setCompareAtPrice(value as string)
+                if (key === 'isFeatured') setIsFeatured(value as boolean)
+                if (key === 'preOrder') setPreOrder(value as boolean)
+                if (key === 'daysToShip') setDaysToShip(value as string)
+              }}
+            />
+            <ProductPromotionsCard productId={productId} siteId={activeSite?.id} />
+          </div>
         )}
 
         {activeStep === 'shipping' && (
@@ -334,7 +453,13 @@ export default function ProductWizardPage() {
         )}
 
         {activeStep === 'seo' && (
-          <SeoForm productId={productId} initialMetaTitle={metaTitle} initialMetaDescription={metaDescription} />
+          <SeoForm
+            productId={productId}
+            metaTitle={metaTitle}
+            onMetaTitleChange={setMetaTitle}
+            metaDescription={metaDescription}
+            onMetaDescriptionChange={setMetaDescription}
+          />
         )}
       </WizardShell>
     </ContentEditorLayout>

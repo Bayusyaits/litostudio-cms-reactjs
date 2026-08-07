@@ -10,25 +10,40 @@ import { Combobox } from '@litostudio/ui-cms'
 import { brandService } from '@/services/catalog.service'
 
 interface BrandSelectorProps {
+  id?: string
   value: string | null
   categoryId: string | null
   onChange: (brandId: string | null) => void
 }
 
-export function BrandSelector({ value, categoryId, onChange }: BrandSelectorProps) {
+export function BrandSelector({ id, value, categoryId, onChange }: Readonly<BrandSelectorProps>) {
   const [search, setSearch] = useState('')
+  const trimmedSearch = search.trim()
   const [requesting, setRequesting] = useState(false)
   const [requestName, setRequestName] = useState('')
   const [requestNotes, setRequestNotes] = useState('')
   const [requestStatus, setRequestStatus] = useState<'idle' | 'saving' | 'sent' | 'error'>('idle')
 
-  const { data, isFetching } = useQuery({
-    queryKey: ['brand-search', search, categoryId],
-    queryFn: () => brandService.search(search, categoryId),
+  const { data: brands, isFetching } = useQuery({
+    queryKey: ['brand-search', trimmedSearch, categoryId],
+    queryFn: () => brandService.search(trimmedSearch, categoryId),
   })
-  const brands = data ?? []
 
-  const options = brands.map((b) => ({ value: b.id, label: b.name, ...(b.logo_url ? { avatar: b.logo_url } : {}) }))
+  const { data: selectedBrand } = useQuery({
+    queryKey: ['brand', value],
+    queryFn: () => brandService.getById(value!),
+    enabled: !!value,
+  })
+
+  const options = (brands ?? []).map((brand) => ({
+    value: brand.id,
+    label: brand.name,
+    ...(brand.logo_url ? { avatar: brand.logo_url } : {}),
+  }))
+
+  const mergedOptions = value && selectedBrand && !options.some((option) => option.value === value)
+    ? [{ value: selectedBrand.id, label: selectedBrand.name, ...(selectedBrand.logo_url ? { avatar: selectedBrand.logo_url } : {}) }, ...options]
+    : options
 
   async function submitRequest() {
     if (!requestName.trim()) return
@@ -44,9 +59,10 @@ export function BrandSelector({ value, categoryId, onChange }: BrandSelectorProp
   return (
     <div className="space-y-2">
       <Combobox
+        id={id}
         value={value}
-        onChange={onChange}
-        options={options}
+        onChange={(brandId) => onChange(brandId || null)}
+        options={mergedOptions}
         loading={isFetching}
         onSearchChange={setSearch}
         placeholder="Search brands…"

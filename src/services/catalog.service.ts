@@ -20,6 +20,17 @@ export interface ProductCategory {
   status: 'active' | 'inactive'
 }
 
+/** A search result — a category plus its full ancestor path, e.g. "Menswear
+ *  & Underwear > Men's Tops > Shirts" (search_product_categories RPC,
+ *  20260722200000). Distinct from ProductCategory (the tree-browse shape)
+ *  since a search hit has no meaningful parent_id/slug/etc. to the caller —
+ *  it only needs a label. */
+export interface ProductCategorySearchResult {
+  id: string
+  name: string
+  path: string
+}
+
 export const productCategoryService = {
   async getList(parentId?: string | null): Promise<ProductCategory[]> {
     const params = new URLSearchParams()
@@ -34,6 +45,17 @@ export const productCategoryService = {
   async getById(id: string): Promise<ProductCategory> {
     const data = await http.get<ApiResponse<ProductCategory>>(`/api/v1/cms/content/product-categories/${id}`)
     return data.data
+  },
+
+  /** Text search across the whole tree — mirrors brandService.search()'s
+   *  shape/usage exactly, so CategorySelector.tsx can drive the same shared
+   *  Combobox component BrandSelector.tsx already uses. */
+  async search(q: string): Promise<ProductCategorySearchResult[]> {
+    const params = new URLSearchParams({ q })
+    const data = await http.get<{ success: boolean; data: ProductCategorySearchResult[] }>(
+      `/api/v1/cms/content/product-categories?${params}`,
+    )
+    return data.data ?? []
   },
 }
 
@@ -68,11 +90,16 @@ export interface Brand {
 
 export const brandService = {
   async search(q: string, categoryId?: string | null): Promise<Brand[]> {
-    const params = new URLSearchParams({ limit: '20' })
+    const params = new URLSearchParams({ limit: '100' })
     if (q) params.set('q', q)
     if (categoryId) params.set('category_id', categoryId)
     const data = await http.get<ApiResponse<Brand[]>>(`/api/v1/cms/content/brands?${params}`)
     return data.data ?? []
+  },
+
+  async getById(id: string): Promise<Brand> {
+    const data = await http.get<ApiResponse<Brand>>(`/api/v1/cms/content/brands/${id}`)
+    return data.data
   },
 
   async requestNew(payload: { requested_name: string; requested_category_id?: string | null; notes?: string | null }): Promise<void> {

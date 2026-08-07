@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { http, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
+import { http, EnterpriseDataTable, Select, TourLauncher, deployTour } from '@litostudio/ui-cms'
 import type { EDTColumn } from '@litostudio/ui-cms'
 import type { ApiResponse } from '@/types/api.types'
 import { useOrgStore } from '@litostudio/ui-cms'
@@ -153,28 +153,33 @@ export default function DeploymentsPageContainer() {
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Deployments</h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">Deployment history for your sites.</p>
         </div>
-        {activeSite && (
-          <div className="flex items-center gap-2 shrink-0 mt-1">
-            <button
-              type="button"
-              onClick={() => deployMutation.mutate()}
-              disabled={deployMutation.isPending}
-              title="Triggers a new build via this site's Vercel Deploy Hook"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--lito-gold)] bg-[var(--lito-gold)] font-body text-[12px] text-[var(--cms-bg,#fff)] cursor-pointer hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Rocket size={13} />
-              {deployMutation.isPending ? 'Deploying…' : 'Deploy Now'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowRepublish(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--lito-border)] bg-transparent font-body text-[12px] text-[var(--text-muted)] cursor-pointer hover:border-[var(--lito-gold)] hover:text-[var(--text-primary)] transition-colors duration-150"
-            >
-              <RefreshCw size={13} />
-              Republish All Pages
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2 shrink-0 mt-1">
+          {activeSite && (
+            <>
+              <button
+                type="button"
+                data-tour="cms-deploy-now"
+                onClick={() => deployMutation.mutate()}
+                disabled={deployMutation.isPending}
+                title="Triggers a new build via this site's Vercel Deploy Hook"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--lito-gold)] bg-[var(--lito-gold)] font-body text-[12px] text-[var(--cms-bg,#fff)] cursor-pointer hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Rocket size={13} />
+                {deployMutation.isPending ? 'Deploying…' : 'Deploy Now'}
+              </button>
+              <button
+                type="button"
+                data-tour="cms-deploy-republish"
+                onClick={() => setShowRepublish(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--lito-border)] bg-transparent font-body text-[12px] text-[var(--text-muted)] cursor-pointer hover:border-[var(--lito-gold)] hover:text-[var(--text-primary)] transition-colors duration-150"
+              >
+                <RefreshCw size={13} />
+                Republish All Pages
+              </button>
+            </>
+          )}
+          <TourLauncher skin="cms" config={deployTour} />
+        </div>
       </div>
 
       {deployError && (
@@ -184,7 +189,7 @@ export default function DeploymentsPageContainer() {
       )}
 
       {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
+      <div data-tour="cms-deploy-filters" className="flex gap-3 flex-wrap">
         <Select
           value={siteFilter}
           onChange={(v) => { setSiteFilter(v); setPage(0) }}

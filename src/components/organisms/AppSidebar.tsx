@@ -8,6 +8,7 @@ import {
   Briefcase, Quote, DollarSign, Tv2, MessageCircle,
   ShoppingBag, Mail, Inbox, Bot, Link2, Rocket, FileSpreadsheet,
   Building2, Languages, Truck, Scale, Percent, Award, Settings2, Upload,
+  RotateCcw,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
@@ -23,6 +24,13 @@ interface NavSection { section: string; items: NavItem[] }
 // resolves the icon column (a lucide-react name string in cms_menu_items,
 // maintained via the cms-superadmin "Admin Menu" page) back to the same
 // components this file already imported for the old static array.
+// BUG FIX (QA-AUDIT-2026-08-05.md finding 2.4): this map was missing
+// 'RotateCcw', the icon slug seeded by migrations/20260722170000_cms_menu_returns.sql
+// for the "Returns" nav item — it silently fell back to the generic Package
+// icon instead of throwing, so the gap was invisible in normal use. Kept the
+// Package fallback in treeToSections() below for any *future* icon-name
+// drift (new menu row added without a matching import here), but the fix
+// for a known, currently-seeded slug is to just add the import.
 const ICONS: Record<string, React.ElementType> = {
   LayoutDashboard, FileText, BookOpen, Image, Film, MapPin,
   Megaphone, Globe, Settings, Users, BarChart2, Search,
@@ -31,6 +39,7 @@ const ICONS: Record<string, React.ElementType> = {
   Briefcase, Quote, DollarSign, Tv2, MessageCircle,
   ShoppingBag, Mail, Inbox, Bot, Link2, Rocket, FileSpreadsheet,
   Building2, Languages, Truck, Scale, Percent, Award, Settings2, Upload,
+  RotateCcw,
 }
 
 // Fail-open fallback — used only while the menu tree is loading/erroring, or
