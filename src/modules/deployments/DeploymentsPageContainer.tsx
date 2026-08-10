@@ -27,6 +27,11 @@ interface Deployment {
   started_at: string | null
   finished_at: string | null
   created_at: string
+  // 2026-08-07 — already returned by the backend (GET /cms/deployments
+  // selects '*') but never read here until now; only populated for
+  // status='failed' (see vercelDeployment.service.ts's catch path and the
+  // new vercelWebhook.service.ts's deployment.error handling).
+  build_log: string | null
   sites?: { id: string; name: string; domain: string }
   // Index signature — lets this satisfy EnterpriseDataTable's
   // `T extends Record<string, unknown>` generic constraint (an `interface`
@@ -95,6 +100,23 @@ const deploymentColumns: EDTColumn<Deployment>[] = [
     label: 'URL',
     render: (dep) => dep.deploy_url
       ? <a href={dep.deploy_url} target="_blank" rel="noreferrer" className="text-[var(--lito-gold)] text-xs hover:underline">View</a>
+      : <span className="text-[var(--text-muted)] text-xs">—</span>,
+  },
+  {
+    key: 'build_log',
+    label: 'Reason',
+    // Only ever populated for status='failed' — full text in the title
+    // tooltip (can be long, e.g. a Vercel dashboard inspect link), truncated
+    // in the cell itself so it doesn't blow out the table layout.
+    render: (dep) => dep.build_log
+      ? (
+          <span
+            className="text-[var(--cms-danger)] text-xs truncate block max-w-[220px]"
+            title={dep.build_log}
+          >
+            {dep.build_log}
+          </span>
+        )
       : <span className="text-[var(--text-muted)] text-xs">—</span>,
   },
 ]

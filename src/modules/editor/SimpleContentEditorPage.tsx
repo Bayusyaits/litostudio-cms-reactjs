@@ -28,6 +28,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   storiesService,
   journalService,
+  blogService,
+  portfolioService,
   galleryService,
   servicesService,
   destinationsService,
@@ -53,7 +55,7 @@ import { Switch }                                 from '@/components/atoms/Switc
 
 import type { ContentStatus } from '@litostudio/ui-cms'
 import type {
-  Story, JournalPost, GalleryItem, Service, Destination, Brand, Product, Collection, Campaign,
+  Story, JournalPost, BlogPost, PortfolioItem, GalleryItem, Service, Destination, Brand, Product, Collection, Campaign,
   ProductType, ProductCategory, ProductExtra,
 } from '@/types/content.types'
 import { getTitle } from '@/types/content.types'
@@ -61,10 +63,10 @@ import { getTitle } from '@/types/content.types'
 // ── Types ──────────────────────────────────────────────────────────────────
 
 type SimpleModule =
-  | 'stories' | 'journal' | 'gallery' | 'services' | 'destinations' | 'brands'
+  | 'stories' | 'journal' | 'blog' | 'portfolio' | 'gallery' | 'services' | 'destinations' | 'brands'
   | 'products' | 'collections' | 'campaigns'
 
-type AnyEntity = Story | JournalPost | GalleryItem | Service | Destination | Brand | Product | Collection | Campaign
+type AnyEntity = Story | JournalPost | BlogPost | PortfolioItem | GalleryItem | Service | Destination | Brand | Product | Collection | Campaign
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyService = any
@@ -74,6 +76,13 @@ const LOCALE = 'id'
 const MODULE_CONFIG: Record<SimpleModule, { label: string; service: AnyService }> = {
   stories:      { label: 'Story',        service: storiesService      },
   journal:      { label: 'Journal Post', service: journalService      },
+  // 2026-08-10 (user-requested independence split): Blog and Portfolio are
+  // now independent content_items types (see content.service.ts) — added
+  // here so SimpleContentEditorPage's pathname-based module detection
+  // (`pathname.startsWith('/${k}/')` below) resolves /blog/* and
+  // /portfolio/* to their own service, exactly like journal.
+  blog:         { label: 'Blog Post',    service: blogService         },
+  portfolio:    { label: 'Portfolio Item', service: portfolioService  },
   gallery:      { label: 'Gallery Item', service: galleryService      },
   services:     { label: 'Service',      service: servicesService     },
   destinations: { label: 'Destination',  service: destinationsService },
@@ -160,6 +169,14 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
     case 'journal': {
       const j = e as JournalPost
       return { category: j.category ?? '', isFeatured: j.is_featured ?? false }
+    }
+    case 'blog': {
+      const b = e as BlogPost
+      return { category: b.category ?? '', isFeatured: b.is_featured ?? false }
+    }
+    case 'portfolio': {
+      const p = e as PortfolioItem
+      return { category: p.category ?? '', isFeatured: p.is_featured ?? false }
     }
     case 'gallery': {
       const g = e as GalleryItem
@@ -354,6 +371,10 @@ function buildCreatePayload(
       return { ...base, category: extras.category || undefined, location: extras.location || undefined, region: extras.region || undefined, is_featured: extras.isFeatured ?? false, tags, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'journal':
       return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+    case 'blog':
+      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+    case 'portfolio':
+      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'gallery': {
       const extra: Record<string, unknown> = {}
       if (extras.aspectRatio)  extra.aspect_ratio = extras.aspectRatio
@@ -458,6 +479,8 @@ function buildUpdatePatch(
   switch (module) {
     case 'stories':      return { ...base, tags, category: extras.category || null, location: extras.location || null, region: extras.region || null, is_featured: extras.isFeatured ?? false }
     case 'journal':      return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
+    case 'blog':         return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
+    case 'portfolio':    return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
     case 'gallery': {
       const extra: Record<string, unknown> = {}
       if (extras.aspectRatio)  extra.aspect_ratio = extras.aspectRatio
@@ -670,6 +693,28 @@ function renderModuleExtras(
         <div className="cms-card p-4 space-y-3">
           <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Post Details</h3>
           <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Behind the scenes" maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
+          <div className="flex items-center justify-between">
+            <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
+            <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+          </div>
+        </div>
+      )
+    case 'blog':
+      return (
+        <div className="cms-card p-4 space-y-3">
+          <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Blog Details</h3>
+          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Tips" maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
+          <div className="flex items-center justify-between">
+            <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
+            <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+          </div>
+        </div>
+      )
+    case 'portfolio':
+      return (
+        <div className="cms-card p-4 space-y-3">
+          <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Portfolio Details</h3>
+          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Photography" maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
           <div className="flex items-center justify-between">
             <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
             <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />

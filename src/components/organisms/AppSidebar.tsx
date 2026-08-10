@@ -8,7 +8,7 @@ import {
   Briefcase, Quote, DollarSign, Tv2, MessageCircle,
   ShoppingBag, Mail, Inbox, Bot, Link2, Rocket, FileSpreadsheet,
   Building2, Languages, Truck, Scale, Percent, Award, Settings2, Upload,
-  RotateCcw,
+  RotateCcw, Newspaper, LayoutGrid,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
@@ -39,7 +39,7 @@ const ICONS: Record<string, React.ElementType> = {
   Briefcase, Quote, DollarSign, Tv2, MessageCircle,
   ShoppingBag, Mail, Inbox, Bot, Link2, Rocket, FileSpreadsheet,
   Building2, Languages, Truck, Scale, Percent, Award, Settings2, Upload,
-  RotateCcw,
+  RotateCcw, Newspaper, LayoutGrid,
 }
 
 // Fail-open fallback — used only while the menu tree is loading/erroring, or
@@ -56,6 +56,14 @@ const FALLBACK_NAV: NavSection[] = [
   ] },
   { section: 'Content', items: [
     { label: 'Stories', icon: FileText, to: '/stories' },
+    // 2026-08-10 (user-requested independence split): Blog and Portfolio are
+    // now independent CMS modules (own list/edit pages, own content_type),
+    // placed right after Stories per user's explicit choice — see
+    // migrations/20260810140000_seed_blog_portfolio_cms_menu.sql for the
+    // server-driven nav (this fallback array is only used while that tree
+    // is loading/erroring).
+    { label: 'Blog', icon: Newspaper, to: '/blog' },
+    { label: 'Portfolio', icon: LayoutGrid, to: '/portfolio' },
     { label: 'Journal', icon: BookOpen, to: '/journal' },
     { label: 'Gallery', icon: Image, to: '/gallery' },
     { label: 'Media', icon: Film, to: '/media' },

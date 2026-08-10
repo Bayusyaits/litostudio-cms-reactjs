@@ -22,6 +22,10 @@ const DashboardPage    = lazy(() => import('@/modules/dashboard/DashboardPageCon
 const NotificationsPage = lazy(() => import('@/modules/notifications/NotificationsPageContainer'))
 const StoriesPage      = lazy(() => import('@/modules/stories/StoriesPageContainer'))
 const JournalPage      = lazy(() => import('@/modules/journal/JournalPageContainer'))
+// 2026-08-10 (user-requested independence split): independent Blog and
+// Portfolio CMS modules — no longer aliases of Stories.
+const BlogPage         = lazy(() => import('@/modules/blog/BlogPageContainer'))
+const PortfolioPage    = lazy(() => import('@/modules/portfolio/PortfolioPageContainer'))
 const GalleryPage      = lazy(() => import('@/modules/gallery/GalleryPageContainer'))
 const MediaPage        = lazy(() => import('@/modules/media/MediaPageContainer'))
 const DestinationsPage = lazy(() => import('@/modules/destinations/DestinationsPageContainer'))
@@ -121,6 +125,16 @@ export const router = createBrowserRouter([
       { path: 'journal',           element: <S><JournalPage /></S> },
       { path: 'journal/new',       element: <S><SimpleContentEditorPage /></S> },
       { path: 'journal/:id/edit',  element: <S><SimpleContentEditorPage /></S> },
+
+      // Blog (independent from Stories — 2026-08-10)
+      { path: 'blog',              element: <S><BlogPage /></S> },
+      { path: 'blog/new',          element: <S><SimpleContentEditorPage /></S> },
+      { path: 'blog/:id/edit',     element: <S><SimpleContentEditorPage /></S> },
+
+      // Portfolio (independent from Stories — 2026-08-10)
+      { path: 'portfolio',              element: <S><PortfolioPage /></S> },
+      { path: 'portfolio/new',          element: <S><SimpleContentEditorPage /></S> },
+      { path: 'portfolio/:id/edit',     element: <S><SimpleContentEditorPage /></S> },
 
       { path: 'gallery',           element: <S><GalleryPage /></S> },
       { path: 'gallery/new',       element: <S><SimpleContentEditorPage /></S> },

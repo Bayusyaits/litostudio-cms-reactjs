@@ -1,7 +1,7 @@
 import { http } from '@litostudio/ui-cms'
 import type { ApiResponse, PaginatedResponse, ListParams, BulkUpdateRequest, BulkDeleteRequest, BulkUpdateResponse, BulkDeleteResponse } from '@/types/api.types'
 import type { ReportResult } from '@/types/reports.types'
-import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination, Brand, Product, ProductCreateRequest, ProductUpdateRequest, Collection, CollectionCreateRequest, CollectionUpdateRequest, Review, ReviewUpdateRequest, Faq, FaqCreateRequest, FaqUpdateRequest, FaqCategory, FaqCategoryCreateRequest, FaqCategoryUpdateRequest, Service, ServiceCreateRequest, ServiceUpdateRequest, Testimonial, TestimonialCreateRequest, TestimonialUpdateRequest, Feedback, FeedbackCreateRequest, FeedbackUpdateRequest, PricingPackage, PricingCreateRequest, PricingUpdateRequest, HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, Comment, CommentUpdateRequest, Campaign, CampaignCreateRequest, CampaignUpdateRequest, SeoMetadata, SeoSaveRequest, Promotion, PromotionCreateRequest, PromotionUpdateRequest, PromotionScope } from '@/types/content.types'
+import type { Story, StoryCreateRequest, StoryUpdateRequest, JournalPost, JournalCreateRequest, JournalUpdateRequest, BlogPost, BlogCreateRequest, BlogUpdateRequest, PortfolioItem, PortfolioCreateRequest, PortfolioUpdateRequest, GalleryItem, GalleryCreateRequest, GalleryUpdateRequest, Destination, Brand, Product, ProductCreateRequest, ProductUpdateRequest, Collection, CollectionCreateRequest, CollectionUpdateRequest, Review, ReviewUpdateRequest, Faq, FaqCreateRequest, FaqUpdateRequest, FaqCategory, FaqCategoryCreateRequest, FaqCategoryUpdateRequest, Service, ServiceCreateRequest, ServiceUpdateRequest, Testimonial, TestimonialCreateRequest, TestimonialUpdateRequest, Feedback, FeedbackCreateRequest, FeedbackUpdateRequest, PricingPackage, PricingCreateRequest, PricingUpdateRequest, HeroSlide, HeroSlideCreateRequest, HeroSlideUpdateRequest, Comment, CommentUpdateRequest, Campaign, CampaignCreateRequest, CampaignUpdateRequest, SeoMetadata, SeoSaveRequest, Promotion, PromotionCreateRequest, PromotionUpdateRequest, PromotionScope } from '@/types/content.types'
 import type { Order, UpdateOrderStatusRequest, NewsletterSubscriber, UpdateNewsletterStatusRequest, ContactMessage } from '@/types/commerce.types'
 
 // ── Generic content service factory ─────────────────────────────────────
@@ -185,9 +185,15 @@ function createContentItemService<Entity, CreateDTO, UpdateDTO>(contentType: str
 //   comments table       → /api/v1/cms/content/comments
 //   newsletter table     → /api/v1/cms/content/newsletter
 
-// Stories, Journal, Gallery, Destinations, Hero → content_items (type filter)
+// Stories, Journal, Blog, Portfolio, Gallery, Destinations, Hero → content_items (type filter)
 export const storiesService       = createContentItemService<Story,          StoryCreateRequest,       StoryUpdateRequest>(      'story')
 export const journalService       = createContentItemService<JournalPost,    JournalCreateRequest,     JournalUpdateRequest>(    'journal')
+// 2026-08-10 (user-requested independence split): Blog and Portfolio used to
+// be website-only aliases of Story data (no CMS presence at all). Now full
+// siblings of Story/Journal — own content_type, own service instance, own
+// CMS module (modules/blog, modules/portfolio) — same factory, same pattern.
+export const blogService          = createContentItemService<BlogPost,       BlogCreateRequest,        BlogUpdateRequest>(       'blog')
+export const portfolioService     = createContentItemService<PortfolioItem,  PortfolioCreateRequest,   PortfolioUpdateRequest>(  'portfolio')
 export const galleryService       = createContentItemService<GalleryItem,    GalleryCreateRequest,     GalleryUpdateRequest>(    'gallery')
 export const destinationsService  = createContentItemService<Destination,    Record<string,unknown>,   Record<string,unknown>>(  'destination')
 export const brandsService        = createContentItemService<Brand,          Record<string,unknown>,   Record<string,unknown>>(  'brand')

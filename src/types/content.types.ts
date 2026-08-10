@@ -111,6 +111,77 @@ export interface JournalCreateRequest {
 
 export interface JournalUpdateRequest extends Partial<JournalCreateRequest> {}
 
+// ── Blog ──────────────────────────────────────────────────────────────────
+// 2026-08-10 (user-requested independence split): Blog is its own
+// content_type ('blog', seeded in content_types by migrations/003_content.sql)
+// stored in the same unified content_items/content_translations tables as
+// Story/Journal/Gallery — same pattern, fully independent CMS module/service/
+// website data layer. No longer an alias of Story data. Shape mirrors
+// JournalPost (category + is_featured, no story-only fields like location/
+// region/camera).
+
+export interface BlogPost {
+  id: string
+  site_id: string
+  slug: string
+  category: string | null
+  cover_image: string | null
+  read_time: number | null
+  is_featured: boolean
+  status: ContentStatus
+  published_at: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface BlogCreateRequest {
+  site_id?: string
+  slug: string
+  category?: string
+  cover_image?: string
+  is_featured?: boolean
+  status?: ContentStatus
+  translation: { locale: string; title: string; excerpt?: string; body?: unknown }
+}
+
+export interface BlogUpdateRequest extends Partial<BlogCreateRequest> {}
+
+// ── Portfolio ─────────────────────────────────────────────────────────────
+// 2026-08-10 (user-requested independence split): Portfolio is its own
+// content_type ('portfolio', added by migrations/20260810130000_split_blog_
+// portfolio_from_stories.sql) — same table, own CMS module/service/website
+// data layer, independent from Story and Blog.
+
+export interface PortfolioItem {
+  id: string
+  site_id: string
+  slug: string
+  category: string | null
+  cover_image: string | null
+  read_time: number | null
+  is_featured: boolean
+  status: ContentStatus
+  published_at: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface PortfolioCreateRequest {
+  site_id?: string
+  slug: string
+  category?: string
+  cover_image?: string
+  is_featured?: boolean
+  status?: ContentStatus
+  translation: { locale: string; title: string; excerpt?: string; body?: unknown }
+}
+
+export interface PortfolioUpdateRequest extends Partial<PortfolioCreateRequest> {}
+
 // ── Gallery ───────────────────────────────────────────────────────────────
 //
 // 2026-07-09 fix: this used to model the OLD dedicated `gallery_items` table
