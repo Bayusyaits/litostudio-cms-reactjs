@@ -22,9 +22,15 @@ import { useWebsiteStore } from '@litostudio/ui-cms'
 import { ContentEditorLayout } from '@/components/organisms/ContentEditorLayout'
 import { TagInput } from '@/components/molecules/TagInput'
 import { Switch } from '@/components/atoms/Switch'
+import { LocaleSwitcher } from '@/components/molecules/LocaleSwitcher'
+import { useOrgLocales } from '@/hooks/useOrgLocales'
 import { DashboardSkeleton, TextAreaField, Select } from '@litostudio/ui-cms'
 
-const LOCALE = 'id'
+// 2026-08-11 (Phase 6 — MULTIPLE-LANGUAGE-PLAN.md CMS editor gap audit):
+// was a hardcoded `const LOCALE = 'id'` with no switcher at all — faqs is
+// squarely in-scope for this fix since faq_translations already has an FK
+// to platform_locales(code) (migrations/20260715160000_platform_locales.sql).
+// Replaced by component-level `locale` state below.
 
 // Matches the real `faqs.status` CHECK constraint (draft/active/inactive/
 // archived/suspended) — deliberately not reusing PublishCard/ContentStatus
@@ -69,17 +75,39 @@ export default function FaqEditorPage() {
   const [isSaving, setIsSaving]   = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
+  // Same self-correcting default pattern as SimpleContentEditorPage.tsx /
+  // ProductWizardPage.tsx's Phase 6 fixes.
+  const { primaryLocale, isLoading: localesLoading } = useOrgLocales()
+  const [locale, setLocale] = useState('id')
+  const [localeTouched, setLocaleTouched] = useState(false)
+  useEffect(() => {
+    if (!localeTouched && !localesLoading && primaryLocale) setLocale(primaryLocale)
+  }, [localeTouched, localesLoading, primaryLocale])
+  const handleLocaleChange = useCallback((next: string) => {
+    setLocale(next)
+    setLocaleTouched(true)
+  }, [])
+
+  // Entity-level fields — not per-locale.
   useEffect(() => {
     if (!faq) return
-    const tr = faq.faq_translations?.find((t) => t.locale === LOCALE) ?? faq.faq_translations?.[0]
-    setQuestion(tr?.question ?? '')
-    setAnswer(tr?.answer ?? '')
     setCategoryId(faq.category_id ?? '')
     setTags(faq.tags ?? [])
     setIsFeatured(faq.is_featured)
     setStatus(faq.status)
     setSortOrder(faq.sort_order)
   }, [faq])
+
+  // Translation-level fields — re-runs when the selected locale changes so
+  // switching locale shows that locale's own question/answer, or blank
+  // fields when it doesn't exist yet (not another locale's text silently
+  // mislabeled — same reasoning as SimpleContentEditorPage.tsx).
+  useEffect(() => {
+    if (!faq) return
+    const tr = faq.faq_translations?.find((t) => t.locale === locale)
+    setQuestion(tr?.question ?? '')
+    setAnswer(tr?.answer ?? '')
+  }, [faq, locale])
 
   const doSave = useCallback(async () => {
     setSaveError(null)
@@ -97,7 +125,7 @@ export default function FaqEditorPage() {
           is_featured: isFeatured,
           status: status as 'draft',
           sort_order: sortOrder,
-          translations: [{ locale: LOCALE, question: question.trim(), answer: answer.trim() }],
+          translations: [{ locale, question: question.trim(), answer: answer.trim() }],
         })
         void queryClient.invalidateQueries({ queryKey: ['faqs'] })
         navigate(`/faqs/${created.id}/edit`, { replace: true })
@@ -108,7 +136,7 @@ export default function FaqEditorPage() {
           is_featured: isFeatured,
           status: status as 'draft',
           sort_order: sortOrder,
-          translations: [{ locale: LOCALE, question: question.trim(), answer: answer.trim() }],
+          translations: [{ locale, question: question.trim(), answer: answer.trim() }],
         })
         void queryClient.invalidateQueries({ queryKey: ['faqs'] })
         void queryClient.invalidateQueries({ queryKey: ['faq', id] })
@@ -118,7 +146,7 @@ export default function FaqEditorPage() {
     } finally {
       setIsSaving(false)
     }
-  }, [isNew, question, answer, categoryId, tags, isFeatured, status, sortOrder, activeSite, id, navigate, queryClient])
+  }, [isNew, question, answer, categoryId, tags, isFeatured, status, sortOrder, activeSite, id, navigate, queryClient, locale])
 
   if (!isNew && isLoading) return <DashboardSkeleton />
   if (!isNew && error) {
@@ -134,6 +162,7 @@ export default function FaqEditorPage() {
       title={isNew ? 'New FAQ' : 'Edit FAQ'}
       subtitle={isNew ? 'FAQs › New' : `FAQs › ${question || id}`}
       onBack={() => navigate('/faqs')}
+      headerExtra={!isNew ? <LocaleSwitcher value={locale} onChange={handleLocaleChange} /> : undefined}
       sidebarContent={
         <>
           <div className="cms-card p-4 space-y-3">

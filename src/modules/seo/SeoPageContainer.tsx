@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { seoService } from '@/services/content.service'
 import { pagesService } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { getErrorMessage } from '@litostudio/ui-cms'
 import { SeoPageView } from './SeoPageView'
+import { useOrgLocales } from '@/hooks/useOrgLocales'
 import type { SeoSaveRequest } from '@/types/content.types'
 
 /** Static base types — always present regardless of CMS pages */
@@ -29,9 +30,24 @@ export default function SeoPageContainer() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [serverError, setServerError] = useState<string | null>(null)
 
+  // 2026-08-11 (Phase 6): was hardcoded `locale: 'id'` at both read and
+  // write time (confirmed via direct read — genuinely per-locale content,
+  // e.g. a different meta_description per language, with zero switcher
+  // before this fix). Same self-correcting default as the content editors.
+  const { primaryLocale, isLoading: localesLoading } = useOrgLocales()
+  const [locale, setLocale] = useState('id')
+  const [localeTouched, setLocaleTouched] = useState(false)
+  useEffect(() => {
+    if (!localeTouched && !localesLoading && primaryLocale) setLocale(primaryLocale)
+  }, [localeTouched, localesLoading, primaryLocale])
+  const handleLocaleChange = useCallback((next: string) => {
+    setLocale(next)
+    setLocaleTouched(true)
+  }, [])
+
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['seo', activeSite?.id, activeTab],
-    queryFn:  () => seoService.get(activeSite!.id, activeTab),
+    queryKey: ['seo', activeSite?.id, activeTab, locale],
+    queryFn:  () => seoService.get(activeSite!.id, activeTab, locale),
     enabled:  !!activeSite,
     staleTime: 5 * 60 * 1000,
   })
@@ -73,8 +89,8 @@ export default function SeoPageContainer() {
   })
 
   const handleSave = useCallback((values: SeoSaveRequest) => {
-    saveMutation.mutate({ ...values, page_type: activeTab, locale: 'id' })
-  }, [saveMutation, activeTab])
+    saveMutation.mutate({ ...values, page_type: activeTab, locale })
+  }, [saveMutation, activeTab, locale])
 
   return (
     <SeoPageView
@@ -86,6 +102,8 @@ export default function SeoPageContainer() {
       saveStatus={saveStatus}
       serverError={serverError}
       onSave={handleSave}
+      locale={locale}
+      onLocaleChange={handleLocaleChange}
     />
   )
 }

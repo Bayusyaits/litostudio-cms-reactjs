@@ -19,6 +19,8 @@ import type { ContentStatus } from '@litostudio/ui-cms'
 import { ContentEditorLayout } from '@/components/organisms/ContentEditorLayout'
 import { PublishCard } from '@/components/molecules/PublishCard'
 import { VariantsCard } from '@/components/molecules/VariantsCard'
+import { LocaleSwitcher } from '@/components/molecules/LocaleSwitcher'
+import { useOrgLocales } from '@/hooks/useOrgLocales'
 import { productInventoryService } from '@/services/catalog.service'
 import { productsService } from '@/services/content.service'
 import type { Product, ProductType } from '@/types/content.types'
@@ -67,6 +69,25 @@ export default function ProductWizardPage() {
   const [activeStep, setActiveStep] = useState('information')
   const [productId, setProductId] = useState<string | null>(id ?? null)
 
+  // ── Locale (Phase 6 — MULTIPLE-LANGUAGE-PLAN.md CMS editor gap audit) ──
+  // Was previously hardcoded `locale: 'id'` at save time (line ~264 below)
+  // and `product.translations?.[0]` at hydrate time (no locale awareness at
+  // all — confirmed via direct read of this file). Same self-correcting
+  // default as SimpleContentEditorPage.tsx's Phase 6 fix: starts 'id'
+  // (matches every existing org today), corrects to the org's real primary
+  // locale once useOrgLocales() resolves, unless the editor has already
+  // picked a locale manually.
+  const { primaryLocale, isLoading: localesLoading } = useOrgLocales()
+  const [locale, setLocale] = useState('id')
+  const [localeTouched, setLocaleTouched] = useState(false)
+  useEffect(() => {
+    if (!localeTouched && !localesLoading && primaryLocale) setLocale(primaryLocale)
+  }, [localeTouched, localesLoading, primaryLocale])
+  const handleLocaleChange = useCallback((next: string) => {
+    setLocale(next)
+    setLocaleTouched(true)
+  }, [])
+
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [slugLocked, setSlugLocked] = useState(false)
@@ -108,27 +129,17 @@ export default function ProductWizardPage() {
   const [inventoryQuantity, setInventoryQuantity] = useState('0')
   const [inventoryTrackStock, setInventoryTrackStock] = useState(true)
 
-  // ── Hydrate from the loaded product (EDIT mode) ───────────────────────
+  // ── Hydrate entity-level (non-translated) fields (EDIT mode) ──────────
+  // Deliberately does NOT depend on `locale` — everything here (slug, SKU,
+  // category, price, images, inventory…) lives on the `products` row
+  // itself, shared across every locale's product_translations row.
   const hasHydrated = useRef(false)
   useEffect(() => {
     if (!product) return
     hasHydrated.current = true
-    const t = product.translations?.[0]
-    // 2026-07-25 bug fix (QA audit, Critical #1): `product_translations` has
-    // no `title` column — only `name`. Reading `t?.title` always returned
-    // undefined, so this field loaded empty and autosave then PATCHed the
-    // product with an empty name, silently blanking every product opened
-    // for editing. Read the real column instead.
-    setName(t?.name ?? '')
     setSlug(product.slug)
     setSlugLocked(true)
     setSku(product.sku ?? '')
-    // Same class of bug: the wizard's Description field was hydrated from
-    // `excerpt`, but the save payload below wrote to a key the backend
-    // never persists to `excerpt` (see the `translation` payload comment).
-    // Fall back the same way the storefront composables already do
-    // (`description ?? excerpt`) so existing data in either column shows.
-    setDescription(t?.description ?? t?.excerpt ?? '')
     setProductType(product.product_type)
     setSortOrder(String(product.sort_order ?? 0))
     setTags(product.tags ?? [])
@@ -154,9 +165,33 @@ export default function ProductWizardPage() {
     const productLevelInventory = product.inventory?.find((i) => i.variant_id === null)
     setInventoryQuantity(String(productLevelInventory?.quantity ?? 0))
     setInventoryTrackStock(productLevelInventory?.track_stock ?? true)
+  }, [product])
+
+  // ── Hydrate translation-level fields (EDIT mode) ──────────────────────
+  // 2026-08-11 (Phase 6): was `product.translations?.[0]` — always the
+  // first row regardless of which locale that happened to be, and with no
+  // way to switch. Re-runs when `locale` changes (<LocaleSwitcher> below)
+  // so name/description/meta show THAT locale's translation, or blank
+  // fields when it doesn't exist yet (a new translation, not another
+  // locale's content silently mislabeled).
+  useEffect(() => {
+    if (!product) return
+    const t = product.translations?.find((tr) => tr.locale === locale)
+    // 2026-07-25 bug fix (QA audit, Critical #1): `product_translations` has
+    // no `title` column — only `name`. Reading `t?.title` always returned
+    // undefined, so this field loaded empty and autosave then PATCHed the
+    // product with an empty name, silently blanking every product opened
+    // for editing. Read the real column instead.
+    setName(t?.name ?? '')
+    // Same class of bug: the wizard's Description field was hydrated from
+    // `excerpt`, but the save payload below wrote to a key the backend
+    // never persists to `excerpt` (see the `translation` payload comment).
+    // Fall back the same way the storefront composables already do
+    // (`description ?? excerpt`) so existing data in either column shows.
+    setDescription(t?.description ?? t?.excerpt ?? '')
     setMetaTitle(t?.meta_title ?? '')
     setMetaDescription(t?.meta_description ?? '')
-  }, [product])
+  }, [product, locale])
 
   useEffect(() => {
     if (isNew && !slugLocked && name) setSlug(slugify(name))
@@ -261,7 +296,7 @@ export default function ProductWizardPage() {
         // never actually persisted, independent of the name-blanking bug
         // above. `title` stays as-is; the backend intentionally maps it to
         // the `name` column.
-        translation: { locale: 'id', title: name, description },
+        translation: { locale, title: name, description },
       }
 
       let savedProductId = productId
@@ -285,7 +320,7 @@ export default function ProductWizardPage() {
       }
 
       if (savedProductId) {
-        await productsService.upsertTranslation(savedProductId, 'id', { meta_title: metaTitle, meta_description: metaDescription })
+        await productsService.upsertTranslation(savedProductId, locale, { meta_title: metaTitle, meta_description: metaDescription })
       }
 
       setLastSaved(new Date().toLocaleTimeString())
@@ -299,7 +334,7 @@ export default function ProductWizardPage() {
     coverImage, images, videoUrl, price, compareAtPrice, isFeatured, preOrder, daysToShip,
     isDigital, digitalFileUrl, weightGrams, lengthCm, widthCm, heightCm, biteshipCategory,
     description, minStock, inventoryQuantity, inventoryTrackStock, hasVariants, product?.extra, navigate, queryClient,
-    metaTitle, metaDescription,
+    metaTitle, metaDescription, locale,
   ])
 
   // ── Autosave (EDIT mode only, 2s debounce) — same pattern as the old
@@ -318,6 +353,7 @@ export default function ProductWizardPage() {
       title={isNew ? 'New Product' : name || 'Edit Product'}
       subtitle={`Products${name ? ` / ${name}` : ''}`}
       onBack={() => navigate('/products')}
+      headerExtra={productId ? <LocaleSwitcher value={locale} onChange={handleLocaleChange} /> : undefined}
       sidebarContent={
         <PublishCard
           status={status}

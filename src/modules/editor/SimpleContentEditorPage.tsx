@@ -30,6 +30,8 @@ import {
   journalService,
   blogService,
   portfolioService,
+  newsService,
+  articleService,
   galleryService,
   servicesService,
   destinationsService,
@@ -51,11 +53,13 @@ import { SeoCard }                                from '@/components/molecules/S
 import { PublishCard }                            from '@/components/molecules/PublishCard'
 import { TagInput }                               from '@/components/molecules/TagInput'
 import { VariantsCard }                           from '@/components/molecules/VariantsCard'
+import { LocaleSwitcher }                         from '@/components/molecules/LocaleSwitcher'
 import { Switch }                                 from '@/components/atoms/Switch'
+import { useOrgLocales }                          from '@/hooks/useOrgLocales'
 
 import type { ContentStatus } from '@litostudio/ui-cms'
 import type {
-  Story, JournalPost, BlogPost, PortfolioItem, GalleryItem, Service, Destination, Brand, Product, Collection, Campaign,
+  Story, JournalPost, BlogPost, PortfolioItem, NewsPost, ArticlePost, GalleryItem, Service, Destination, Brand, Product, Collection, Campaign,
   ProductType, ProductCategory, ProductExtra,
 } from '@/types/content.types'
 import { getTitle } from '@/types/content.types'
@@ -63,15 +67,27 @@ import { getTitle } from '@/types/content.types'
 // ── Types ──────────────────────────────────────────────────────────────────
 
 type SimpleModule =
-  | 'stories' | 'journal' | 'blog' | 'portfolio' | 'gallery' | 'services' | 'destinations' | 'brands'
+  | 'stories' | 'journal' | 'blog' | 'portfolio' | 'news' | 'articles' | 'gallery' | 'services' | 'destinations' | 'brands'
   | 'products' | 'collections' | 'campaigns'
 
-type AnyEntity = Story | JournalPost | BlogPost | PortfolioItem | GalleryItem | Service | Destination | Brand | Product | Collection | Campaign
+type AnyEntity = Story | JournalPost | BlogPost | PortfolioItem | NewsPost | ArticlePost | GalleryItem | Service | Destination | Brand | Product | Collection | Campaign
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyService = any
 
-const LOCALE = 'id'
+// 2026-08-11 (Phase 6 — CMS editor locale gap): this used to be a hardcoded
+// `const LOCALE = 'id'` — every one of the 12 modules below always read and
+// wrote the 'id' translation row regardless of the org's real primary
+// locale, with no UI to view/create any other locale at all (confirmed via
+// full read of this file — task #84 audit). Replaced by a `locale` piece of
+// state on the component itself (defaults to the org's primary locale via
+// useOrgLocales(), switchable in EDIT mode via <LocaleSwitcher>) that gets
+// threaded through getEntityTranslation/buildCreatePayload/upsertTranslation
+// below instead of this constant. Kept as the hardcoded fallback default
+// only (see the component's `useState('id')` below) — matches every
+// existing org's actual default locale today, so this is a no-op for
+// current data and only changes behavior for a new 'en'-primary org or an
+// org that has activated a 2nd language.
 
 const MODULE_CONFIG: Record<SimpleModule, { label: string; service: AnyService }> = {
   stories:      { label: 'Story',        service: storiesService      },
@@ -83,6 +99,18 @@ const MODULE_CONFIG: Record<SimpleModule, { label: string; service: AnyService }
   // /portfolio/* to their own service, exactly like journal.
   blog:         { label: 'Blog Post',    service: blogService         },
   portfolio:    { label: 'Portfolio Item', service: portfolioService  },
+  // 2026-08-10 (user-requested independence split, follow-up to Blog/
+  // Portfolio): News and Article are now independent content_items types
+  // (see content.service.ts) — added here so SimpleContentEditorPage's
+  // pathname-based module detection (`pathname.startsWith('/${k}/')` below)
+  // resolves /news/* and /articles/* to their own service, exactly like
+  // blog/portfolio. News' route is singular ('/news', matching the existing
+  // website route it inherited from its former Journal alias); Article's is
+  // plural ('/articles', matching Products/Collections/Destinations/
+  // Services' plural convention — 'Article' doesn't read as a natural mass
+  // noun the way 'Blog'/'Portfolio' do).
+  news:         { label: 'News Item',    service: newsService         },
+  articles:     { label: 'Article',      service: articleService      },
   gallery:      { label: 'Gallery Item', service: galleryService      },
   services:     { label: 'Service',      service: servicesService     },
   destinations: { label: 'Destination',  service: destinationsService },
@@ -140,9 +168,14 @@ function getEntitySlug(e: AnyEntity): string {
   return (e as { slug?: string }).slug ?? ''
 }
 
-function getEntityTranslation(e: AnyEntity, module: SimpleModule) {
+function getEntityTranslation(e: AnyEntity, module: SimpleModule, locale: string) {
   const translations = ((e as unknown as Record<string, unknown>).translations as Record<string, unknown>[] | undefined) ?? []
-  const t = translations.find((tr) => tr.locale === LOCALE) ?? translations[0]
+  // 2026-08-11 (Phase 6): no longer falls back to translations[0] when the
+  // selected locale has no row — with only one locale ('id') that fallback
+  // was always correct by construction; with multiple locales it would
+  // silently show another language's title/body under the selected
+  // locale's tab, which is worse than an empty "not yet translated" form.
+  const t = translations.find((tr) => tr.locale === locale)
   if (!t) return null
   // products, collections, and services (stored in products table, via
   // product_translations which has a real `name` column) use `name`.
@@ -177,6 +210,14 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
     case 'portfolio': {
       const p = e as PortfolioItem
       return { category: p.category ?? '', isFeatured: p.is_featured ?? false }
+    }
+    case 'news': {
+      const n = e as NewsPost
+      return { category: n.category ?? '', isFeatured: n.is_featured ?? false }
+    }
+    case 'articles': {
+      const a = e as ArticlePost
+      return { category: a.category ?? '', isFeatured: a.is_featured ?? false }
     }
     case 'gallery': {
       const g = e as GalleryItem
@@ -363,18 +404,22 @@ function buildCreatePayload(
   module: SimpleModule,
   slug: string, title: string, excerpt: string, body: string,
   coverImage: string | null, tags: string[], status: ContentStatus,
-  extras: Record<string, unknown>, siteId: string,
+  extras: Record<string, unknown>, siteId: string, locale: string,
 ): Record<string, unknown> {
   const base: Record<string, unknown> = { site_id: siteId, slug, cover_image: coverImage || undefined, status }
   switch (module) {
     case 'stories':
-      return { ...base, category: extras.category || undefined, location: extras.location || undefined, region: extras.region || undefined, is_featured: extras.isFeatured ?? false, tags, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+      return { ...base, category: extras.category || undefined, location: extras.location || undefined, region: extras.region || undefined, is_featured: extras.isFeatured ?? false, tags, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'journal':
-      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'blog':
-      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'portfolio':
-      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+    case 'news':
+      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+    case 'articles':
+      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'gallery': {
       const extra: Record<string, unknown> = {}
       if (extras.aspectRatio)  extra.aspect_ratio = extras.aspectRatio
@@ -388,7 +433,7 @@ function buildCreatePayload(
         region:      extras.region   || undefined,
         is_featured: extras.isFeatured ?? false,
         extra,
-        translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) },
+        translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) },
       }
     }
     case 'services':
@@ -409,7 +454,7 @@ function buildCreatePayload(
         region:      extras.region || undefined,
         is_featured: extras.isFeatured ?? false,
         extra,
-        translation: { locale: LOCALE, title, excerpt: excerpt || undefined },
+        translation: { locale, title, excerpt: excerpt || undefined },
       }
     }
     case 'products': {
@@ -459,12 +504,12 @@ function buildCreatePayload(
         category:    extras.category || undefined,
         is_featured: extras.isFeatured ?? false,
         extra:       extras.linkUrl ? { link_url: extras.linkUrl } : {},
-        translation: { locale: LOCALE, title },
+        translation: { locale, title },
       }
     case 'collections':
       return { ...base }
     case 'campaigns':
-      return { ...base, cta_label: extras.ctaLabel || undefined, cta_url: extras.ctaUrl || undefined, start_date: extras.startDate || undefined, end_date: extras.endDate || undefined, is_featured: extras.isFeatured ?? false, translation: { locale: LOCALE, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+      return { ...base, cta_label: extras.ctaLabel || undefined, cta_url: extras.ctaUrl || undefined, start_date: extras.startDate || undefined, end_date: extras.endDate || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     default:
       return base
   }
@@ -481,6 +526,8 @@ function buildUpdatePatch(
     case 'journal':      return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
     case 'blog':         return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
     case 'portfolio':    return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
+    case 'news':         return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
+    case 'articles':     return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
     case 'gallery': {
       const extra: Record<string, unknown> = {}
       if (extras.aspectRatio)  extra.aspect_ratio = extras.aspectRatio
@@ -715,6 +762,28 @@ function renderModuleExtras(
         <div className="cms-card p-4 space-y-3">
           <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Portfolio Details</h3>
           <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Photography" maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
+          <div className="flex items-center justify-between">
+            <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
+            <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+          </div>
+        </div>
+      )
+    case 'news':
+      return (
+        <div className="cms-card p-4 space-y-3">
+          <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">News Details</h3>
+          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Announcement" maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
+          <div className="flex items-center justify-between">
+            <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
+            <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+          </div>
+        </div>
+      )
+    case 'articles':
+      return (
+        <div className="cms-card p-4 space-y-3">
+          <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Article Details</h3>
+          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Guide" maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
           <div className="flex items-center justify-between">
             <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
             <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
@@ -1293,6 +1362,24 @@ export default function SimpleContentEditorPage() {
   // same table/list but must not show up here.
   const productBrands = ((brandsData?.data ?? []) as Brand[]).filter((b) => b.category === 'product')
 
+  // ── Locale (Phase 6) ─────────────────────────────────────────────────
+  // Defaults to 'id' (identical to every existing org's actual default
+  // today — a no-op for current data) and self-corrects to the org's real
+  // primary locale once useOrgLocales() resolves, UNLESS the editor has
+  // manually picked a locale via <LocaleSwitcher> already (localeTouched)
+  // — otherwise switching to view an 'en' translation would keep getting
+  // silently reset back to 'id' every time this effect re-runs.
+  const { primaryLocale, isLoading: localesLoading } = useOrgLocales()
+  const [locale,        setLocale]        = useState('id')
+  const [localeTouched, setLocaleTouched] = useState(false)
+  useEffect(() => {
+    if (!localeTouched && !localesLoading && primaryLocale) setLocale(primaryLocale)
+  }, [localeTouched, localesLoading, primaryLocale])
+  const handleLocaleChange = useCallback((next: string) => {
+    setLocale(next)
+    setLocaleTouched(true)
+  }, [])
+
   // ── Local state ──────────────────────────────────────────────────────
 
   const [title,      setTitle]      = useState('')
@@ -1321,17 +1408,11 @@ export default function SimpleContentEditorPage() {
     if (isNew && !slugLocked && title) setSlug(slugify(title))
   }, [isNew, slugLocked, title])
 
-  // Hydrate from entity (EDIT mode)
+  // Hydrate entity-level (non-translated) fields from entity (EDIT mode).
+  // Deliberately does NOT depend on `locale` — cover image/tags/status/slug/
+  // extras are shared across every locale of the same entity, not per-locale.
   useEffect(() => {
     if (!entity || !module) return
-    const t = getEntityTranslation(entity, module)
-    if (t) {
-      setTitle(t.displayTitle)
-      setExcerpt(t.displayExcerpt)
-      setBody(decodeBody(t.body))
-      setMetaTitle(t.meta_title)
-      setMetaDesc(t.meta_description)
-    }
     setCoverImage(getCoverImage(entity) || null)
     setTags((entity as { tags?: string[] }).tags ?? [])
     setStatus((entity as { status?: ContentStatus }).status ?? 'draft')
@@ -1339,6 +1420,23 @@ export default function SimpleContentEditorPage() {
     setSlugLocked(true)
     setExtras(getModuleExtras(entity, module))
   }, [entity, module])
+
+  // Hydrate translation-level fields (EDIT mode) — re-runs whenever the
+  // selected locale changes (Phase 6 — see <LocaleSwitcher> below) so
+  // switching locale shows THAT locale's title/excerpt/body instead of
+  // whatever locale loaded first. No translation for the selected locale
+  // yet → blank fields (a new, not-yet-created translation), not another
+  // locale's content silently mislabeled (see getEntityTranslation's
+  // updated fallback behavior above).
+  useEffect(() => {
+    if (!entity || !module) return
+    const t = getEntityTranslation(entity, module, locale)
+    setTitle(t?.displayTitle ?? '')
+    setExcerpt(t?.displayExcerpt ?? '')
+    setBody(decodeBody(t?.body))
+    setMetaTitle(t?.meta_title ?? '')
+    setMetaDesc(t?.meta_description ?? '')
+  }, [entity, module, locale])
 
   // ── Autosave (EDIT mode only — 2s debounce on any field change) ──────────
   // Mirrors the pattern in EditorShell.tsx. Skips NEW mode (no entity yet).
@@ -1413,14 +1511,14 @@ export default function SimpleContentEditorPage() {
 
           const createPayload = buildCreatePayload(
             module, slug.trim(), title.trim(), excerpt, body,
-            coverImage, tags, effectiveStatus, extras, activeSite.id,
+            coverImage, tags, effectiveStatus, extras, activeSite.id, locale,
           )
           const newEntity = await config.service.create(createPayload) as { id: string }
 
           // products/collections/services: create payload omits body — upsert translation separately
           if (module === 'products' || module === 'collections' || module === 'services') {
             await config.service.upsertTranslation(
-              newEntity.id, LOCALE,
+              newEntity.id, locale,
               buildTranslationPayload(module, title, excerpt, body, metaTitle, metaDesc),
             )
           }
@@ -1436,7 +1534,7 @@ export default function SimpleContentEditorPage() {
 
           await Promise.all([
             config.service.upsertTranslation(
-              id, LOCALE,
+              id, locale,
               buildTranslationPayload(module, title, excerpt, body, metaTitle, metaDesc),
             ),
             config.service.update(
@@ -1459,7 +1557,7 @@ export default function SimpleContentEditorPage() {
       }
     },
     [config, module, id, isNew, title, slug, excerpt, body, metaTitle, metaDesc,
-     coverImage, tags, status, extras, activeSite, queryClient, navigate],
+     coverImage, tags, status, extras, activeSite, queryClient, navigate, locale],
   )
 
   const handleSave    = useCallback(() => doSave(), [doSave])
@@ -1494,6 +1592,7 @@ export default function SimpleContentEditorPage() {
         : `${config.label}s › ${title || slug || id}`
       }
       onBack={() => navigate(`/${module}`)}
+      headerExtra={!isNew ? <LocaleSwitcher value={locale} onChange={handleLocaleChange} /> : undefined}
       sidebarContent={
         <>
           <PublishCard

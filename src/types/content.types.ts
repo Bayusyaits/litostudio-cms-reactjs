@@ -182,6 +182,79 @@ export interface PortfolioCreateRequest {
 
 export interface PortfolioUpdateRequest extends Partial<PortfolioCreateRequest> {}
 
+// ── News ──────────────────────────────────────────────────────────────────
+// 2026-08-10 (user-requested independence split, follow-up to Blog/
+// Portfolio): News is its own content_type ('news', already seeded in
+// content_types by 003_content.sql, activated by migrations/20260810150000_
+// split_news_article_from_journal.sql), stored in the same unified
+// content_items/content_translations tables. No longer a website-only alias
+// of Journal data. Shape mirrors JournalPost/BlogPost exactly.
+
+export interface NewsPost {
+  id: string
+  site_id: string
+  slug: string
+  category: string | null
+  cover_image: string | null
+  read_time: number | null
+  is_featured: boolean
+  status: ContentStatus
+  published_at: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface NewsCreateRequest {
+  site_id?: string
+  slug: string
+  category?: string
+  cover_image?: string
+  is_featured?: boolean
+  status?: ContentStatus
+  translation: { locale: string; title: string; excerpt?: string; body?: unknown }
+}
+
+export interface NewsUpdateRequest extends Partial<NewsCreateRequest> {}
+
+// ── Article ───────────────────────────────────────────────────────────────
+// 2026-08-10 (user-requested independence split): Article is its own
+// content_type ('article', seeded in content_types by 003_content.sql but
+// unused until migrations/20260810150000_split_news_article_from_journal.sql
+// activated it), stored in the same unified content_items/content_translations
+// tables. Unlike News, Article never aliased anything — it's a brand new
+// independent module starting from zero rows. Shape mirrors JournalPost/
+// BlogPost/News exactly (same editorial-content field set).
+
+export interface ArticlePost {
+  id: string
+  site_id: string
+  slug: string
+  category: string | null
+  cover_image: string | null
+  read_time: number | null
+  is_featured: boolean
+  status: ContentStatus
+  published_at: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+  translations: Translation[]
+}
+
+export interface ArticleCreateRequest {
+  site_id?: string
+  slug: string
+  category?: string
+  cover_image?: string
+  is_featured?: boolean
+  status?: ContentStatus
+  translation: { locale: string; title: string; excerpt?: string; body?: unknown }
+}
+
+export interface ArticleUpdateRequest extends Partial<ArticleCreateRequest> {}
+
 // ── Gallery ───────────────────────────────────────────────────────────────
 //
 // 2026-07-09 fix: this used to model the OLD dedicated `gallery_items` table

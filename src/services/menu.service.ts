@@ -10,6 +10,12 @@ export interface MenuNode {
   label: string
   icon: string
   path: string
+  // 2026-08-10 (MARKETING-PRICING-PLAN.md, user-confirmed via AskUserQuestion
+  // — "Show locked with 🔒 + upsell tooltip"): addon/plan-gated items are no
+  // longer omitted by the backend — they're returned locked, with a reason,
+  // so AppSidebar can render them dimmed instead of hiding them outright.
+  locked: boolean
+  lockReason: string | null
   children: MenuNode[]
 }
 

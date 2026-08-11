@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   LayoutDashboard, FileText, BookOpen, Image, Film, MapPin,
@@ -8,14 +8,19 @@ import {
   Briefcase, Quote, DollarSign, Tv2, MessageCircle,
   ShoppingBag, Mail, Inbox, Bot, Link2, Rocket, FileSpreadsheet,
   Building2, Languages, Truck, Scale, Percent, Award, Settings2, Upload,
-  RotateCcw, Newspaper, LayoutGrid,
+  RotateCcw, Newspaper, LayoutGrid, Lock,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { useThemeStore } from '@/stores/theme.store'
 import { menuService, type MenuNode } from '@/services/menu.service'
 import { WorkspaceSwitcher, useWebsiteStore } from '@litostudio/ui-cms'
 
-interface NavItem { label: string; icon: React.ElementType; to: string }
+// 2026-08-10 (MARKETING-PRICING-PLAN.md, user-confirmed via AskUserQuestion —
+// "Show locked with 🔒 + upsell tooltip"): locked/lockReason are optional so
+// FALLBACK_NAV (no gating info available while the tree endpoint hasn't
+// loaded) doesn't need every entry updated — `undefined` renders unlocked,
+// same fail-open trade-off already documented on FALLBACK_NAV below.
+interface NavItem { label: string; icon: React.ElementType; to: string; locked?: boolean; lockReason?: string | null }
 interface NavSection { section: string; items: NavItem[] }
 
 // 2026-07-21 (admin-menu role/addon/flag/plan gating): the sidebar is now
@@ -65,6 +70,13 @@ const FALLBACK_NAV: NavSection[] = [
     { label: 'Blog', icon: Newspaper, to: '/blog' },
     { label: 'Portfolio', icon: LayoutGrid, to: '/portfolio' },
     { label: 'Journal', icon: BookOpen, to: '/journal' },
+    // 2026-08-10 (user-requested independence split, follow-up to Blog/
+    // Portfolio): News and Article are now independent CMS modules —
+    // see migrations/20260810160000_seed_news_article_cms_menu.sql for the
+    // server-driven nav (this fallback array is only used while that tree
+    // is loading/erroring).
+    { label: 'News', icon: Newspaper, to: '/news' },
+    { label: 'Article', icon: FileText, to: '/articles' },
     { label: 'Gallery', icon: Image, to: '/gallery' },
     { label: 'Media', icon: Film, to: '/media' },
     { label: 'Pages', icon: Globe, to: '/pages' },
@@ -83,6 +95,8 @@ function treeToSections(tree: MenuNode[]): NavSection[] {
         label: c.label,
         icon: ICONS[c.icon] ?? Package,
         to: c.path,
+        locked: c.locked,
+        lockReason: c.lockReason,
       })),
     }))
 }
@@ -205,28 +219,53 @@ export function AppSidebar() {
                 {section}
               </div>
 
-              {visibleItems.map(({ label, icon: Icon, to }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  // Bug fix (2026-07): must pass className as a FUNCTION here.
-                  // When className is a plain string, react-router's NavLink
-                  // (v6.30, see node_modules/react-router-dom/dist/
-                  // react-router-dom.development.js ~line 889-897) auto-appends
-                  // its OWN "active" class computed from ITS OWN prefix-match
-                  // isActive — completely ignoring/on top of whatever string we
-                  // pass. That's why passing a plain template string here still
-                  // produced "active" on "Settings" while on
-                  // /settings/localization (NavLink's own prefix match: "/settings"
-                  // is a prefix of "/settings/localization"), regardless of our
-                  // activeNavPath computation. Passing a function opts out of
-                  // that auto-append entirely — NavLink then uses exactly what
-                  // this function returns.
-                  className={() => `cms-nav-item flex ${to === activeNavPath ? 'active' : ''}`}
-                >
-                  <Icon size={15} className="shrink-0 opacity-85" />
-                  <span className="leading-none truncate">{label}</span>
-                </NavLink>
+              {visibleItems.map(({ label, icon: Icon, to, locked, lockReason }) => (
+                locked ? (
+                  // 2026-08-10 (MARKETING-PRICING-PLAN.md, user-confirmed via
+                  // AskUserQuestion — "Show locked with 🔒 + upsell tooltip"):
+                  // addon/plan-gated items stay visible but dimmed, with a
+                  // lock icon and a native title tooltip carrying the
+                  // server-computed reason (add-on name + price, or plan
+                  // name — see cms-menu.routes.ts computeLock()). Clicking
+                  // deep-links to Settings → Add-ons (the existing
+                  // AddonsPageContainer route) instead of the item's own
+                  // (backend-blocked) path — that's the upgrade path, not a
+                  // navigation the user could actually use yet.
+                  <Link
+                    key={to}
+                    to="/addons"
+                    title={lockReason ?? 'Requires an add-on or plan upgrade'}
+                    className="cms-nav-item flex justify-between opacity-45 hover:opacity-70"
+                  >
+                    <span className="flex items-center gap-[9px] min-w-0">
+                      <Icon size={15} className="shrink-0 opacity-85" />
+                      <span className="leading-none truncate">{label}</span>
+                    </span>
+                    <Lock size={12} className="shrink-0 opacity-70" aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    // Bug fix (2026-07): must pass className as a FUNCTION here.
+                    // When className is a plain string, react-router's NavLink
+                    // (v6.30, see node_modules/react-router-dom/dist/
+                    // react-router-dom.development.js ~line 889-897) auto-appends
+                    // its OWN "active" class computed from ITS OWN prefix-match
+                    // isActive — completely ignoring/on top of whatever string we
+                    // pass. That's why passing a plain template string here still
+                    // produced "active" on "Settings" while on
+                    // /settings/localization (NavLink's own prefix match: "/settings"
+                    // is a prefix of "/settings/localization"), regardless of our
+                    // activeNavPath computation. Passing a function opts out of
+                    // that auto-append entirely — NavLink then uses exactly what
+                    // this function returns.
+                    className={() => `cms-nav-item flex ${to === activeNavPath ? 'active' : ''}`}
+                  >
+                    <Icon size={15} className="shrink-0 opacity-85" />
+                    <span className="leading-none truncate">{label}</span>
+                  </NavLink>
+                )
               ))}
 
               <div className="h-px mx-4 mt-1.5 bg-[var(--cms-sidebar-div)]" />

@@ -26,6 +26,11 @@ const JournalPage      = lazy(() => import('@/modules/journal/JournalPageContain
 // Portfolio CMS modules — no longer aliases of Stories.
 const BlogPage         = lazy(() => import('@/modules/blog/BlogPageContainer'))
 const PortfolioPage    = lazy(() => import('@/modules/portfolio/PortfolioPageContainer'))
+// 2026-08-10 (user-requested independence split, follow-up to Blog/
+// Portfolio): independent News and Article CMS modules — News no longer a
+// website-only alias of Journal; Article had no CMS presence at all before.
+const NewsPage          = lazy(() => import('@/modules/news/NewsPageContainer'))
+const ArticlePage       = lazy(() => import('@/modules/article/ArticlePageContainer'))
 const GalleryPage      = lazy(() => import('@/modules/gallery/GalleryPageContainer'))
 const MediaPage        = lazy(() => import('@/modules/media/MediaPageContainer'))
 const DestinationsPage = lazy(() => import('@/modules/destinations/DestinationsPageContainer'))
@@ -65,6 +70,7 @@ const CommentsPage       = lazy(() => import('@/modules/comments/CommentsPageCon
 const CampaignsPage      = lazy(() => import('@/modules/campaigns/CampaignsPageContainer'))
 const SeoPage            = lazy(() => import('@/modules/seo/SeoPageContainer'))
 const LabelsPage         = lazy(() => import('@/modules/settings/labels/LabelsPageContainer'))
+const LanguagesPage      = lazy(() => import('@/modules/settings/languages/LanguagesPageContainer'))
 
 // Commerce + engagement pages
 const OrdersPage         = lazy(() => import('@/modules/orders/OrdersPageContainer'))
@@ -136,6 +142,16 @@ export const router = createBrowserRouter([
       { path: 'portfolio/new',          element: <S><SimpleContentEditorPage /></S> },
       { path: 'portfolio/:id/edit',     element: <S><SimpleContentEditorPage /></S> },
 
+      // News (independent from Journal — 2026-08-10)
+      { path: 'news',                   element: <S><NewsPage /></S> },
+      { path: 'news/new',               element: <S><SimpleContentEditorPage /></S> },
+      { path: 'news/:id/edit',          element: <S><SimpleContentEditorPage /></S> },
+
+      // Article (brand new independent module — 2026-08-10)
+      { path: 'articles',               element: <S><ArticlePage /></S> },
+      { path: 'articles/new',           element: <S><SimpleContentEditorPage /></S> },
+      { path: 'articles/:id/edit',      element: <S><SimpleContentEditorPage /></S> },
+
       { path: 'gallery',           element: <S><GalleryPage /></S> },
       { path: 'gallery/new',       element: <S><SimpleContentEditorPage /></S> },
       { path: 'gallery/:id/edit',  element: <S><SimpleContentEditorPage /></S> },
@@ -154,6 +170,7 @@ export const router = createBrowserRouter([
       { path: 'team',              element: <S><TeamPage /></S> },
       { path: 'settings',               element: <S><SettingsPage /></S> },
       { path: 'settings/localization',  element: <S><LabelsPage /></S> },
+      { path: 'settings/languages',     element: <S><LanguagesPage /></S> },
       { path: 'categories',        element: <S><CategoriesPage /></S> },
       { path: 'tags',              element: <S><TagsPage /></S> },
       { path: 'themes',            element: <S><ThemesPage /></S> },

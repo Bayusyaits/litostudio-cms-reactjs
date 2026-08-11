@@ -11,6 +11,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { SeoMetadata, SeoSaveRequest } from '@/types/content.types'
 import type { PAGE_TYPES, SeoPageType } from './SeoPageContainer'
+import { LocaleSwitcher } from '@/components/molecules/LocaleSwitcher'
 
 // 2026-07 standardization pass: register() → Controller (see
 // cms-form-standardization-execution-plan-2026-07-16.md, Track A). URL
@@ -64,9 +65,15 @@ interface Props {
   saveStatus: 'idle' | 'saving' | 'saved' | 'error'
   serverError: string | null
   onSave: (values: SeoSaveRequest) => void
+  /** 2026-08-11 (Phase 6): which locale's SEO meta is being edited — was
+   * previously hardcoded to 'id' with no way to set per-locale meta tags
+   * at all (real gap for the plan's "SEO hreflang" requirement — an 'en'
+   * page rendering with 'id' meta_description). */
+  locale: string
+  onLocaleChange: (locale: string) => void
 }
 
-export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading, saveStatus, serverError, onSave }: Props) {
+export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading, saveStatus, serverError, onSave, locale, onLocaleChange }: Props) {
   const { control, handleSubmit, watch, reset } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -136,6 +143,7 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
             Manage meta tags, Open Graph and social previews per page
           </p>
         </div>
+        <LocaleSwitcher value={locale} onChange={onLocaleChange} />
         {saveStatus === 'saved' && (
           <div className="flex items-center gap-1.5 text-emerald-600">
             <CheckCircle className="w-4 h-4" />

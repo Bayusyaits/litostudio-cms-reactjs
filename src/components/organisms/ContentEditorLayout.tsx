@@ -21,6 +21,13 @@ interface ContentEditorLayoutProps {
   onBack?: () => void
   /** Breadcrumb-style subtitle (e.g. "Services / My Service") */
   subtitle?: string
+  /** 2026-08-11 (Phase 6 — locale switcher gap): optional slot rendered in
+   * the sticky header, left of the Block Editor button. Added so
+   * SimpleContentEditorPage/ProductWizardPage/FaqEditorPage can drop in
+   * <LocaleSwitcher> without every ContentEditorLayout consumer needing to
+   * change — optional prop, existing callers (FaqEditorPage.tsx today)
+   * that don't pass it render exactly as before. */
+  headerExtra?: ReactNode
   children: ReactNode
   sidebarContent: ReactNode
   className?: string
@@ -32,6 +39,7 @@ export function ContentEditorLayout({
   onEditorBClick,
   onBack,
   subtitle,
+  headerExtra,
   children,
   sidebarContent,
   className,
@@ -52,6 +60,8 @@ export function ContentEditorLayout({
             <p className="font-body text-xs text-[var(--text-muted)] truncate">{subtitle}</p>
           )}
         </div>
+
+        {headerExtra}
 
         {onEditorBClick && (
           <Button skin="cms" variant="ghost" size="sm" onClick={onEditorBClick}>

@@ -12,6 +12,7 @@ import type { PageDefinition } from '@litostudio/templates'
 import { FileText, ChevronLeft, Plus, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useTracking } from '@/tracking'
 import type { PageType } from '@/tracking/types'
+import { useOrgLocales } from '@/hooks/useOrgLocales'
 import { FOOTER_ONLY_SLUGS } from './PagesPageView'
 
 function slugify(s: string): string {
@@ -23,6 +24,14 @@ export default function PagesNewPageContainer() {
   const { activeSite }     = useWebsiteStore()
   const { manifest, templateSlug } = useTemplateManifest()
   const { trackPageCreated } = useTracking()
+  // 2026-08-11 (Phase 6): this used to hardcode `locale: 'id'` when seeding
+  // the initial page_translations row on create — wrong for a new org whose
+  // primary locale is 'en' (Phase 1 of this session's localization work
+  // switched new-org creation to default to 'en'). BlockEditorPage.tsx
+  // (the actual Pages block editor) already reads/writes whichever locale
+  // is selected in its own toolbar once the page exists — this only fixes
+  // what the FIRST row is seeded as.
+  const { primaryLocale } = useOrgLocales()
 
   const labelId = useId()
 
@@ -62,7 +71,7 @@ export default function PagesNewPageContainer() {
         template:  templateSlug ?? 'lito',
         status:    'draft',
         parent_id: parentId || null,
-        translations: title ? [{ locale: 'id', title }] : undefined,
+        translations: title ? [{ locale: primaryLocale, title }] : undefined,
       })
     },
     onSuccess: async (page) => {

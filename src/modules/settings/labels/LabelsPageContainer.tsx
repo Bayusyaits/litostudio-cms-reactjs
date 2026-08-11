@@ -56,7 +56,7 @@ export default function LabelsPageContainer() {
   // Fallback keeps the filter usable if the org has no organization_locales
   // rows yet (e.g. never explicitly seeded) — matches the previous
   // hardcoded default rather than rendering an empty select.
-  const locales = (languagesData?.data ?? []).map((l) => l.locale)
+  const locales = (languagesData?.data.languages ?? []).map((l) => l.locale)
   const localeOptions = locales.length > 0 ? locales : ['id', 'en']
 
   const updateMutation = useMutation({
