@@ -209,7 +209,18 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
     }
     case 'portfolio': {
       const p = e as PortfolioItem
-      return { category: p.category ?? '', isFeatured: p.is_featured ?? false }
+      // 2026-08-22 (bug audit) — clientName/projectDate/externalLink/shots
+      // live in extra JSONB, same pattern as gallery's
+      // photographer/shoot_date/shots above.
+      const ext = ((p as unknown as { extra?: Record<string, unknown> }).extra) ?? {}
+      return {
+        category:     p.category ?? '',
+        clientName:   (ext.client_name as string) ?? '',
+        projectDate:  (ext.project_date as string) ?? '',
+        externalLink: (ext.external_link as string) ?? '',
+        shots:        (ext.shots as ShotEntry[]) ?? [],
+        isFeatured:   p.is_featured ?? false,
+      }
     }
     case 'news': {
       const n = e as NewsPost
@@ -414,8 +425,16 @@ function buildCreatePayload(
       return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'blog':
       return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
-    case 'portfolio':
-      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+    case 'portfolio': {
+      // 2026-08-22 (bug audit) — case-study fields routed into extra JSONB,
+      // same pattern as gallery's photographer/shoot_date/shots.
+      const extra: Record<string, unknown> = {}
+      if (extras.clientName)   extra.client_name   = extras.clientName
+      if (extras.projectDate)  extra.project_date  = extras.projectDate
+      if (extras.externalLink) extra.external_link = extras.externalLink
+      if (Array.isArray(extras.shots) && (extras.shots as ShotEntry[]).length > 0) extra.shots = extras.shots
+      return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, tags, extra, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+    }
     case 'news':
       return { ...base, category: extras.category || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     case 'articles':
@@ -525,7 +544,16 @@ function buildUpdatePatch(
     case 'stories':      return { ...base, tags, category: extras.category || null, location: extras.location || null, region: extras.region || null, is_featured: extras.isFeatured ?? false }
     case 'journal':      return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
     case 'blog':         return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
-    case 'portfolio':    return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
+    case 'portfolio': {
+      // 2026-08-22 (bug audit) — case-study fields routed into extra JSONB,
+      // same pattern as gallery's photographer/shoot_date/shots below.
+      const extra: Record<string, unknown> = {}
+      if (extras.clientName)   extra.client_name   = extras.clientName
+      if (extras.projectDate)  extra.project_date  = extras.projectDate
+      if (extras.externalLink) extra.external_link = extras.externalLink
+      if (Array.isArray(extras.shots) && (extras.shots as ShotEntry[]).length > 0) extra.shots = extras.shots
+      return { ...base, tags, category: extras.category || null, is_featured: extras.isFeatured ?? false, extra }
+    }
     case 'news':         return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
     case 'articles':     return { ...base, category: extras.category || null, is_featured: extras.isFeatured ?? false }
     case 'gallery': {
@@ -759,14 +787,38 @@ function renderModuleExtras(
       )
     case 'portfolio':
       return (
-        <div className="cms-card p-4 space-y-3">
-          <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Portfolio Details</h3>
-          <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Photography" maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
-          <div className="flex items-center justify-between">
-            <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
-            <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+        <>
+          <div className="cms-card p-4 space-y-3">
+            <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Portfolio Details</h3>
+            <FormField label="Category" value={extras.category as string ?? ''} onChange={(e) => setExtra('category', e.target.value)} placeholder="e.g. Photography" maxLength={FIELD_LIMITS.CONTENT_CATEGORY} />
+            {/* 2026-08-22 (bug audit) — client/project date/external link
+                added: the backend's `extra` JSONB already supported
+                arbitrary case-study fields, but nothing in this editor wrote
+                to it for portfolio, so case-study content was structurally
+                impossible to enter. Mirrors gallery's photographer/shootDate
+                pattern above. */}
+            <FormField label="Client" value={extras.clientName as string ?? ''} onChange={(e) => setExtra('clientName', e.target.value)} placeholder="e.g. Studio Anka" />
+            <FormField label="Project Date" type="date" value={extras.projectDate as string ?? ''} onChange={(e) => setExtra('projectDate', e.target.value)} />
+            <FormField label="External Link" value={extras.externalLink as string ?? ''} onChange={(e) => setExtra('externalLink', e.target.value)} placeholder="https://..." />
+            <div className="flex items-center justify-between">
+              <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
+              <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+            </div>
           </div>
-        </div>
+          <div className="cms-card p-4 space-y-3">
+            <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">
+              Project Gallery
+              <span className="font-body text-xs font-normal text-[var(--text-muted)] ml-1.5">
+                — extra images shown on the portfolio detail page
+              </span>
+            </h3>
+            <ShotsEditor
+              shots={(extras.shots as ShotEntry[]) ?? []}
+              onChange={(next) => setExtra('shots', next)}
+              folder="portfolio/shots"
+            />
+          </div>
+        </>
       )
     case 'news':
       return (
@@ -1580,7 +1632,12 @@ export default function SimpleContentEditorPage() {
   // 'products' added 2026-07-17 — the Tags card (and its <TagInput>) never
   // rendered for products at all, on top of the save-payload bug fixed
   // above; there was no way to even attempt entering a product tag before.
-  const hasTags    = module === 'stories' || module === 'gallery' || module === 'products'
+  // 'portfolio' added 2026-08-22 (bug audit) — the backend has always fully
+  // supported tags/filtering (`?tag=`) for portfolio content_items, and the
+  // live storefront actively renders them (PortfolioSection.vue tag pills,
+  // PortfolioCarouselSection.vue's category-from-tags[0] fallback), but the
+  // editor never exposed a Tags field, so that data could never be entered.
+  const hasTags    = module === 'stories' || module === 'gallery' || module === 'products' || module === 'portfolio'
 
   // ── Render ───────────────────────────────────────────────────────────
 

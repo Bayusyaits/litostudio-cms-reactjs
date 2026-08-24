@@ -396,6 +396,19 @@ export interface ProductExtra {
   color?:      string | null
   /** Accessories: material */
   material?:   string | null
+  /**
+   * "Tabel Ukuran" size chart (2026-08-24) — merchant-built table shown on
+   * the storefront PDP. `has_size_guide` gates display independently of
+   * whether `size_guide` itself is populated, so toggling it off in the CMS
+   * hides the chart without discarding a table the merchant already built.
+   * See apps/website/composables/useSizeGuide.ts for the shared shape this
+   * mirrors on the storefront side.
+   */
+  has_size_guide?: boolean
+  size_guide?: {
+    columns: Array<{ key: string; label: string; unit?: string }>
+    rows: Array<Record<string, string>>
+  } | null
   /** Arbitrary extra attributes */
   [key: string]: unknown
 }
@@ -632,6 +645,99 @@ export interface FaqCreateRequest {
 
 export interface FaqUpdateRequest extends Partial<Omit<FaqCreateRequest, 'translations'>> {
   translations?: Array<{ locale: string; question?: string; answer?: string }>
+}
+
+// ── Team Member (2026-08-11 — Our Team module) ──────────────────────────────
+// Bespoke table (team_members + team_member_translations), same shape as
+// Faq above — see apps/backend/src/modules/team-members/interface/
+// team-members.routes.ts (mirrors faqs.routes.ts exactly).
+
+export interface TeamMember {
+  id: string
+  site_id: string
+  slug: string | null
+  photo: string | null
+  department: string | null
+  email: string | null
+  social_links: Record<string, string>
+  is_featured: boolean
+  sort_order: number
+  status: ContentStatus
+  created_at: string
+  updated_at: string
+  // Backend returns this relation as `team_member_translations` — matches
+  // the real Postgres/PostgREST relation name (same convention as
+  // Faq.faq_translations above).
+  team_member_translations?: Array<{ locale: string; name: string; role: string; bio: string | null }>
+}
+
+export interface TeamMemberCreateRequest {
+  site_id?: string
+  slug?: string
+  photo?: string
+  department?: string
+  email?: string
+  social_links?: Record<string, string>
+  is_featured?: boolean
+  sort_order?: number
+  status?: ContentStatus
+  translations: Array<{ locale: string; name: string; role: string; bio?: string }>
+}
+
+export interface TeamMemberUpdateRequest extends Partial<Omit<TeamMemberCreateRequest, 'translations'>> {
+  translations?: Array<{ locale: string; name?: string; role?: string; bio?: string }>
+}
+
+// ── Job Posting (2026-08-11 — Careers module) ───────────────────────────────
+// Bespoke table (job_postings + job_posting_translations) — see
+// apps/backend/src/modules/careers/interface/careers.routes.ts.
+
+export type EmploymentType = 'full_time' | 'part_time' | 'contract' | 'internship' | 'temporary'
+export type ApplicationType = 'internal' | 'external'
+
+export interface JobPosting {
+  id: string
+  site_id: string
+  slug: string | null
+  department: string | null
+  location: string | null
+  employment_type: EmploymentType
+  is_remote: boolean
+  salary_min: number | null
+  salary_max: number | null
+  salary_currency: string
+  application_type: ApplicationType
+  external_apply_url: string | null
+  is_featured: boolean
+  sort_order: number
+  status: ContentStatus
+  closes_at: string | null
+  created_at: string
+  updated_at: string
+  job_posting_translations?: Array<{ locale: string; title: string; description: string | null; requirements: string | null; benefits: string | null }>
+}
+
+export interface JobPostingCreateRequest {
+  site_id?: string
+  slug?: string
+  department?: string
+  location?: string
+  employment_type?: EmploymentType
+  is_remote?: boolean
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_currency?: string
+  application_type?: ApplicationType
+  external_apply_url?: string | null
+  is_featured?: boolean
+  sort_order?: number
+  status?: ContentStatus
+  closes_at?: string | null
+  translations: Array<{ locale: string; title: string; description?: string; requirements?: string; benefits?: string }>
+}
+
+export interface JobPostingUpdateRequest extends Partial<Omit<JobPostingCreateRequest, 'translations'>> {
+  translations?: Array<{ locale: string; title?: string; description?: string; requirements?: string; benefits?: string }>
 }
 
 // ── Service ───────────────────────────────────────────────────────────────

@@ -79,6 +79,13 @@ const FALLBACK_NAV: NavSection[] = [
     { label: 'Article', icon: FileText, to: '/articles' },
     { label: 'Gallery', icon: Image, to: '/gallery' },
     { label: 'Media', icon: Film, to: '/media' },
+    // 2026-08-11 (Our Team / Careers build) — see
+    // migrations/20260811120000_seed_team_careers_cms_menu.sql for the
+    // server-driven nav (this fallback array is only used while that tree
+    // is loading/erroring). Named 'Team Members' (not 'Team') to stay
+    // distinct from Administration › Team (org member invites/roles).
+    { label: 'Team Members', icon: Users, to: '/team-members' },
+    { label: 'Careers', icon: Briefcase, to: '/careers' },
     { label: 'Pages', icon: Globe, to: '/pages' },
   ] },
   { section: 'Settings', items: [

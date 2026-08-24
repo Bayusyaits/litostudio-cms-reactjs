@@ -36,6 +36,7 @@ import { ProductPromotionsCard } from './components/ProductPromotionsCard'
 import { PricingForm } from './components/PricingForm'
 import { ShippingForm } from './components/ShippingForm'
 import { SeoForm } from './components/SeoForm'
+import { SizingForm, type SizeGuideColumn, type SizeGuideRow } from './components/SizingForm'
 
 const STEPS = [
   { id: 'information', label: 'Information' },
@@ -43,6 +44,7 @@ const STEPS = [
   { id: 'attributes', label: 'Attributes' },
   { id: 'media', label: 'Media' },
   { id: 'variants', label: 'Variants' },
+  { id: 'sizing', label: 'Sizing' },
   { id: 'pricing', label: 'Pricing' },
   { id: 'shipping', label: 'Shipping' },
   { id: 'seo', label: 'SEO' },
@@ -122,6 +124,14 @@ export default function ProductWizardPage() {
   const [metaTitle, setMetaTitle] = useState('')
   const [metaDescription, setMetaDescription] = useState('')
 
+  // "Tabel Ukuran" size chart (2026-08-24) — stored in extra.has_size_guide /
+  // extra.size_guide, same jsonb-bucket pattern as pre_order/days_to_ship
+  // below. See SizingForm.tsx's own header comment for why this is a
+  // controlled values/onChange step rather than its own save endpoint.
+  const [hasSizeGuide, setHasSizeGuide] = useState(false)
+  const [sizeGuideColumns, setSizeGuideColumns] = useState<SizeGuideColumn[]>([])
+  const [sizeGuideRows, setSizeGuideRows] = useState<SizeGuideRow[]>([])
+
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
@@ -162,6 +172,9 @@ export default function ProductWizardPage() {
     setHeightCm(product.height_cm != null ? String(product.height_cm) : '')
     setBiteshipCategory(product.biteship_category ?? '')
     setMinStock(product.extra?.min_stock_alert != null ? String(product.extra.min_stock_alert) : '')
+    setHasSizeGuide(!!product.extra?.has_size_guide)
+    setSizeGuideColumns(product.extra?.size_guide?.columns ?? [])
+    setSizeGuideRows(product.extra?.size_guide?.rows ?? [])
     const productLevelInventory = product.inventory?.find((i) => i.variant_id === null)
     setInventoryQuantity(String(productLevelInventory?.quantity ?? 0))
     setInventoryTrackStock(productLevelInventory?.track_stock ?? true)
@@ -253,6 +266,15 @@ export default function ProductWizardPage() {
       nextExtra.pre_order = preOrder
       nextExtra.days_to_ship = daysToShip !== '' ? Number(daysToShip) : undefined
       nextExtra.min_stock_alert = minStock !== '' ? Number(minStock) : null
+      // "Tabel Ukuran" — has_size_guide gates display independently of
+      // whether size_guide is populated (see SizingForm.tsx's comment), so a
+      // merchant can toggle the chart off without losing a table they
+      // already built: size_guide itself is only cleared (null) when there
+      // are no columns to save, not whenever the checkbox is off.
+      nextExtra.has_size_guide = hasSizeGuide
+      nextExtra.size_guide = sizeGuideColumns.length > 0
+        ? { columns: sizeGuideColumns, rows: sizeGuideRows }
+        : null
 
       const payload = {
         // 2026-07-22 bug fix: this used to also send a top-level `name`
@@ -334,7 +356,7 @@ export default function ProductWizardPage() {
     coverImage, images, videoUrl, price, compareAtPrice, isFeatured, preOrder, daysToShip,
     isDigital, digitalFileUrl, weightGrams, lengthCm, widthCm, heightCm, biteshipCategory,
     description, minStock, inventoryQuantity, inventoryTrackStock, hasVariants, product?.extra, navigate, queryClient,
-    metaTitle, metaDescription, locale,
+    metaTitle, metaDescription, locale, hasSizeGuide, sizeGuideColumns, sizeGuideRows,
   ])
 
   // ── Autosave (EDIT mode only, 2s debounce) — same pattern as the old
@@ -346,7 +368,7 @@ export default function ProductWizardPage() {
     autosaveTimer.current = setTimeout(() => { void doSave() }, 2_000)
     return () => { if (autosaveTimer.current) clearTimeout(autosaveTimer.current) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, slug, sku, description, tags, categoryId, brandId, coverImage, images, videoUrl, price, compareAtPrice, isFeatured, preOrder, daysToShip, isDigital, digitalFileUrl, weightGrams, lengthCm, widthCm, heightCm, biteshipCategory, sortOrder, minStock, inventoryQuantity, inventoryTrackStock])
+  }, [name, slug, sku, description, tags, categoryId, brandId, coverImage, images, videoUrl, price, compareAtPrice, isFeatured, preOrder, daysToShip, isDigital, digitalFileUrl, weightGrams, lengthCm, widthCm, heightCm, biteshipCategory, sortOrder, minStock, inventoryQuantity, inventoryTrackStock, hasSizeGuide, sizeGuideColumns, sizeGuideRows])
 
   return (
     <ContentEditorLayout
@@ -455,6 +477,17 @@ export default function ProductWizardPage() {
               onSynced={() => void queryClient.invalidateQueries({ queryKey: ['products', activeSite?.id, productId] })}
             />
           </div>
+        )}
+
+        {activeStep === 'sizing' && (
+          <SizingForm
+            values={{ hasSizeGuide, columns: sizeGuideColumns, rows: sizeGuideRows }}
+            onChange={(key, value) => {
+              if (key === 'hasSizeGuide') setHasSizeGuide(value as boolean)
+              if (key === 'columns') setSizeGuideColumns(value as SizeGuideColumn[])
+              if (key === 'rows') setSizeGuideRows(value as SizeGuideRow[])
+            }}
+          />
         )}
 
         {activeStep === 'pricing' && (

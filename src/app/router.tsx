@@ -47,6 +47,10 @@ const CollectionsPage  = lazy(() => import('@/modules/collections/CollectionsPag
 const ReviewsPage      = lazy(() => import('@/modules/reviews/ReviewsPageContainer'))
 const FaqsPage         = lazy(() => import('@/modules/faqs/FaqsPageContainer'))
 const FaqEditorPage    = lazy(() => import('@/modules/faqs/FaqEditorPage'))
+const TeamMembersPage       = lazy(() => import('@/modules/team-members/TeamMembersPageContainer'))
+const TeamMemberEditorPage  = lazy(() => import('@/modules/team-members/TeamMemberEditorPage'))
+const CareersPage           = lazy(() => import('@/modules/careers/CareersPageContainer'))
+const JobEditorPage         = lazy(() => import('@/modules/careers/JobEditorPage'))
 const LegalPage        = lazy(() => import('@/modules/legal/LegalPageContainer'))
 const OnboardingPage          = lazy(() => import('@/modules/onboarding/OnboardingPage'))
 const GenerateContentPage     = lazy(() => import('@/modules/onboarding/GenerateContentPage'))
@@ -200,6 +204,12 @@ export const router = createBrowserRouter([
       { path: 'faqs',              element: <S><FaqsPage /></S> },
       { path: 'faqs/new',          element: <S><FaqEditorPage /></S> },
       { path: 'faqs/:id/edit',     element: <S><FaqEditorPage /></S> },
+      { path: 'team-members',          element: <S><TeamMembersPage /></S> },
+      { path: 'team-members/new',      element: <S><TeamMemberEditorPage /></S> },
+      { path: 'team-members/:id/edit', element: <S><TeamMemberEditorPage /></S> },
+      { path: 'careers',               element: <S><CareersPage /></S> },
+      { path: 'careers/new',           element: <S><JobEditorPage /></S> },
+      { path: 'careers/:id/edit',      element: <S><JobEditorPage /></S> },
       { path: 'legal',             element: <S><LegalPage /></S> },
       { path: 'onboarding',          element: <S><OnboardingPage /></S> },
       { path: 'onboarding/generate', element: <S><GenerateContentPage /></S> },
