@@ -38,6 +38,21 @@ export interface OrderStatusHistory {
   created_at: string
 }
 
+/**
+ * Per-voucher breakdown for an order with 1-2 stacked promotions (2026-08-24
+ * stacking — see order_promotions migration + orders.routes.ts). orders.
+ * discount_amount/promotion_id stay the back-compat aggregate (summed
+ * discount / first promo) — this is the real itemized list.
+ */
+export interface OrderPromotion {
+  id: string
+  order_id: string
+  promotion_id: string
+  code: string | null
+  discount_amount: number
+  created_at: string
+}
+
 export interface Order {
   id: string
   org_id: string
@@ -62,11 +77,14 @@ export interface Order {
   subtotal: number
   tax_amount: number
   discount_amount: number
+  promotion_id?: string | null
   total_amount: number
   notes: string | null
   metadata: Record<string, unknown>
   items?: OrderItem[]
   status_history?: OrderStatusHistory[]
+  /** 1-2 stacked vouchers (2026-08-24) — see OrderPromotion above. Empty/absent for orders with no promotion applied. */
+  promotions?: OrderPromotion[]
   created_at: string
   updated_at: string
 }

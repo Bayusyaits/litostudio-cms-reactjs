@@ -5,8 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { CheckCircle2, Send, ShieldCheck, Trash2, AlertCircle, Loader2 } from 'lucide-react'
-import { Select } from '@litostudio/ui-cms'
-import { useAuthStore } from '@/stores/auth.store'
+import { Select, http, getErrorMessage } from '@litostudio/ui-cms'
 
 // ── Country definitions ───────────────────────────────────────────────────────
 
@@ -28,21 +27,17 @@ const COUNTRIES: Country[] = [
 ]
 
 // ── API helpers ───────────────────────────────────────────────────────────────
+// Routed through the shared `http` client (not a hand-rolled fetch()) so
+// this hits the real cookie-backed auth token and the correct prod base
+// URL — see cms-settings-rbac-audit-2026-08-27.md §7 for why the previous
+// raw-fetch + useAuthStore().token version could get stuck on "Loading…"
+// forever after any page refresh.
 
 const BASE = '/api/v1/auth/phone'
 
-async function apiFetch(path: string, method: string, token: string, body?: object) {
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  const json = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(json.message ?? `Request failed (${res.status})`)
-  return json
+interface PhoneApiResponse {
+  data: PhoneRecord | null
+  dev_otp?: string
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -70,8 +65,6 @@ const btnDanger    = `${btnBase} border border-[rgba(239,68,68,0.2)] bg-[rgba(23
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function PhoneNumberManager() {
-  const { token: accessToken } = useAuthStore()
-
   const [record,   setRecord]   = useState<PhoneRecord | null>(null)
   const [loading,  setLoading]  = useState(true)
   const [step,     setStep]     = useState<Step>('idle')
@@ -84,8 +77,7 @@ export function PhoneNumberManager() {
 
   // ── Load existing phone record ─────────────────────────────────────────────
   useEffect(() => {
-    if (!accessToken) return
-    apiFetch('', 'GET', accessToken)
+    http.get<PhoneApiResponse>(BASE)
       .then(({ data }) => {
         setRecord(data)
         setStep(data?.verified ? 'verified' : data ? 'otp' : 'idle')
@@ -97,15 +89,14 @@ export function PhoneNumberManager() {
       })
       .catch(() => setRecord(null))
       .finally(() => setLoading(false))
-  }, [accessToken])
+  }, [])
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
   async function handleSendOtp() {
-    if (!accessToken) return
     setError(null); setBusy(true); setDevOtp(null)
     try {
-      const res = await apiFetch('/send-otp', 'POST', accessToken, {
+      const res = await http.post<PhoneApiResponse>(`${BASE}/send-otp`, {
         country_code: country.code,
         local_number: localNum.replace(/\D/g, ''),
       })
@@ -113,36 +104,35 @@ export function PhoneNumberManager() {
       setStep('otp')
       setOtp('')
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to send OTP')
+      setError(getErrorMessage(e))
     } finally {
       setBusy(false)
     }
   }
 
   async function handleVerifyOtp() {
-    if (!accessToken) return
     setError(null); setBusy(true)
     try {
-      await apiFetch('/verify-otp', 'POST', accessToken, { otp })
-      const { data } = await apiFetch('', 'GET', accessToken)
+      await http.post(`${BASE}/verify-otp`, { otp })
+      const { data } = await http.get<PhoneApiResponse>(BASE)
       setRecord(data)
       setStep('verified')
       setDevOtp(null)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Verification failed')
+      setError(getErrorMessage(e))
     } finally {
       setBusy(false)
     }
   }
 
   async function handleDelete() {
-    if (!accessToken || !window.confirm('Remove your phone number?')) return
+    if (!window.confirm('Remove your phone number?')) return
     setBusy(true); setError(null)
     try {
-      await apiFetch('', 'DELETE', accessToken)
+      await http.delete(BASE)
       setRecord(null); setStep('idle'); setLocalNum(''); setOtp(''); setDevOtp(null)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to remove phone')
+      setError(getErrorMessage(e))
     } finally {
       setBusy(false)
     }

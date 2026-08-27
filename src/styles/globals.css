@@ -993,3 +993,27 @@ input[type="checkbox"] { accent-color: var(--lito-ink); cursor: pointer; }
 .edt-skel { background: linear-gradient(90deg, rgba(17,17,17,0.05) 25%, rgba(17,17,17,0.09) 37%, rgba(17,17,17,0.05) 63%); background-size: 400% 100%; animation: edtShimmer 1.4s ease infinite; border-radius: 4px; }
 [data-dark] .edt-skel { background: linear-gradient(90deg, rgba(240,237,231,0.05) 25%, rgba(240,237,231,0.09) 37%, rgba(240,237,231,0.05) 63%); background-size: 400% 100%; }
 @keyframes edtShimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+/* ── Modal / ConfirmDialog overlay (Centralized Media Hub build, 2026-08-26) ─
+   Byte-identical port of apps/cms-superadmin/src/styles/design-tokens.css's
+   .sa-modal-overlay/.sa-modal block (same duplication convention as the
+   EnterpriseDataTable block above) — packages/ui-cms/src/organisms/Modal.tsx
+   and ConfirmDialog.tsx render these classes but only cms-superadmin ever
+   defined them, so in apps/cms the modal rendered inline in the page flow
+   with no backdrop/centering instead of as a proper overlay. This block is
+   what actually fixes that. Keep in sync with the superadmin copy. */
+.sa-modal-overlay {
+  position: fixed; inset: 0; z-index: 500; background: rgba(17,17,17,0.45);
+  backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center;
+  padding: 24px; animation: saFadeIn 140ms ease-out both;
+}
+.sa-modal {
+  width: 100%; background: var(--cms-card-bg); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg); display: flex; flex-direction: column; max-height: 88vh;
+  animation: saPopIn 180ms cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes saFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes saPopIn { from { transform: scale(0.97) translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sa-modal-head { padding: 20px 24px 4px; flex-shrink: 0; }
+.sa-modal-body { padding: 16px 24px 20px; overflow-y: auto; }
+.sa-modal-foot { padding: 16px 24px; border-top: 1px solid var(--lito-border); display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; }

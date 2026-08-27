@@ -71,9 +71,16 @@ interface Props {
    * page rendering with 'id' meta_description). */
   locale: string
   onLocaleChange: (locale: string) => void
+  /**
+   * Active site's real domain (e.g. "litostudio.id"), or null when no
+   * domain is connected yet. Used to bind the Google/Facebook previews to
+   * a real URL instead of a hardcoded "yourdomain.com" placeholder — see
+   * cms-settings-rbac-audit-2026-08-27.md §5.
+   */
+  siteDomain: string | null
 }
 
-export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading, saveStatus, serverError, onSave, locale, onLocaleChange }: Props) {
+export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading, saveStatus, serverError, onSave, locale, onLocaleChange, siteDomain }: Props) {
   const { control, handleSubmit, watch, reset } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -132,6 +139,19 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
 
   const titleLen = (title ?? '').length
   const descLen  = (description ?? '').length
+
+  // Real page label for this tab (falls back to the tab key itself, never
+  // a generic string) — pageTypes already carries the real label per tab,
+  // it just wasn't threaded into the preview before this fix.
+  const activePageLabel = pageTypes.find((pt) => pt.key === activeTab)?.label ?? String(activeTab)
+
+  // Real preview URL: bind to the site's actual connected domain + this
+  // tab's real slug, falling back to a clearly-labeled placeholder only
+  // when no domain is connected yet (rather than always showing the same
+  // hardcoded "yourdomain.com" regardless of site or page).
+  const previewPath = activeTab === 'site' || activeTab === 'home' ? '' : `/${activeTab}`
+  const previewHost  = siteDomain || 'yourdomain.com'
+  const previewUrl   = `https://${previewHost}${previewPath}`
 
   return (
     <div className="p-6 space-y-5 overflow-y-auto">
@@ -278,8 +298,8 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
               <div className="cms-card p-4 space-y-2">
                 <p className="font-body text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Google Preview</p>
                 <div className="space-y-0.5">
-                  <p className="font-body text-[13px] text-blue-700 truncate">{title || 'Page Title'}</p>
-                  <p className="font-body text-[11px] text-emerald-700 truncate">https://yourdomain.com/page</p>
+                  <p className="font-body text-[13px] text-blue-700 truncate">{title || activePageLabel}</p>
+                  <p className="font-body text-[11px] text-emerald-700 truncate">{previewUrl}</p>
                   <p className="font-body text-[11px] text-[var(--text-muted)] line-clamp-2">
                     {description || 'Page description will appear here. Write 120–160 chars for best results.'}
                   </p>
@@ -297,8 +317,8 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
                   </div>
                 )}
                 <div className="px-3 py-2 bg-[var(--lito-cream-alt)]">
-                  <p className="font-body text-[10px] text-[var(--text-muted)] uppercase">yourdomain.com</p>
-                  <p className="font-body text-[12px] font-semibold text-[var(--text-primary)] truncate">{ogTitle || 'Page Title'}</p>
+                  <p className="font-body text-[10px] text-[var(--text-muted)] uppercase">{previewHost}</p>
+                  <p className="font-body text-[12px] font-semibold text-[var(--text-primary)] truncate">{ogTitle || activePageLabel}</p>
                   <p className="font-body text-[11px] text-[var(--text-muted)] line-clamp-2">
                     {watch('og_description') || description || 'Description'}
                   </p>
@@ -314,7 +334,12 @@ export function SeoPageView({ pageTypes, activeTab, onTabChange, data, isLoading
                   { label: 'Title ≤ 60 chars',     ok: titleLen > 0 && titleLen <= 60 },
                   { label: 'Description ≤ 160',    ok: descLen > 0 && descLen <= 160 },
                   { label: 'OG image set',          ok: !!watch('og_image') },
-                  { label: 'Twitter card set',      ok: !!watch('twitter_card') },
+                  // Checked against the *saved* record, not the live form
+                  // default — twitter_card defaults to 'summary_large_image'
+                  // in defaultValues, so checking watch('twitter_card') was
+                  // true even on a completely blank, never-saved page. See
+                  // cms-settings-rbac-audit-2026-08-27.md §5.
+                  { label: 'Twitter card set',      ok: !!data.twitter_card },
                 ].map(({ label, ok }) => (
                   <div key={label} className="flex items-center gap-2">
                     <div className={cn('w-3.5 h-3.5 rounded-full flex-shrink-0', ok ? 'bg-emerald-500' : 'bg-[var(--lito-border)]')} />

@@ -1,24 +1,50 @@
-import { useRef, useCallback, useState } from 'react'
-import { AppImage, Skeleton, SearchInput, EmptyState, EnterpriseDataTable, Select } from '@litostudio/ui-cms'
-import { FolderOpen, Upload, Trash2, FileVideo, FileText, File, Grid, List, Check, Search, X } from 'lucide-react'
-import { formatBytes, isImageMime, isVideoMime } from '@/lib/utils'
-import { cn } from '@/lib/utils'
-import type { Media } from '@litostudio/ui-cms'
+import { useState } from 'react'
+import { AppImage, Skeleton, SearchInput, EmptyState, EnterpriseDataTable, Select, Button } from '@litostudio/ui-cms'
+import { KNOWN_SOURCE_MODULES, sourceModuleLabel } from '@litostudio/ui-cms'
+import { FolderOpen, Trash2, Grid, List, Search, X, Plus, Play } from 'lucide-react'
+import { formatBytes, isImageMime } from '@/lib/utils'
+import type { Media, MediaFileType } from '@litostudio/ui-cms'
 import type { EDTColumn } from '@litostudio/ui-cms'
+import { FileTypeIcon } from './mediaIcons'
 
 type ViewMode = 'grid' | 'list'
+
+interface MediaFilterState {
+  q: string
+  file_type: MediaFileType | ''
+  source_module: string
+  page: number
+}
 
 interface Props {
   items: Media[]
   meta?: { total: number; page: number; per_page: number }
   isLoading: boolean
-  uploading: boolean
   uploadError: string | null
-  filter: { q: string; media_type: string; page: number }
-  setFilter: (f: Partial<{ q: string; media_type: string; page: number }>) => void
-  onUpload: (files: File[]) => void
-  onDelete: (id: string) => void
+  filter: MediaFilterState
+  setFilter: (f: Partial<MediaFilterState>) => void
+  onOpenAddMedia: () => void
+  onOpenItem: (item: Media) => void
+  onRequestDelete: (item: Media) => void
+  selectedIds: string[]
+  onToggleSelect: (id: string, checked: boolean) => void
+  onToggleSelectAll: (checked: boolean) => void
+  onBulkDeleteRequest: (ids: string[]) => void
 }
+
+const FILE_TYPE_OPTIONS: { value: MediaFileType | ''; label: string }[] = [
+  { value: '', label: 'All types' },
+  { value: 'image', label: 'Images' },
+  { value: 'pdf', label: 'PDFs' },
+  { value: 'spreadsheet', label: 'Spreadsheets' },
+  { value: 'video', label: 'Videos' },
+  { value: 'document', label: 'Documents' },
+]
+
+const CATEGORY_FILTER_OPTIONS = [
+  { value: '', label: 'All categories' },
+  ...KNOWN_SOURCE_MODULES.map((m) => ({ value: m, label: sourceModuleLabel(m) })),
+]
 
 function StorageRing({ usedMb = 240, totalMb = 1000 }) {
   const pct = Math.min(usedMb / totalMb, 1)
@@ -49,49 +75,70 @@ function StorageRing({ usedMb = 240, totalMb = 1000 }) {
   )
 }
 
-function MediaTypeIcon({ mimeType, className }: { mimeType: string; className?: string }) {
-  if (isVideoMime(mimeType)) return <FileVideo className={cn('text-[var(--text-muted)]', className)} aria-hidden />
-  if (mimeType.startsWith('text/')) return <FileText className={cn('text-[var(--text-muted)]', className)} aria-hidden />
-  return <File className={cn('text-[var(--text-muted)]', className)} aria-hidden />
-}
-
-function GridCard({ item, selected, onSelect, onDelete }: { item: Media; selected: boolean; onSelect: () => void; onDelete: () => void }) {
+function GridCard({ item, onOpen, onDelete, selected, onToggleSelect }: { item: Media; onOpen: () => void; onDelete: () => void; selected: boolean; onToggleSelect: (checked: boolean) => void }) {
+  const previewUrl = item.cdn_url ?? item.file_url
   return (
     <div
-      className={`relative rounded-md overflow-hidden cursor-pointer aspect-[4/3] bg-[var(--lito-cream-alt)] transition-[border-color] duration-150 border-[1.5px] ${selected ? 'border-[var(--lito-gold)]' : 'border-[var(--lito-border)]'}`}
-      onClick={onSelect}
+      className={`group relative rounded-md overflow-hidden cursor-pointer aspect-[4/3] bg-[var(--lito-cream-alt)] transition-[border-color] duration-150 border-[1.5px] ${selected ? 'border-[var(--lito-gold)]' : 'border-[var(--lito-border)] hover:border-[var(--lito-gold)]'}`}
+      onClick={onOpen}
     >
-      {isImageMime(item.mime_type) ? (
-        <AppImage src={item.cdn_url ?? item.original_url ?? ''} alt={item.alt_text ?? item.filename} objectFit="cover" skeleton wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
+      {/* Bulk-select checkbox — always visible once anything is selected
+          (so the user can see/adjust the set at a glance), otherwise only
+          on hover, matching the delete button's own hover-reveal below. */}
+      <label
+        className={`absolute top-[5px] left-[5px] z-10 w-[18px] h-[18px] rounded-[4px] border-[1.5px] flex items-center justify-center cursor-pointer transition-opacity duration-150 ${selected ? 'opacity-100 bg-[var(--lito-gold)] border-[var(--lito-gold)]' : 'opacity-0 group-hover:opacity-100 bg-[rgba(17,17,17,0.55)] border-white/70 hover:opacity-100'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={(e) => onToggleSelect(e.target.checked)}
+          className="sr-only"
+          aria-label={`Select ${item.file_name}`}
+        />
+        {selected && <span aria-hidden style={{ fontSize: 11, lineHeight: 1, color: '#111' }}>✓</span>}
+      </label>
+      {item.file_type === 'image' && isImageMime(item.mime_type) ? (
+        <AppImage src={previewUrl ?? ''} alt={item.alt_text ?? item.file_name} objectFit="cover" skeleton wrapperStyle={{ position: 'absolute', inset: 0 }} style={{ width: '100%', height: '100%' }} />
+      ) : item.file_type === 'video' && previewUrl ? (
+        <div className="relative w-full h-full">
+          {/* Thumbnail: first frame via preload="metadata" (no server-side
+              thumbnail generation exists yet) + a play-icon overlay so video
+              cards read as playable at a glance, distinct from static images. */}
+          <video src={previewUrl} preload="metadata" muted playsInline className="w-full h-full object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center bg-[rgba(17,17,17,0.15)]">
+            <div className="w-9 h-9 rounded-full bg-[rgba(17,17,17,0.6)] flex items-center justify-center">
+              <Play size={14} color="#fff" fill="#fff" />
+            </div>
+          </div>
+        </div>
       ) : (
         <div className="w-full h-full flex flex-col items-center justify-center gap-[6px]">
-          <MediaTypeIcon mimeType={item.mime_type} className="w-8 h-8" />
+          <FileTypeIcon fileType={item.file_type} className="w-8 h-8 text-[var(--text-muted)]" />
           <span className="text-[9px] text-[var(--text-muted)] text-center px-[6px] overflow-hidden text-ellipsis whitespace-nowrap max-w-full">
-            {item.filename}
+            {item.file_name}
           </span>
         </div>
       )}
 
-      {/* Type badge */}
-      <div className="absolute top-[5px] left-[5px] px-[5px] py-[2px] rounded-[3px] bg-[rgba(17,17,17,0.55)] backdrop-blur-[4px] text-[9px] font-semibold text-white tracking-[0.05em] uppercase">
-        {item.mime_type.split('/')[1]?.slice(0, 4) ?? 'FILE'}
-      </div>
-
-      {/* Selection check */}
-      {selected && (
-        <div className="absolute top-[5px] right-[5px] w-[18px] h-[18px] rounded-full bg-[var(--lito-gold)] flex items-center justify-center">
-          <Check size={10} color="#111" strokeWidth={3} />
+      {/* Type + category badges */}
+      <div className="absolute top-[5px] left-[28px] flex gap-[4px]">
+        <div className="px-[5px] py-[2px] rounded-[3px] bg-[rgba(17,17,17,0.55)] backdrop-blur-[4px] text-[9px] font-semibold text-white tracking-[0.05em] uppercase">
+          {item.file_type}
         </div>
-      )}
+      </div>
+      <div className="absolute top-[5px] right-[5px] px-[5px] py-[2px] rounded-[3px] bg-[rgba(212,168,83,0.85)] text-[9px] font-semibold text-[#111] tracking-[0.03em] uppercase">
+        {sourceModuleLabel(item.source_module)}
+      </div>
 
       {/* Hover overlay */}
       <div
-        className="absolute inset-0 flex items-end p-[6px] opacity-0 hover:opacity-100 hover:bg-[rgba(17,17,17,0.45)] transition-all duration-150"
+        className="absolute inset-0 flex items-end p-[6px] opacity-0 hover:opacity-100 hover:bg-[rgba(17,17,17,0.35)] transition-all duration-150"
       >
         <button
           type="button"
-          aria-label={`Delete ${item.filename}`}
-          onClick={e => { e.stopPropagation(); onDelete() }}
+          aria-label={`Delete ${item.file_name}`}
+          onClick={(e) => { e.stopPropagation(); onDelete() }}
           className="ml-auto w-6 h-6 rounded-full bg-[rgba(163,48,40,0.8)] border-none cursor-pointer flex items-center justify-center"
         >
           <Trash2 size={11} color="#fff" />
@@ -101,37 +148,46 @@ function GridCard({ item, selected, onSelect, onDelete }: { item: Media; selecte
   )
 }
 
-function buildMediaColumns(onDelete: (id: string) => void): EDTColumn<Media>[] {
+function buildMediaColumns(onRequestDelete: (item: Media) => void): EDTColumn<Media>[] {
   return [
     {
-      key: 'filename',
+      key: 'file_name',
       label: 'File',
       render: (item) => (
         <div className="flex items-center gap-[10px]">
-          {isImageMime(item.mime_type) ? (
-            <AppImage src={item.cdn_url ?? item.original_url ?? ''} alt="" objectFit="cover" skeleton={false} wrapperStyle={{ width: 48, height: 34, flexShrink: 0, borderRadius: 3 }} style={{ width: '100%', height: '100%' }} />
+          {item.file_type === 'image' && isImageMime(item.mime_type) ? (
+            <AppImage src={item.cdn_url ?? item.file_url ?? ''} alt="" objectFit="cover" skeleton={false} wrapperStyle={{ width: 48, height: 34, flexShrink: 0, borderRadius: 3 }} style={{ width: '100%', height: '100%' }} />
           ) : (
             <div className="w-12 h-[34px] rounded-[3px] bg-[var(--lito-cream-alt)] flex items-center justify-center shrink-0">
-              <MediaTypeIcon mimeType={item.mime_type} className="w-4 h-4" />
+              <FileTypeIcon fileType={item.file_type} className="w-4 h-4 text-[var(--text-muted)]" />
             </div>
           )}
-          <span className="font-body text-[13px] font-medium text-[var(--text-muted)]">{item.filename}</span>
+          <span className="font-body text-[13px] font-medium text-[var(--text-muted)]">{item.file_name}</span>
         </div>
       ),
     },
     {
-      key: 'mime_type',
+      key: 'file_type',
       label: 'Type',
       render: (item) => (
         <span className="px-[7px] py-[2px] rounded-[3px] bg-[var(--lito-cream-alt)] text-[10px] font-semibold text-[var(--text-muted)] uppercase">
-          {item.mime_type.split('/')[1]?.slice(0, 4)}
+          {item.file_type}
         </span>
       ),
     },
     {
-      key: 'size_bytes',
+      key: 'source_module',
+      label: 'Category',
+      render: (item) => (
+        <span className="px-[7px] py-[2px] rounded-[3px] bg-[rgba(212,168,83,0.15)] text-[10px] font-semibold text-[var(--lito-ink)] uppercase">
+          {sourceModuleLabel(item.source_module)}
+        </span>
+      ),
+    },
+    {
+      key: 'file_size',
       label: 'Size',
-      render: (item) => <span className="text-xs text-[var(--text-muted)]">{formatBytes(item.size_bytes)}</span>,
+      render: (item) => <span className="text-xs text-[var(--text-muted)]">{item.file_size ? formatBytes(item.file_size) : '—'}</span>,
     },
     {
       key: 'created_at',
@@ -146,8 +202,8 @@ function buildMediaColumns(onDelete: (id: string) => void): EDTColumn<Media>[] {
       render: (item) => (
         <button
           type="button"
-          aria-label={`Delete ${item.filename}`}
-          onClick={(e) => { e.stopPropagation(); onDelete(item.id) }}
+          aria-label={`Delete ${item.file_name}`}
+          onClick={(e) => { e.stopPropagation(); onRequestDelete(item) }}
           className="bg-transparent border-none cursor-pointer p-1 text-[var(--text-muted)] flex rounded hover:text-[var(--cms-danger)] hover:bg-[var(--cms-danger-bg)]"
         >
           <Trash2 size={14} />
@@ -158,33 +214,11 @@ function buildMediaColumns(onDelete: (id: string) => void): EDTColumn<Media>[] {
 }
 
 export function MediaPageView({
-  items, meta, isLoading, uploading, uploadError,
-  filter, setFilter, onUpload, onDelete,
+  items, meta, isLoading, uploadError,
+  filter, setFilter, onOpenAddMedia, onOpenItem, onRequestDelete,
+  selectedIds, onToggleSelect, onToggleSelectAll, onBulkDeleteRequest,
 }: Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    const files = Array.from(e.dataTransfer.files)
-    if (files.length) onUpload(files)
-  }, [onUpload])
-
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    if (files.length) onUpload(files)
-    e.target.value = ''
-  }, [onUpload])
-
-  function toggleSelect(id: string) {
-    setSelected(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
 
   const iconBtnBase = 'flex items-center justify-center w-8 h-8 rounded border border-[var(--lito-border)] bg-transparent cursor-pointer text-[var(--text-muted)] transition-all duration-150'
   const iconBtnActive = 'bg-[var(--lito-ink)] text-[var(--lito-cream)] border-[var(--lito-ink)]'
@@ -198,42 +232,12 @@ export function MediaPageView({
           <div>
             <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">Media Library</h1>
             <p className="font-body text-xs text-[var(--text-muted)] mt-[3px]">
-              {meta ? `${meta.total.toLocaleString()} files` : 'Upload and manage media'}
+              {meta ? `${meta.total.toLocaleString()} files` : 'Upload and manage media across every module'}
             </p>
           </div>
-          <button
-            type="button"
-            className={`flex items-center gap-[6px] px-4 py-[7px] rounded-full bg-[var(--lito-ink)] text-[var(--lito-cream)] border-none text-[13px] font-medium cursor-pointer font-body transition-opacity duration-150 ${uploading ? 'opacity-70' : 'opacity-100'}`}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            <Upload size={14} /> {uploading ? 'Uploading…' : 'Upload'}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*,video/*,application/pdf"
-            className="sr-only"
-            onChange={handleFileChange}
-            aria-label="Upload files"
-          />
-        </div>
-
-        {/* Dropzone */}
-        <div
-          className={`border-2 border-dashed border-[var(--lito-border)] rounded-[10px] py-7 px-5 flex flex-col items-center justify-center gap-2 text-center cursor-pointer transition-[border-color,background] duration-200 mb-4 ${uploading ? 'bg-[rgba(212,168,83,0.04)] opacity-60 pointer-events-none' : 'bg-transparent'}`}
-          onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--lito-gold)' }}
-          onDragLeave={e => (e.currentTarget.style.borderColor = 'var(--lito-border)')}
-          onDrop={e => { e.currentTarget.style.borderColor = 'var(--lito-border)'; handleDrop(e) }}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Upload size={22} className="text-[var(--text-muted)]" aria-hidden />
-          <p className="font-body text-[13px] text-[var(--text-muted)]">
-            Drop files here or{' '}
-            <span className="text-[var(--lito-gold)] underline">browse</span>
-          </p>
-          <p className="font-body text-[11px] text-[var(--text-faint)]">Images, videos, PDFs up to 50 MB</p>
+          <Button skin="cms" leftIcon={<Plus size={14} />} onClick={onOpenAddMedia}>
+            Add Media
+          </Button>
         </div>
 
         {uploadError && (
@@ -243,7 +247,7 @@ export function MediaPageView({
         )}
 
         {/* Toolbar */}
-        <div className="flex items-center gap-[10px]">
+        <div className="flex items-center gap-[10px] flex-wrap">
           <SearchInput
             skin="cms"
             icon={<Search className="w-3.5 h-3.5" />}
@@ -256,14 +260,16 @@ export function MediaPageView({
           <Select
             size="sm"
             className="w-[140px]"
-            value={filter.media_type}
-            onChange={(v) => setFilter({ media_type: v, page: 1 })}
-            options={[
-              { value: '', label: 'All types' },
-              { value: 'image', label: 'Images' },
-              { value: 'video', label: 'Videos' },
-              { value: 'document', label: 'Documents' },
-            ]}
+            value={filter.file_type}
+            onChange={(v) => setFilter({ file_type: v as MediaFileType | '', page: 1 })}
+            options={FILE_TYPE_OPTIONS}
+          />
+          <Select
+            size="sm"
+            className="w-[160px]"
+            value={filter.source_module}
+            onChange={(v) => setFilter({ source_module: v, page: 1 })}
+            options={CATEGORY_FILTER_OPTIONS}
           />
 
           <div className="ml-auto flex gap-1">
@@ -303,16 +309,17 @@ export function MediaPageView({
             </div>
           )
         ) : items.length === 0 ? (
-          <EmptyState skin="cms" icon={<FolderOpen className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No media files" description="Upload images and videos to get started" />
+          <EmptyState skin="cms" icon={<FolderOpen className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />} title="No media files" description="Upload files or add an approved URL to get started" />
         ) : viewMode === 'grid' ? (
           <div className="grid gap-[10px] [grid-template-columns:repeat(auto-fill,minmax(140px,1fr))]">
             {items.map(item => (
               <GridCard
                 key={item.id}
                 item={item}
-                selected={selected.has(item.id)}
-                onSelect={() => toggleSelect(item.id)}
-                onDelete={() => onDelete(item.id)}
+                onOpen={() => onOpenItem(item)}
+                onDelete={() => onRequestDelete(item)}
+                selected={selectedIds.includes(item.id)}
+                onToggleSelect={(checked) => onToggleSelect(item.id, checked)}
               />
             ))}
           </div>
@@ -320,15 +327,60 @@ export function MediaPageView({
           <div className="cms-card overflow-hidden">
             <EnterpriseDataTable<Media>
               skin="cms"
-              columns={buildMediaColumns(onDelete)}
+              columns={buildMediaColumns(onRequestDelete)}
               data={items}
+              onRowClick={onOpenItem}
+              rowSelection
+              bulkActions={[
+                {
+                  label: 'Delete Selected',
+                  icon: <Trash2 className="w-3.5 h-3.5" />,
+                  variant: 'danger',
+                  onClick: (ids) => onBulkDeleteRequest(ids as string[]),
+                },
+              ]}
               emptyIcon={<FolderOpen className="w-6 h-6 text-[var(--lito-gold)]" aria-hidden />}
               emptyTitle="No media files"
-              emptyDescription="Upload images and videos to get started"
+              emptyDescription="Upload files or add an approved URL to get started"
             />
           </div>
         )}
       </div>
+
+      {/* Floating bulk-action bar — grid view only; list view already gets
+          an equivalent bar for free from EnterpriseDataTable's own
+          rowSelection/bulkActions (same component Products/Promotions use),
+          so this is additive, not a duplicate control. */}
+      {viewMode === 'grid' && selectedIds.length > 0 && (
+        <div
+          className="fixed left-1/2 bottom-6 -translate-x-1/2 z-40 flex items-center gap-[14px] px-[18px] py-[10px] rounded-[10px] bg-[var(--lito-ink)] shadow-[0_12px_32px_rgba(17,17,17,0.35)]"
+        >
+          <span className="font-body text-[13px] font-medium text-[var(--lito-cream)] whitespace-nowrap">
+            {selectedIds.length} item{selectedIds.length === 1 ? '' : 's'} selected
+          </span>
+          <button
+            type="button"
+            onClick={() => onToggleSelectAll(true)}
+            className="font-body text-[12px] font-medium text-[var(--lito-cream)] opacity-80 hover:opacity-100 bg-transparent border-none cursor-pointer underline"
+          >
+            Select All
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggleSelectAll(false)}
+            className="font-body text-[12px] font-medium text-[var(--lito-cream)] opacity-80 hover:opacity-100 bg-transparent border-none cursor-pointer underline"
+          >
+            Deselect All
+          </button>
+          <button
+            type="button"
+            onClick={() => onBulkDeleteRequest(selectedIds)}
+            className="flex items-center gap-[6px] font-body text-[12.5px] font-semibold text-white bg-[var(--cms-danger)] px-[12px] py-[6px] rounded-[6px] border-none cursor-pointer"
+          >
+            <Trash2 size={13} /> Delete Selected
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -36,7 +36,15 @@ export default function ProductsPageContainer() {
         limit: filter.limit,
       }),
     enabled: !!activeSite,
-    staleTime: 2 * 60 * 1000,
+    // BUG FIX (2026-08-24, dead-product-link audit): 2min staleTime let this
+    // list keep showing rows for products already deleted elsewhere (another
+    // tab, another admin, a script) — clicking one navigated to a real-looking
+    // /products/:id/edit URL that 404'd ("Product with id '...' not found").
+    // Always refetch on mount/focus so the list a merchant clicks from is
+    // never more than a moment stale.
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   })
 
   const deleteMutation = useMutation({

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
-  Building2, Globe, Moon, Sun, Monitor, Check, AlertCircle, Layout, Palette, Phone, ImageIcon,
+  Building2, Globe, Moon, Sun, Monitor, Check, AlertCircle, Layout, Palette, Phone, ImageIcon, Lock,
 } from 'lucide-react'
 import type { Organization, Site } from '@litostudio/ui-cms'
 import type { Theme } from '@litostudio/ui-cms'
@@ -49,6 +49,13 @@ interface Props {
   darkLogoUrl:     string | null
   onSaveBranding:  (payload: { logo_url: string | null; dark_logo_url: string | null }) => Promise<void>
   savingBranding:  boolean
+  /**
+   * Whether the current user may edit Organization / Website / Branding —
+   * all three are admin+-gated on the backend. Non-admins see disabled
+   * controls with an explanatory note rather than a 403 after Save. See
+   * cms-settings-rbac-audit-2026-08-27.md §9 Phase 4.
+   */
+  canEdit: boolean
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -71,6 +78,17 @@ function SectionCard({ icon: Icon, title, description, children }: {
       </div>
       <div className="px-6 py-5">{children}</div>
     </div>
+  )
+}
+
+/** Shown above a disabled fieldset for non-admins — matches the task's
+ *  "Contact store owner to modify settings" wording. */
+function RestrictedNote() {
+  return (
+    <p className="font-body text-[11px] text-[var(--text-muted)] mb-3 flex items-center gap-1.5">
+      <Lock size={11} aria-hidden="true" />
+      Contact store owner to modify settings
+    </p>
   )
 }
 
@@ -187,6 +205,7 @@ export function SettingsPageView({
   onSaveOrg, onSaveSite, saving, saveError, saveSuccess,
   themes, activeThemeId, onApplyTheme, applyingTheme,
   logoUrl, darkLogoUrl, onSaveBranding, savingBranding,
+  canEdit,
 }: Props) {
   // ── Local branding state — initialised from server props ─────────────────
   const [localLogoUrl, setLocalLogoUrl]         = useState<string | null>(logoUrl)
@@ -259,88 +278,94 @@ export function SettingsPageView({
 
       {/* ── Organization ── */}
       <SectionCard icon={Building2} title="Organization" description="General information about your organization">
+        {!canEdit && <RestrictedNote />}
         <form onSubmit={orgForm.handleSubmit(v => onSaveOrg({ name: v.name }))} noValidate>
-          <FormRow label="Organization name" hint="The display name for your workspace">
-            <div>
-              <input
-                {...orgForm.register('name')}
-                type="text"
-                className="cms-input h-[34px]"
-                placeholder="e.g. Lito Studio"
-                aria-invalid={!!orgForm.formState.errors.name}
-              />
-              {orgForm.formState.errors.name && (
-                <p role="alert" className="mt-1 text-[11px] text-[var(--s-danger)] font-body">
-                  {orgForm.formState.errors.name.message}
-                </p>
-              )}
+          <fieldset disabled={!canEdit} className={!canEdit ? 'opacity-60' : undefined}>
+            <FormRow label="Organization name" hint="The display name for your workspace">
+              <div>
+                <input
+                  {...orgForm.register('name')}
+                  type="text"
+                  className="cms-input h-[34px]"
+                  placeholder="e.g. Lito Studio"
+                  aria-invalid={!!orgForm.formState.errors.name}
+                />
+                {orgForm.formState.errors.name && (
+                  <p role="alert" className="mt-1 text-[11px] text-[var(--s-danger)] font-body">
+                    {orgForm.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+            </FormRow>
+            <FormRow label="Plan" hint="Your current subscription tier">
+              <span className="status-badge capitalize text-[var(--lito-teal)] bg-[rgba(26,74,90,0.10)]">
+                {org?.plan ?? 'Free'}
+              </span>
+            </FormRow>
+            <div className="flex justify-end mt-2">
+              <button
+                type="submit"
+                disabled={saving || !orgForm.formState.isDirty || !orgForm.formState.isValid}
+                className="cms-btn cms-btn-primary cms-btn-sm"
+              >
+                {saving ? 'Saving…' : 'Save organization'}
+              </button>
             </div>
-          </FormRow>
-          <FormRow label="Plan" hint="Your current subscription tier">
-            <span className="status-badge capitalize text-[var(--lito-teal)] bg-[rgba(26,74,90,0.10)]">
-              {org?.plan ?? 'Free'}
-            </span>
-          </FormRow>
-          <div className="flex justify-end mt-2">
-            <button
-              type="submit"
-              disabled={saving || !orgForm.formState.isDirty || !orgForm.formState.isValid}
-              className="cms-btn cms-btn-primary cms-btn-sm"
-            >
-              {saving ? 'Saving…' : 'Save organization'}
-            </button>
-          </div>
+          </fieldset>
         </form>
       </SectionCard>
 
       {/* ── Website ── */}
       {activeSite && (
         <SectionCard icon={Globe} title="Website" description="Settings for the currently active website">
+          {!canEdit && <RestrictedNote />}
           <form onSubmit={siteForm.handleSubmit(handleSaveSite)} noValidate>
-            <FormRow label="Site name" hint="Internal display name for this website">
-              <div>
+            <fieldset disabled={!canEdit} className={!canEdit ? 'opacity-60' : undefined}>
+              <FormRow label="Site name" hint="Internal display name for this website">
+                <div>
+                  <input
+                    {...siteForm.register('name')}
+                    type="text"
+                    className="cms-input h-[34px]"
+                    placeholder="e.g. Lito Studio Photography"
+                    aria-invalid={!!siteForm.formState.errors.name}
+                  />
+                  {siteForm.formState.errors.name && (
+                    <p role="alert" className="mt-1 text-[11px] text-[var(--s-danger)] font-body">
+                      {siteForm.formState.errors.name.message}
+                    </p>
+                  )}
+                </div>
+              </FormRow>
+
+              <FormRow label="Domain" hint="The primary domain for this website">
                 <input
-                  {...siteForm.register('name')}
+                  {...siteForm.register('domain')}
                   type="text"
                   className="cms-input h-[34px]"
-                  placeholder="e.g. Lito Studio Photography"
-                  aria-invalid={!!siteForm.formState.errors.name}
+                  placeholder="e.g. litostudio.id"
                 />
-                {siteForm.formState.errors.name && (
-                  <p role="alert" className="mt-1 text-[11px] text-[var(--s-danger)] font-body">
-                    {siteForm.formState.errors.name.message}
-                  </p>
-                )}
+              </FormRow>
+
+              <FormRow label="Site ID" hint="Read-only unique identifier">
+                <input
+                  type="text"
+                  className="cms-input h-[34px] opacity-60 cursor-default font-mono text-[11px]"
+                  value={activeSite.id}
+                  readOnly
+                />
+              </FormRow>
+
+              <div className="flex justify-end mt-2">
+                <button
+                  type="submit"
+                  disabled={saving || !siteForm.formState.isDirty || !siteForm.formState.isValid}
+                  className="cms-btn cms-btn-primary cms-btn-sm"
+                >
+                  {saving ? 'Saving…' : 'Save website'}
+                </button>
               </div>
-            </FormRow>
-
-            <FormRow label="Domain" hint="The primary domain for this website">
-              <input
-                {...siteForm.register('domain')}
-                type="text"
-                className="cms-input h-[34px]"
-                placeholder="e.g. litostudio.id"
-              />
-            </FormRow>
-
-            <FormRow label="Site ID" hint="Read-only unique identifier">
-              <input
-                type="text"
-                className="cms-input h-[34px] opacity-60 cursor-default font-mono text-[11px]"
-                value={activeSite.id}
-                readOnly
-              />
-            </FormRow>
-
-            <div className="flex justify-end mt-2">
-              <button
-                type="submit"
-                disabled={saving || !siteForm.formState.isDirty || !siteForm.formState.isValid}
-                className="cms-btn cms-btn-primary cms-btn-sm"
-              >
-                {saving ? 'Saving…' : 'Save website'}
-              </button>
-            </div>
+            </fieldset>
           </form>
         </SectionCard>
       )}
@@ -395,46 +420,53 @@ export function SettingsPageView({
               <Check size={14} aria-hidden="true" /> Branding saved
             </div>
           )}
+          {!canEdit && <RestrictedNote />}
 
-          <FormRow
-            label="Logo — colour"
-            hint="Used when the header/footer background is white or transparent. Typically a full-colour version of your logo."
-          >
-            <ImageUploader
-              value={localLogoUrl}
-              onChange={setLocalLogoUrl}
-              folder="branding"
-            />
-          </FormRow>
-
-          <FormRow
-            label="Logo — white"
-            hint="Used when the header/footer background is dark or a non-white colour. Must be a white/light logo."
-          >
-            <div className="rounded-lg overflow-hidden">
-              <div className="p-2 rounded-t-lg bg-[#1a1a1a]">
-                <ImageUploader
-                  value={localDarkLogoUrl}
-                  onChange={setLocalDarkLogoUrl}
-                  folder="branding"
-                />
-              </div>
-              <p className="font-body text-[11px] text-[var(--text-muted)] mt-1">
-                Preview shown on dark background so you can verify visibility.
-              </p>
-            </div>
-          </FormRow>
-
-          <div className="flex justify-end mt-1">
-            <button
-              type="button"
-              onClick={handleSaveBranding}
-              disabled={savingBranding}
-              className="cms-btn cms-btn-primary cms-btn-sm"
+          <fieldset disabled={!canEdit} className={!canEdit ? 'opacity-60' : undefined}>
+            <FormRow
+              label="Logo — colour"
+              hint="Used when the header/footer background is white or transparent. Typically a full-colour version of your logo."
             >
-              {savingBranding ? 'Saving…' : 'Save branding'}
-            </button>
-          </div>
+              <ImageUploader
+                value={localLogoUrl}
+                onChange={setLocalLogoUrl}
+                folder="branding"
+                previewFit="contain"
+                disabled={!canEdit}
+              />
+            </FormRow>
+
+            <FormRow
+              label="Logo — white"
+              hint="Used when the header/footer background is dark or a non-white colour. Must be a white/light logo."
+            >
+              <div className="rounded-lg overflow-hidden">
+                <div className="p-2 rounded-t-lg bg-[#1a1a1a]">
+                  <ImageUploader
+                    value={localDarkLogoUrl}
+                    onChange={setLocalDarkLogoUrl}
+                    folder="branding"
+                    previewFit="contain"
+                    disabled={!canEdit}
+                  />
+                </div>
+                <p className="font-body text-[11px] text-[var(--text-muted)] mt-1">
+                  Preview shown on dark background so you can verify visibility.
+                </p>
+              </div>
+            </FormRow>
+
+            <div className="flex justify-end mt-1">
+              <button
+                type="button"
+                onClick={handleSaveBranding}
+                disabled={savingBranding}
+                className="cms-btn cms-btn-primary cms-btn-sm"
+              >
+                {savingBranding ? 'Saving…' : 'Save branding'}
+              </button>
+            </div>
+          </fieldset>
         </SectionCard>
       )}
 

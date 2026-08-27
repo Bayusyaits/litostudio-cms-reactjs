@@ -16,6 +16,10 @@ interface Props {
   onSaveCurrency:           (locale: string, currencyCode: string, currencySymbol: string) => void
   saving:                   boolean
   onGoToAddons:             () => void
+  /** Admin+ only — mirrors the backend's requireRole('admin') on the
+   *  enable/update-locale routes. See
+   *  cms-settings-rbac-audit-2026-08-27.md §9 Phase 4. */
+  canEdit:                  boolean
 }
 
 function SectionCard({ icon: Icon, title, description, children }: {
@@ -84,6 +88,7 @@ export function LanguagesPageView({
   languages, multiLanguageAddonActive, catalog, isLoading,
   actionError, onDismissError,
   onEnable, onSetActive, onSetPrimary, onSaveCurrency, saving, onGoToAddons,
+  canEdit,
 }: Props) {
   const [pickerLocale, setPickerLocale] = useState('')
 
@@ -162,14 +167,14 @@ export function LanguagesPageView({
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
-                  <CurrencyEditor language={lang} onSave={(code, symbol) => onSaveCurrency(lang.locale, code, symbol)} disabled={saving} />
+                  <CurrencyEditor language={lang} onSave={(code, symbol) => onSaveCurrency(lang.locale, code, symbol)} disabled={saving || !canEdit} />
 
                   {!lang.is_default && (
                     <button
                       type="button"
                       onClick={() => onSetPrimary(lang.locale)}
-                      disabled={saving || !lang.is_active}
-                      title={!lang.is_active ? 'Enable this language first' : 'Set as primary language'}
+                      disabled={saving || !lang.is_active || !canEdit}
+                      title={!canEdit ? 'Contact store owner to modify settings' : !lang.is_active ? 'Enable this language first' : 'Set as primary language'}
                       className="cms-btn cms-btn-sm h-[28px] px-2.5 text-[11px]"
                     >
                       Set primary
@@ -180,8 +185,8 @@ export function LanguagesPageView({
                     <input
                       type="checkbox"
                       checked={lang.is_active}
-                      disabled={saving || lang.is_default}
-                      title={lang.is_default ? 'Cannot disable the primary language' : undefined}
+                      disabled={saving || lang.is_default || !canEdit}
+                      title={!canEdit ? 'Contact store owner to modify settings' : lang.is_default ? 'Cannot disable the primary language' : undefined}
                       onChange={(e) => onSetActive(lang.locale, e.target.checked)}
                     />
                     Active
@@ -194,6 +199,12 @@ export function LanguagesPageView({
       </SectionCard>
 
       <SectionCard icon={Plus} title="Add a language" description="Add another language from the platform catalog">
+        {!canEdit && (
+          <p className="font-body text-[11px] text-[var(--text-muted)] mb-3 flex items-center gap-1.5">
+            <Lock size={11} aria-hidden="true" />
+            Contact store owner to modify settings
+          </p>
+        )}
         {addableLocales.length === 0 ? (
           <p className="font-body text-xs text-[var(--text-muted)]">Every available language has already been added.</p>
         ) : (
@@ -201,6 +212,7 @@ export function LanguagesPageView({
             <select
               value={pickerLocale}
               onChange={(e) => setPickerLocale(e.target.value)}
+              disabled={!canEdit}
               className="cms-input h-[34px] flex-1"
             >
               <option value="">Select a language…</option>
@@ -210,7 +222,7 @@ export function LanguagesPageView({
             </select>
             <button
               type="button"
-              disabled={!pickerLocale || saving}
+              disabled={!pickerLocale || saving || !canEdit}
               onClick={() => { if (pickerLocale) { onEnable(pickerLocale); setPickerLocale('') } }}
               className="cms-btn cms-btn-primary cms-btn-sm"
             >

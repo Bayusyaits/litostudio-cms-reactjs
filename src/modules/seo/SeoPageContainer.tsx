@@ -104,6 +104,7 @@ export default function SeoPageContainer() {
       onSave={handleSave}
       locale={locale}
       onLocaleChange={handleLocaleChange}
+      siteDomain={activeSite?.domain ?? null}
     />
   )
 }

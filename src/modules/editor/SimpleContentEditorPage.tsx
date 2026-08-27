@@ -53,6 +53,8 @@ import { SeoCard }                                from '@/components/molecules/S
 import { PublishCard }                            from '@/components/molecules/PublishCard'
 import { TagInput }                               from '@/components/molecules/TagInput'
 import { VariantsCard }                           from '@/components/molecules/VariantsCard'
+import { CollectionItemsPanel }                   from '@/components/molecules/CollectionItemsPanel'
+import { CollectionMultiSelect }                  from '@/modules/products/wizard/components/CollectionMultiSelect'
 import { LocaleSwitcher }                         from '@/components/molecules/LocaleSwitcher'
 import { Switch }                                 from '@/components/atoms/Switch'
 import { useOrgLocales }                          from '@/hooks/useOrgLocales'
@@ -335,7 +337,15 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
       }
     }
     case 'collections': {
-      return {}
+      const col = e as Collection
+      // 2026-08-27 (collections-audit-2026-08-27.md §3/§4 Phase C): this
+      // used to return {} unconditionally — collection_type/is_featured
+      // were real DB columns the CMS could read/write via the generic
+      // create/update payload builders below, but nothing ever hydrated
+      // them into the edit form, so an editor could never see or change a
+      // collection's own type. DB default is 'collection' (product
+      // collection) — the one type with a real storefront consumer.
+      return { collectionType: col.collection_type ?? 'collection', isFeatured: col.is_featured ?? false }
     }
     case 'campaigns': {
       const c = e as Campaign
@@ -526,7 +536,7 @@ function buildCreatePayload(
         translation: { locale, title },
       }
     case 'collections':
-      return { ...base }
+      return { ...base, collection_type: extras.collectionType || 'collection', is_featured: extras.isFeatured ?? false }
     case 'campaigns':
       return { ...base, cta_label: extras.ctaLabel || undefined, cta_url: extras.ctaUrl || undefined, start_date: extras.startDate || undefined, end_date: extras.endDate || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
     default:
@@ -626,7 +636,7 @@ function buildUpdatePatch(
         is_featured: extras.isFeatured ?? false,
         extra:       extras.linkUrl ? { link_url: extras.linkUrl } : {},
       }
-    case 'collections':  return { ...base }
+    case 'collections':  return { ...base, collection_type: extras.collectionType || 'collection', is_featured: extras.isFeatured ?? false }
     case 'campaigns':    return { ...base, cta_label: extras.ctaLabel || null, cta_url: extras.ctaUrl || null, start_date: extras.startDate || null, end_date: extras.endDate || null, is_featured: extras.isFeatured ?? false }
     default:             return base
   }
@@ -1349,6 +1359,35 @@ function renderModuleExtras(
           </div>
         </div>
       )
+    case 'collections':
+      return (
+        <div className="cms-card p-4 space-y-3">
+          <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Collection Details</h3>
+          <div className="space-y-1.5">
+            <label className="cms-label">Type</label>
+            <Select
+              className="w-full"
+              value={(extras.collectionType as string) || 'collection'}
+              onChange={(v) => setExtra('collectionType', v)}
+              options={[
+                { value: 'collection',  label: 'Product Collection' },
+                { value: 'gallery',     label: 'Gallery' },
+                { value: 'destination', label: 'Destination' },
+                { value: 'category',    label: 'Category' },
+              ]}
+            />
+            <p className="font-body text-[11px] text-[var(--text-faint)]">
+              Locked per item, not just here — the backend rejects mixing item types within one collection
+              once it has its first linked item (see Collection Items below). Only &ldquo;Product
+              Collection&rdquo; is currently rendered on the storefront.
+            </p>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
+            <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+          </div>
+        </div>
+      )
     case 'campaigns':
       return (
         <div className="cms-card p-4 space-y-3">
@@ -1771,6 +1810,28 @@ export default function SimpleContentEditorPage() {
           skuPrefix={slug ? slug.toUpperCase().replace(/[^A-Z0-9]+/g, '-') : ''}
           onSynced={() => void queryClient.invalidateQueries({ queryKey: ['simple-editor', module, id] })}
         />
+      )}
+
+      {module === 'collections' && (
+        <CollectionItemsPanel
+          collectionId={isNew ? null : (id ?? null)}
+          collectionType={(extras.collectionType as string) || 'collection'}
+          siteId={activeSite?.id ?? null}
+        />
+      )}
+
+      {/* 2026-08-27 (collections-audit-2026-08-27.md Phase D): services are
+          product_type='service' rows in the same `products` table as
+          regular products (see this file's header comment), so
+          item_type='product' is correct here too — same component as the
+          product wizard's Collections card, not a special case. Portfolio
+          deliberately does NOT get this (see CollectionMultiSelect's header
+          comment for why). */}
+      {module === 'services' && (
+        <div className="cms-card p-5 space-y-1.5">
+          <p className="cms-label">Collections</p>
+          <CollectionMultiSelect itemId={isNew ? null : (id ?? null)} siteId={activeSite?.id ?? null} />
+        </div>
       )}
 
       {saveError && (

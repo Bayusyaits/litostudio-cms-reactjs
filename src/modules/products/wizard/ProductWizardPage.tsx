@@ -29,6 +29,7 @@ import { WizardShell } from './WizardShell'
 import { ProductInformationForm } from './components/ProductInformationForm'
 import { CategorySelector } from './components/CategorySelector'
 import { BrandSelector } from './components/BrandSelector'
+import { CollectionMultiSelect } from './components/CollectionMultiSelect'
 import { DynamicAttributeForm } from './components/DynamicAttributeForm'
 import { ProductMediaUploader } from './components/ProductMediaUploader'
 import { InventoryEditor } from './components/InventoryEditor'
@@ -61,11 +62,21 @@ export default function ProductWizardPage() {
   const { activeSite } = useWebsiteStore()
   const isNew = !id
 
-  const { data: product } = useQuery<Product>({
+  // BUG FIX (2026-08-24, product not found / stale-id audit): this used to
+  // destructure ONLY `data` — a 404 (deleted product, stale link, bad nav
+  // from the list) left `product` silently `undefined` forever, with zero
+  // signal to the user. The hydrate effect below already guards on
+  // `if (!product) return`, so the wizard just rendered its blank/default
+  // "new product" state (no image, empty name/description) at what looked
+  // like a real edit URL — indistinguishable from a genuine data-mismatch
+  // bug. Surfacing isLoading/isError lets the render below tell the two
+  // apart and show an actual "not found" state instead of a blank form.
+  const { data: product, isLoading: productLoading, isError: productError } = useQuery<Product>({
     queryKey: ['products', activeSite?.id, id],
     queryFn: () => productsService.getById(id!),
     enabled: !isNew && !!id,
     staleTime: 0,
+    retry: false,
   })
 
   const [activeStep, setActiveStep] = useState('information')
@@ -256,11 +267,42 @@ export default function ProductWizardPage() {
       return
     }
 
+    // BUG FIX (2026-08-26 — storefront showed "Rp145.000 ~~Rp145.000~~"):
+    // Compare-at (strikethrough) price only makes sense as a discount
+    // marker when it's higher than the real price. PricingForm shows this
+    // inline as the user types; this is the actual save-time gate (and the
+    // backend re-checks authoritatively — products.routes.ts).
+    if (price !== '' && compareAtPrice !== '' && Number(compareAtPrice) <= Number(price)) {
+      setSaveError('Compare-at (strikethrough) price must be higher than Price.')
+      return
+    }
+
     setIsSaving(true)
     setSaveError(null)
     try {
       const resolvedCover = coverImage ? await draftMediaStore.resolveUrl(coverImage) : null
       const resolvedImages = images.length > 0 ? await draftMediaStore.resolveUrls(images) : []
+      // BUG FIX (2026-08-24, CMS/website image-mismatch audit): resolveUrl()
+      // uploads the blob and REVOKES the blob: URL (URL.revokeObjectURL) —
+      // but this local `coverImage`/`images` state was never updated to the
+      // resolved CDN URL. Two real, user-visible failures resulted:
+      //  1. The Cover Image / Gallery previews in this very wizard went
+      //     broken (revoked blob: src, rendering as a generic broken-image
+      //     icon) within ~2s of a successful save — right after autosave
+      //     silently resolved and revoked the blob — even though the
+      //     upload had actually succeeded and the CDN url was already
+      //     correctly saved to the DB.
+      //  2. Any LATER save (autosave on another field, or a manual
+      //     re-save) called resolveUrl() again on that same now-stale
+      //     blob: URL — its draft entry was already deleted, so
+      //     resolveUrl() threw "Draft file not found. Please re-select the
+      //     image." and silently blocked every subsequent autosave (not
+      //     just image saves) until the page was reloaded.
+      // Syncing state to the resolved CDN URL here fixes both: the preview
+      // shows the real uploaded image, and future resolveUrl() calls see a
+      // real https:// URL (not blob:) and pass it through unchanged.
+      if (resolvedCover !== coverImage) setCoverImage(resolvedCover)
+      if (JSON.stringify(resolvedImages) !== JSON.stringify(images)) setImages(resolvedImages)
       const existingExtra = product?.extra && typeof product.extra === 'object' ? product.extra : undefined
       const nextExtra: Record<string, unknown> = existingExtra ? { ...existingExtra } : {}
       nextExtra.pre_order = preOrder
@@ -370,6 +412,32 @@ export default function ProductWizardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, slug, sku, description, tags, categoryId, brandId, coverImage, images, videoUrl, price, compareAtPrice, isFeatured, preOrder, daysToShip, isDigital, digitalFileUrl, weightGrams, lengthCm, widthCm, heightCm, biteshipCategory, sortOrder, minStock, inventoryQuantity, inventoryTrackStock, hasSizeGuide, sizeGuideColumns, sizeGuideRows])
 
+  // Real "not found" state instead of silently rendering a blank wizard —
+  // see the useQuery comment above for why this matters.
+  if (!isNew && productLoading) {
+    return (
+      <div className="p-8 text-center font-body text-sm text-[var(--text-muted)]">
+        Loading product…
+      </div>
+    )
+  }
+  if (!isNew && (productError || (!productLoading && !product))) {
+    return (
+      <div className="p-8 text-center space-y-3">
+        <p className="font-body text-sm text-[var(--s-danger)]">
+          This product couldn't be found — it may have been deleted, or this link is out of date.
+        </p>
+        <button
+          type="button"
+          className="cms-btn cms-btn-secondary cms-btn-sm"
+          onClick={() => navigate('/products')}
+        >
+          Back to Products
+        </button>
+      </div>
+    )
+  }
+
   return (
     <ContentEditorLayout
       title={isNew ? 'New Product' : name || 'Edit Product'}
@@ -444,6 +512,16 @@ export default function ProductWizardPage() {
             <div className="cms-card p-5 space-y-1.5">
               <p className="cms-label">Brand</p>
               <BrandSelector id="product-brand-combobox" value={brandId} categoryId={categoryId} onChange={setBrandId} />
+            </div>
+            {/* 2026-08-27 (collections-audit-2026-08-27.md Phase D): links
+                this product into Product Collections from the product's own
+                form — the mirror of the collection-side picker
+                (CollectionItemsPanel). Disabled until the product has been
+                saved once (collection_items.item_id has nothing to point at
+                before that). */}
+            <div className="cms-card p-5 space-y-1.5">
+              <p className="cms-label">Collections</p>
+              <CollectionMultiSelect itemId={productId} siteId={activeSite?.id ?? null} />
             </div>
           </div>
         )}

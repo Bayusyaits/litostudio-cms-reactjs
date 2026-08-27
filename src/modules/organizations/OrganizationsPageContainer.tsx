@@ -28,6 +28,15 @@ export default function OrganizationsPageContainer() {
 
   const orgs: Organization[] = orgsData?.data ?? []
 
+  // 2026-08-26: this page only ever renders the single org the session's
+  // JWT is currently scoped to (getOrgs() wraps the single-org endpoint
+  // into an array of at most 1 — see the query above), so user.org_role
+  // always applies to every row shown here. Mirrors the backend's own
+  // gates exactly: PATCH /organizations/:id requires 'admin', DELETE
+  // requires 'owner' (organization.routes.ts).
+  const canEdit = user?.org_role === 'admin' || user?.org_role === 'owner'
+  const canDelete = user?.org_role === 'owner'
+
   // ── Create ───────────────────────────────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: (payload: { name: string; slug: string }) =>
@@ -126,6 +135,8 @@ export default function OrganizationsPageContainer() {
         onCreate={() => setModalOrg(null)}
         onEdit={(org) => setModalOrg(org)}
         onDelete={(org) => deleteMutation.mutate(org.id)}
+        canEdit={canEdit}
+        canDelete={canDelete}
       />
 
       {modalOrg !== undefined && (

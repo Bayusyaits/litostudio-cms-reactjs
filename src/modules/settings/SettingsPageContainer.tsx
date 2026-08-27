@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { orgService, themeService, useOrgStore, useWebsiteStore, getErrorMessage, TemplateSwitchModal } from '@litostudio/ui-cms'
 import { useThemeStore } from '@/stores/theme.store'
+import { useAuthStore } from '@/stores/auth.store'
 import { SettingsPageView } from './SettingsPageView'
 import { useState, useCallback } from 'react'
 import type { TemplateSwitchResult } from '@litostudio/ui-cms'
@@ -11,6 +12,14 @@ export default function SettingsPageContainer() {
   const qc = useQueryClient()
   const { org, setOrg } = useOrgStore()
   const { activeSite, setActiveSite } = useWebsiteStore()
+  // Organization / Website / Branding are all admin+-gated on the backend
+  // (see cms-settings-rbac-audit-2026-08-27.md §9 Phase 4) — mirrored here
+  // so non-admins see disabled controls instead of a 403 after clicking
+  // Save, matching the pattern already used on the superadmin org list
+  // (OrganizationsPageContainer.tsx's canEdit) and Team
+  // (TeamPageContainer.tsx's currentUserIsOwner).
+  const { user } = useAuthStore()
+  const canEdit = user?.org_role === 'admin' || user?.org_role === 'owner'
   const { colorMode, setColorMode } = useThemeStore()
   const resetEditor = useEditorStore((s) => s.reset)
   const [saveError, setSaveError]     = useState<string | null>(null)
@@ -151,6 +160,7 @@ export default function SettingsPageContainer() {
       <SettingsPageView
         org={org}
         activeSite={activeSite}
+        canEdit={canEdit}
         colorMode={colorMode}
         onSetColorMode={setColorMode}
         onSaveOrg={(payload) => updateOrgMutation.mutate(payload)}

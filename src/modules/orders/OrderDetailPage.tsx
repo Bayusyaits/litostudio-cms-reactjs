@@ -20,7 +20,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Select } from '@litostudio/ui-cms'
-import { ArrowLeft, Loader2, Package, CreditCard, Truck, Clock } from 'lucide-react'
+import { ArrowLeft, Loader2, Package, CreditCard, Truck, Clock, Tag } from 'lucide-react'
 import { ordersService } from '@/services/content.service'
 import type { OrderStatus } from '@/types/commerce.types'
 
@@ -78,6 +78,11 @@ export default function OrderDetailPage() {
   }
 
   const items = order.items ?? []
+  // 2026-08-24 stacking: 1-2 stacked vouchers, itemized. order.discount_amount
+  // (shown in the summary card above) is always the sum of these — same
+  // computeComboDiscountAmount() the checkout preview and order creation
+  // both used, so this list and that total can never disagree.
+  const promotions = order.promotions ?? []
   const history = order.status_history ?? []
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0)
   const paymentMethod = order.payment_method ?? null
@@ -169,6 +174,22 @@ export default function OrderDetailPage() {
                   <span className="font-medium">{formatCurrency(item.total_price, order.currency)}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {promotions.length > 0 && (
+            <div className="mt-4 pt-3.5 border-t border-[var(--border-subtle)]">
+              <h4 className="font-body text-xs font-semibold mb-2 flex items-center gap-1.5 text-[var(--text-muted)]">
+                <Tag className="w-3.5 h-3.5" /> Vouchers applied ({promotions.length})
+              </h4>
+              <div className="flex flex-col gap-2">
+                {promotions.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between text-sm">
+                    <span>{p.code ?? 'Promotion'}</span>
+                    <span className="font-medium text-[var(--s-success,#1f7a4d)]">-{formatCurrency(p.discount_amount, order.currency)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

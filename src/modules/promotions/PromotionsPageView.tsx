@@ -101,6 +101,24 @@ export function PromotionsPageView({ promotions, meta, isLoading, filter, setFil
       ),
     },
     {
+      // 2026-08-24 stacking: at-a-glance visibility for which vouchers a
+      // shopper can combine (max 2, both must be stackable — see
+      // checkStackCompatibility in the backend). Without this column an
+      // admin has no way to tell from the list alone.
+      key: 'stackable',
+      label: 'Stack',
+      width: 90,
+      render: (promo) => (
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded-full font-body text-[11px] font-medium ${
+            promo.stackable ? 'bg-[var(--s-success-bg,#e6f4ea)] text-[var(--s-success,#1f7a4d)]' : 'text-[var(--text-muted)]'
+          }`}
+        >
+          {promo.stackable ? 'Combinable' : 'Solo only'}
+        </span>
+      ),
+    },
+    {
       key: 'status',
       label: 'Status',
       width: 110,

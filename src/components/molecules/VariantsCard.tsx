@@ -271,6 +271,17 @@ export function VariantsCard({ productId, disabled, product, skuPrefix = '', cat
             })
           }
         }
+        // BUG FIX (2026-08-24, same class as ProductWizardPage's doSave):
+        // resolveUrls() above already revoked every resolved blob: URL —
+        // sync colorPhotos state to the resolved CDN URLs so (a) the color
+        // photo preview doesn't go broken right after save, and (b) a
+        // later Save Variants click doesn't throw "Draft file not found"
+        // on this now-stale blob: reference.
+        setColorPhotos((prev) => {
+          const next = { ...prev }
+          for (let i = 0; i < colorEntries.length; i++) next[colorEntries[i][0]] = resolvedUrls[i]
+          return next
+        })
       }
 
       toast.show({

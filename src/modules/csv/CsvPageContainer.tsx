@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useWebsiteStore, useOrgStore, http, RadioGroup, type RadioOption } from '@litostudio/ui-cms'
-import { useAuthStore } from '@/stores/auth.store'
 import type { ApiResponse } from '@/types/api.types'
 // 2026-07-22 (import-menu consolidation): folded in as a tab rather than its
 // own sidebar entry/route — see this file's header comment below and
@@ -55,7 +54,6 @@ type ImportTab = 'csv' | 'catalog'
 export default function CsvPageContainer() {
   const { activeSite } = useWebsiteStore()
   const { org } = useOrgStore()
-  const { token } = useAuthStore()
   const siteId = activeSite?.id ?? ''
   const orgId = org?.id ?? ''
 
@@ -79,17 +77,19 @@ export default function CsvPageContainer() {
   const handleExport = async () => {
     setExporting(true)
     try {
-      const qs = new URLSearchParams()
-      if (moduleConfig.siteScoped && siteId) qs.set('site_id', siteId)
-      else if (orgId) qs.set('org_id', orgId)
+      // Routed through the shared `http` client (not a hand-rolled fetch()
+      // with a manually-read useAuthStore().token, which is never persisted
+      // across a page refresh — see cms-settings-rbac-audit-2026-08-27.md §7)
+      // so this always sends the real cookie-backed auth token.
+      const params: Record<string, string> = {}
+      if (moduleConfig.siteScoped && siteId) params.site_id = siteId
+      else if (orgId) params.org_id = orgId
 
-      const res = await fetch(`/api/v1/cms/csv/${selectedModule}/export?${qs.toString()}`, {
-        headers: { Authorization: `Bearer ${token ?? ''}` },
+      const blob = await http.get<Blob>(`/api/v1/cms/csv/${selectedModule}/export`, {
+        params,
+        responseType: 'blob',
       })
 
-      if (!res.ok) throw new Error('Export failed')
-
-      const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url

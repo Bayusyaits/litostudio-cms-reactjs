@@ -221,7 +221,47 @@ export const productsService      = { ...createContentService<Product, ProductCr
 // Categories: reuse the existing `categoryService` from taxonomy.service.ts
 // (the dedicated Categories CMS module at /categories) — do NOT add a
 // second category client here. See taxonomy.service.ts for details.
-export const collectionsService   = createContentService<Collection,     CollectionCreateRequest,   CollectionUpdateRequest>(   '/api/v1/cms/content/collections')
+export const collectionsService   = {
+  ...createContentService<Collection, CollectionCreateRequest, CollectionUpdateRequest>('/api/v1/cms/content/collections'),
+  // 2026-08-27 (collections-audit-2026-08-27.md Phase C): the backend's
+  // POST /:id/items (add) has existed and worked since collections.routes.ts
+  // was built; DELETE /:id/items/:itemId (remove) was added alongside this
+  // panel (same audit doc, Phase C prerequisite) — neither was ever called
+  // from anywhere in the CMS, which is the actual root cause of collections
+  // showing zero items on the storefront despite "being added" in the CMS.
+  async addItem(collectionId: string, payload: { item_id: string; item_type: string; sort_order?: number }) {
+    const data = await http.post<ApiResponse<{ id: string; item_id: string; item_type: string; sort_order: number }>>(
+      `/api/v1/cms/content/collections/${collectionId}/items`, payload,
+    )
+    return data.data
+  },
+  async removeItem(collectionId: string, collectionItemId: string) {
+    await http.delete(`/api/v1/cms/content/collections/${collectionId}/items/${collectionItemId}`)
+  },
+  // 2026-08-27 (collections-audit-2026-08-27.md Phase D): CollectionMultiSelect
+  // needs to (a) search collections by name and (b) find which collections a
+  // given Product/Service/Portfolio item already belongs to. The generic
+  // getList() above can't do either — its `search` param is silently
+  // dropped by this resource's backend route (nothing reads `q.search`,
+  // only `q.q` — same mismatch across list() callers isn't touched here to
+  // avoid changing other services' behavior), and `item_id` isn't part of
+  // ExtraListParams at all. Both call the backend directly instead.
+  async searchByName(siteId: string, q: string, collectionType = 'collection') {
+    const params: Record<string, string> = { site_id: siteId, type: collectionType, limit: '20' }
+    if (q.trim()) params.q = q.trim()
+    const data = await http.get<PaginatedResponse<Collection>>(
+      `/api/v1/cms/content/collections?${new URLSearchParams(params).toString()}`,
+    )
+    return data
+  },
+  async getForItem(siteId: string, itemId: string, itemType = 'product') {
+    const params = new URLSearchParams({ site_id: siteId, item_id: itemId, item_type: itemType, limit: '100' })
+    const data = await http.get<PaginatedResponse<Collection & { matched_item_id: string }>>(
+      `/api/v1/cms/content/collections?${params.toString()}`,
+    )
+    return data
+  },
+}
 export const faqsService          = createContentService<Faq,            FaqCreateRequest,          FaqUpdateRequest>(          '/api/v1/cms/content/faqs')
 // 2026-08-11 (Our Team / Careers build) — bespoke tables, same factory usage
 // as faqsService above (backend module mirrors faqs.routes.ts exactly).

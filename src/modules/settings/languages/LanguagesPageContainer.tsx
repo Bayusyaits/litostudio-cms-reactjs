@@ -13,6 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { languagesService } from '@/services/languages.service'
 import { useOrgStore, getErrorMessage } from '@litostudio/ui-cms'
+import { useAuthStore } from '@/stores/auth.store'
 import { LanguagesPageView } from './LanguagesPageView'
 
 export default function LanguagesPageContainer() {
@@ -20,6 +21,12 @@ export default function LanguagesPageContainer() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const [actionError, setActionError] = useState<string | null>(null)
+  // Enabling/disabling/setting-primary is admin+-gated on the backend
+  // (POST/PATCH /cms/organizations/locales) — mirrored on the frontend so
+  // non-admins see disabled controls instead of a 403. See
+  // cms-settings-rbac-audit-2026-08-27.md §9 Phase 4.
+  const { user } = useAuthStore()
+  const canEdit = user?.org_role === 'admin' || user?.org_role === 'owner'
 
   const qKey = ['org-languages-all', org?.id]
 
@@ -72,6 +79,7 @@ export default function LanguagesPageContainer() {
         updateMutation.mutate({ locale, payload: { currency_code: currencyCode || null, currency_symbol: currencySymbol || null } })}
       saving={enableMutation.isPending || updateMutation.isPending}
       onGoToAddons={() => navigate('/addons')}
+      canEdit={canEdit}
     />
   )
 }

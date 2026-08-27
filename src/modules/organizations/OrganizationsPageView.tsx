@@ -12,6 +12,12 @@ interface Props {
   onCreate: () => void
   onEdit: (org: Organization) => void
   onDelete: (org: Organization) => void
+  // 2026-08-26: mirrors the backend's own role gates exactly (PATCH /:id
+  // requires 'admin', DELETE /:id requires 'owner' — see
+  // organization.routes.ts) so a viewer/editor never sees a live-looking
+  // control that just 403s on click.
+  canEdit: boolean
+  canDelete: boolean
 }
 
 function PlanBadge({ plan }: { plan: string }) {
@@ -32,7 +38,7 @@ function PlanBadge({ plan }: { plan: string }) {
   )
 }
 
-export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, onCreate, onEdit, onDelete }: Props) {
+export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, onCreate, onEdit, onDelete, canEdit, canDelete }: Props) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   function handleDeleteClick(org: Organization) {
@@ -155,28 +161,32 @@ export function OrganizationsPageView({ orgs, isLoading, activeOrgId, onSelect, 
                         Switch <ChevronRight size={11} />
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => onEdit(org)}
-                      title="Edit organization"
-                      className="flex items-center justify-center w-[30px] h-[30px] rounded-md border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] cursor-pointer transition-all duration-150 hover:bg-[var(--lito-cream-alt)] hover:text-[var(--text-primary)]"
-                    >
-                      <Pencil size={12} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteClick(org)}
-                      title={isConfirm ? 'Click again to confirm delete' : 'Delete organization'}
-                      className={`flex items-center justify-center h-[30px] rounded-md cursor-pointer transition-all duration-150 text-[10px] font-semibold gap-[3px] whitespace-nowrap ${
-                        isConfirm
-                          ? 'border border-[rgba(163,48,40,0.5)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger)] px-2'
-                          : 'border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] w-[30px] hover:border-[rgba(163,48,40,0.5)] hover:text-[var(--cms-danger)]'
-                      }`}
-                      onMouseLeave={() => { if (!isConfirm) setDeleteConfirm(null) }}
-                    >
-                      <Trash2 size={12} />
-                      {isConfirm && <span>Confirm?</span>}
-                    </button>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => onEdit(org)}
+                        title="Edit organization"
+                        className="flex items-center justify-center w-[30px] h-[30px] rounded-md border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] cursor-pointer transition-all duration-150 hover:bg-[var(--lito-cream-alt)] hover:text-[var(--text-primary)]"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteClick(org)}
+                        title={isConfirm ? 'Click again to confirm delete' : 'Delete organization'}
+                        className={`flex items-center justify-center h-[30px] rounded-md cursor-pointer transition-all duration-150 text-[10px] font-semibold gap-[3px] whitespace-nowrap ${
+                          isConfirm
+                            ? 'border border-[rgba(163,48,40,0.5)] bg-[var(--cms-danger-bg)] text-[var(--cms-danger)] px-2'
+                            : 'border border-[var(--lito-border)] bg-transparent text-[var(--text-muted)] w-[30px] hover:border-[rgba(163,48,40,0.5)] hover:text-[var(--cms-danger)]'
+                        }`}
+                        onMouseLeave={() => { if (!isConfirm) setDeleteConfirm(null) }}
+                      >
+                        <Trash2 size={12} />
+                        {isConfirm && <span>Confirm?</span>}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

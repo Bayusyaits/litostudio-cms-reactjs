@@ -17,6 +17,19 @@ interface PricingFormProps {
 }
 
 export function PricingForm({ values, onChange }: PricingFormProps) {
+  // BUG FIX (2026-08-26 — storefront showed "Rp145.000 ~~Rp145.000~~"):
+  // Compare-at Price renders as a strikethrough next to Price on the
+  // storefront (FashionProductCard.vue/BeautyProductCard.vue etc. — see
+  // .pcard-compare-price's `line-through`). It only means something when
+  // it's strictly HIGHER than Price; equal or lower is either bad data or a
+  // leftover value and produces a nonsensical doubled price. This inline
+  // check gives immediate feedback; ProductWizardPage's doSave() blocks the
+  // actual save, and the backend re-validates authoritatively (see
+  // products.routes.ts).
+  const priceNum = values.price !== '' ? Number(values.price) : null
+  const compareNum = values.compareAtPrice !== '' ? Number(values.compareAtPrice) : null
+  const compareInvalid = priceNum != null && compareNum != null && compareNum <= priceNum
+
   return (
     <div className="cms-card p-5 space-y-4">
       <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Pricing</h3>
@@ -32,7 +45,20 @@ export function PricingForm({ values, onChange }: PricingFormProps) {
         </div>
         <div className="space-y-1.5">
           <label className="cms-label">Compare-at Price</label>
-          <input type="number" min={0} className="cms-input w-full" value={values.compareAtPrice} onChange={(e) => onChange('compareAtPrice', e.target.value)} placeholder="Optional — shown as a strikethrough" />
+          <input
+            type="number"
+            min={0}
+            className={`cms-input w-full ${compareInvalid ? 'border-[var(--cms-danger)] focus:border-[var(--cms-danger)]' : ''}`}
+            value={values.compareAtPrice}
+            onChange={(e) => onChange('compareAtPrice', e.target.value)}
+            placeholder="Optional — shown as a strikethrough"
+            aria-invalid={compareInvalid}
+          />
+          {compareInvalid && (
+            <p className="font-body text-xs text-[var(--cms-danger)]">
+              Must be higher than Price, or it won't show as a discount (currently displays as {values.price === values.compareAtPrice ? 'the same price twice' : 'a strikethrough below the real price'}).
+            </p>
+          )}
         </div>
       </div>
 

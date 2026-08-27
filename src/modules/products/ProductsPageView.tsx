@@ -113,8 +113,27 @@ export function ProductsPageView({
       sortable: true,
       render: (product) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded bg-[var(--lito-cream-alt)] flex items-center justify-center flex-shrink-0">
-            <Package className="w-4 h-4 text-[var(--text-muted)]" aria-hidden />
+          {/* BUG FIX (2026-08-24, thumbnail audit): this cell rendered a
+              static <Package> icon unconditionally — never read
+              `product.cover_image` at all, so every row showed the same
+              generic box regardless of whether an image was uploaded. Now
+              shows the real cover image when present, falling back to the
+              Package icon on missing/broken images via onError. */}
+          <div className="w-9 h-9 rounded bg-[var(--lito-cream-alt)] flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {product.cover_image
+              ? (
+                  <img
+                    src={product.cover_image}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                    }}
+                  />
+                )
+              : null}
+            <Package className={`w-4 h-4 text-[var(--text-muted)] ${product.cover_image ? 'hidden' : ''}`} aria-hidden />
           </div>
           <div>
             <p className="font-body text-sm font-medium text-[var(--text-muted)] truncate max-w-[260px]">
@@ -130,6 +149,21 @@ export function ProductsPageView({
       header: 'Type',
       width: '110px',
       render: (product) => <ProductTypeBadge type={product.product_type} />,
+    },
+    // FEATURE (2026-08-24, user request): merchant enters SKU in the wizard's
+    // Information step (ProductInformationForm) and it's stored/returned fine
+    // (`products.sku` column, present on the list API response) — this table
+    // just never had a column for it, so it looked like the value silently
+    // never saved even though it did.
+    {
+      key: 'sku',
+      header: 'SKU',
+      width: '130px',
+      render: (product) => (
+        <span className="font-body text-xs text-[var(--text-muted)] font-mono">
+          {product.sku || '—'}
+        </span>
+      ),
     },
     {
       key: 'price',

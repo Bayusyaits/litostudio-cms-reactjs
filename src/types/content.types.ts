@@ -548,6 +548,23 @@ export interface Collection {
   updated_at: string
   deleted_at?: string | null
   translations: Translation[]
+  /**
+   * 2026-08-27 (collections-audit-2026-08-27.md Phase C): backend's
+   * GET /collections/:id has always embedded this
+   * (`items:collection_items(id, item_id, item_type, sort_order)`) — the
+   * type just never declared it, so nothing in the CMS could read it.
+   * Only present on the single-collection GET, not the list endpoint.
+   */
+  items?: CollectionItem[]
+}
+
+/** A row from the collection_items pivot table, as embedded on Collection.items. */
+export interface CollectionItem {
+  /** collection_items.id — pass this (not item_id) to collectionsService.removeItem(). */
+  id: string
+  item_id: string
+  item_type: string
+  sort_order: number
 }
 
 export interface CollectionCreateRequest {

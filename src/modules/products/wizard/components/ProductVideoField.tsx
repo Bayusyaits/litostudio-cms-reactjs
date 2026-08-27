@@ -45,7 +45,7 @@ export function ProductVideoField({ value, onChange, siteId }: ProductVideoField
     setUploading(true)
     try {
       const media = await mediaService.upload(file, { folder: 'products/video', site_id: siteId ?? undefined })
-      onChange(media.cdn_url ?? media.original_url ?? null)
+      onChange(media.cdn_url ?? media.file_url ?? null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {

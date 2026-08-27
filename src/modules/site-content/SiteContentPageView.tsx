@@ -272,7 +272,7 @@ export function SiteContentPageView({ extra, isLoading, saving, saveError, saveS
   }
 
   return (
-    <div className="px-8 py-7 max-w-[760px] font-body">
+    <div className="px-8 py-7 max-w-[760px] font-body overflow-y-auto">
       {/* Header */}
       <div className="mb-6">
         <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)] m-0">
