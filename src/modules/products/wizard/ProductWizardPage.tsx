@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useWebsiteStore, draftMediaStore } from '@litostudio/ui-cms'
+import { useWebsiteStore, draftMediaStore, isPublishedStatus } from '@litostudio/ui-cms'
 import type { ContentStatus } from '@litostudio/ui-cms'
 
 import { ContentEditorLayout } from '@/components/organisms/ContentEditorLayout'
@@ -233,7 +233,7 @@ export default function ProductWizardPage() {
   // ── Save (create or patch core product fields) ───────────────────────
   const doSave = useCallback(async (nextStatus?: ContentStatus) => {
     const effectiveStatus = nextStatus ?? status
-    if (effectiveStatus === 'published') {
+    if (isPublishedStatus(effectiveStatus)) {
       const priceNum = price ? Number(price) : 0
       if (!priceNum || priceNum <= 0) {
         setSaveError('Set a price before publishing — a product with no price would show as free on the storefront.')
@@ -449,7 +449,7 @@ export default function ProductWizardPage() {
           status={status}
           onStatusChange={setStatus}
           onSave={() => void doSave()}
-          onPublish={() => void doSave(status === 'published' ? 'draft' : 'published')}
+          onPublish={() => void doSave(isPublishedStatus(status) ? 'draft' : 'published')}
           isSaving={isSaving}
           lastSaved={lastSaved}
         />

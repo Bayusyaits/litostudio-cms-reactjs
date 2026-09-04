@@ -48,7 +48,7 @@ import { useWebsiteStore } from '@litostudio/ui-cms'
 import { formatRelative }                    from '@/lib/utils'
 
 import { ContentEditorLayout }                   from '@/components/organisms/ContentEditorLayout'
-import { RichTextEditor, encodeBody, decodeBody, ImageUploader, FIELD_LIMITS, DashboardSkeleton, FormField, TextAreaField, Select } from '@litostudio/ui-cms'
+import { RichTextEditor, encodeBody, decodeBody, ImageUploader, FIELD_LIMITS, DashboardSkeleton, FormField, TextAreaField, Select, isPublishedStatus } from '@litostudio/ui-cms'
 import { SeoCard }                                from '@/components/molecules/SeoCard'
 import { PublishCard }                            from '@/components/molecules/PublishCard'
 import { TagInput }                               from '@/components/molecules/TagInput'
@@ -1568,7 +1568,7 @@ export default function SimpleContentEditorPage() {
       // gone through the motions; catching it here, at the moment an editor
       // actually publishes, is the preventable point. Draft saves are left
       // alone — a WIP product with no price yet is normal.
-      if (module === 'products' && effectiveStatus === 'published') {
+      if (module === 'products' && isPublishedStatus(effectiveStatus)) {
         const priceNum = extras.price ? Number(extras.price) : 0
         if (!priceNum || priceNum <= 0) {
           setIsSaving(false)
@@ -1654,7 +1654,7 @@ export default function SimpleContentEditorPage() {
   const handleSave    = useCallback(() => doSave(), [doSave])
   const handlePublish = useCallback(() => {
     setIsPublishing(true)
-    doSave(status === 'published' ? 'draft' : 'published').finally(() => setIsPublishing(false))
+    doSave(isPublishedStatus(status) ? 'draft' : 'published').finally(() => setIsPublishing(false))
   }, [doSave, status])
 
   // ── Guards ───────────────────────────────────────────────────────────

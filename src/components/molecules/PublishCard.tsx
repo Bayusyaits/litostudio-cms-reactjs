@@ -9,6 +9,7 @@ import { Globe, FileText, Archive, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button, Select } from '@litostudio/ui-cms'
 import type { ContentStatus } from '@litostudio/ui-cms'
+import { isPublishedStatus } from '@litostudio/ui-cms'
 
 const STATUS_OPTIONS: { value: ContentStatus; label: string; icon: React.ReactNode }[] = [
   { value: 'draft',     label: 'Draft',     icon: <FileText className="w-3.5 h-3.5" /> },
@@ -51,7 +52,7 @@ export function PublishCard({
           <label className="cms-label">Visibility</label>
           <Select
             className="w-full"
-            value={status}
+            value={isPublishedStatus(status) ? 'published' : status}
             onChange={(v) => onStatusChange(v as ContentStatus)}
             disabled={isSaving || isPublishing}
             options={STATUS_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
@@ -60,14 +61,14 @@ export function PublishCard({
 
         {/* Status badge row */}
         <div className="flex items-center gap-2">
-          {STATUS_OPTIONS.find((o) => o.value === status)?.icon}
+          {STATUS_OPTIONS.find((o) => o.value === (isPublishedStatus(status) ? 'published' : status))?.icon}
           <span className={cn(
             'font-body text-xs font-medium',
-            status === 'published' && 'text-[var(--s-pub-fg)]',
-            status === 'draft'     && 'text-[var(--s-draft-fg)]',
-            status === 'archived'  && 'text-[var(--s-arch-fg)]',
+            isPublishedStatus(status) && 'text-[var(--s-pub-fg)]',
+            status === 'draft'        && 'text-[var(--s-draft-fg)]',
+            status === 'archived'     && 'text-[var(--s-arch-fg)]',
           )}>
-            {STATUS_OPTIONS.find((o) => o.value === status)?.label}
+            {STATUS_OPTIONS.find((o) => o.value === (isPublishedStatus(status) ? 'published' : status))?.label}
           </span>
           {lastSaved && (
             <span className="ml-auto font-body text-[10px] text-[var(--text-faint)]">
@@ -89,7 +90,7 @@ export function PublishCard({
             Save Draft
           </Button>
 
-          {status !== 'published' && onPublish && (
+          {!isPublishedStatus(status) && onPublish && (
             <Button skin="cms"
               type="button"
               variant="primary"
@@ -102,7 +103,7 @@ export function PublishCard({
             </Button>
           )}
 
-          {status === 'published' && onPublish && (
+          {isPublishedStatus(status) && onPublish && (
             <Button skin="cms"
               type="button"
               variant="ghost"
