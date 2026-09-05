@@ -1085,6 +1085,14 @@ export interface Campaign {
   created_at: string
   updated_at: string
   translations: Translation[]
+  // Real DB column (migrations/029_campaigns.sql / .../051_campaigns_
+  // scheduling.sql) already read by the public website (coupon_code,
+  // discount_text, terms, and now promo_strip — see WEB-007/CMS-012) but
+  // never declared here before, so the editor form had no typed way to
+  // read or write it. `createContentModule`'s generic POST/PATCH handlers
+  // pass this straight through to the `campaigns` table — no backend
+  // change needed to persist it.
+  extra?: Record<string, unknown> | null
 }
 
 export interface CampaignCreateRequest {
@@ -1098,6 +1106,7 @@ export interface CampaignCreateRequest {
   is_featured?: boolean
   status?: ContentStatus
   sort_order?: number
+  extra?: Record<string, unknown>
   translation: { locale: string; title: string; excerpt?: string; body?: unknown }
 }
 

@@ -166,6 +166,22 @@ function FooterTab({ draft, set }: { draft: SiteExtraSettings; set: (k: keyof Si
         </Field>
       ))}
 
+      {/* WEB-007/CMS-012 (FIND-031): Fashion's "Contact Cards" section reads
+          these from footer_contact but had no CMS field to set them — each
+          is optional/self-hiding on the website like every field above. */}
+      <SectionTitle>Contact Cards — Extra Categories</SectionTitle>
+
+      {([
+        ['support_email',    'Customer Support Email', 'support@yourbrand.com'],
+        ['support_note',     'Customer Support Note',  'Orders, returns & exchanges'],
+        ['wholesale_email',  'Wholesale Email',         'wholesale@yourbrand.com'],
+        ['wholesale_note',   'Wholesale Note',          'Minimum order 50 units'],
+      ] as [string, string, string][]).map(([k, lbl, ph]) => (
+        <Field key={k} label={lbl}>
+          <TextInput value={contact[k] ?? ''} onChange={v => setContact(k, v)} placeholder={ph} />
+        </Field>
+      ))}
+
       <SectionTitle>Social Links</SectionTitle>
 
       {([

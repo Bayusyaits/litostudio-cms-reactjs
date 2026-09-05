@@ -124,6 +124,9 @@ const MODULE_CONFIG: Record<SimpleModule, { label: string; service: AnyService }
 
 /** A single frame in a gallery item's or destination's shot album. */
 interface ShotEntry { url: string; title?: string; sub?: string }
+// WEB-007/CMS-012: campaigns.extra.promo_strip — 3-stat strip on the Fashion
+// Promo/Campaign detail page (reference Fashion Promo.html's .promo-strip).
+interface PromoStripItem { value: string; label: string }
 
 // ── Pure helpers ───────────────────────────────────────────────────────────
 
@@ -349,7 +352,8 @@ function getModuleExtras(e: AnyEntity, module: SimpleModule): Record<string, unk
     }
     case 'campaigns': {
       const c = e as Campaign
-      return { ctaLabel: c.cta_label ?? '', ctaUrl: c.cta_url ?? '', startDate: c.start_date ?? '', endDate: c.end_date ?? '', isFeatured: c.is_featured ?? false }
+      const promoStrip = Array.isArray(c.extra?.promo_strip) ? (c.extra!.promo_strip as PromoStripItem[]) : []
+      return { ctaLabel: c.cta_label ?? '', ctaUrl: c.cta_url ?? '', startDate: c.start_date ?? '', endDate: c.end_date ?? '', isFeatured: c.is_featured ?? false, promoStrip }
     }
   }
 }
@@ -538,7 +542,18 @@ function buildCreatePayload(
     case 'collections':
       return { ...base, collection_type: extras.collectionType || 'collection', is_featured: extras.isFeatured ?? false }
     case 'campaigns':
-      return { ...base, cta_label: extras.ctaLabel || undefined, cta_url: extras.ctaUrl || undefined, start_date: extras.startDate || undefined, end_date: extras.endDate || undefined, is_featured: extras.isFeatured ?? false, translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) } }
+      return {
+        ...base,
+        cta_label: extras.ctaLabel || undefined,
+        cta_url: extras.ctaUrl || undefined,
+        start_date: extras.startDate || undefined,
+        end_date: extras.endDate || undefined,
+        is_featured: extras.isFeatured ?? false,
+        extra: (Array.isArray(extras.promoStrip) && (extras.promoStrip as PromoStripItem[]).length > 0)
+          ? { promo_strip: extras.promoStrip }
+          : undefined,
+        translation: { locale, title, excerpt: excerpt || undefined, body: encodeBody(body) },
+      }
     default:
       return base
   }
@@ -637,7 +652,18 @@ function buildUpdatePatch(
         extra:       extras.linkUrl ? { link_url: extras.linkUrl } : {},
       }
     case 'collections':  return { ...base, collection_type: extras.collectionType || 'collection', is_featured: extras.isFeatured ?? false }
-    case 'campaigns':    return { ...base, cta_label: extras.ctaLabel || null, cta_url: extras.ctaUrl || null, start_date: extras.startDate || null, end_date: extras.endDate || null, is_featured: extras.isFeatured ?? false }
+    case 'campaigns':
+      return {
+        ...base,
+        cta_label: extras.ctaLabel || null,
+        cta_url: extras.ctaUrl || null,
+        start_date: extras.startDate || null,
+        end_date: extras.endDate || null,
+        is_featured: extras.isFeatured ?? false,
+        extra: (Array.isArray(extras.promoStrip) && (extras.promoStrip as PromoStripItem[]).length > 0)
+          ? { promo_strip: extras.promoStrip }
+          : {},
+      }
     default:             return base
   }
 }
@@ -699,6 +725,66 @@ function ShotsEditor({
         className="cms-btn cms-btn-ghost cms-btn-sm w-full justify-center"
       >
         + Add Shot
+      </button>
+    </div>
+  )
+}
+
+/**
+ * campaigns.extra.promo_strip editor (WEB-007/CMS-012) — a short repeater
+ * of { value, label } stat pairs (e.g. "20%" / "Off Sitewide"), rendered on
+ * the Fashion Promo/Campaign detail page as the compact strip directly
+ * under the hero (reference Fashion Promo.html's .promo-strip; website
+ * side: StatisticsSection.vue's new `variant="strip"`). Modeled on
+ * ShotsEditor above — same add/remove-closure pattern, just two plain text
+ * fields per item instead of an image + two fields.
+ */
+function PromoStripEditor({
+  items, onChange,
+}: {
+  items: PromoStripItem[]
+  onChange: (next: PromoStripItem[]) => void
+}) {
+  const updateItem = (i: number, patch: Partial<PromoStripItem>) => {
+    onChange(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)))
+  }
+  const removeItem = (i: number) => onChange(items.filter((_, idx) => idx !== i))
+  const addItem = () => onChange([...items, { value: '', label: '' }])
+
+  return (
+    <div className="space-y-3">
+      {items.map((item, i) => (
+        <div key={i} className="rounded-lg border border-[var(--lito-border)] p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-body text-xs font-semibold text-[var(--text-muted)]">Stat {i + 1}</span>
+            <button
+              type="button"
+              onClick={() => removeItem(i)}
+              className="font-body text-xs text-[var(--s-danger)] hover:underline"
+            >
+              Remove
+            </button>
+          </div>
+          <FormField
+            label="Value"
+            value={item.value}
+            onChange={(e) => updateItem(i, { value: e.target.value })}
+            placeholder="e.g. 20%"
+          />
+          <FormField
+            label="Label"
+            value={item.label}
+            onChange={(e) => updateItem(i, { label: e.target.value })}
+            placeholder="e.g. Off Sitewide"
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addItem}
+        className="cms-btn cms-btn-ghost cms-btn-sm w-full justify-center"
+      >
+        + Add Stat
       </button>
     </div>
   )
@@ -1399,6 +1485,15 @@ function renderModuleExtras(
           <div className="flex items-center justify-between">
             <span className="font-body text-xs text-[var(--text-primary)]">Featured</span>
             <Switch checked={!!(extras.isFeatured)} onChange={(v) => setExtra('isFeatured', v)} />
+          </div>
+          {/* WEB-007/CMS-012: promo strip stats, Fashion template only —
+              renders on the website only when at least one stat is set. */}
+          <div className="pt-1 space-y-2">
+            <span className="font-body text-xs font-semibold text-[var(--text-primary)]">Promo Strip Stats (Fashion)</span>
+            <PromoStripEditor
+              items={(extras.promoStrip as PromoStripItem[]) ?? []}
+              onChange={(next) => setExtra('promoStrip', next)}
+            />
           </div>
         </div>
       )
