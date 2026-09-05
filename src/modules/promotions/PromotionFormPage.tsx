@@ -14,17 +14,20 @@
 // Routes: /promotions/new (create), /promotions/:id/edit (edit) — see
 // apps/cms/src/app/router.tsx.
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Save, Loader2, Search } from 'lucide-react'
+import { Save, Loader2, Search } from 'lucide-react'
 import { FIELD_LIMITS, Select } from '@litostudio/ui-cms'
 import { useWebsiteStore } from '@litostudio/ui-cms'
 import { promotionsService, productsService, collectionsService } from '@/services/content.service'
 import { Switch } from '@/components/atoms/Switch'
 import { StepUpConfirmDialog } from '@/components/StepUpConfirmDialog'
+// CMS-009 (FIND-044): converge onto the shared editor chrome (sticky
+// header + back button + two-column body) — see the render section below.
+import { ContentEditorLayout } from '@/components/organisms/ContentEditorLayout'
 
 const promotionSchema = z.object({
   type: z.enum(['coupon', 'campaign', 'promo']),
@@ -328,18 +331,91 @@ export default function PromotionFormPage() {
     )
   }
 
+  // CMS-009 (FIND-044): converged onto the shared ContentEditorLayout chrome
+  // (sticky header + back button + two-column body) used by Collections and
+  // every other content editor, instead of this page's previous bespoke
+  // max-w-3xl single-column layout with its own inline back-link/h1 and a
+  // bottom Save/Cancel row. The Status field — previously buried inline amid
+  // the discount-configuration fields — now lives in a dedicated sidebar
+  // "Publish" card, modeled on PublishCard.tsx's visual pattern (header +
+  // status control + action button) but NOT that component itself: Promotions'
+  // status vocabulary (draft/active/paused/expired/archived) is a genuinely
+  // different lifecycle from content's Draft/Published pair and must not be
+  // collapsed into ContentStatus/PublishCard, per this task's own scope note.
+  // Every field, validation rule, and business-logic behavior (step-up
+  // confirmation, stacking toggle, scoping, org-wide gating) is unchanged —
+  // this is a layout/chrome convergence only, not a functional rewrite. The
+  // <form> wraps the whole ContentEditorLayout so the sidebar's submit button
+  // still triggers the same handleSubmit(onSubmit) as before.
   return (
-    <div className="cms-page p-8 overflow-y-auto h-full max-w-3xl mx-auto">
-      <div className="mb-6">
-        <Link to="/promotions" className="inline-flex items-center gap-1.5 font-body text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-3">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Promotions
-        </Link>
-        <h1 className="font-display text-[28px] font-normal text-[var(--text-muted)]">
-          {isEdit ? 'Edit Promotion' : 'New Promotion'}
-        </h1>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="h-full">
+      <ContentEditorLayout
+        title={isEdit ? 'Edit Promotion' : 'New Promotion'}
+        subtitle={isEdit ? `Promotions › ${watch('name') || id}` : 'Promotions › New'}
+        onBack={() => navigate('/promotions')}
+        sidebarContent={
+          <>
+            <div className="cms-card p-4 space-y-3">
+              <h3 className="font-body text-sm font-semibold text-[var(--text-primary)]">Publish</h3>
+              <div className="space-y-1.5">
+                <label className="cms-label">Status</label>
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      className="w-full"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      disabled={isSubmitting || saveMutation.isPending}
+                      options={[
+                        { value: 'draft', label: 'Draft (not visible to customers)' },
+                        { value: 'active', label: 'Active' },
+                        { value: 'paused', label: 'Paused' },
+                        { value: 'expired', label: 'Expired' },
+                        { value: 'archived', label: 'Archived' },
+                      ]}
+                    />
+                  )}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="cms-label">Starts (optional)</label>
+                <input type="datetime-local" {...register('starts_at')} className="cms-input h-9 text-sm w-full" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="cms-label">Ends (optional)</label>
+                <input type="datetime-local" {...register('ends_at')} className="cms-input h-9 text-sm w-full" />
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <span className="font-body text-xs text-[var(--text-primary)]">Apply to all sites in this organization</span>
+                <Controller
+                  name="applies_to_all_sites"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onChange={(checked) => {
+                        field.onChange(checked)
+                        if (checked) setValue('applies_to', 'all')
+                      }}
+                    />
+                  )}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isSubmitting || saveMutation.isPending}
+                className="cms-btn cms-btn-primary w-full justify-center"
+              >
+                <Save size={14} /> {saveMutation.isPending ? 'Saving…' : 'Save promotion'}
+              </button>
+              {saveError && <p className="font-body text-xs text-[var(--s-danger)]" role="alert">{saveError}</p>}
+            </div>
+          </>
+        }
+      >
         <div className="cms-card p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="cms-label">Type</label>
@@ -459,55 +535,6 @@ export default function PromotionFormPage() {
           </div>
         </div>
 
-        <div className="cms-card p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="cms-label">Status</label>
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  className="w-full"
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  options={[
-                    { value: 'draft', label: 'Draft (not visible to customers)' },
-                    { value: 'active', label: 'Active' },
-                    { value: 'paused', label: 'Paused' },
-                    { value: 'expired', label: 'Expired' },
-                    { value: 'archived', label: 'Archived' },
-                  ]}
-                />
-              )}
-            />
-          </div>
-          <div className="flex items-end">
-            <Controller
-              name="applies_to_all_sites"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  checked={field.value}
-                  onChange={(checked) => {
-                    field.onChange(checked)
-                    if (checked) setValue('applies_to', 'all')
-                  }}
-                  label="Apply to all sites in this organization"
-                />
-              )}
-            />
-          </div>
-          <div>
-            <label className="cms-label">Starts (optional)</label>
-            <input type="datetime-local" {...register('starts_at')} className="cms-input h-9 text-sm w-full" />
-          </div>
-          <div>
-            <label className="cms-label">Ends (optional)</label>
-            <input type="datetime-local" {...register('ends_at')} className="cms-input h-9 text-sm w-full" />
-          </div>
-        </div>
-
         <div className="cms-card p-5">
           <label className="cms-label mb-2 block">Applies to</label>
           <Controller
@@ -542,18 +569,7 @@ export default function PromotionFormPage() {
             <ScopePicker siteId={activeSite.id} kind="specific_collections" selectedIds={selectedCollectionIds} onToggle={toggleCollection} />
           )}
         </div>
-
-        {saveError && (
-          <div className="px-4 py-3 rounded bg-[var(--cms-danger-bg)] text-sm text-[var(--s-danger)]">{saveError}</div>
-        )}
-
-        <div className="flex items-center gap-3">
-          <button type="submit" disabled={isSubmitting || saveMutation.isPending} className="cms-btn cms-btn-primary">
-            <Save size={14} /> {saveMutation.isPending ? 'Saving…' : 'Save promotion'}
-          </button>
-          <Link to="/promotions" className="cms-btn cms-btn-ghost">Cancel</Link>
-        </div>
-      </form>
+      </ContentEditorLayout>
 
       <StepUpConfirmDialog
         open={pendingValues !== null}
@@ -576,6 +592,6 @@ export default function PromotionFormPage() {
           if (pendingValues) saveMutation.mutate(pendingValues)
         }}
       />
-    </div>
+    </form>
   )
 }
