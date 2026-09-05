@@ -166,7 +166,7 @@ function FooterTab({ draft, set }: { draft: SiteExtraSettings; set: (k: keyof Si
         </Field>
       ))}
 
-      {/* WEB-007/CMS-012 (FIND-031): Fashion's "Contact Cards" section reads
+      {/* WEB-007/CMS-012 (FIND-030): Fashion's "Contact Cards" section reads
           these from footer_contact but had no CMS field to set them — each
           is optional/self-hiding on the website like every field above. */}
       <SectionTitle>Contact Cards — Extra Categories</SectionTitle>

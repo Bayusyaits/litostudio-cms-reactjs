@@ -32,7 +32,7 @@ export interface SiteExtraSettings {
     email?: string
     phone?: string
     address?: string
-    // WEB-007/CMS-012 (FIND-031): Fashion ContactCardsSection.vue's
+    // WEB-007/CMS-012 (FIND-030): Fashion ContactCardsSection.vue's
     // Customer Support / Wholesale Inquiry card categories.
     support_email?: string
     support_note?: string
